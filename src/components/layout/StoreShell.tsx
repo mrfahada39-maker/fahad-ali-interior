@@ -46,8 +46,10 @@ interface StoreShellProps {
 export default function StoreShell({ children, showFooter = true, hideNavbar = false }: StoreShellProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [interactive, setInteractive] = useState(false);
 
   useEffect(() => {
+    setInteractive(true);
     const handler = () => setAuthOpen(true);
     window.addEventListener('open-auth', handler);
     return () => window.removeEventListener('open-auth', handler);
@@ -71,12 +73,12 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       {!hideNavbar && <Navbar onSearchOpen={() => setSearchOpen(true)} onAuthOpen={() => setAuthOpen(true)} />}
       {children}
       {showFooter && <Footer />}
-      <CartDrawer />
-      <WishlistDrawerPanel />
+      {interactive && <CartDrawer />}
+      {interactive && <WishlistDrawerPanel />}
       {searchOpen && <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />}
       {authOpen && <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} googleEnabled={googleEnabled} />}
-      <PWAInstallPrompt />
-      <AiInteriorChatbot />
+      {interactive && <PWAInstallPrompt />}
+      {interactive && <AiInteriorChatbot />}
     </div>
   );
 }

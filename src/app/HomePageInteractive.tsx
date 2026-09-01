@@ -91,26 +91,6 @@ export default function HomePageInteractive({
     if (desktopVideoRef.current && desktopVideoRef.current.paused) {
       desktopVideoRef.current.play().catch(() => {});
     }
-
-    // Non-blocking background image pre-warmer (runs when initial screen is ready)
-    const runIdlePreload = () => {
-      const preloadUrls = [
-        ...CATEGORIES.map((c) => resolveImageUrl(c.image, c.name, 420)),
-        ...REVIEWS.map((r) => r.avatar),
-      ];
-      preloadUrls.forEach((url) => {
-        if (url && typeof window !== 'undefined') {
-          const img = new window.Image();
-          img.src = url;
-        }
-      });
-    };
-
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(runIdlePreload, { timeout: 2000 });
-    } else {
-      setTimeout(runIdlePreload, 1200);
-    }
   }, []);
 
   useEffect(() => {
