@@ -166,9 +166,10 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
                 {/* Image */}
                 <div className="relative aspect-square sm:aspect-auto sm:min-h-[550px] bg-theme-card">
                   <Image
-                    src={resolveImageUrl(product.image, product.category)}
+                    src={resolveImageUrl(product.image, product.category, 800)}
                     alt={product.name}
                     fill
+                    unoptimized
                     className="object-cover"
                     sizes="(max-width: 640px) 100vw, 50vw"
                   />

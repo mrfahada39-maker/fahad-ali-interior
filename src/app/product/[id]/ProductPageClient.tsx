@@ -192,6 +192,7 @@ export default function ProductPageClient({
                 alt={product.name}
                 fill
                 priority
+                unoptimized
                 sizes="(max-width: 1024px) 100vw, 55vw"
                 className={`object-cover transition-transform duration-300 ${
                   isZooming ? 'scale-150' : 'scale-100'
@@ -250,6 +251,7 @@ export default function ProductPageClient({
                         src={img}
                         alt={`${product.name} view ${i + 1}`}
                         fill
+                        unoptimized
                         className="object-cover transition-transform duration-500 group-hover/thumb:scale-108"
                         sizes="128px"
                       />

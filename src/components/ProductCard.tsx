@@ -92,7 +92,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
     toast.success(`Added ${product.name} to Cart 🛒`);
   };
 
-  const imgSrc = resolveImageUrl(imgError ? null : product.image, product.category, 480);
+  const imgSrc = resolveImageUrl(imgError ? null : product.image, product.category, 800);
   const isPriority = typeof index === 'number' && index < 4;
 
   if (layoutMode === 'list') {
@@ -116,6 +116,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             src={imgSrc}
             alt={product.name}
             fill
+            unoptimized
             priority={isPriority}
             loading={isPriority ? 'eager' : 'lazy'}
             className="object-cover transition-transform duration-700 group-hover:scale-106"
@@ -208,6 +209,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             src={imgSrc}
             alt={product.name}
             fill
+            unoptimized
             priority={isPriority}
             loading={isPriority ? 'eager' : 'lazy'}
             className="object-cover transition-transform duration-700 group-hover:scale-108"
