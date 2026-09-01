@@ -95,7 +95,7 @@ export function useCheckout() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await apiFetch('/api/uploads/image', { method: 'POST', body: formData, credentials: 'include' });
+      const res = await apiFetch('/api/v1/uploads/image', { method: 'POST', body: formData, credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setScreenshot(data.url);

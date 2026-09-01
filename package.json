@@ -15,7 +15,7 @@
     "db:migrate": "prisma migrate deploy --schema=Database/models/schema.prisma",
     "db:migrate:dev": "prisma migrate dev --schema=Database/models/schema.prisma",
     "db:seed": "tsx Database/seed.ts",
-    "seed:test": "npx tsx Database/seed.test.ts",
+    "seed:test": "tsx Database/seed.ts",
     "pwa:icons": "node scripts/generate-icons.mjs",
     "test:ci": "npm run lint && npm run test:unit && npm run test:e2e"
   },
