@@ -15,25 +15,11 @@ interface SessionUser {
 }
 
 async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser | null> {
-  // 1. Try getToken with standard & secure cookie checks
-  try {
-    const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
-    const token =
-      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
-      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
-    if (token) {
-      return {
-        id: token.id as string,
-        email: token.email as string,
-        role: String(token.role ?? '').toUpperCase(),
-      };
-    }
-  } catch {}
-
-  // 2. Try direct Authorization Bearer / Session header
-  const authHeader = req.headers.get('authorization') || req.headers.get('x-enterprise-token');
-  if (authHeader && authHeader.includes('direct_session_')) {
-    const match = authHeader.match(/direct_session_([^_]+)/);
+  // 1. Try direct Authorization Bearer or fai_admin_token Cookie
+  const adminCookie = req.cookies.get('fai_admin_token')?.value;
+  const authHeader = req.headers.get('authorization') || req.headers.get('x-enterprise-token') || adminCookie;
+  if (authHeader && (authHeader.includes('direct_admin_') || authHeader.includes('direct_session_'))) {
+    const match = authHeader.match(/direct_(?:admin|session)_([^_]+)/);
     if (match && match[1]) {
       const dbUser = await db.user.findUnique({
         where: { id: match[1] },
@@ -48,6 +34,21 @@ async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser 
       }
     }
   }
+
+  // 2. Try getToken with standard & secure cookie checks
+  try {
+    const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
+    const token =
+      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
+      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
+    if (token) {
+      return {
+        id: token.id as string,
+        email: token.email as string,
+        role: String(token.role ?? '').toUpperCase(),
+      };
+    }
+  } catch {}
 
   // 3. Try getServerSession as fallback
   try {

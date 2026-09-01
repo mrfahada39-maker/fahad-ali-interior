@@ -27,20 +27,34 @@ export default function AdminLoginGate({ onLoginSuccess, error }: AdminLoginGate
 
     setSubmitting(true);
     try {
-      const res = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
+      // 1. Direct High-Priority Executive Authentication
+      const loginRes = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      if (res?.error) {
-        toast.error(res.error || 'Invalid executive credentials');
+      const data = await loginRes.json().catch(() => null);
+
+      if (!loginRes.ok || !data?.success) {
+        toast.error(data?.error || 'Invalid executive credentials');
         setSubmitting(false);
         return;
       }
 
-      await ensureEnterpriseTokens(true);
-      toast.success('Authenticated successfully. Unlocking Executive Console...');
+      if (data?.token) {
+        setEnterpriseTokens(data.token, data.token);
+        try {
+          localStorage.setItem('fai_admin_token', data.token);
+          sessionStorage.setItem('fai_admin_token', data.token);
+          document.cookie = `fai_admin_token=${data.token}; path=/; max-age=2592000; SameSite=Lax`;
+        } catch {}
+      }
+
+      // 2. Background NextAuth sync
+      signIn('credentials', { email: email.trim(), password, redirect: false }).catch(() => {});
+
+      toast.success('Executive Command Center Unlocked!');
       onLoginSuccess();
     } catch {
       toast.error('Authentication failed. Please try again.');
