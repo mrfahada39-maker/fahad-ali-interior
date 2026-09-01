@@ -8,11 +8,11 @@ export const CLOUDINARY_ASSETS = {
   easypaisa: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/easypaisa_logo.png',
   raast: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/raast_logo.png',
   
-  // Ultra-Low Bandwidth Video Streams (326 KB Mobile / 527 KB Desktop, 24fps cinema cadence, 0 audio overhead)
-  heroMobileVideo: 'https://res.cloudinary.com/dfd8rzojj/video/upload/f_mp4,q_auto:eco,ac_none,w_450,br_260k,fps_24/v1788030499/fahad-ali-interior/hero/mobile_hero_video.mp4',
-  heroDesktopVideo: 'https://res.cloudinary.com/dfd8rzojj/video/upload/f_mp4,q_auto:eco,ac_none,w_800,br_450k,fps_24/v1788030503/fahad-ali-interior/hero/desktop_hero_video.mp4',
+  // High-Definition Luxury Video Streams (Silky 30fps cinema cadence, rich color depth)
+  heroMobileVideo: 'https://res.cloudinary.com/dfd8rzojj/video/upload/f_mp4,q_auto:good,ac_none,w_640,br_550k,fps_30/v1788030499/fahad-ali-interior/hero/mobile_hero_video.mp4',
+  heroDesktopVideo: 'https://res.cloudinary.com/dfd8rzojj/video/upload/f_mp4,q_auto:good,ac_none,w_1280,br_950k,fps_30/v1788030503/fahad-ali-interior/hero/desktop_hero_video.mp4',
   
-  // Exact 0.0s First Frame Video Posters (Ultra-light 6KB-9KB AVIF/WebP previews)
-  heroMobilePoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_auto,q_auto:eco,w_390/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg',
-  heroDesktopPoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_auto,q_auto:eco,w_750/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg',
+  // Crystal Clear First Frame Video Posters (High Definition AVIF/WebP)
+  heroMobilePoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_auto,q_auto:good,w_640/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg',
+  heroDesktopPoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_auto,q_auto:good,w_1280/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg',
 } as const;
