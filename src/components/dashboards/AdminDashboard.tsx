@@ -91,7 +91,8 @@ export default function AdminDashboard() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [selectedThreadIndex, setSelectedThreadIndex] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isAuthed, setIsAuthed] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [dbProgress, setDbProgress] = useState(0);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -439,6 +440,7 @@ export default function AdminDashboard() {
 
       if (result.ok && result.data) {
         setAuthError(null);
+        setIsAuthed(true);
         applyBundle(result.data);
         setDbProgress(100);
         setLoading(false);
@@ -461,6 +463,7 @@ export default function AdminDashboard() {
         return;
       }
 
+      setIsAuthed(false);
       if (result.status === 503) {
         setAuthError('Database connecting, please retry in a few moments.');
         setLoading(false);
@@ -473,6 +476,7 @@ export default function AdminDashboard() {
           : 'Authentication session expired.',
       );
     } catch {
+      setIsAuthed(false);
       setAuthError('Unable to connect to admin services.');
     } finally {
       setDbProgress(100);
@@ -867,15 +871,25 @@ export default function AdminDashboard() {
     return statusStyles[s] || 'bg-white/10 text-white/50';
   };
 
-  if (authError) {
+  if (authError || (!isAuthed && !loading)) {
     return (
       <AdminLoginGate
-        error={authError}
+        error={authError || 'Executive authentication required.'}
         onLoginSuccess={() => {
           setAuthError(null);
+          setIsAuthed(true);
           loadAll();
         }}
       />
+    );
+  }
+
+  if (loading && !isAuthed) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] flex flex-col items-center justify-center text-[#2D231E]">
+        <div className="w-12 h-12 border-3 border-[#B88E4B]/30 border-t-[#B88E4B] rounded-full animate-spin mb-4" />
+        <p className="font-serif text-sm tracking-widest text-[#B88E4B] uppercase">Verifying Executive Session...</p>
+      </div>
     );
   }
 
