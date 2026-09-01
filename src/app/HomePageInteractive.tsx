@@ -92,18 +92,25 @@ export default function HomePageInteractive({
       desktopVideoRef.current.play().catch(() => {});
     }
 
-    // Instant Image Pre-warmer: Pre-loads all website images into browser cache before user scrolls
-    const preloadUrls = [
-      ...CATEGORIES.map((c) => resolveImageUrl(c.image, c.name)),
-      ...REVIEWS.map((r) => r.avatar),
-      ...REVIEWS.map((r) => r.productImage),
-    ];
-    preloadUrls.forEach((url) => {
-      if (url && typeof window !== 'undefined') {
-        const img = new window.Image();
-        img.src = url;
-      }
-    });
+    // Non-blocking background image pre-warmer (runs when initial screen is ready)
+    const runIdlePreload = () => {
+      const preloadUrls = [
+        ...CATEGORIES.map((c) => resolveImageUrl(c.image, c.name, 420)),
+        ...REVIEWS.map((r) => r.avatar),
+      ];
+      preloadUrls.forEach((url) => {
+        if (url && typeof window !== 'undefined') {
+          const img = new window.Image();
+          img.src = url;
+        }
+      });
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(runIdlePreload, { timeout: 2000 });
+    } else {
+      setTimeout(runIdlePreload, 1200);
+    }
   }, []);
 
   useEffect(() => {
@@ -286,11 +293,10 @@ export default function HomePageInteractive({
                 {/* Background Image Wrap */}
                 <div className="gsap-cat-img-wrap absolute inset-0 overflow-hidden">
                   <Image 
-                    src={resolveImageUrl(cat.image, cat.name)} 
+                    src={resolveImageUrl(cat.image, cat.name, 420)} 
                     alt={cat.name} 
                     fill 
-                    priority
-                    loading="eager"
+                    loading="lazy"
                     className="gsap-cat-img object-cover will-change-transform transition-transform duration-700 group-hover:scale-106" 
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" 
                   />

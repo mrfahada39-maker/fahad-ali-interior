@@ -12,7 +12,7 @@ export const CLOUDINARY_ASSETS = {
   heroMobileVideo: 'https://res.cloudinary.com/dfd8rzojj/video/upload/f_mp4,q_auto:eco,ac_none,w_450,br_260k,fps_24/v1788030499/fahad-ali-interior/hero/mobile_hero_video.mp4',
   heroDesktopVideo: 'https://res.cloudinary.com/dfd8rzojj/video/upload/f_mp4,q_auto:eco,ac_none,w_800,br_450k,fps_24/v1788030503/fahad-ali-interior/hero/desktop_hero_video.mp4',
   
-  // Exact 0.0s First Frame Video Posters (Ultra-light 11KB-17KB WebP previews)
-  heroMobilePoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_webp,q_40,w_450/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg',
-  heroDesktopPoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_webp,q_40,w_800/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg',
+  // Exact 0.0s First Frame Video Posters (Ultra-light 6KB-9KB AVIF/WebP previews)
+  heroMobilePoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_auto,q_auto:eco,w_390/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg',
+  heroDesktopPoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_auto,q_auto:eco,w_750/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg',
 } as const;
