@@ -7,14 +7,14 @@ export interface RateLimitOptions {
 }
 
 export const RATE_LIMITS = {
-  login: { windowMs: 15 * 60 * 1000, maxRequests: 5 },
-  register: { windowMs: 60 * 60 * 1000, maxRequests: 3 },
-  newsletter: { windowMs: 60 * 60 * 1000, maxRequests: 3 },
-  inquiry: { windowMs: 60 * 60 * 1000, maxRequests: 5 },
-  coupon: { windowMs: 60 * 1000, maxRequests: 10 },
-  admin: { windowMs: 60 * 1000, maxRequests: 100 },
-  api: { windowMs: 60 * 1000, maxRequests: 120 },
-  upload: { windowMs: 60 * 60 * 1000, maxRequests: 20 },
+  login: { windowMs: 60 * 1000, maxRequests: 100 },
+  register: { windowMs: 60 * 1000, maxRequests: 50 },
+  newsletter: { windowMs: 60 * 60 * 1000, maxRequests: 10 },
+  inquiry: { windowMs: 60 * 1000, maxRequests: 30 },
+  coupon: { windowMs: 60 * 1000, maxRequests: 50 },
+  admin: { windowMs: 60 * 1000, maxRequests: 500 },
+  api: { windowMs: 60 * 1000, maxRequests: 500 },
+  upload: { windowMs: 60 * 1000, maxRequests: 100 },
 } as const;
 
 type LimitName = keyof typeof RATE_LIMITS;

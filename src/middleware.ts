@@ -108,12 +108,6 @@ export async function middleware(request: NextRequest) {
     const ip = getClientIp(request);
 
     if (isNextAuthInternalRoute(pathname)) {
-      if (pathname.startsWith('/api/auth/callback/credentials') && request.method === 'POST') {
-        const rl = await rateLimit(`auth:credentials:${ip}`, 'login');
-        if (!rl.allowed) {
-          return NextResponse.json({ error: 'Too many login attempts' }, { status: 429 });
-        }
-      }
       if (isUnsafeMethod(request.method) && !isSameOriginRequest(request)) {
         return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
       }
