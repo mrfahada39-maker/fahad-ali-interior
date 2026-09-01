@@ -130,8 +130,8 @@ const nextConfig: NextConfig = {
 
   experimental: {
     staleTimes: {
-      dynamic: 300, // 5 minutes in-memory router cache for dynamic routes
-      static: 1800, // 30 minutes in-memory router cache for static routes
+      dynamic: 3600, // 1 hour in-memory client router cache (0ms instant page switches)
+      static: 86400, // 24 hours in-memory client router cache
     },
     optimizePackageImports: [
       'lucide-react',
@@ -143,6 +143,7 @@ const nextConfig: NextConfig = {
       'zustand',
       'clsx',
       'tailwind-merge',
+      'isomorphic-dompurify',
       '@radix-ui/react-label',
       '@radix-ui/react-separator',
       '@radix-ui/react-slider',
