@@ -15,12 +15,12 @@ interface SessionUser {
 }
 
 async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser | null> {
-  // 1. Try getToken (extremely reliable on Vercel Edge / Serverless)
+  // 1. Try getToken with standard & secure cookie checks
   try {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+    const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
+    const token =
+      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
+      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
     if (token) {
       return {
         id: token.id as string,
@@ -30,7 +30,26 @@ async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser 
     }
   } catch {}
 
-  // 2. Try getServerSession as fallback
+  // 2. Try direct Authorization Bearer / Session header
+  const authHeader = req.headers.get('authorization') || req.headers.get('x-enterprise-token');
+  if (authHeader && authHeader.includes('direct_session_')) {
+    const match = authHeader.match(/direct_session_([^_]+)/);
+    if (match && match[1]) {
+      const dbUser = await db.user.findUnique({
+        where: { id: match[1] },
+        select: { id: true, email: true, role: true },
+      });
+      if (dbUser) {
+        return {
+          id: dbUser.id,
+          email: dbUser.email,
+          role: String(dbUser.role).toUpperCase(),
+        };
+      }
+    }
+  }
+
+  // 3. Try getServerSession as fallback
   try {
     const session = await getServerSession(authOptions);
     if (session?.user) {

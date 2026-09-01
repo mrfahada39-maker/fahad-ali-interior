@@ -7,30 +7,42 @@
  */
 import { resolveApiPath } from '@/lib/api-config';
 
-// ── Token management — No longer needed on client with HttpOnly cookies ──────
+// ── Token management — Dual-layer (HttpOnly cookies + Bearer token) ──────
 
 export function getEnterpriseAccessToken(): string | null {
   if (typeof window === 'undefined') return null;
   try {
-    return sessionStorage.getItem('has_enterprise_session');
+    return (
+      sessionStorage.getItem('enterprise_access_token') ||
+      localStorage.getItem('enterprise_access_token') ||
+      sessionStorage.getItem('has_enterprise_session')
+    );
   } catch {
     return null;
   }
 }
 
 export function getEnterpriseRefreshToken(): string | null {
-  return null;
+  if (typeof window === 'undefined') return null;
+  try {
+    return sessionStorage.getItem('enterprise_refresh_token') || localStorage.getItem('enterprise_refresh_token');
+  } catch {
+    return null;
+  }
 }
 
-export function setEnterpriseTokens(_accessToken: string, _refreshToken: string): void {
-  // Tokens are now set via Set-Cookie headers from the backend
+export function setEnterpriseTokens(accessToken: string, refreshToken: string): void {
   if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem('has_enterprise_session', 'present');
-    sessionStorage.removeItem('enterprise_access_token');
-    sessionStorage.removeItem('enterprise_refresh_token');
-    localStorage.removeItem('enterprise_access_token');
-    localStorage.removeItem('enterprise_refresh_token');
+    if (accessToken) {
+      sessionStorage.setItem('enterprise_access_token', accessToken);
+      localStorage.setItem('enterprise_access_token', accessToken);
+    }
+    if (refreshToken) {
+      sessionStorage.setItem('enterprise_refresh_token', refreshToken);
+      localStorage.setItem('enterprise_refresh_token', refreshToken);
+    }
   } catch { /* ignore */ }
 }
 
@@ -91,6 +103,12 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
     if (csrf) {
       headers.set('x-csrf-token', csrf);
     }
+  }
+
+  // Auto-inject Enterprise Bearer session token if available
+  const bearer = getEnterpriseAccessToken();
+  if (bearer && !headers.has('authorization') && bearer.includes('direct_session_')) {
+    headers.set('authorization', `Bearer ${bearer}`);
   }
 
   const controller = new AbortController();

@@ -421,9 +421,7 @@ export default function AdminDashboard() {
     try {
       let hasToken = await ensureEnterpriseTokens();
       if (!hasToken) {
-        setAuthError('Executive authentication required.');
-        setLoading(false);
-        return;
+        hasToken = await ensureEnterpriseTokens(true);
       }
       setDbProgress(50);
 
@@ -490,6 +488,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const silentSync = async () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+      if (!isAuthed) return;
       try {
         const res = await apiFetchJsonWithStatus<AdminBundle>('/api/admin/dashboard-bundle');
         if (res.ok && res.data) {
@@ -500,7 +499,7 @@ export default function AdminDashboard() {
 
     const intervalId = setInterval(silentSync, 15000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [isAuthed]);
 
   useEffect(() => {
     const pollMessages = async () => {
