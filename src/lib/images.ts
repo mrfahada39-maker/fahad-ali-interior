@@ -1,11 +1,11 @@
 /** Canonical local product/hero images — verified ultra-high-resolution luxury photography. */
 export const LOCAL_IMAGES = {
-  hero: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&fm=webp&q=75&w=1080',
-  bed: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&fm=webp&q=75&w=640',
-  sofa: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&fm=webp&q=75&w=640',
-  dining: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&fm=webp&q=75&w=640',
-  wardrobe: 'https://images.unsplash.com/photo-1558997519-83ea9252def8?auto=format&fit=crop&fm=webp&q=75&w=640',
-  chair: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&fm=webp&q=75&w=640',
+  hero: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&fm=webp&q=85&w=1600',
+  bed: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&fm=webp&q=85&w=800',
+  sofa: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&fm=webp&q=85&w=800',
+  dining: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&fm=webp&q=85&w=800',
+  wardrobe: 'https://images.unsplash.com/photo-1558997519-83ea9252def8?auto=format&fit=crop&fm=webp&q=85&w=800',
+  chair: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&fm=webp&q=85&w=800',
 } as const;
 
 export type ImageCategory = keyof typeof LOCAL_IMAGES;
@@ -31,7 +31,7 @@ const CATEGORY_MAP: Record<string, string> = {
 /**
  * Automatically compress any Cloudinary URL to ultra-fast AVIF/WebP format and perceptual auto quality.
  */
-export function compressCloudinaryUrl(url: string, width = 640): string {
+export function compressCloudinaryUrl(url: string, width = 800): string {
   if (!url || typeof url !== 'string') return url;
   if (!url.includes('res.cloudinary.com')) return url;
   if (url.includes('/f_auto') || url.includes('/q_auto')) return url;
@@ -39,7 +39,7 @@ export function compressCloudinaryUrl(url: string, width = 640): string {
   // Transform /image/upload/...
   return url.replace(
     /\/image\/upload\/(v\d+\/)?/,
-    `/image/upload/f_auto,q_auto:good,c_limit,w_${width},dpr_auto/$1`
+    `/image/upload/f_auto,q_auto:best,c_limit,w_${width},dpr_auto/$1`
   ).replace(
     /\/video\/upload\/(v\d+\/)?/,
     `/video/upload/f_auto,q_auto:good,ac_none,w_640,br_550k,fps_30/$1`
@@ -49,14 +49,14 @@ export function compressCloudinaryUrl(url: string, width = 640): string {
 /**
  * Optimize Unsplash URLs to deliver lightweight WebP with width capping.
  */
-export function optimizeUnsplashUrl(url: string, width = 640): string {
+export function optimizeUnsplashUrl(url: string, width = 800): string {
   if (!url || !url.includes('images.unsplash.com')) return url;
   try {
     const parsed = new URL(url);
     parsed.searchParams.set('auto', 'format');
     parsed.searchParams.set('fm', 'webp');
     parsed.searchParams.set('fit', 'crop');
-    parsed.searchParams.set('q', '75');
+    parsed.searchParams.set('q', '85');
     if (!parsed.searchParams.has('w') || Number(parsed.searchParams.get('w')) > width) {
       parsed.searchParams.set('w', String(width));
     }
@@ -72,7 +72,7 @@ export function optimizeUnsplashUrl(url: string, width = 640): string {
 export function resolveImageUrl(
   image: string | null | undefined,
   category?: string | null,
-  width = 640
+  width = 800
 ): string {
   if (!image || typeof image !== 'string' || image.trim() === '') {
     return (category && CATEGORY_MAP[category]) ? CATEGORY_MAP[category] : LOCAL_IMAGES.sofa;
