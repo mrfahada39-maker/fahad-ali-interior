@@ -1898,6 +1898,46 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       return NextResponse.json(updated);
     }
 
+    // 13.1 PUT /admin/account
+    if ((method === 'PUT' || method === 'POST') && (segment === 'admin/account' || segment === 'v1/admin/account')) {
+      const body = await req.json();
+      const admin = await db.user.findFirst({
+        where: { role: 'ADMIN', deletedAt: null },
+      });
+      if (admin) {
+        await db.user.update({
+          where: { id: admin.id },
+          data: {
+            name: body.name || admin.name,
+            phone: body.phone !== undefined ? body.phone : admin.phone,
+          },
+        });
+      }
+      return NextResponse.json({ success: true, message: 'Admin account updated successfully' });
+    }
+
+    // 13.2 PUT /admin/password
+    if ((method === 'PUT' || method === 'POST') && (segment === 'admin/password' || segment === 'v1/admin/password')) {
+      const body = await req.json();
+      const { currentPassword, newPassword } = body;
+      const admin = await db.user.findFirst({
+        where: { role: 'ADMIN', deletedAt: null },
+      });
+      if (!admin || !admin.password) {
+        return NextResponse.json({ error: 'Admin account not found' }, { status: 404 });
+      }
+      const isValid = await bcrypt.compare(currentPassword, admin.password);
+      if (!isValid) {
+        return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });
+      }
+      const hashed = await bcrypt.hash(newPassword, 12);
+      await db.user.update({
+        where: { id: admin.id },
+        data: { password: hashed },
+      });
+      return NextResponse.json({ success: true, message: 'Admin password updated successfully' });
+    }
+
     // 14. GET /user/notifications
     if (method === 'GET' && (segment === 'user/notifications' || segment === 'v1/user/notifications')) {
       const user = await getUserFromSessionOrToken(req);
