@@ -15,7 +15,10 @@ const WishlistDrawerPanel = dynamic(
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false });
 const PWAInstallPrompt = dynamic(() => import('@/components/PWAInstallPrompt'), { ssr: false });
-const AiInteriorChatbot = dynamic(() => import('@/components/AiInteriorChatbot'), { ssr: false });
+const AiInteriorChatbot = dynamic(
+  () => import('@/components/ai/AiEmployeeWidget').then((m) => m.AiEmployeeWidget),
+  { ssr: false }
+);
 
 // Read at module level (server-evaluated at build time in Next.js)
 const googleEnabled =

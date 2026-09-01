@@ -45,39 +45,7 @@ async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser 
   return null;
 }
 
-const activeCallSessions = new Map<string, any>();
-
-const ENTERPRISE_ORIGIN =
-  process.env.ENTERPRISE_API_ORIGIN?.replace(/\/$/, '') || 'http://localhost:3001';
-const INTERNAL_PROXY_KEY = process.env.INTERNAL_PROXY_KEY ?? '';
-
-// Whitelisted headers to forward — prevents header injection / SSRF
-const ALLOWED_REQUEST_HEADERS = new Set([
-  'authorization',
-  'content-type',
-  'accept',
-  'accept-language',
-  'x-request-id',
-  'cache-control',
-  'cookie',
-  'x-csrf-token',
-]);
-
 type RouteContext = { params: Promise<{ path: string[] }> };
-
-function passthroughHeaders(upstream: Headers, bodyChanged: boolean): Headers {
-  const headers = new Headers();
-  const skip = bodyChanged
-    ? new Set(['transfer-encoding', 'content-length', 'content-encoding'])
-    : new Set(['transfer-encoding']);
-
-  upstream.forEach((value, key) => {
-    if (!skip.has(key.toLowerCase())) {
-      headers.set(key, value);
-    }
-  });
-  return headers;
-}
 
 // Static fallback categories matching homepage list
 const fallbackCategories = [
