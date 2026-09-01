@@ -93,6 +93,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
   };
 
   const imgSrc = resolveImageUrl(imgError ? null : product.image, product.category, 480);
+  const isPriority = typeof index === 'number' && index < 4;
 
   if (layoutMode === 'list') {
     return (
@@ -115,7 +116,8 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             src={imgSrc}
             alt={product.name}
             fill
-            loading="eager"
+            priority={isPriority}
+            loading={isPriority ? 'eager' : 'lazy'}
             className="object-cover transition-transform duration-700 group-hover:scale-106"
             sizes="(max-width: 640px) 100vw, 224px"
             onError={() => setImgError(true)}
@@ -206,7 +208,8 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             src={imgSrc}
             alt={product.name}
             fill
-            loading="eager"
+            priority={isPriority}
+            loading={isPriority ? 'eager' : 'lazy'}
             className="object-cover transition-transform duration-700 group-hover:scale-108"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             onError={() => setImgError(true)}
