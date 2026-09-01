@@ -57,9 +57,7 @@ export function clearEnterpriseTokens(): void {
   } catch { /* ignore */ }
 }
 
-// ── Response unwrapper ────────────────────────────────────────────────────────
-
-function unwrapNestBody<T>(body: unknown): T {
+function unwrapResponseBody<T>(body: unknown): T {
   if (
     body &&
     typeof body === 'object' &&
@@ -71,6 +69,8 @@ function unwrapNestBody<T>(body: unknown): T {
   }
   return body as T;
 }
+
+const unwrapNestBody = unwrapResponseBody;
 
 // ── CSRF Token retrieval ──────────────────────────────────────────────────
 
