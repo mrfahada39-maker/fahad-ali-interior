@@ -87,6 +87,8 @@ export default function AdminDashboard() {
   const [siteSettings, setSiteSettings] = useState<any>({});
   const [adminAccount, setAdminAccount] = useState({ name: '', email: '', phone: '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [showPassword, setShowPassword] = useState({ current: false, next: false, confirm: false });
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [selectedThreadIndex, setSelectedThreadIndex] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [loading, setLoading] = useState(false);
