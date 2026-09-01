@@ -50,9 +50,9 @@ test.describe('Navigation & Links', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
-  test('should navigate to Blog page', async ({ page }) => {
-    await page.goto('/blog');
-    await expect(page).toHaveURL(/\/blog/);
+  test('should navigate to Collections page', async ({ page }) => {
+    await page.goto('/shop/categories');
+    await expect(page).toHaveURL(/\/shop\/categories/);
   });
 
   test('should navigate to Contact page', async ({ page }) => {
