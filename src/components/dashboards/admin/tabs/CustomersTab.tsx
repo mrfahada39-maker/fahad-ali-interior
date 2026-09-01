@@ -423,8 +423,12 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
               <tbody className="divide-y divide-neutral-100 text-xs">
                 {filteredCustomers.map((c) => {
                   const initial = c.name ? c.name[0].toUpperCase() : 'C';
-                  const customerPhone = c.phone || '';
-                  const whatsappUrl = customerPhone ? `https://wa.me/${customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${c.name || 'Valued Client'}, from Fahad Ali Interior:`)}` : null;
+                  const rawPhone = (c.phone || '').replace(/\D/g, '');
+                  const isValidPhone = rawPhone.length >= 10 && !rawPhone.includes('0000000') && !rawPhone.includes('1234567');
+                  const whatsappPhone = isValidPhone ? (rawPhone.startsWith('92') ? rawPhone : (rawPhone.startsWith('0') ? '92' + rawPhone.slice(1) : '92' + rawPhone)) : null;
+                  const whatsappUrl = whatsappPhone ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(`Hi ${c.name || 'Valued Client'}, from Fahad Ali Interior:`)}` : null;
+
+                  const tier = (c.loyaltyTier || 'BRONZE').toUpperCase();
 
                   return (
                     <motion.tr
@@ -436,13 +440,26 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
                       {/* Avatar & Name */}
                       <td className="py-3.5 px-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#B88E4B] to-[#996515] border border-[#E2D1BC] flex items-center justify-center text-white font-serif font-black text-sm shadow-2xs shrink-0">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-serif font-black text-sm shadow-2xs shrink-0 ${
+                            tier === 'PLATINUM'
+                              ? 'bg-gradient-to-br from-[#2A170D] to-[#0D0603] text-[#FFEAA0] border border-[#D4AF37]'
+                              : tier === 'GOLD'
+                              ? 'bg-gradient-to-br from-[#B88E4B] to-[#996515] text-white border border-[#E2D1BC]'
+                              : 'bg-gradient-to-br from-stone-600 to-stone-800 text-white border border-stone-400'
+                          }`}>
                             {initial}
                           </div>
                           <div>
-                            <p className="font-black text-[#1F1612] text-sm leading-snug font-serif">
-                              {c.name || 'Valued Client'}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-black text-[#1F1612] text-sm leading-snug font-serif">
+                                {c.name || 'Valued Client'}
+                              </p>
+                              {c.tags?.includes('Test Account') && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-stone-100 text-stone-500 border border-stone-300">
+                                  Test
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[10px] text-stone-400 font-semibold">
                               Joined {c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '2026'}
                             </p>
@@ -453,12 +470,12 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
                       {/* Contact Info */}
                       <td className="py-3.5 px-4">
                         <p className="text-[11.5px] text-[#1F1612] font-semibold">{c.email}</p>
-                        {customerPhone ? (
+                        {isValidPhone && c.phone ? (
                           <p className="text-[10.5px] text-[#8C6239] mt-0.5 flex items-center gap-1 font-bold">
-                            <Phone size={11} /> {customerPhone}
+                            <Phone size={11} /> {c.phone}
                           </p>
                         ) : (
-                          <span className="text-[10px] text-stone-400">No phone attached</span>
+                          <span className="text-[10px] text-stone-400 italic">No phone attached</span>
                         )}
                       </td>
 
@@ -475,10 +492,27 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
 
                       {/* Loyalty Tier */}
                       <td className="py-3.5 px-4">
-                        <span className="bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/40 text-[10px] font-black rounded-full px-2.5 py-0.5 inline-flex items-center gap-1 shadow-2xs">
-                          <Crown size={10} className="text-[#B88E4B]" />
-                          {c.loyaltyTier || 'GOLD'} TIER
-                        </span>
+                        {tier === 'PLATINUM' ? (
+                          <span className="bg-gradient-to-r from-[#2A170D] via-[#1A0E07] to-[#0D0603] text-[#FFEAA0] border border-[#D4AF37] text-[10px] font-black rounded-full px-2.5 py-0.5 inline-flex items-center gap-1 shadow-xs">
+                            <Crown size={10} className="text-[#FFEAA0]" />
+                            PLATINUM VIP
+                          </span>
+                        ) : tier === 'GOLD' ? (
+                          <span className="bg-gradient-to-r from-[#FFF5D6] to-[#FFEAA0] text-[#6E4B1F] border border-[#D4AF37]/80 text-[10px] font-black rounded-full px-2.5 py-0.5 inline-flex items-center gap-1 shadow-2xs">
+                            <Crown size={10} className="text-[#B88E4B]" />
+                            GOLD TIER
+                          </span>
+                        ) : tier === 'SILVER' ? (
+                          <span className="bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border border-slate-300 text-[10px] font-black rounded-full px-2.5 py-0.5 inline-flex items-center gap-1 shadow-2xs">
+                            <Sparkles size={10} className="text-slate-500" />
+                            SILVER TIER
+                          </span>
+                        ) : (
+                          <span className="bg-gradient-to-r from-[#FAF5EE] to-[#F2ECE4] text-[#8C6239] border border-[#E7DDD0] text-[10px] font-black rounded-full px-2.5 py-0.5 inline-flex items-center gap-1 shadow-2xs">
+                            <Sparkles size={10} className="text-[#8C6239]" />
+                            BRONZE TIER
+                          </span>
+                        )}
                       </td>
 
                       {/* Security Status */}

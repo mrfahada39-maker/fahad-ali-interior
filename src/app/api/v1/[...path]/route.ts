@@ -1458,31 +1458,70 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         orderBy: { createdAt: 'desc' },
       }).catch(() => []);
 
+      const computeLoyaltyTier = (totalSpent: number, orderCount: number): string => {
+        if (totalSpent >= 500000 || orderCount >= 10) return 'PLATINUM';
+        if (totalSpent >= 200000 || orderCount >= 5) return 'GOLD';
+        if (totalSpent >= 40000 || orderCount >= 2) return 'SILVER';
+        return 'BRONZE';
+      };
+
+      const resolvePhone = (u: any): string | null => {
+        if (u.phone && !u.phone.includes('0000000') && !u.phone.includes('1234567') && u.phone.trim() !== '') {
+          return u.phone;
+        }
+        if (u.orders && u.orders.length > 0) {
+          for (const ord of u.orders) {
+            if (ord.shippingPhone && !ord.shippingPhone.includes('0000000') && ord.shippingPhone.trim() !== '') {
+              return ord.shippingPhone;
+            }
+          }
+        }
+        return (u.phone && !u.phone.includes('0000000')) ? u.phone : null;
+      };
+
       const data = users.map((u) => {
         const totalSpent = (u.orders || []).reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+        const orderCount = (u.orders || []).length;
         const lastOrder = u.orders && u.orders.length > 0 ? u.orders[0] : null;
+        const dynamicTier = computeLoyaltyTier(totalSpent, orderCount);
+        const phone = resolvePhone(u);
+
+        const isTest = (u.email || '').startsWith('health_check_') || (u.email || '').startsWith('test_check') || u.name === 'VIP Tester';
+        let tags = ['Active', 'Verified'];
+        if (isTest) {
+          tags = ['Test Account'];
+        } else if (dynamicTier === 'PLATINUM') {
+          tags = ['Royal VIP', 'Verified'];
+        } else if (dynamicTier === 'GOLD') {
+          tags = ['High Value', 'Verified'];
+        }
+
+        let segmentLabel = u.role === 'ADMIN' ? 'VIP Admin' : 'Regular';
+        if (dynamicTier === 'PLATINUM' || dynamicTier === 'GOLD') {
+          segmentLabel = 'VIP';
+        }
 
         return {
           id: u.id,
           name: u.name || 'Valued Customer',
           email: u.email,
-          phone: u.phone || '+92 300 0000000',
+          phone: phone,
           createdAt: u.createdAt,
           emailVerified: u.createdAt,
-          lockedUntil: null,
+          lockedUntil: u.lockedUntil || null,
           avatar: null,
-          segment: u.role === 'ADMIN' ? 'VIP Admin' : 'Regular',
-          loyaltyTier: u.loyaltyTier || 'BRONZE',
-          loyaltyPoints: u.loyaltyPoints || Math.floor(totalSpent / 1000),
-          tags: ['Active', 'Verified'],
+          segment: segmentLabel,
+          loyaltyTier: dynamicTier,
+          loyaltyPoints: Math.floor(totalSpent / 1000),
+          tags,
           lastLoginAt: u.updatedAt,
-          isBlocked: false,
+          isBlocked: Boolean(u.lockedUntil && new Date(u.lockedUntil) > new Date()),
           totalSpent,
           lastOrderDate: lastOrder ? lastOrder.createdAt : null,
           lastOrderStatus: lastOrder ? lastOrder.status : null,
           lastOrderId: lastOrder ? lastOrder.id : null,
           _count: {
-            orders: (u.orders || []).length,
+            orders: orderCount,
             reviews: (u.reviews || []).length,
             wishlistItems: 0,
             messages: (u.messages || []).length,
@@ -1503,7 +1542,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 8.2 GET /admin/customers/stats
     if (method === 'GET' && (segment === 'admin/customers/stats' || segment === 'v1/admin/customers/stats')) {
-      const users = await db.user.findMany({ where: { deletedAt: null } }).catch(() => []);
+      const users = await db.user.findMany({
+        where: { deletedAt: null },
+        include: { orders: { where: { deletedAt: null } } },
+      }).catch(() => []);
       const orders = await db.order.findMany({ where: { deletedAt: null } }).catch(() => []);
 
       const totalRevenue = orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
@@ -1511,14 +1553,16 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const ltv = users.length > 0 ? Math.round(totalRevenue / users.length) : 0;
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
+      const activeUsersWithOrders = users.filter((u) => u.orders && u.orders.length > 0);
+
       return NextResponse.json({
         total: users.length,
         active: users.length,
         newThisMonth: users.filter((u) => u.createdAt > thirtyDaysAgo).length,
-        blocked: 0,
+        blocked: users.filter((u) => u.lockedUntil && new Date(u.lockedUntil) > new Date()).length,
         verified: users.length,
         unverified: 0,
-        returning: Math.max(1, Math.floor(users.length * 0.4)),
+        returning: Math.max(1, activeUsersWithOrders.length),
         totalRevenue,
         averageOrderValue: avgOrderVal,
         customerLifetimeValue: ltv,
@@ -1527,10 +1571,28 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 8.3 GET /admin/customers/analytics
     if (method === 'GET' && (segment === 'admin/customers/analytics' || segment === 'v1/admin/customers/analytics')) {
-      const users = await db.user.findMany({ where: { deletedAt: null } }).catch(() => []);
+      const users = await db.user.findMany({
+        where: { deletedAt: null },
+        include: { orders: { where: { deletedAt: null } } },
+      }).catch(() => []);
+
+      let platinumCount = 0;
+      let goldCount = 0;
+      let silverCount = 0;
+      let bronzeCount = 0;
+
+      users.forEach((u) => {
+        const spent = (u.orders || []).reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+        const count = (u.orders || []).length;
+        if (spent >= 500000 || count >= 10) platinumCount++;
+        else if (spent >= 200000 || count >= 5) goldCount++;
+        else if (spent >= 40000 || count >= 2) silverCount++;
+        else bronzeCount++;
+      });
+
       return NextResponse.json({
         monthlySignups: { '2026-07': Math.max(1, users.length - 2), '2026-08': users.length },
-        tierDistribution: { BRONZE: users.length, SILVER: 0, GOLD: 0, PLATINUM: 0 },
+        tierDistribution: { BRONZE: bronzeCount, SILVER: silverCount, GOLD: goldCount, PLATINUM: platinumCount },
       });
     }
 
@@ -1549,31 +1611,35 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       if (!u) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
 
       const totalSpent = (u.orders || []).reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
-      const avgOrderVal = (u.orders || []).length > 0 ? Math.round(totalSpent / u.orders.length) : 0;
+      const orderCount = (u.orders || []).length;
+      const avgOrderVal = orderCount > 0 ? Math.round(totalSpent / orderCount) : 0;
+
+      const dynamicTier = totalSpent >= 500000 || orderCount >= 10 ? 'PLATINUM' : totalSpent >= 200000 || orderCount >= 5 ? 'GOLD' : totalSpent >= 40000 || orderCount >= 2 ? 'SILVER' : 'BRONZE';
+      const resolvedPhone = (u.phone && !u.phone.includes('0000000')) ? u.phone : (u.orders?.[0]?.shippingPhone || null);
 
       return NextResponse.json({
         id: u.id,
         name: u.name || 'Valued Customer',
         email: u.email,
-        phone: u.phone || '+92 300 0000000',
+        phone: resolvedPhone,
         role: u.role,
         createdAt: u.createdAt,
         updatedAt: u.updatedAt,
         emailVerified: u.createdAt,
-        lockedUntil: null,
+        lockedUntil: u.lockedUntil,
         loginAttempts: 0,
         bio: 'VIP Client of Fahad Ali Interior',
         avatar: null,
         language: 'en',
         darkMode: false,
-        segment: u.role === 'ADMIN' ? 'VIP Admin' : 'Regular',
-        loyaltyTier: u.loyaltyTier || 'BRONZE',
-        loyaltyPoints: u.loyaltyPoints || Math.floor(totalSpent / 1000),
-        tags: ['Active', 'Verified'],
+        segment: dynamicTier === 'PLATINUM' || dynamicTier === 'GOLD' ? 'VIP' : 'Regular',
+        loyaltyTier: dynamicTier,
+        loyaltyPoints: Math.floor(totalSpent / 1000),
+        tags: [dynamicTier === 'PLATINUM' ? 'Royal VIP' : dynamicTier === 'GOLD' ? 'High Value' : 'Active', 'Verified'],
         lastLoginAt: u.updatedAt,
         lastActivityAt: u.updatedAt,
         dataRetentionDate: null,
-        isBlocked: false,
+        isBlocked: Boolean(u.lockedUntil && new Date(u.lockedUntil) > new Date()),
         totalSpent,
         averageOrderValue: avgOrderVal,
         lifetimeValue: totalSpent,
