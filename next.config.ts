@@ -130,7 +130,7 @@ const nextConfig: NextConfig = {
 
   experimental: {
     staleTimes: {
-      dynamic: 3600, // 1 hour in-memory client router cache (0ms instant page switches)
+      dynamic: 86400, // 24 hours in-memory client router cache (0ms instant page switches)
       static: 86400, // 24 hours in-memory client router cache
     },
     optimizePackageImports: [

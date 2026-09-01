@@ -399,7 +399,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const applyBundle = (bundle: AdminBundle) => {
+  const applyBundle = (bundle: AdminBundle, saveToCache = true) => {
     if (!bundle) return;
     if (bundle.stats) setStats(bundle.stats);
     if (bundle.products) {
@@ -420,13 +420,16 @@ export default function AdminDashboard() {
         phone: bundle.account?.phone || '',
       });
     }
+
+    if (saveToCache && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('fahad_admin_live_bundle', JSON.stringify(bundle));
+      } catch {}
+    }
   };
 
   const loadAll = async () => {
-    setLoading(true);
-    setDbProgress(1);
     try {
-      setDbProgress(50);
       const res = await fetch('/api/v1/admin/dashboard-bundle', {
         cache: 'no-store',
         headers: {
@@ -438,9 +441,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         const bundle = (await res.json()) as AdminBundle;
         if (bundle && bundle.stats) {
-          applyBundle(bundle);
-          setDbProgress(100);
-          setLoading(false);
+          applyBundle(bundle, true);
         }
       }
 
@@ -458,13 +459,24 @@ export default function AdminDashboard() {
         .catch(() => {});
     } catch {
       // fallback
-    } finally {
-      setDbProgress(100);
-      setLoading(false);
     }
   };
 
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => {
+    // 0ms Instant SWR Cache Hydration (Render immediately without waiting)
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.stats) {
+            applyBundle(parsed, false);
+          }
+        }
+      } catch {}
+    }
+    loadAll();
+  }, []);
 
   // Silent 10-second background live sync loop (Real PostgreSQL polling)
   useEffect(() => {
