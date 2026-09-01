@@ -131,10 +131,12 @@ export default function ProductsTab({
   // Filter & Sort Products
   const filteredProducts = products
     .filter((p) => {
+      const q = searchQuery.trim().toLowerCase();
       const matchesSearch =
-        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.material && p.material.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()));
+        !q ||
+        Boolean(p.name && p.name.toLowerCase().includes(q)) ||
+        Boolean(p.material && p.material.toLowerCase().includes(q)) ||
+        Boolean(p.category && p.category.toLowerCase().includes(q));
       const matchesCategory = selectedCategoryFilter ? p.category === selectedCategoryFilter : true;
       return matchesSearch && matchesCategory;
     })

@@ -74,28 +74,44 @@ interface CustomerRow {
   _count: { orders: number; reviews: number; wishlistItems: number; messages: number };
 }
 
-export default function CustomersTab() {
-  const [customers, setCustomers] = useState<CustomerRow[]>([]);
+interface CustomersTabProps {
+  initialUsers?: any[];
+}
+
+export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
+  const [customers, setCustomers] = useState<CustomerRow[]>(initialUsers as CustomerRow[]);
   const [stats, setStats] = useState<CustomerStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedSegment, setSelectedSegment] = useState('all');
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
     try {
-      await ensureEnterpriseTokens();
       const [custRes, statsRes] = await Promise.all([
-        apiFetchJsonWithStatus<any>('/api/admin/customers?limit=100'),
-        apiFetchJsonWithStatus<CustomerStats>('/api/admin/customers/stats'),
+        fetch('/api/v1/admin/customers', { cache: 'no-store' }),
+        fetch('/api/v1/admin/customers/stats', { cache: 'no-store' }),
       ]);
 
-      if (custRes.ok && custRes.data) {
-        setCustomers(custRes.data.data || []);
+      if (custRes.ok) {
+        const custData = await custRes.json();
+        if (custData && Array.isArray(custData.data)) {
+          setCustomers(custData.data);
+        }
+      } else {
+        // Fallback to dashboard-bundle
+        const bundleRes = await fetch('/api/v1/admin/dashboard-bundle', { cache: 'no-store' });
+        if (bundleRes.ok) {
+          const bundle = await bundleRes.json();
+          if (Array.isArray(bundle.users)) {
+            setCustomers(bundle.users);
+          }
+        }
       }
-      if (statsRes.ok && statsRes.data) {
-        setStats(statsRes.data);
+
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        if (statsData) setStats(statsData);
       }
     } catch (e) {
       console.error('Failed to load customers:', e);
@@ -107,6 +123,12 @@ export default function CustomersTab() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (initialUsers && initialUsers.length > 0 && customers.length === 0) {
+      setCustomers(initialUsers as CustomerRow[]);
+    }
+  }, [initialUsers, customers.length]);
 
   const toggleBlock = async (id: string, block: boolean) => {
     try {
@@ -131,7 +153,7 @@ export default function CustomersTab() {
     const csvRows = customers
       .map(
         (c) =>
-          `"${c.id}","${c.name || 'Client'}","${c.email}","${c.phone || ''}",${c._count?.orders || 0},${c.totalSpent || 0},"${c.loyaltyTier || 'BRONZE'}","${c.isBlocked ? 'BLOCKED' : 'ACTIVE'}","${new Date(c.createdAt).toLocaleDateString()}"`
+          `"${c.id}","${c.name || 'Client'}","${c.email}","${c.phone || ''}",${c._count?.orders || (c as any).ordersCount || 0},${c.totalSpent || 0},"${c.loyaltyTier || 'BRONZE'}","${c.isBlocked ? 'BLOCKED' : 'ACTIVE'}","${new Date(c.createdAt).toLocaleDateString()}"`
       )
       .join('\n');
     const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
@@ -145,27 +167,28 @@ export default function CustomersTab() {
   };
 
   const filteredCustomers = customers.filter((c) => {
-    const q = search.toLowerCase();
+    const q = search.trim().toLowerCase();
     const matchesSearch =
-      c.name?.toLowerCase().includes(q) ||
-      c.email?.toLowerCase().includes(q) ||
-      c.phone?.toLowerCase().includes(q) ||
-      c.id?.toLowerCase().includes(q);
+      !q ||
+      Boolean(c.name && c.name.toLowerCase().includes(q)) ||
+      Boolean(c.email && c.email.toLowerCase().includes(q)) ||
+      Boolean(c.phone && c.phone.toLowerCase().includes(q)) ||
+      Boolean(c.id && c.id.toLowerCase().includes(q));
 
     const matchesSegment =
       selectedSegment === 'all' ||
       (selectedSegment === 'vip' && (c.segment === 'VIP' || c.loyaltyTier === 'GOLD' || c.loyaltyTier === 'PLATINUM')) ||
-      (selectedSegment === 'verified' && c.emailVerified) ||
-      (selectedSegment === 'blocked' && c.isBlocked) ||
+      (selectedSegment === 'verified' && Boolean(c.emailVerified)) ||
+      (selectedSegment === 'blocked' && Boolean(c.isBlocked)) ||
       (selectedSegment === 'active' && !c.isBlocked);
 
     return matchesSearch && matchesSegment;
   });
 
-  const totalClients = stats?.total || customers.length || 11;
-  const activeClients = stats?.active || customers.filter((c) => !c.isBlocked).length || 11;
-  const totalRevenue = stats?.totalRevenue || customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0) || 402170;
-  const avgOrderValue = stats?.averageOrderValue || Math.round(totalRevenue / Math.max(1, totalClients)) || 36561;
+  const totalClients = stats?.total ?? customers.length;
+  const activeClients = stats?.active ?? customers.filter((c) => !c.isBlocked).length;
+  const totalRevenue = stats?.totalRevenue ?? customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0);
+  const avgOrderValue = stats?.averageOrderValue ?? (totalClients > 0 ? Math.round(totalRevenue / totalClients) : 0);
 
   const kpis = [
     {

@@ -98,14 +98,15 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
 
   const filteredOrders = orders.filter((o) => {
     const matchesStatus = selectedStatusFilter === 'all' || (o.status || '').toLowerCase() === selectedStatusFilter;
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
-      o.id?.toLowerCase().includes(q) ||
-      o.user?.name?.toLowerCase().includes(q) ||
-      o.user?.email?.toLowerCase().includes(q) ||
-      o.shippingInfo?.name?.toLowerCase().includes(q) ||
-      o.shippingInfo?.phone?.toLowerCase().includes(q) ||
-      o.shippingName?.toLowerCase().includes(q);
+      !q ||
+      Boolean(o.id && o.id.toLowerCase().includes(q)) ||
+      Boolean(o.user?.name && o.user.name.toLowerCase().includes(q)) ||
+      Boolean(o.user?.email && o.user.email.toLowerCase().includes(q)) ||
+      Boolean(o.shippingInfo?.name && o.shippingInfo.name.toLowerCase().includes(q)) ||
+      Boolean(o.shippingInfo?.phone && o.shippingInfo.phone.toLowerCase().includes(q)) ||
+      Boolean(o.shippingName && o.shippingName.toLowerCase().includes(q));
 
     return matchesStatus && matchesSearch;
   });

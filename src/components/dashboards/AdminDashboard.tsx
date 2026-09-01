@@ -59,6 +59,7 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [telemetry, setTelemetry] = useState<any>(null);
@@ -406,6 +407,7 @@ export default function AdminDashboard() {
       setProducts(Array.isArray(p) ? p : (p as { products?: unknown[] }).products || []);
     }
     if (Array.isArray(bundle.orders)) setOrders(bundle.orders);
+    if (Array.isArray(bundle.users)) setUsers(bundle.users);
     if (bundle.messages) applyMessageThreads(bundle.messages);
     if (Array.isArray(bundle.reviews)) setReviews(bundle.reviews);
     if (Array.isArray(bundle.inquiries)) setInquiries(bundle.inquiries);
@@ -1123,7 +1125,7 @@ export default function AdminDashboard() {
             )}
 
             {/* CUSTOMERS */}
-            {activeTab === 'customers' && <CustomersTab />}
+            {activeTab === 'customers' && <CustomersTab initialUsers={users} />}
 
             {/* AI CHATBOT */}
             {activeTab === 'ai-chatbot' && <AiChatbotTab />}

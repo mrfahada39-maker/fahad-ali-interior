@@ -49,15 +49,16 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
   const filteredInquiries = inquiries.filter((inq) => {
     const matchesStatus =
       selectedStatusFilter === 'all' || (inq.status || '').toLowerCase() === selectedStatusFilter;
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
-      inq.roomType?.toLowerCase().includes(q) ||
-      inq.description?.toLowerCase().includes(q) ||
-      inq.name?.toLowerCase().includes(q) ||
-      inq.user?.name?.toLowerCase().includes(q) ||
-      inq.email?.toLowerCase().includes(q) ||
-      inq.user?.email?.toLowerCase().includes(q) ||
-      inq.phone?.toLowerCase().includes(q);
+      !q ||
+      Boolean(inq.roomType && inq.roomType.toLowerCase().includes(q)) ||
+      Boolean(inq.description && inq.description.toLowerCase().includes(q)) ||
+      Boolean(inq.name && inq.name.toLowerCase().includes(q)) ||
+      Boolean(inq.user?.name && inq.user.name.toLowerCase().includes(q)) ||
+      Boolean(inq.email && inq.email.toLowerCase().includes(q)) ||
+      Boolean(inq.user?.email && inq.user.email.toLowerCase().includes(q)) ||
+      Boolean(inq.phone && inq.phone.toLowerCase().includes(q));
 
     return matchesStatus && matchesSearch;
   });

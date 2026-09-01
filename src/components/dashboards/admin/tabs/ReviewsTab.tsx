@@ -39,12 +39,13 @@ export default function ReviewsTab({
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const filteredReviews = (reviews || []).filter((r: any) => {
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
-      r.customerName?.toLowerCase().includes(q) ||
-      r.user?.name?.toLowerCase().includes(q) ||
-      r.product?.name?.toLowerCase().includes(q) ||
-      r.comment?.toLowerCase().includes(q);
+      !q ||
+      Boolean(r.customerName && r.customerName.toLowerCase().includes(q)) ||
+      Boolean(r.user?.name && r.user.name.toLowerCase().includes(q)) ||
+      Boolean(r.product?.name && r.product.name.toLowerCase().includes(q)) ||
+      Boolean(r.comment && r.comment.toLowerCase().includes(q));
 
     if (filterStatus === 'all') return matchesSearch;
     if (filterStatus === 'pending') return matchesSearch && (r.status || 'pending').toLowerCase() === 'pending';
