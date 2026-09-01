@@ -137,6 +137,33 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <script
+          type="speculationrules"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              prerender: [
+                {
+                  source: "list",
+                  urls: ["/", "/shop", "/shop/categories", "/about", "/contact", "/cart"],
+                  eagerness: "moderate"
+                }
+              ],
+              prefetch: [
+                {
+                  source: "document",
+                  where: {
+                    and: [
+                      { href_matches: "/*" },
+                      { not: { href_matches: "/admin/*" } },
+                      { not: { href_matches: "/api/*" } }
+                    ]
+                  },
+                  eagerness: "immediate"
+                }
+              ]
+            })
+          }}
+        />
       </head>
       <body
         suppressHydrationWarning
