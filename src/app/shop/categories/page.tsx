@@ -45,7 +45,7 @@ export default async function CategoriesPage() {
           {/* Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {displayCategories.map((cat, i) => {
-              const imgSrc = resolveImageUrl(cat.image, cat.name);
+              const imgSrc = resolveImageUrl(cat.image, cat.name, 1000);
               const itemCount = cat.count > 0 ? `${cat.count} Items` : '';
               return (
                 <Link
@@ -58,6 +58,7 @@ export default async function CategoriesPage() {
                     src={imgSrc}
                     alt={cat.name}
                     fill
+                    unoptimized
                     className="object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 mix-blend-multiply"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   />

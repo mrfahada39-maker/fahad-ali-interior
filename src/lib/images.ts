@@ -31,7 +31,7 @@ const CATEGORY_MAP: Record<string, string> = {
 /**
  * Automatically compress any Cloudinary URL to ultra-fast AVIF/WebP format and perceptual auto quality.
  */
-export function compressCloudinaryUrl(url: string, width = 800): string {
+export function compressCloudinaryUrl(url: string, width = 1000): string {
   if (!url || typeof url !== 'string') return url;
   if (!url.includes('res.cloudinary.com')) return url;
   if (url.includes('/f_auto') || url.includes('/q_auto')) return url;
@@ -39,7 +39,7 @@ export function compressCloudinaryUrl(url: string, width = 800): string {
   // Transform /image/upload/...
   return url.replace(
     /\/image\/upload\/(v\d+\/)?/,
-    `/image/upload/f_auto,q_auto:best,c_limit,w_${width},dpr_auto/$1`
+    `/image/upload/f_auto,q_auto:best,c_limit,w_${width},dpr_2.0/$1`
   ).replace(
     /\/video\/upload\/(v\d+\/)?/,
     `/video/upload/f_auto,q_auto:good,ac_none,w_640,br_550k,fps_30/$1`

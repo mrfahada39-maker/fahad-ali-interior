@@ -17,13 +17,13 @@ const TestimonialsSection = dynamic(() => import('@/components/home/Testimonials
 });
 
 const CATEGORIES = [
-  { name: 'Living Room', items: '25 Items Available', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?fm=webp&q=65&w=400' },
-  { name: 'Bedroom', items: '18 Items Available', image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?fm=webp&q=65&w=400' },
-  { name: 'Dining Room', items: '16 Items Available', image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?fm=webp&q=65&w=400' },
-  { name: 'Coffee Chairs', items: '12 Items Available', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?fm=webp&q=65&w=400' },
-  { name: 'Luxury Showcase', items: '14 Items Available', image: 'https://images.unsplash.com/photo-1593696140826-c58b021acf8b?fm=webp&q=65&w=400' },
-  { name: 'Luxury Wardrobes', items: '12 Items Available', image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?fm=webp&q=65&w=400' },
-  { name: 'Center Tables', items: '20 Items Available', image: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?fm=webp&q=65&w=400' },
+  { name: 'Living Room', items: '25 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
+  { name: 'Bedroom', items: '18 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
+  { name: 'Dining Room', items: '16 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
+  { name: 'Coffee Chairs', items: '12 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg' },
+  { name: 'Luxury Showcase', items: '14 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg' },
+  { name: 'Luxury Wardrobes', items: '12 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
+  { name: 'Center Tables', items: '20 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
 ];
 
 const REVIEWS = [
@@ -293,10 +293,11 @@ export default function HomePageInteractive({
                 {/* Background Image Wrap */}
                 <div className="gsap-cat-img-wrap absolute inset-0 overflow-hidden">
                   <Image 
-                    src={resolveImageUrl(cat.image, cat.name, 420)} 
+                    src={resolveImageUrl(cat.image, cat.name, 1000)} 
                     alt={cat.name} 
                     fill 
-                    loading="lazy"
+                    unoptimized
+                    loading={i < 3 ? 'eager' : 'lazy'}
                     className="gsap-cat-img object-cover will-change-transform transition-transform duration-700 group-hover:scale-106" 
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" 
                   />
