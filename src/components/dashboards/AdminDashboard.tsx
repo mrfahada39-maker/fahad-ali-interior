@@ -55,10 +55,10 @@ function normalizeWhatsapp(value: string): string {
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState<any>(DEFAULT_ADMIN_STATS);
+  const [stats, setStats] = useState<any>(null);
   const [analytics, setAnalytics] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>(CURATED_FALLBACK_PRODUCTS);
-  const [orders, setOrders] = useState<any[]>(DEFAULT_ADMIN_ORDERS);
+  const [products, setProducts] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [telemetry, setTelemetry] = useState<any>(null);
@@ -397,20 +397,25 @@ export default function AdminDashboard() {
   };
 
   const applyBundle = (bundle: AdminBundle) => {
-    setStats(bundle.stats);
-    const p = bundle.products;
-    setProducts(Array.isArray(p) ? p : (p as { products?: unknown[] }).products || []);
-    setOrders(bundle.orders);
-    applyMessageThreads(bundle.messages);
-    setReviews(bundle.reviews);
-    setInquiries(bundle.inquiries);
-    setSiteSettings(bundle.siteSettings);
-    setAnalytics(bundle.analytics);
-    setAdminAccount({
-      name: bundle.account?.name || '',
-      email: bundle.account?.email || '',
-      phone: bundle.account?.phone || '',
-    });
+    if (!bundle) return;
+    if (bundle.stats) setStats(bundle.stats);
+    if (bundle.products) {
+      const p = bundle.products;
+      setProducts(Array.isArray(p) ? p : (p as { products?: unknown[] }).products || []);
+    }
+    if (Array.isArray(bundle.orders)) setOrders(bundle.orders);
+    if (bundle.messages) applyMessageThreads(bundle.messages);
+    if (Array.isArray(bundle.reviews)) setReviews(bundle.reviews);
+    if (Array.isArray(bundle.inquiries)) setInquiries(bundle.inquiries);
+    if (bundle.siteSettings) setSiteSettings(bundle.siteSettings);
+    if (bundle.analytics) setAnalytics(bundle.analytics);
+    if (bundle.account) {
+      setAdminAccount({
+        name: bundle.account?.name || '',
+        email: bundle.account?.email || '',
+        phone: bundle.account?.phone || '',
+      });
+    }
   };
 
   const loadAll = async () => {
@@ -418,32 +423,35 @@ export default function AdminDashboard() {
     setDbProgress(1);
     try {
       setDbProgress(50);
-      let result = await apiFetchJsonWithStatus<AdminBundle>('/api/admin/dashboard-bundle');
+      const res = await fetch('/api/v1/admin/dashboard-bundle', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+        },
+      });
 
-      if (result.ok && result.data) {
-        setAuthError(null);
-        setIsAuthed(true);
-        applyBundle(result.data);
-        setDbProgress(100);
-        setLoading(false);
-
-        // Fetch secondary non-critical data (blogs and categories) in background
-        Promise.all([
-          apiFetch('/api/v1/blog'),
-          apiFetch('/api/admin/categories'),
-        ]).then(async ([blogRes, catRes]) => {
-          if (blogRes.ok) {
-            const blogData = await blogRes.json();
-            setBlogs(blogData);
-          }
-          if (catRes.ok) {
-            const catData = await catRes.json();
-            setCategories(Array.isArray(catData.data || catData) ? (catData.data || catData) : []);
-          }
-        }).catch(() => {});
-
-        return;
+      if (res.ok) {
+        const bundle = (await res.json()) as AdminBundle;
+        if (bundle && bundle.stats) {
+          applyBundle(bundle);
+          setDbProgress(100);
+          setLoading(false);
+        }
       }
+
+      // Fetch secondary non-critical data (blogs and categories) in background
+      fetch('/api/v1/blog', { cache: 'no-store' })
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => { if (data) setBlogs(data); })
+        .catch(() => {});
+
+      fetch('/api/v1/admin/categories', { cache: 'no-store' })
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (data) setCategories(Array.isArray(data.data || data) ? (data.data || data) : []);
+        })
+        .catch(() => {});
     } catch {
       // fallback
     } finally {
@@ -454,22 +462,24 @@ export default function AdminDashboard() {
 
   useEffect(() => { loadAll(); }, []);
 
-  // Silent 15-second background auto-sync loop (No manual refresh needed ever)
+  // Silent 10-second background live sync loop (Real PostgreSQL polling)
   useEffect(() => {
     const silentSync = async () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
-      if (!isAuthed) return;
       try {
-        const res = await apiFetchJsonWithStatus<AdminBundle>('/api/admin/dashboard-bundle');
-        if (res.ok && res.data) {
-          applyBundle(res.data);
+        const res = await fetch('/api/v1/admin/dashboard-bundle', { cache: 'no-store' });
+        if (res.ok) {
+          const bundle = (await res.json()) as AdminBundle;
+          if (bundle && bundle.stats) {
+            applyBundle(bundle);
+          }
         }
       } catch {}
     };
 
-    const intervalId = setInterval(silentSync, 15000);
+    const intervalId = setInterval(silentSync, 10000);
     return () => clearInterval(intervalId);
-  }, [isAuthed]);
+  }, []);
 
   useEffect(() => {
     const pollMessages = async () => {
