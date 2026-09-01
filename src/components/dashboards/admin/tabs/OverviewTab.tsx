@@ -69,15 +69,14 @@ const getCustomerEmail = (o: any) => {
 };
 
 const getCustomerPhone = (o: any) => {
-  if (!o) return '+92 300 0000000';
-  const phone =
-    (typeof o.shippingPhone === 'string' && o.shippingPhone.trim() && o.shippingPhone.trim() !== '+92 300 0000000' && o.shippingPhone.trim() !== '+92 300 1234567') ? o.shippingPhone.trim() :
-    (o.user?.phone && o.user.phone.trim()) ? o.user.phone.trim() :
-    (typeof o.shippingAddress === 'object' && o.shippingAddress?.phone) ? o.shippingAddress.phone :
-    (typeof o.shippingInfo === 'object' && o.shippingInfo?.phone) ? o.shippingInfo.phone :
-    (typeof o.shippingPhone === 'string' && o.shippingPhone.trim()) ? o.shippingPhone.trim() :
-    o.user?.phone || o.customerPhone || '+92 300 0000000';
-  return phone;
+  if (!o) return '—';
+  const raw =
+    (typeof o.shippingPhone === 'string' && o.shippingPhone.trim() && !o.shippingPhone.includes('0000000') && !o.shippingPhone.includes('1234567')) ? o.shippingPhone.trim() :
+    (o.user?.phone && o.user.phone.trim() && !o.user.phone.includes('0000000') && !o.user.phone.includes('1234567')) ? o.user.phone.trim() :
+    (typeof o.shippingAddress === 'object' && o.shippingAddress?.phone && !o.shippingAddress.phone.includes('0000000')) ? o.shippingAddress.phone :
+    (typeof o.shippingInfo === 'object' && o.shippingInfo?.phone && !o.shippingInfo.phone.includes('0000000')) ? o.shippingInfo.phone :
+    null;
+  return raw || '—';
 };
 
 const getCustomerAddress = (o: any) => {
