@@ -47,9 +47,15 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
   const [searchOpen, setSearchOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [interactive, setInteractive] = useState(false);
-
   useEffect(() => {
-    setInteractive(true);
+    // Ultra-Fast TBT Optimization: Defer secondary background widgets until main thread is idle
+    if (typeof window !== 'undefined') {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => setInteractive(true), { timeout: 2000 });
+      } else {
+        setTimeout(() => setInteractive(true), 1500);
+      }
+    }
     const handler = () => setAuthOpen(true);
     window.addEventListener('open-auth', handler);
     return () => window.removeEventListener('open-auth', handler);

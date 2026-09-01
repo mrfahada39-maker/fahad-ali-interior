@@ -13,7 +13,7 @@ import { resolveImageUrl } from '@/lib/images';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
 
 const TestimonialsSection = dynamic(() => import('@/components/home/TestimonialsSection'), {
-  ssr: true,
+  ssr: false,
 });
 
 const CATEGORIES = [
