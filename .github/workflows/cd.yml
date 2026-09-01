@@ -1,0 +1,36 @@
+name: Continuous Deployment (CD)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy-railway-backend:
+    name: Trigger Railway Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Railway Deploy Webhook
+        env:
+          RAILWAY_WEBHOOK_URL: ${{ secrets.RAILWAY_WEBHOOK_URL }}
+        run: |
+          if [ -n "$RAILWAY_WEBHOOK_URL" ]; then
+            curl -X POST "$RAILWAY_WEBHOOK_URL" -H "Content-Type: application/json" -d '{"event":"github_push"}'
+            echo "Railway deployment triggered successfully."
+          else
+            echo "RAILWAY_WEBHOOK_URL secret not set. Skipping webhook trigger (Railway GitHub App auto-deploys main)."
+          fi
+
+  deploy-vercel-frontend:
+    name: Trigger Vercel Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deploy Webhook
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -n "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            curl -X POST "$VERCEL_DEPLOY_HOOK_URL"
+            echo "Vercel deployment triggered successfully."
+          else
+            echo "VERCEL_DEPLOY_HOOK_URL secret not set. Skipping webhook trigger (Vercel GitHub App auto-deploys main)."
+          fi

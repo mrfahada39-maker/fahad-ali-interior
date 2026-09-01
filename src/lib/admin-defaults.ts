@@ -1,0 +1,77 @@
+export const DEFAULT_ADMIN_STATS = {
+  totalRevenue: 2850000,
+  orderCount: 14,
+  userCount: 48,
+  productCount: 18,
+  pendingOrders: 2,
+  processingOrders: 1,
+  shippedOrders: 1,
+  deliveredOrders: 10,
+  cancelledOrders: 0,
+};
+
+export const DEFAULT_ADMIN_ORDERS = [
+  {
+    id: 'ord-883921',
+    customerName: 'Malik Tariq Khan',
+    customerEmail: 'tariq.malik@lahore.com',
+    customerPhone: '+92 300 8472910',
+    shippingAddress: {
+      fullName: 'Malik Tariq Khan',
+      address: 'House 42-B, Sector Z, Phase 6, DHA',
+      city: 'Lahore',
+      province: 'Punjab',
+      phone: '+92 300 8472910',
+      email: 'tariq.malik@lahore.com',
+    },
+    totalAmount: 245000,
+    status: 'DELIVERED',
+    paymentMethod: 'bank',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    items: [
+      { name: 'Royal Solid Sheesham King Bed', quantity: 1, price: 245000 },
+    ],
+  },
+  {
+    id: 'ord-883922',
+    customerName: 'Dr. Ayesha Siddiqui',
+    customerEmail: 'dr.ayesha@gmail.com',
+    customerPhone: '+92 321 4589201',
+    shippingAddress: {
+      fullName: 'Dr. Ayesha Siddiqui',
+      address: 'Villa 18, Street 4, F-7/2',
+      city: 'Islamabad',
+      province: 'Federal',
+      phone: '+92 321 4589201',
+      email: 'dr.ayesha@gmail.com',
+    },
+    totalAmount: 385000,
+    status: 'PROCESSING',
+    paymentMethod: 'jazzcash',
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    items: [
+      { name: 'Royal Curved Architectural Sectional', quantity: 1, price: 385000 },
+    ],
+  },
+  {
+    id: 'ord-883923',
+    customerName: 'Chaudhry Bilal Warraich',
+    customerEmail: 'bilal.warraich@gujranwala.com',
+    customerPhone: '+92 301 9283746',
+    shippingAddress: {
+      fullName: 'Chaudhry Bilal Warraich',
+      address: 'Model Town, Grand Trunk Road',
+      city: 'Gujranwala',
+      province: 'Punjab',
+      phone: '+92 301 9283746',
+      email: 'bilal.warraich@gujranwala.com',
+    },
+    totalAmount: 360000,
+    status: 'PENDING',
+    paymentMethod: 'cod',
+    createdAt: new Date().toISOString(),
+    items: [
+      { name: 'Royal Sheesham 8-Seater Dining Set', quantity: 1, price: 360000 },
+    ],
+  },
+];

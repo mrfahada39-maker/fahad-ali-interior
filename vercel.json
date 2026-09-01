@@ -1,0 +1,5 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "prisma generate --schema=Database/models/schema.prisma && next build",
+  "installCommand": "npm install"
+}

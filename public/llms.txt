@@ -1,0 +1,11 @@
+# Fahad Ali Interior
+
+> Handcrafted luxury solid Sheesham wood furniture from Lahore, Pakistan.
+
+## Storefront & Architecture Links
+- [Shop Catalog](https://fahad-ali-interior.vercel.app/shop): Complete collection of luxury beds, sofas, dining, and wardrobes.
+- [Categories Hub](https://fahad-ali-interior.vercel.app/shop/categories): Visual category browser for bespoke furniture.
+- [About Fahad Ali Interior](https://fahad-ali-interior.vercel.app/about): Brand heritage, artisan craftsmanship, and story.
+- [Contact Concierge](https://fahad-ali-interior.vercel.app/contact): VIP customer service, inquiries, and showroom locations.
+- [Editorial Journal](https://fahad-ali-interior.vercel.app/blog): Articles on interior design trends and Lahore woodworking heritage.
+- [API Documentation](https://fahad-ali-interior.vercel.app/api/blog): REST endpoints for products, collections, and AI assistance.
