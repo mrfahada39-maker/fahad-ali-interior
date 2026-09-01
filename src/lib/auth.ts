@@ -125,9 +125,18 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
+        const isAdminEmail = emailLower === 'mrfahada39@gmail.com' || emailLower === 'admin@fahadali.com';
+        if (isAdminEmail && dbUser && dbUser.role !== 'ADMIN') {
+          await db.user.update({
+            where: { id: dbUser.id },
+            data: { role: 'ADMIN' },
+          });
+          dbUser.role = 'ADMIN';
+        }
+
         if (dbUser) {
           user.id = dbUser.id;
-          (user as { role?: string }).role = sessionRole(dbUser.role);
+          (user as { role?: string }).role = isAdminEmail ? 'ADMIN' : sessionRole(dbUser.role);
         }
         return true;
       }
@@ -138,6 +147,10 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = (user as { role?: string }).role;
         token.id = user.id;
+      }
+      const emailLower = (token.email || '').toLowerCase().trim();
+      if (emailLower === 'mrfahada39@gmail.com' || emailLower === 'admin@fahadali.com') {
+        token.role = 'ADMIN';
       }
       // Only re-fetch role from DB on explicit session.update() triggers
       if (trigger === 'update' && token.id) {
