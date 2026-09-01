@@ -19,7 +19,7 @@ function getCached<T>(key: string): T | null {
   return item.data as T;
 }
 
-function setCached<T>(key: string, data: T, ttlSeconds = 300): void {
+function setCached<T>(key: string, data: T, ttlSeconds = 3600): void {
   memoryCache.set(key, { data, expiry: Date.now() + ttlSeconds * 1000 });
 }
 

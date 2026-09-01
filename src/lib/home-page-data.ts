@@ -197,7 +197,7 @@ export const getHomePageData = unstable_cache(
     }
   },
   ['home-bundle-cache'],
-  { revalidate: 120, tags: ['homepage', 'products', 'banners'] }
+  { revalidate: 3600, tags: ['homepage', 'products', 'banners'] }
 );
 
 
