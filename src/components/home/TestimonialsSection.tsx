@@ -236,6 +236,7 @@ export default function TestimonialsSection() {
                     src={currentItem.roomImage} 
                     alt={`${currentItem.name} - ${currentItem.projectType}`} 
                     fill 
+                    unoptimized
                     sizes="(max-width: 640px) 100vw, 420px"
                     className="object-cover" 
                   />
@@ -273,6 +274,7 @@ export default function TestimonialsSection() {
                       src={imgErrors[currentItem.id] ? currentItem.fallbackAvatar : currentItem.avatar} 
                       alt={currentItem.name} 
                       fill 
+                      unoptimized
                       loading="eager"
                       sizes="48px"
                       className="object-cover" 
@@ -486,6 +488,7 @@ export default function TestimonialsSection() {
                                   src={imgErrors[item.id] ? item.fallbackAvatar : item.avatar} 
                                   alt={item.name} 
                                   fill 
+                                  unoptimized
                                   loading="eager"
                                   sizes="36px"
                                   className="object-cover" 
@@ -519,6 +522,7 @@ export default function TestimonialsSection() {
                         src={item.roomImage} 
                         alt={`${item.name} ${item.projectType}`} 
                         fill 
+                        unoptimized
                         loading="eager"
                         sizes="(max-width: 1024px) 50vw, 400px"
                         className="object-cover transition-transform duration-700 group-hover:scale-108" 
