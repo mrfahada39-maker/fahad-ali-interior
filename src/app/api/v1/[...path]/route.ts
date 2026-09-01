@@ -1747,6 +1747,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 9. POST /admin/products
+    // 9. POST & PUT /admin/products
     if (method === 'POST' && (segment === 'admin/products' || segment === 'v1/admin/products')) {
       const body = await req.json();
       const product = await db.product.create({
@@ -1769,6 +1770,32 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       });
     }
 
+    if ((method === 'PUT' || method === 'PATCH') && (segment === 'admin/products' || segment === 'v1/admin/products')) {
+      const body = await req.json();
+      const { id, ...rest } = body;
+      if (!id) return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
+      const updateData: any = {};
+      if (rest.name !== undefined) updateData.name = rest.name;
+      if (rest.description !== undefined) updateData.description = rest.description;
+      if (rest.price !== undefined) updateData.price = Number(rest.price);
+      if (rest.category !== undefined) updateData.category = rest.category;
+      if (rest.image !== undefined) updateData.image = rest.image;
+      if (rest.images !== undefined) updateData.images = rest.images;
+      if (rest.material !== undefined) updateData.material = rest.material;
+      if (rest.dimensions !== undefined) updateData.dimensions = rest.dimensions;
+      if (rest.stockCount !== undefined) updateData.stockCount = Number(rest.stockCount);
+      if (rest.isPremium !== undefined) updateData.isPremium = Boolean(rest.isPremium);
+
+      const product = await db.product.update({
+        where: { id },
+        data: updateData,
+      });
+      return NextResponse.json({
+        ...product,
+        price: Number(product.price),
+      });
+    }
+
     // 10. DELETE /admin/products
     if (method === 'DELETE' && (segment === 'admin/products' || segment === 'v1/admin/products')) {
       const id = req.nextUrl.searchParams.get('id');
@@ -1781,13 +1808,56 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }
     }
 
-    // 11. PUT /admin/orders
-    if (method === 'PUT' && (segment === 'admin/orders' || segment === 'v1/admin/orders')) {
+    // 11. PUT & PATCH /admin/orders
+    if ((method === 'PUT' || method === 'PATCH') && (segment === 'admin/orders' || segment === 'v1/admin/orders')) {
       const body = await req.json();
+      const updateData: any = {};
+      if (body.status) updateData.status = body.status;
+      if (body.paymentStatus) updateData.paymentStatus = body.paymentStatus;
+      if (body.trackingNumber !== undefined) updateData.trackingNumber = body.trackingNumber;
+
       const updated = await db.order.update({
         where: { id: body.id },
-        data: { status: body.status },
+        data: updateData,
       });
+      return NextResponse.json(updated);
+    }
+
+    // 11.1 PUT & POST /admin/settings
+    if ((method === 'PUT' || method === 'POST') && (segment === 'admin/settings' || segment === 'v1/admin/settings')) {
+      const body = await req.json();
+      const existing = await db.settings.findFirst();
+      let updated;
+      if (existing) {
+        updated = await db.settings.update({
+          where: { id: existing.id },
+          data: {
+            siteName: body.siteName ?? existing.siteName,
+            contactPhone: body.contactPhone ?? existing.contactPhone,
+            adminEmail: body.adminEmail ?? existing.adminEmail,
+            storeAddress: body.storeAddress ?? existing.storeAddress,
+            socialInstagram: body.socialInstagram ?? existing.socialInstagram,
+            socialFacebook: body.socialFacebook ?? existing.socialFacebook,
+            socialWhatsapp: body.socialWhatsapp ?? existing.socialWhatsapp,
+            foundedYear: body.foundedYear ?? existing.foundedYear,
+            currency: body.currency ?? existing.currency,
+          },
+        });
+      } else {
+        updated = await db.settings.create({
+          data: {
+            siteName: body.siteName || 'Fahad Ali Interior',
+            contactPhone: body.contactPhone || '',
+            adminEmail: body.adminEmail || '',
+            storeAddress: body.storeAddress || '',
+            socialInstagram: body.socialInstagram || '',
+            socialFacebook: body.socialFacebook || '',
+            socialWhatsapp: body.socialWhatsapp || '',
+            foundedYear: body.foundedYear || '2024',
+            currency: body.currency || 'PKR',
+          },
+        });
+      }
       return NextResponse.json(updated);
     }
 
