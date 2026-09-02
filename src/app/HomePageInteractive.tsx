@@ -249,7 +249,7 @@ export default function HomePageInteractive({
       </section>
 
       {/* ── CATEGORIES SECTION (COMPACT SLEEK LUXURY PROPORTIONS) ── */}
-      <section className="w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 mb-16 relative z-10">
+      <section className="cv-auto optimize-gpu w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 mb-16 relative z-10">
         <div className="gsap-cat-header text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] shadow-xs mb-3.5">
             <span className="text-[#B88E4B] text-sm font-bold">✦</span>
@@ -290,7 +290,6 @@ export default function HomePageInteractive({
                     src={resolveImageUrl(cat.image, cat.name, 1000)} 
                     alt={cat.name} 
                     fill 
-                    unoptimized
                     loading={i < 3 ? 'eager' : 'lazy'}
                     className="gsap-cat-img object-cover will-change-transform transition-transform duration-700 group-hover:scale-106" 
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" 

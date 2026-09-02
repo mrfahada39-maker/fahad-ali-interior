@@ -160,10 +160,16 @@
     scrollbar-width: none;
   }
 
-  /* Selection */
-  ::selection {
-    background: rgba(176, 133, 82, 0.25);
-    color: #2C1E18;
+  /* Universal Mobile GPU Engine */
+  .optimize-gpu {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
+
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 400px;
   }
 }
 
