@@ -49,17 +49,15 @@ export function compressCloudinaryUrl(url: string, width = 800): string {
 /**
  * Optimize Unsplash URLs to deliver lightweight AVIF with width capping.
  */
-export function optimizeUnsplashUrl(url: string, width = 720): string {
+export function optimizeUnsplashUrl(url: string, width = 480): string {
   if (!url || !url.includes('images.unsplash.com')) return url;
   try {
     const parsed = new URL(url);
     parsed.searchParams.set('auto', 'format');
-    parsed.searchParams.set('fm', 'avif');
+    parsed.searchParams.set('fm', 'webp');
     parsed.searchParams.set('fit', 'crop');
-    parsed.searchParams.set('q', '70');
-    if (!parsed.searchParams.has('w') || Number(parsed.searchParams.get('w')) > width) {
-      parsed.searchParams.set('w', String(width));
-    }
+    parsed.searchParams.set('q', '65');
+    parsed.searchParams.set('w', String(width));
     return parsed.toString();
   } catch {
     return url;
