@@ -138,48 +138,50 @@ export default function HomePageInteractive({
             />
           </div>
 
-          {/* CINEMATIC LUXURY VIDEOS */}
-          {isMounted && (
-            <>
-              {/* MOBILE CINEMATIC LUXURY VIDEO */}
-              <video
-                ref={mobileVideoRef}
-                autoPlay
-                loop
-                muted
-                playsInline
-                crossOrigin="anonymous"
-                preload="none"
-                poster={CLOUDINARY_ASSETS.heroMobilePoster}
-                disablePictureInPicture
-                disableRemotePlayback
-                aria-label="Fahad Ali Interior Luxury Showcase Video"
-                className="block md:hidden absolute inset-0 w-full h-full object-cover object-center opacity-100 pointer-events-none z-[1]"
-              >
-                <source src={CLOUDINARY_ASSETS.heroMobileVideo} type="video/mp4" />
-                <track kind="captions" srcLang="en" label="English" default />
-              </video>
+          {/* CINEMATIC LUXURY VIDEOS (Permanent GPU-Accelerated Hardware Stream) */}
+          {/* MOBILE CINEMATIC LUXURY VIDEO */}
+          <video
+            ref={mobileVideoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            crossOrigin="anonymous"
+            preload="auto"
+            poster={CLOUDINARY_ASSETS.heroMobilePoster}
+            disablePictureInPicture
+            disableRemotePlayback
+            onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
+            onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
+            aria-label="Fahad Ali Interior Luxury Showcase Video"
+            style={{ willChange: 'transform, opacity', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
+            className="block md:hidden absolute inset-0 w-full h-full object-cover object-center opacity-100 pointer-events-none z-[1]"
+          >
+            <source src={CLOUDINARY_ASSETS.heroMobileVideo} type="video/mp4" />
+            <track kind="captions" srcLang="en" label="English" default />
+          </video>
 
-              {/* DESKTOP & TABLET CINEMATIC LUXURY VIDEO */}
-              <video
-                ref={desktopVideoRef}
-                autoPlay
-                loop
-                muted
-                playsInline
-                crossOrigin="anonymous"
-                preload="none"
-                poster={CLOUDINARY_ASSETS.heroDesktopPoster}
-                disablePictureInPicture
-                disableRemotePlayback
-                aria-label="Fahad Ali Interior Luxury Showcase Video"
-                className="hidden md:block absolute inset-0 w-full h-full object-cover object-center opacity-100 pointer-events-none z-[1]"
-              >
-                <source src={CLOUDINARY_ASSETS.heroDesktopVideo} type="video/mp4" />
-                <track kind="captions" srcLang="en" label="English" default />
-              </video>
-            </>
-          )}
+          {/* DESKTOP & TABLET CINEMATIC LUXURY VIDEO */}
+          <video
+            ref={desktopVideoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            crossOrigin="anonymous"
+            preload="auto"
+            poster={CLOUDINARY_ASSETS.heroDesktopPoster}
+            disablePictureInPicture
+            disableRemotePlayback
+            onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
+            onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
+            aria-label="Fahad Ali Interior Luxury Showcase Video"
+            style={{ willChange: 'transform, opacity', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
+            className="hidden md:block absolute inset-0 w-full h-full object-cover object-center opacity-100 pointer-events-none z-[1]"
+          >
+            <source src={CLOUDINARY_ASSETS.heroDesktopVideo} type="video/mp4" />
+            <track kind="captions" srcLang="en" label="English" default />
+          </video>
 
           {/* Subtle Crystal Clear Lightweight Vignette & Contrast Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/60 pointer-events-none z-[2]" />
