@@ -183,31 +183,35 @@ const nextConfig: NextConfig = {
       { source: '/(.*)', headers: securityHeaders },
       {
         source:  '/api/public/home-bundle',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=10, stale-while-revalidate=60' }],
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
       {
         source:  '/api/v1/public/home-bundle',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=10, stale-while-revalidate=60' }],
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
       {
         source:  '/api/public/(.*)',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=10, stale-while-revalidate=60' }],
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
       {
         source:  '/api/v1/public/(.*)',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=10, stale-while-revalidate=60' }],
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
       {
         source:  '/api/products',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=2, stale-while-revalidate=5' }],
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
       {
         source:  '/api/v1/products',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=2, stale-while-revalidate=5' }],
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
-      // Static images — 1 year immutable cache
+      // Static images & assets — 1 year immutable cache
       {
         source:  '/images/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source:  '/_next/static/(.*)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
     ];

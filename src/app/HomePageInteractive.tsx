@@ -149,7 +149,7 @@ export default function HomePageInteractive({
                 muted
                 playsInline
                 crossOrigin="anonymous"
-                preload="none"
+                preload="auto"
                 poster={CLOUDINARY_ASSETS.heroMobilePoster}
                 disablePictureInPicture
                 disableRemotePlayback
@@ -168,7 +168,7 @@ export default function HomePageInteractive({
                 muted
                 playsInline
                 crossOrigin="anonymous"
-                preload="none"
+                preload="auto"
                 poster={CLOUDINARY_ASSETS.heroDesktopPoster}
                 disablePictureInPicture
                 disableRemotePlayback

@@ -139,6 +139,9 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preload" href="https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039209/fahad-ali-interior/assets/fahad_ali_logo.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_1080/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg" as="image" type="image/avif" media="(min-width: 768px)" />
+        <link rel="preload" href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_540/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg" as="image" type="image/avif" media="(max-width: 767px)" />
       </head>
       <body
         suppressHydrationWarning
