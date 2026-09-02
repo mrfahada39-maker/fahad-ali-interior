@@ -150,6 +150,7 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-tabs',
       '@radix-ui/react-slot',
       'class-variance-authority',
+      'date-fns',
     ],
   },
   turbopack: {
