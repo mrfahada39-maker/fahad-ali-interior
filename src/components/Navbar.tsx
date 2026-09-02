@@ -27,11 +27,12 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   useEffect(() => {
     setMounted(true);
     
+    let lastScrolled = false;
     const handleScroll = () => {
-      if (window.scrollY > 30) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
+      const scrolled = window.scrollY > 30;
+      if (scrolled !== lastScrolled) {
+        lastScrolled = scrolled;
+        setIsScrolled(scrolled);
       }
     };
     

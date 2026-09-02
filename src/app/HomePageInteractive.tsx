@@ -76,21 +76,33 @@ export default function HomePageInteractive({
   initialCategories = CATEGORIES,
   initialReviews = REVIEWS,
 }: HomePageInteractiveProps) {
+  const heroSectionRef = useRef<HTMLElement>(null);
   const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const desktopVideoRef = useRef<HTMLVideoElement>(null);
-  const [isMounted, setIsMounted] = useState(false);
   const [categoriesList, setCategoriesList] = useState<any[]>(
     initialCategories && initialCategories.length > 0 ? initialCategories : CATEGORIES
   );
 
+  // ── Smart Viewport Observer: Pause video when scrolled down to eliminate lag on Infinix/Tecno ──
   useEffect(() => {
-    setIsMounted(true);
-    if (mobileVideoRef.current && mobileVideoRef.current.paused) {
-      mobileVideoRef.current.play().catch(() => {});
-    }
-    if (desktopVideoRef.current && desktopVideoRef.current.paused) {
-      desktopVideoRef.current.play().catch(() => {});
-    }
+    const el = heroSectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (mobileVideoRef.current?.paused) mobileVideoRef.current.play().catch(() => {});
+          if (desktopVideoRef.current?.paused) desktopVideoRef.current.play().catch(() => {});
+        } else {
+          if (mobileVideoRef.current && !mobileVideoRef.current.paused) mobileVideoRef.current.pause();
+          if (desktopVideoRef.current && !desktopVideoRef.current.paused) desktopVideoRef.current.pause();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -109,7 +121,7 @@ export default function HomePageInteractive({
     <div className="contents">
 
       {/* ── FULL SCREEN LUXURY HERO VIDEO SECTION (100SVH ON ALL MOBILE & DESKTOP) ── */}
-      <section className="gsap-hero-section relative w-full h-screen h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
+      <section ref={heroSectionRef} className="gsap-hero-section relative w-full h-screen h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
         {/* Background Parallax & Video Container */}
         <div className="gsap-hero-bg absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           {/* Instant SSR Priority Poster (Delivers < 0.4s FCP & LCP) */}
@@ -186,8 +198,8 @@ export default function HomePageInteractive({
           {/* Subtle Crystal Clear Lightweight Vignette & Contrast Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/60 pointer-events-none z-[2]" />
 
-          {/* Ambient Warm Center Glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-[#C9A96E]/20 rounded-full blur-[120px] pointer-events-none z-[2]" />
+          {/* Ambient Warm Center Glow — GPU Native Radial Gradient (Zero Lag on Low-End Chips) */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(201,169,110,0.18)_0%,transparent_65%)] pointer-events-none z-[2]" />
         </div>
 
         {/* Center Editorial Content Overlay */}
