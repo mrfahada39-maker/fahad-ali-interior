@@ -307,11 +307,19 @@ TOTAL STORE PRODUCTS: 64 luxury Sheesham items across Living, Bedroom, Dining, O
     // Auto-attach matching live database products if user asked about items or categories
     if (!retrievedProducts && allProducts.length > 0) {
       const qLower = sanitizedUserQuery.toLowerCase();
+      const qWords = qLower.split(/\s+/).filter((w) => w.length > 2);
+
       const matched = allProducts.filter((p) => {
-        if (p.name?.toLowerCase().includes('fahad') || p.name?.toLowerCase() === 'hi') return false;
-        const n = p.name?.toLowerCase() || '';
-        const c = p.category?.toLowerCase() || '';
-        return qLower.includes(n) || n.includes(qLower) || qLower.includes(c) || (c.length > 2 && c.includes(qLower));
+        const n = (p.name || '').toLowerCase();
+        const c = (p.category || '').toLowerCase();
+        const d = (p.description || '').toLowerCase();
+        
+        // Exact substring match
+        if (qLower.includes(n) || n.includes(qLower) || qLower.includes(c) || (c.length > 2 && c.includes(qLower))) {
+          return true;
+        }
+        // Word level match (e.g. 'dining', 'table', 'sofa', 'bed', 'wardrobe', 'mirror', 'chair')
+        return qWords.some((w) => n.includes(w) || c.includes(w) || d.includes(w));
       });
 
       if (matched.length > 0) {
@@ -320,7 +328,7 @@ TOTAL STORE PRODUCTS: 64 luxury Sheesham items across Living, Bedroom, Dining, O
           name: p.name,
           price: Number(p.price),
           category: p.category || 'Furniture',
-          image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+          image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=380&q=55',
           description: p.description || '100% Solid Seasoned Sheesham Wood furniture',
           dimensions: p.dimensions || 'Standard',
           material: p.material || '100% Solid Sheesham Wood',
