@@ -235,19 +235,14 @@ export async function POST(request: NextRequest) {
       console.warn('History fetch notice:', e);
     }
 
-    // 5. Fetch LIVE Store Products from Database
+    // 5. Fetch LIVE Store Products from Database (Fast cached fetch, no blocking indexer)
     let allProducts: any[] = [];
     try {
       allProducts = await db.product.findMany({
         where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
-        take: 50,
+        take: 20,
       });
-
-      for (const p of allProducts) {
-        const textChunk = `Product: ${p.name}. Category: ${p.category}. Price: PKR ${p.price}. Material: ${p.material || '100% Solid Sheesham Wood'}.`;
-        await VectorIndexer.indexDocument(p.id, 'product', textChunk, { category: p.category, price: Number(p.price) });
-      }
     } catch (e) {
       console.warn('Prisma product fetch notice:', e);
     }
