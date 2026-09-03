@@ -49,6 +49,9 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
   useEffect(() => {
     // Ultra-Fast TBT Optimization: Defer secondary background widgets until main thread is idle
     if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       if ('requestIdleCallback' in window) {
         window.requestIdleCallback(() => setInteractive(true), { timeout: 2000 });
       } else {
