@@ -8,6 +8,8 @@ import TelemetryTracker from '@/components/TelemetryTracker';
 
 import { Toaster } from 'sonner';
 
+import NetworkWatcher from '@/components/NetworkWatcher';
+
 interface ProvidersProps {
   children: ReactNode;
   initialSettings?: SiteSettings | null;
@@ -102,6 +104,7 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
   return (
     <SessionProvider>
       <TelemetryTracker />
+      <NetworkWatcher />
       <Toaster
         position="top-right"
         closeButton

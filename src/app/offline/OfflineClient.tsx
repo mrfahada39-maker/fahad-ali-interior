@@ -52,8 +52,9 @@ export default function OfflineClient() {
       clearTimeout(timeoutId);
       setIsOnline(true);
       toast.success('Connected! Returning to live showroom...');
+      const targetUrl = typeof sessionStorage !== 'undefined' ? (sessionStorage.getItem('last_online_path') || '/') : '/';
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = targetUrl;
       }, 600);
     } catch {
       setIsOnline(false);
