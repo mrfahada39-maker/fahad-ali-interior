@@ -6,6 +6,8 @@ import { useSiteSettingsStore, SiteSettings } from '@/store/siteSettingsStore';
 import { useClientCacheStore } from '@/store/clientCacheStore';
 import TelemetryTracker from '@/components/TelemetryTracker';
 
+import { Toaster } from 'sonner';
+
 interface ProvidersProps {
   children: ReactNode;
   initialSettings?: SiteSettings | null;
@@ -100,6 +102,12 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
   return (
     <SessionProvider>
       <TelemetryTracker />
+      <Toaster
+        position="top-right"
+        closeButton
+        richColors={false}
+        duration={3500}
+      />
       {children}
     </SessionProvider>
   );
