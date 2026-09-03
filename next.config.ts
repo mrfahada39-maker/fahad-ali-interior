@@ -18,6 +18,15 @@ const withPWA = withPWAInit({
   exclude: [/sw-push\.js$/, /\.mp4$/i, /\.webm$/i],
   runtimeCaching: [
     {
+      urlPattern: ({ request }: { request: any }) => request.mode === 'navigate',
+      handler:    'NetworkFirst',
+      options: {
+        cacheName:  'pages-cache',
+        expiration: { maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 },
+        networkTimeoutSeconds: 2,
+      },
+    },
+    {
       urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
       handler:    'CacheFirst',
       options: {
