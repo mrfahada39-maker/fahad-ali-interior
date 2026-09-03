@@ -12,7 +12,7 @@ const withPWA = withPWAInit({
   register:    !isDev,
   skipWaiting: true,
   fallbacks: {
-    document: '/offline',
+    document: '/offline.html',
   },
   // sw-push.js is our custom push SW — exclude from PWA precache, exclude video media
   exclude: [/sw-push\.js$/, /\.mp4$/i, /\.webm$/i],
