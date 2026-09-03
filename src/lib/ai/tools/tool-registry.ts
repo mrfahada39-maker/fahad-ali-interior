@@ -149,7 +149,7 @@ export class AiToolExecutor {
             material: p.material || '100% Solid Sheesham Wood',
             dimensions: p.dimensions || 'Standard',
             stockCount: p.stockCount,
-            image: p.image || '/images/hero_sofa.webp',
+            image: p.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80',
           })),
         };
       }
