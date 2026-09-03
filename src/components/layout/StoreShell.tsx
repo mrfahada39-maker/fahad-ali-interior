@@ -68,11 +68,29 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       </Suspense>
       <Toaster
         position="top-right"
+        closeButton
+        richColors={false}
+        duration={3500}
         toastOptions={{
           style: {
-            background: '#F5EDE6',
-            border: '1px solid rgba(201,169,110,0.2)',
-            color: '#2C1E18',
+            background: 'rgba(255, 255, 255, 0.96)',
+            backdropFilter: 'blur(16px)',
+            color: '#221814',
+            border: '1.5px solid #E2D1BC',
+            boxShadow: '0 16px 40px rgba(44,30,24,0.12), 0 2px 8px rgba(184,142,75,0.15)',
+            borderRadius: '18px',
+            padding: '14px 18px',
+            fontSize: '13.5px',
+            fontWeight: 550,
+            fontFamily: 'inherit',
+          },
+          classNames: {
+            toast: 'group !font-sans !tracking-tight',
+            closeButton: '!bg-[#FAF5EE] !text-[#8C6239] !border !border-[#E2D1BC] hover:!bg-[#8C6239] hover:!text-white !transition-all !rounded-full !shadow-xs !left-auto !right-2 !top-2',
+            success: '!border-amber-300/90 !text-[#221814]',
+            error: '!border-rose-300/90 !text-[#221814]',
+            info: '!border-amber-300/90 !text-[#221814]',
+            warning: '!border-amber-400/90 !text-[#221814]',
           },
         }}
       />

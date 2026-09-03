@@ -120,8 +120,10 @@ export function AiEmployeeWidget() {
   }, [messages.length]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+    if (isOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping, isOpen]);
 
   // Listen for open-ai-chat events triggered from bottom navbar or anywhere in UI
   useEffect(() => {
