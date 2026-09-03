@@ -1,59 +1,17 @@
 const APP_NAME = 'Fahad Ali Interior';
 const DEFAULT_ICON = '/logo.svg';
 const DEFAULT_BADGE = '/logo.svg';
-const OFFLINE_CACHE_NAME = 'fahad-ali-offline-v3';
-const OFFLINE_ASSETS = ['/offline.html', '/logo.svg'];
 
 let VAPID_PUBLIC_KEY = null;
 
-// INSTALL: Precache standalone luxury offline page immediately
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(OFFLINE_CACHE_NAME).then((cache) => {
-      return cache.addAll(OFFLINE_ASSETS);
-    }).then(() => self.skipWaiting())
-  );
+// INSTALL: Skip waiting immediately
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
-// ACTIVATE: Clean up older caches & claim clients immediately
+// ACTIVATE: Claim clients immediately
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== OFFLINE_CACHE_NAME && !key.startsWith('workbox-')) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// FETCH: When online, ALWAYS serve live site. Only when network fails, serve offline.html
-self.addEventListener('fetch', (event) => {
-  if (event.request.method === 'GET' && event.request.mode === 'navigate') {
-    event.respondWith(
-      (async () => {
-        try {
-          const response = await fetch(event.request);
-          if (response) {
-            return response;
-          }
-        } catch (error) {
-          // Network failure (offline / no connection)
-          try {
-            const cache = await caches.open(OFFLINE_CACHE_NAME);
-            const cachedOffline = await cache.match('/offline.html');
-            if (cachedOffline) {
-              return cachedOffline;
-            }
-          } catch (e) {}
-        }
-        return new Response('Offline', { status: 503, statusText: 'Offline' });
-      })()
-    );
-  }
+  event.waitUntil(self.clients.claim());
 });
 
 // receive key from frontend
