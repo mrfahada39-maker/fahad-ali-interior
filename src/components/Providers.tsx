@@ -22,6 +22,15 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
       hasInitialized.current = true;
       setSiteSettings(initialSettings);
     }
+
+    // Proactively check for new Service Worker update on live site
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.update().catch(() => {});
+        }
+      }).catch(() => {});
+    }
   }, [initialSettings, setSiteSettings]);
 
   useEffect(() => {
@@ -80,7 +89,7 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
         link.id = fontId;
         link.rel = 'stylesheet';
         link.media = 'print';
-        link.onload = function() { (this as HTMLLinkElement).media = 'all'; };
+        link.onload = function(this: any) { this.media = 'all'; };
         link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(settings.themeFontFamily)}:wght@300;400;500;600;700;800;900&display=swap`;
         document.head.appendChild(link);
       }
