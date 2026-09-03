@@ -83,12 +83,22 @@ export default function HomePageInteractive({
     initialCategories && initialCategories.length > 0 ? initialCategories : CATEGORIES
   );
 
+  // ── Always start at top of home page on load / reload ──
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+    }
+  }, []);
+
   // ── Smart Viewport Observer: Pause video when scrolled down to eliminate lag on Infinix/Tecno ──
   useEffect(() => {
     const el = heroSectionRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
+    if (!el || typeof window === 'undefined' || typeof window.IntersectionObserver === 'undefined') return;
 
-    const observer = new IntersectionObserver(
+    const observer = new window.IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           if (mobileVideoRef.current?.paused) mobileVideoRef.current.play().catch(() => {});
