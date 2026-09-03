@@ -1,8 +1,50 @@
 const APP_NAME = 'Fahad Ali Interior';
-const DEFAULT_ICON = '/icons/icon-192.png';
-const DEFAULT_BADGE = '/icons/icon-192.png';
+const DEFAULT_ICON = '/logo.svg';
+const DEFAULT_BADGE = '/logo.svg';
+const OFFLINE_CACHE_NAME = 'fahad-ali-offline-v2';
+const OFFLINE_ASSETS = ['/offline.html', '/logo.svg'];
 
 let VAPID_PUBLIC_KEY = null;
+
+// INSTALL: Precache standalone luxury offline page immediately
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(OFFLINE_CACHE_NAME).then((cache) => {
+      return cache.addAll(OFFLINE_ASSETS);
+    }).then(() => self.skipWaiting())
+  );
+});
+
+// ACTIVATE: Clean up older caches & claim clients immediately
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== OFFLINE_CACHE_NAME && !key.startsWith('workbox-')) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// FETCH: If network is offline on any page navigation, return cached luxury offline page
+self.addEventListener('fetch', (event) => {
+  if (event.request.method === 'GET' && event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(async () => {
+        const cache = await caches.open(OFFLINE_CACHE_NAME);
+        const cachedOffline = await cache.match('/offline.html');
+        if (cachedOffline) {
+          return cachedOffline;
+        }
+        return new Response('Offline', { status: 503, statusText: 'Offline' });
+      })
+    );
+  }
+});
 
 // receive key from frontend
 self.addEventListener('message', (event) => {

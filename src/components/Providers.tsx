@@ -27,8 +27,9 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
       setSiteSettings(initialSettings);
     }
 
-    // Proactively check for new Service Worker update on live site
+    // Register & proactively check for new Service Worker update on live site
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw-push.js').catch(() => {});
       navigator.serviceWorker.getRegistrations().then((registrations) => {
         for (const registration of registrations) {
           registration.update().catch(() => {});
