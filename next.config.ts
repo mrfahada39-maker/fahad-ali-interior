@@ -11,6 +11,9 @@ const withPWA = withPWAInit({
   disable:     isDev,
   register:    !isDev,
   skipWaiting: true,
+  fallbacks: {
+    document: '/offline',
+  },
   // sw-push.js is our custom push SW — exclude from PWA precache, exclude video media
   exclude: [/sw-push\.js$/, /\.mp4$/i, /\.webm$/i],
   runtimeCaching: [
@@ -206,15 +209,19 @@ const nextConfig: NextConfig = {
         source:  '/api/v1/products',
         headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
-      // Static images & assets — 1 year immutable cache
-      {
-        source:  '/images/(.*)',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-      },
-      {
-        source:  '/_next/static/(.*)',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-      },
+      // Static images & assets — 1 year immutable cache in production only
+      ...(process.env.NODE_ENV === 'production'
+        ? [
+            {
+              source: '/images/(.*)',
+              headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+            },
+            {
+              source: '/_next/static/(.*)',
+              headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+            },
+          ]
+        : []),
     ];
   },
 };
