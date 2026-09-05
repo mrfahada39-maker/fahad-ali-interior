@@ -23,7 +23,7 @@ const TESTIMONIALS_DATA = [
     score: '5.0',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
     fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    roomImage: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1000&q=80',
+    roomImage: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&fm=webp&q=65&w=600',
     theme: 'amber',
     tag: '14 Orders in Period',
     cardBorder: 'border-amber-300/90 shadow-[0_8px_35px_rgba(245,158,11,0.22)]',
@@ -43,7 +43,7 @@ const TESTIMONIALS_DATA = [
     score: '5.0',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
     fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    roomImage: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1000&q=80',
+    roomImage: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&fm=webp&q=65&w=600',
     theme: 'blue',
     tag: '4 Delivered / Completed',
     cardBorder: 'border-blue-300/90 shadow-[0_8px_35px_rgba(59,130,246,0.22)]',
@@ -63,7 +63,7 @@ const TESTIMONIALS_DATA = [
     score: '5.0',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80',
     fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    roomImage: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1000&q=80',
+    roomImage: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&fm=webp&q=65&w=600',
     theme: 'purple',
     tag: 'Live Registered Accounts',
     cardBorder: 'border-purple-300/90 shadow-[0_8px_35px_rgba(168,85,247,0.22)]',
@@ -83,7 +83,7 @@ const TESTIMONIALS_DATA = [
     score: '5.0',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
     fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    roomImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80',
+    roomImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&fm=webp&q=65&w=600',
     theme: 'emerald',
     tag: '100% In-Stock Database',
     cardBorder: 'border-emerald-300/90 shadow-[0_8px_35px_rgba(16,185,129,0.22)]',
@@ -103,7 +103,7 @@ const TESTIMONIALS_DATA = [
     score: '5.0',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
     fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    roomImage: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=1000&q=80',
+    roomImage: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&fm=webp&q=65&w=600',
     theme: 'rose',
     tag: '5-Star Verified Project',
     cardBorder: 'border-rose-300/90 shadow-[0_8px_35px_rgba(244,63,94,0.22)]',
@@ -186,9 +186,9 @@ export default function TestimonialsSection() {
             onTouchEnd={onTouchEnd}
             className={`relative bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] ${currentItem.cardBorder} border-[1.5px] rounded-[36px] p-5 sm:p-7 overflow-hidden transition-all duration-500 group`}
           >
-            {/* Ambient Colored Radial Glow in Top and Bottom Corners (Dynamic Lighting) */}
-            <div className={`absolute -top-10 -right-10 w-36 h-36 rounded-full blur-2xl pointer-events-none ${currentItem.ambientGlow} opacity-90 transition-all duration-700 animate-pulse`} />
-            <div className={`absolute -bottom-10 -left-10 w-36 h-36 rounded-full blur-2xl pointer-events-none ${currentItem.ambientGlow} opacity-80 transition-all duration-700 animate-pulse`} />
+            {/* Ambient Colored Radial Glow in Top and Bottom Corners (GPU Shader Radial — Zero Lag on Infinix/Tecno) */}
+            <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.22)_0%,transparent_70%)] opacity-80" />
+            <div className="absolute -bottom-10 -left-10 w-36 h-36 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.18)_0%,transparent_70%)] opacity-70" />
 
             {/* Top Left Number Badge (Dynamic Gradient) */}
             <div className={`absolute top-4 left-4 z-20 w-9 h-9 rounded-full bg-gradient-to-br ${currentItem.numberGradient} text-white font-serif font-bold text-xs flex items-center justify-center shadow-[0_3px_12px_rgba(0,0,0,0.25)] border border-white/40`}>
@@ -236,7 +236,8 @@ export default function TestimonialsSection() {
                     src={currentItem.roomImage} 
                     alt={`${currentItem.name} - ${currentItem.projectType}`} 
                     fill 
-                    unoptimized
+                    loading="lazy"
+                    decoding="async"
                     sizes="(max-width: 640px) 100vw, 420px"
                     className="object-cover" 
                   />
@@ -424,9 +425,9 @@ export default function TestimonialsSection() {
                     {/* Shimmer Light Reflection Sweep on Hover */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none z-30" />
 
-                    {/* Ambient Glowing Colored Lights Inside Card (Expands on Hover) */}
-                    <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl pointer-events-none ${item.ambientGlow} opacity-80 group-hover:opacity-100 group-hover:scale-125 transition-all duration-500 z-0 animate-pulse`} />
-                    <div className={`absolute -bottom-10 -left-10 w-32 h-32 rounded-full blur-2xl pointer-events-none ${item.ambientGlow} opacity-70 group-hover:opacity-100 group-hover:scale-125 transition-all duration-500 z-0 animate-pulse`} />
+                    {/* Ambient Glowing Colored Lights Inside Card (GPU Native Shader — Zero Repaint) */}
+                    <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.22)_0%,transparent_70%)] opacity-80 z-0" />
+                    <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.18)_0%,transparent_70%)] opacity-70 z-0" />
 
                     {/* Top Left Number Badge (Matching KPI Luminous Jewel Scheme) */}
                     <div className={`absolute top-3 left-3 z-30 w-7 h-7 rounded-full bg-gradient-to-br ${item.numberGradient} text-white font-serif font-bold text-[10.5px] flex items-center justify-center shadow-[0_3px_10px_rgba(0,0,0,0.2)] border border-white/40 group-hover:scale-110 transition-transform duration-300`}>

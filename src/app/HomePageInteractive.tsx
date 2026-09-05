@@ -108,7 +108,7 @@ export default function HomePageInteractive({
           if (desktopVideoRef.current && !desktopVideoRef.current.paused) desktopVideoRef.current.pause();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.0 }
     );
 
     observer.observe(el);
@@ -258,8 +258,8 @@ export default function HomePageInteractive({
         </div>
       </section>
 
-      {/* ── CATEGORIES SECTION (COMPACT SLEEK LUXURY PROPORTIONS) ── */}
-      <section className="cv-auto optimize-gpu w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 mb-16 relative z-10">
+      {/* ── CATEGORIES SECTION (LOW-END PHONE OPTIMIZED JANK-FREE ENGINE) ── */}
+      <section className="smooth-scroll-section w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 mb-16 relative z-10">
         <div className="gsap-cat-header text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] shadow-xs mb-3.5">
             <span className="text-[#B88E4B] text-sm font-bold">✦</span>
@@ -286,28 +286,27 @@ export default function HomePageInteractive({
             <div
               key={cat.name || i}
               className="gsap-cat-card-wrapper"
-              style={{ perspective: '1000px' }}
             >
               <Link 
                 href={`/shop?category=${encodeURIComponent(cat.name)}`} 
                 prefetch={true}
-                className="gsap-cat-card group relative aspect-[5/4] rounded-[24px] overflow-hidden bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_16px_40px_rgba(184,142,75,0.22)] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] transition-all duration-300 block will-change-transform"
-                style={{ transformStyle: 'preserve-3d' }}
+                className="gsap-cat-card group relative aspect-[5/4] rounded-[24px] overflow-hidden bg-[#FAF5EE] shadow-[0_3px_14px_rgba(184,142,75,0.08)] hover:shadow-[0_12px_32px_rgba(184,142,75,0.18)] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] transition-all duration-300 block"
               >
                 {/* Background Image Wrap */}
                 <div className="gsap-cat-img-wrap absolute inset-0 overflow-hidden">
                   <Image 
-                    src={resolveImageUrl(cat.image, cat.name, 1000)} 
+                    src={resolveImageUrl(cat.image, cat.name, 550)} 
                     alt={cat.name} 
                     fill 
-                    loading={i < 3 ? 'eager' : 'lazy'}
-                    className="gsap-cat-img object-cover will-change-transform transition-transform duration-700 group-hover:scale-106" 
+                    loading={i < 2 ? 'eager' : 'lazy'}
+                    decoding="async"
+                    className="gsap-cat-img object-cover transition-transform duration-500 group-hover:scale-105" 
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" 
                   />
                 </div>
 
-                {/* Ambient Corner Glow on Category Card */}
-                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl pointer-events-none bg-amber-500/15 opacity-80 z-10" />
+                {/* Ambient Corner Glow — GPU Shader Gradient (Zero Blur Calculation on Budget Chips) */}
+                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.22)_0%,transparent_70%)] opacity-80 z-10" />
 
                 {/* Subtle Light Sweep Luxury Overlay */}
                 <div className="gsap-cat-light absolute inset-0 pointer-events-none opacity-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full rotate-45 z-20" />

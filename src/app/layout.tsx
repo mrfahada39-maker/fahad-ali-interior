@@ -133,6 +133,40 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Supersonic High-Priority CDN Preconnections */}
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+        {/* Google Speculation Rules API for Instant 0.00ms Zero-Latency Navigation */}
+        <script
+          type="speculationrules"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              prerender: [
+                {
+                  source: 'list',
+                  urls: ['/shop', '/about', '/contact', '/cart', '/faq'],
+                  eagerness: 'moderate',
+                },
+                {
+                  where: { href_matches: '/*' },
+                  eagerness: 'conservative',
+                },
+              ],
+              prefetch: [
+                {
+                  where: { href_matches: '/*' },
+                  eagerness: 'moderate',
+                },
+              ],
+            }),
+          }}
+        />
+
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if('scrollRestoration' in history){history.scrollRestoration='manual';}window.scrollTo(0,0);}catch(e){}`,
