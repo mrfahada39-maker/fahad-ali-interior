@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "prisma generate --schema=Database/models/schema.prisma && next build",
+  "buildCommand": "prisma generate --schema=Database/models/schema.prisma && next build && node scripts/prune-build.js",
   "installCommand": "npm install"
 }
