@@ -167,7 +167,6 @@ const nextConfig: NextConfig = {
       'isomorphic-dompurify',
       '@radix-ui/react-label',
       '@radix-ui/react-separator',
-      '@radix-ui/react-slider',
       '@radix-ui/react-tabs',
       '@radix-ui/react-slot',
       'class-variance-authority',
