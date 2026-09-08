@@ -1,5 +1,6 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { db } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
@@ -30,7 +31,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized. Admin role required.' }, { status: 403 });
     }
 
-    const token = `direct_admin_${user.id}_${Date.now()}`;
+    const secret = process.env.NEXTAUTH_SECRET || 'fahad-ali-interior-enterprise-token-secret-2026';
+    const timestamp = Date.now();
+    const signature = crypto.createHmac('sha256', secret).update(`${user.id}:${timestamp}`).digest('hex');
+    const token = `fai_token_${user.id}_${timestamp}_${signature}`;
 
     const res = NextResponse.json({
       success: true,
@@ -43,10 +47,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Set persistent admin session cookie (30 days)
+    // Set secure persistent admin session cookie (30 days)
     res.cookies.set('fai_admin_token', token, {
       path: '/',
-      httpOnly: false,
+      httpOnly: true,
       secure: req.url.startsWith('https://') || process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60,

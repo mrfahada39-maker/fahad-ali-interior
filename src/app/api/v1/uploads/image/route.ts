@@ -65,6 +65,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided in form data' }, { status: 400 });
     }
 
+    const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: 'Invalid file type. Only JPEG, PNG, WebP, and AVIF images are allowed.' }, { status: 400 });
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'File size exceeds the 5MB limit.' }, { status: 400 });
+    }
+
     const result = await uploadSingleFileToCloudinary(file, folder);
 
     return NextResponse.json({

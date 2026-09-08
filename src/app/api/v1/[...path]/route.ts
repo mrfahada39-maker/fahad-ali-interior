@@ -19,22 +19,33 @@ const activeCallSessions =
   globalForCalls.activeCallSessions ?? (globalForCalls.activeCallSessions = new Map<string, any>());
 
 async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser | null> {
-  // 1. Try direct Authorization Bearer or fai_admin_token Cookie
+  // 1. Try cryptographic HMAC signed token from Authorization, x-enterprise-token or cookie
   const adminCookie = req.cookies.get('fai_admin_token')?.value;
   const authHeader = req.headers.get('authorization') || req.headers.get('x-enterprise-token') || adminCookie;
-  if (authHeader && (authHeader.includes('direct_admin_') || authHeader.includes('direct_session_'))) {
-    const match = authHeader.match(/direct_(?:admin|session)_([^_]+)/);
-    if (match && match[1]) {
-      const dbUser = await db.user.findUnique({
-        where: { id: match[1] },
-        select: { id: true, email: true, role: true },
-      });
-      if (dbUser) {
-        return {
-          id: dbUser.id,
-          email: dbUser.email,
-          role: String(dbUser.role).toUpperCase(),
-        };
+  if (authHeader && authHeader.includes('fai_token_')) {
+    const match = authHeader.match(/fai_token_([^_]+)_([^_]+)_([a-f0-9]+)/);
+    if (match) {
+      const [, userId, timestampStr, signature] = match;
+      const timestamp = parseInt(timestampStr, 10);
+      const maxAgeMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+      if (!isNaN(timestamp) && (Date.now() - timestamp) < maxAgeMs) {
+        const secret = process.env.NEXTAUTH_SECRET || 'fahad-ali-interior-enterprise-token-secret-2026';
+        const expectedSig = crypto.createHmac('sha256', secret).update(`${userId}:${timestamp}`).digest('hex');
+        try {
+          if (crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSig, 'hex'))) {
+            const dbUser = await db.user.findUnique({
+              where: { id: userId },
+              select: { id: true, email: true, role: true },
+            });
+            if (dbUser) {
+              return {
+                id: dbUser.id,
+                email: dbUser.email,
+                role: String(dbUser.role).toUpperCase(),
+              };
+            }
+          }
+        } catch {}
       }
     }
   }
@@ -69,6 +80,12 @@ async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser 
   return null;
 }
 
+function requireAdmin(user: SessionUser | null): boolean {
+  if (!user?.role) return false;
+  const r = user.role.toUpperCase();
+  return r === 'ADMIN' || r === 'SUPER_ADMIN';
+}
+
 type RouteContext = { params: Promise<{ path: string[] }> };
 
 // Static fallback categories matching homepage list
@@ -85,9 +102,12 @@ const fallbackCategories = [
 // Handles queries directly from the database if the NestJS backend is offline
 async function handleDatabaseFallback(method: string, segment: string, req: NextRequest): Promise<NextResponse> {
   try {
-    // Admin segments fallback
+    // Admin segments fallback - Enforce Executive RBAC
     if (segment.startsWith('admin') || segment.startsWith('v1/admin')) {
-      // Direct access allowed for executive administration
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
     }
 
     // Uploads Image Fallback
@@ -243,9 +263,14 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     // 2.1 GET /orders or /v1/orders
     if (method === 'GET' && (segment === 'orders' || segment === 'v1/orders')) {
       const user = await getUserFromSessionOrToken(req);
-      const whereCondition = user && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN'
-        ? { userId: user.id, deletedAt: null }
-        : { deletedAt: null };
+      if (!user?.id) {
+        return NextResponse.json({ error: 'Unauthorized. Please sign in to view orders.' }, { status: 401 });
+      }
+
+      const isAdmin = requireAdmin(user);
+      const whereCondition = isAdmin
+        ? { deletedAt: null }
+        : { userId: user.id, deletedAt: null };
 
       const orders = await db.order.findMany({
         where: whereCondition,
@@ -698,24 +723,36 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         rawItems.map(async (item: any) => {
           const rawId = item.productId || item.id;
           let prodId = safeProductId;
+          let serverPrice = 10000;
+          let prodName = item.name || 'Furniture Item';
+          let prodImage = item.image || '';
+
           if (rawId) {
-            const exists = await db.product.findUnique({ where: { id: rawId } }).catch(() => null);
-            if (exists) prodId = exists.id;
+            const dbProd = await db.product.findUnique({ where: { id: rawId } }).catch(() => null);
+            if (dbProd) {
+              prodId = dbProd.id;
+              serverPrice = Number(dbProd.price);
+              prodName = dbProd.name;
+              prodImage = dbProd.image || prodImage;
+            }
           }
+
+          const quantity = Math.max(1, parseNum(item.quantity, 1));
           return {
             productId: prodId,
-            name: item.name || 'Furniture Item',
-            price: parseNum(item.price, 10000),
-            quantity: parseNum(item.quantity, 1),
-            image: item.image || '',
+            name: prodName,
+            price: serverPrice,
+            quantity,
+            image: prodImage,
           };
         })
       );
 
-      const subtotal = parseNum(body.subtotal, formattedItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0));
-      const gst = parseNum(body.gst, 0);
-      const discount = parseNum(body.discount, 0);
-      const totalAmount = parseNum(body.totalAmount, Math.max(0, subtotal + gst - discount));
+      // Secure Server-Side Financial Calculation (Prevents Client-Side Price Tampering)
+      const subtotal = formattedItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
+      const gst = 0;
+      const discount = Math.min(subtotal, Math.max(0, parseNum(body.discount, 0)));
+      const totalAmount = Math.max(0, subtotal + gst - discount);
 
       const rawMethod = String(body.paymentMethod || 'COD').toUpperCase();
       let validPaymentMethod: 'COD' | 'JAZZCASH' | 'EASYPAISA' | 'BANK' = 'COD';
@@ -788,6 +825,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 2.3 GET /orders/:id or /v1/orders/:id
     if (method === 'GET' && (segment.startsWith('orders/') || segment.startsWith('v1/orders/'))) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!user?.id) {
+        return NextResponse.json({ error: 'Unauthorized. Please sign in to view this order.' }, { status: 401 });
+      }
+
       const orderId = segment.split('/').pop();
       const order = await db.order.findFirst({
         where: { id: orderId, deletedAt: null },
@@ -796,6 +838,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
       if (!order) {
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      }
+
+      const isAdmin = requireAdmin(user);
+      if (!isAdmin && order.userId !== user.id) {
+        return NextResponse.json({ error: 'Forbidden. Access denied to this order.' }, { status: 403 });
       }
 
       return NextResponse.json({
@@ -817,15 +864,16 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     // 2.4 GET /user/dashboard-bundle or /v1/user/dashboard-bundle
     if (method === 'GET' && (segment === 'user/dashboard-bundle' || segment === 'v1/user/dashboard-bundle')) {
       const user = await getUserFromSessionOrToken(req);
-      let targetUser = null;
-      if (user?.id) {
-        targetUser = await db.user.findUnique({ where: { id: user.id } }).catch(() => null);
-      }
-      if (!targetUser) {
-        targetUser = await db.user.findFirst({ where: { deletedAt: null } }).catch(() => null);
+      if (!user?.id) {
+        return NextResponse.json({ error: 'Unauthorized. Please sign in to view your dashboard.' }, { status: 401 });
       }
 
-      const targetUserId = targetUser?.id || 'guest_user';
+      const targetUser = await db.user.findUnique({ where: { id: user.id } }).catch(() => null);
+      if (!targetUser) {
+        return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+      }
+
+      const targetUserId = targetUser.id;
 
       const orders = await db.order.findMany({
         where: { userId: targetUserId, deletedAt: null },

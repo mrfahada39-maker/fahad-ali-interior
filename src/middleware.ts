@@ -154,10 +154,9 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  if (adminPages.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
+  if (pathname !== '/admin/login' && adminPages.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     if (!token) {
-      const login = new URL('/', request.url);
-      login.searchParams.set('auth', 'login');
+      const login = new URL('/admin/login', request.url);
       login.searchParams.set('next', pathname);
       return NextResponse.redirect(login);
     }

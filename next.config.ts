@@ -100,8 +100,6 @@ function remotePatterns() {
     { protocol: 'https' as const, hostname: 'images.unsplash.com', pathname: '/**' },
     { protocol: 'https' as const, hostname: 'plus.unsplash.com', pathname: '/**' },
     { protocol: 'https' as const, hostname: '**.unsplash.com', pathname: '/**' },
-    { protocol: 'http' as const, hostname: '**', pathname: '/**' },
-    { protocol: 'https' as const, hostname: '**', pathname: '/**' },
   ];
 }
 
