@@ -35,7 +35,6 @@ import { toneGenerator, WebRtcCallClient } from '@/lib/webrtc-call-manager';
 import { tabs, AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin/tabs/types';
 
 import { useSiteSettingsStore } from '@/store/siteSettingsStore';
-import AdminLoginGate from './admin/AdminLoginGate';
 import { DEFAULT_ADMIN_STATS, DEFAULT_ADMIN_ORDERS } from '@/lib/admin-defaults';
 import { CURATED_FALLBACK_PRODUCTS } from '@/lib/curated-products';
 
