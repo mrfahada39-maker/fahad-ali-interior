@@ -8,13 +8,9 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { apiFetchJson } from '@/lib/api-client';
-import dynamic from 'next/dynamic';
 import { resolveImageUrl } from '@/lib/images';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
-
-const TestimonialsSection = dynamic(() => import('@/components/home/TestimonialsSection'), {
-  ssr: false,
-});
+import TestimonialsSection from '@/components/home/TestimonialsSection';
 
 const CATEGORIES = [
   { name: 'Living Room', items: '25 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
