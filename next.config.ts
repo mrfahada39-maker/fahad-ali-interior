@@ -113,7 +113,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
-  serverExternalPackages: ['@prisma/client', 'prisma', 'bcryptjs', 'sharp', 'nodemailer'],
+  serverExternalPackages: ['@prisma/client', 'bcryptjs', 'sharp', 'nodemailer'],
   productionBrowserSourceMaps: false,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : false,
@@ -121,21 +121,31 @@ const nextConfig: NextConfig = {
 
   outputFileTracingExcludes: {
     '*': [
+      'node_modules/prisma/**/*',
+      'node_modules/@prisma/engines/**/*',
       'node_modules/@playwright/**/*',
       'node_modules/playwright/**/*',
       'node_modules/@lhci/**/*',
       'node_modules/jest/**/*',
+      'node_modules/ts-jest/**/*',
       'node_modules/@types/**/*',
       'node_modules/typescript/**/*',
       'node_modules/eslint/**/*',
       'node_modules/@eslint/**/*',
+      'node_modules/tsx/**/*',
+      'node_modules/esbuild/**/*',
+      'node_modules/terser/**/*',
       'tests/**/*',
       'docs/**/*',
       'scripts/**/*',
       'Database/migrations/**/*',
+      'Database/seed.ts',
       '**/*.map',
       '**/*.d.ts',
       '**/*.md',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.ts',
     ],
   },
 
