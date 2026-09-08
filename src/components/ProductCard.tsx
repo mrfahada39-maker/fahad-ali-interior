@@ -210,6 +210,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             fill
             priority={isPriority}
             loading={isPriority ? 'eager' : 'lazy'}
+            decoding="async"
             className="object-cover transition-transform duration-700 group-hover:scale-108"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             onError={() => setImgError(true)}

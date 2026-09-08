@@ -82,6 +82,7 @@ export default function HomePageInteractive({
   const [categoriesList, setCategoriesList] = useState<any[]>(
     initialCategories && initialCategories.length > 0 ? initialCategories : CATEGORIES
   );
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   // ── Always start at top of home page on load / reload ──
   useEffect(() => {
@@ -173,11 +174,12 @@ export default function HomePageInteractive({
             poster={CLOUDINARY_ASSETS.heroMobilePoster}
             disablePictureInPicture
             disableRemotePlayback
-            onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
-            onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
+            onLoadedData={(e) => { e.currentTarget.play().catch(() => {}); setVideoLoaded(true); }}
+            onPlaying={() => setVideoLoaded(true)}
+            onCanPlay={() => setVideoLoaded(true)}
             aria-label="Fahad Ali Interior Luxury Showcase Video"
-            style={{ willChange: 'transform, opacity', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
-            className="block md:hidden absolute inset-0 w-full h-full object-cover object-center opacity-100 pointer-events-none z-[1]"
+            style={{ willChange: 'opacity', transform: 'translateZ(0)' }}
+            className={`block md:hidden absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1] transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
           >
             <source src={CLOUDINARY_ASSETS.heroMobileVideo} type="video/mp4" />
             <track kind="captions" srcLang="en" label="English" default />
@@ -195,11 +197,12 @@ export default function HomePageInteractive({
             poster={CLOUDINARY_ASSETS.heroDesktopPoster}
             disablePictureInPicture
             disableRemotePlayback
-            onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
-            onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
+            onLoadedData={(e) => { e.currentTarget.play().catch(() => {}); setVideoLoaded(true); }}
+            onPlaying={() => setVideoLoaded(true)}
+            onCanPlay={() => setVideoLoaded(true)}
             aria-label="Fahad Ali Interior Luxury Showcase Video"
-            style={{ willChange: 'transform, opacity', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
-            className="hidden md:block absolute inset-0 w-full h-full object-cover object-center opacity-100 pointer-events-none z-[1]"
+            style={{ willChange: 'opacity', transform: 'translateZ(0)' }}
+            className={`hidden md:block absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1] transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
           >
             <source src={CLOUDINARY_ASSETS.heroDesktopVideo} type="video/mp4" />
             <track kind="captions" srcLang="en" label="English" default />
