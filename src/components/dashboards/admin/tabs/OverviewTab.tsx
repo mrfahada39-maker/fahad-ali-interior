@@ -401,8 +401,8 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
       const name = getCustomerName(o).toLowerCase();
       const email = getCustomerEmail(o).toLowerCase();
       const rawPhone = getCustomerPhone(o).toLowerCase();
-      const cleanPhone = rawPhone.replace(/[\s\-\+\(\)]/g, '');
-      const cleanQuery = q.replace(/[\s\-\+\(\)]/g, '');
+      const cleanPhone = rawPhone.replace(/[\s\-+()]/g, '');
+      const cleanQuery = q.replace(/[\s\-+()]/g, '');
       const address = getCustomerAddress(o).toLowerCase();
       const status = String(o.status || '').toLowerCase();
       const payment = String(o.paymentMethod || '').toLowerCase();

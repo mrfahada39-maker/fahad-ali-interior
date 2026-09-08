@@ -26,8 +26,6 @@ import {
 import { toast } from 'sonner';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
-interface AiChatbotTabProps {}
-
 export default function AiChatbotTab() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);

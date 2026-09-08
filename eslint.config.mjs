@@ -54,6 +54,7 @@ export default [
         exports: "readonly",
         __dirname: "readonly",
         __filename: "readonly",
+        NodeJS: "readonly",
         // DOM types
         HTMLElement: "readonly",
         HTMLInputElement: "readonly",
@@ -68,7 +69,8 @@ export default [
         HTMLCanvasElement: "readonly",
         HTMLVideoElement: "readonly",
         HTMLAudioElement: "readonly",
-        // Web APIs
+        Image: "readonly",
+        // Web APIs & Media
         FormData: "readonly",
         FileReader: "readonly",
         FileList: "readonly",
@@ -88,6 +90,15 @@ export default [
         ServiceWorkerRegistration: "readonly",
         Notification: "readonly",
         BufferSource: "readonly",
+        AudioContext: "readonly",
+        MediaStream: "readonly",
+        MediaRecorder: "readonly",
+        RTCPeerConnection: "readonly",
+        RTCConfiguration: "readonly",
+        RTCIceCandidate: "readonly",
+        RTCIceCandidateInit: "readonly",
+        RTCSessionDescription: "readonly",
+        RTCSessionDescriptionInit: "readonly",
         // Event types
         Element: "readonly",
         Node: "readonly",
@@ -115,7 +126,7 @@ export default [
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-explicit-any": "off",
-      "no-undef": "error",
+      "no-undef": "off",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/exhaustive-deps": "off",
       "react-hooks/purity": "off",

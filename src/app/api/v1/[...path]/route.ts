@@ -14,6 +14,10 @@ interface SessionUser {
   role?: string;
 }
 
+const globalForCalls = globalThis as unknown as { activeCallSessions?: Map<string, any> };
+const activeCallSessions =
+  globalForCalls.activeCallSessions ?? (globalForCalls.activeCallSessions = new Map<string, any>());
+
 async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser | null> {
   // 1. Try direct Authorization Bearer or fai_admin_token Cookie
   const adminCookie = req.cookies.get('fai_admin_token')?.value;

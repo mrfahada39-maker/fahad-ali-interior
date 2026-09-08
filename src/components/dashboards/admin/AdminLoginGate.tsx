@@ -6,6 +6,7 @@ import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
 import { Lock, Mail, Eye, EyeOff, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { ensureEnterpriseTokens } from '@/hooks/use-enterprise-auth-sync';
+import { setEnterpriseTokens } from '@/lib/api-client';
 
 interface AdminLoginGateProps {
   onLoginSuccess: () => void;

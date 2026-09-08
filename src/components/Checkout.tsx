@@ -2289,7 +2289,6 @@ export default function Checkout() {
                     }`}
                     title="JazzCash Instant Mobile Account"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039222/fahad-ali-interior/assets/jazzcash_logo.svg"
                       alt="JazzCash"
@@ -2308,7 +2307,6 @@ export default function Checkout() {
                     }`}
                     title="Easypaisa 1-Tap Wallet"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039224/fahad-ali-interior/assets/easypaisa_logo.png"
                       alt="Easypaisa"
@@ -2360,7 +2358,6 @@ export default function Checkout() {
                     }`}
                     title="Raast Instant Payment (State Bank of Pakistan) / Bank Transfer"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039224/fahad-ali-interior/assets/raast_logo.png"
                       alt="Raast State Bank of Pakistan"
@@ -2812,15 +2809,12 @@ export default function Checkout() {
                           <div className="flex items-center justify-between border-b border-[#E7DDD0] pb-2.5">
                             <div className="flex items-center gap-2">
                               {paymentMethod === 'jazzcash' && (
-                                /* eslint-disable-next-line @next/next/no-img-element */
                                 <img src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto,w_140/v1788039222/fahad-ali-interior/assets/jazzcash_logo.svg" alt="JazzCash" className="h-6 object-contain" />
                               )}
                               {paymentMethod === 'easypaisa' && (
-                                /* eslint-disable-next-line @next/next/no-img-element */
                                 <img src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/easypaisa_logo.png" alt="Easypaisa" className="h-5.5 object-contain" />
                               )}
                               {paymentMethod === 'bank' && (
-                                /* eslint-disable-next-line @next/next/no-img-element */
                                 <img src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/raast_logo.png" alt="Raast SBP" className="h-6 object-contain" />
                               )}
                             </div>

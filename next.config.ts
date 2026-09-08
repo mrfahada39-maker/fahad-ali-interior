@@ -18,7 +18,7 @@ const withPWA = withPWAInit({
   exclude: [/sw-push\.js$/, /\.mp4$/i, /\.webm$/i],
   runtimeCaching: [
     {
-      urlPattern: ({ request }: { request: any }) => request.mode === 'navigate',
+      urlPattern: ({ request }: { request: { mode?: string } }) => request.mode === 'navigate',
       handler:    'NetworkFirst',
       options: {
         cacheName:  'pages-cache',
@@ -134,6 +134,7 @@ const nextConfig: NextConfig = {
       'tests/**/*',
       'docs/**/*',
       'scripts/**/*',
+      'Database/migrations/**/*',
       '**/*.map',
       '**/*.d.ts',
       '**/*.md',
@@ -223,10 +224,6 @@ const nextConfig: NextConfig = {
         ? [
             {
               source: '/images/(.*)',
-              headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-            },
-            {
-              source: '/_next/static/(.*)',
               headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
             },
           ]

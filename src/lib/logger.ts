@@ -20,7 +20,6 @@ let requestIdStorage: RequestIdStorage = {
 };
 
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { AsyncLocalStorage } = require('async_hooks');
   if (AsyncLocalStorage) {
     const als = new AsyncLocalStorage();

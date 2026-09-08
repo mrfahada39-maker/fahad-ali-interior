@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { useCartStore } from '@/store/cartStore';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { create } from 'zustand';

@@ -147,7 +147,7 @@ export default async function RootLayout({
           as="image"
           href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_540/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg"
           media="(max-width: 768px)"
-          // @ts-ignore
+          // @ts-expect-error - fetchpriority is standard HTML
           fetchpriority="high"
         />
         <link
@@ -155,7 +155,7 @@ export default async function RootLayout({
           as="image"
           href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_1080/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg"
           media="(min-width: 769px)"
-          // @ts-ignore
+          // @ts-expect-error - fetchpriority is standard HTML
           fetchpriority="high"
         />
 
