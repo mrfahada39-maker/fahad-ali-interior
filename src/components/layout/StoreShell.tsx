@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import InitialWarmupScreen from '@/components/InitialWarmupScreen';
-import GlobalAssetPrewarmer from '@/components/GlobalAssetPrewarmer';
 
 const CartDrawer = dynamic(() => import('@/components/CartDrawer'), { ssr: false });
 const WishlistDrawerPanel = dynamic(
@@ -68,7 +67,6 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
   return (
     <div className="min-h-screen bg-[#FCFAF7] text-[#221814]" style={{ backgroundColor: '#FCFAF7' }}>
       <InitialWarmupScreen />
-      <GlobalAssetPrewarmer />
       <Suspense fallback={null}>
         <SearchParamsListener setAuthOpen={setAuthOpen} />
       </Suspense>

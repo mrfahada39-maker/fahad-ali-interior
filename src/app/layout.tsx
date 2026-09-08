@@ -141,49 +141,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
-        {/* High-Priority Instant Hero Poster Preload (Zero Black Screen / Zero Flash) */}
-        <link
-          rel="preload"
-          as="image"
-          href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_540/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg"
-          media="(max-width: 768px)"
-          // @ts-expect-error - fetchpriority is standard HTML
-          fetchpriority="high"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_1080/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg"
-          media="(min-width: 769px)"
-          // @ts-expect-error - fetchpriority is standard HTML
-          fetchpriority="high"
-        />
 
-        {/* Google Speculation Rules API for Instant 0.00ms Zero-Latency Navigation */}
-        <script
-          type="speculationrules"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              prerender: [
-                {
-                  source: 'list',
-                  urls: ['/shop', '/about', '/contact', '/cart', '/faq'],
-                  eagerness: 'moderate',
-                },
-                {
-                  where: { href_matches: '/*' },
-                  eagerness: 'conservative',
-                },
-              ],
-              prefetch: [
-                {
-                  where: { href_matches: '/*' },
-                  eagerness: 'moderate',
-                },
-              ],
-            }),
-          }}
-        />
 
         <script
           dangerouslySetInnerHTML={{

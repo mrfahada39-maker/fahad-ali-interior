@@ -73,8 +73,7 @@ export default function HomePageInteractive({
   initialReviews = REVIEWS,
 }: HomePageInteractiveProps) {
   const heroSectionRef = useRef<HTMLElement>(null);
-  const mobileVideoRef = useRef<HTMLVideoElement>(null);
-  const desktopVideoRef = useRef<HTMLVideoElement>(null);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
   const [categoriesList, setCategoriesList] = useState<any[]>(
     initialCategories && initialCategories.length > 0 ? initialCategories : CATEGORIES
   );
@@ -98,11 +97,9 @@ export default function HomePageInteractive({
     const observer = new window.IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          if (mobileVideoRef.current?.paused) mobileVideoRef.current.play().catch(() => {});
-          if (desktopVideoRef.current?.paused) desktopVideoRef.current.play().catch(() => {});
+          if (heroVideoRef.current?.paused) heroVideoRef.current.play().catch(() => {});
         } else {
-          if (mobileVideoRef.current && !mobileVideoRef.current.paused) mobileVideoRef.current.pause();
-          if (desktopVideoRef.current && !desktopVideoRef.current.paused) desktopVideoRef.current.pause();
+          if (heroVideoRef.current && !heroVideoRef.current.paused) heroVideoRef.current.pause();
         }
       },
       { threshold: 0.0 }
@@ -131,43 +128,29 @@ export default function HomePageInteractive({
       <section ref={heroSectionRef} className="gsap-hero-section relative w-full h-screen h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
         {/* Background Parallax & Video Container */}
         <div className="gsap-hero-bg absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-          {/* Instant SSR Priority Poster (Delivers < 0.4s FCP & LCP) */}
-          <div className="block md:hidden absolute inset-0 w-full h-full">
-            <Image
+          {/* Instant SSR Responsive Poster (Zero Flash, Single Device Image Only) */}
+          <picture className="absolute inset-0 w-full h-full">
+            <source media="(max-width: 768px)" srcSet={CLOUDINARY_ASSETS.heroMobilePoster} />
+            <source media="(min-width: 769px)" srcSet={CLOUDINARY_ASSETS.heroDesktopPoster} />
+            <img
               src={CLOUDINARY_ASSETS.heroMobilePoster}
-              alt="Fahad Ali Interior Royal Luxury Bedroom Showcase"
-              fill
-              priority
-              unoptimized
-              fetchPriority="high"
-              sizes="100vw"
-              className="object-cover object-center"
+              alt="Fahad Ali Interior Royal Luxury Showcase"
+              className="w-full h-full object-cover object-center"
+              decoding="async"
+              // @ts-expect-error - fetchpriority is standard HTML
+              fetchpriority="high"
             />
-          </div>
-          <div className="hidden md:block absolute inset-0 w-full h-full">
-            <Image
-              src={CLOUDINARY_ASSETS.heroDesktopPoster}
-              alt="Fahad Ali Interior Royal Luxury Living Room Showcase"
-              fill
-              priority
-              unoptimized
-              fetchPriority="high"
-              sizes="100vw"
-              className="object-cover object-center"
-            />
-          </div>
+          </picture>
 
-          {/* CINEMATIC LUXURY VIDEOS (Permanent GPU-Accelerated Hardware Stream) */}
-          {/* MOBILE CINEMATIC LUXURY VIDEO */}
+          {/* CINEMATIC LUXURY VIDEO (Single Responsive Hardware Accelerated Stream) */}
           <video
-            ref={mobileVideoRef}
+            ref={heroVideoRef}
             autoPlay
             loop
             muted
             playsInline
             crossOrigin="anonymous"
-            preload="auto"
-            poster={CLOUDINARY_ASSETS.heroMobilePoster}
+            preload="metadata"
             disablePictureInPicture
             disableRemotePlayback
             onLoadedData={(e) => { e.currentTarget.play().catch(() => {}); setVideoLoaded(true); }}
@@ -175,32 +158,10 @@ export default function HomePageInteractive({
             onCanPlay={() => setVideoLoaded(true)}
             aria-label="Fahad Ali Interior Luxury Showcase Video"
             style={{ willChange: 'opacity', transform: 'translateZ(0)' }}
-            className={`block md:hidden absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1] transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1] transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
           >
-            <source src={CLOUDINARY_ASSETS.heroMobileVideo} type="video/mp4" />
-            <track kind="captions" srcLang="en" label="English" default />
-          </video>
-
-          {/* DESKTOP & TABLET CINEMATIC LUXURY VIDEO */}
-          <video
-            ref={desktopVideoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            crossOrigin="anonymous"
-            preload="auto"
-            poster={CLOUDINARY_ASSETS.heroDesktopPoster}
-            disablePictureInPicture
-            disableRemotePlayback
-            onLoadedData={(e) => { e.currentTarget.play().catch(() => {}); setVideoLoaded(true); }}
-            onPlaying={() => setVideoLoaded(true)}
-            onCanPlay={() => setVideoLoaded(true)}
-            aria-label="Fahad Ali Interior Luxury Showcase Video"
-            style={{ willChange: 'opacity', transform: 'translateZ(0)' }}
-            className={`hidden md:block absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1] transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
-          >
-            <source src={CLOUDINARY_ASSETS.heroDesktopVideo} type="video/mp4" />
+            <source media="(max-width: 768px)" src={CLOUDINARY_ASSETS.heroMobileVideo} type="video/mp4" />
+            <source media="(min-width: 769px)" src={CLOUDINARY_ASSETS.heroDesktopVideo} type="video/mp4" />
             <track kind="captions" srcLang="en" label="English" default />
           </video>
 
@@ -297,6 +258,7 @@ export default function HomePageInteractive({
                     src={resolveImageUrl(cat.image, cat.name, 550)} 
                     alt={cat.name} 
                     fill 
+                    unoptimized
                     loading={i < 2 ? 'eager' : 'lazy'}
                     decoding="async"
                     className="gsap-cat-img object-cover transition-transform duration-500 group-hover:scale-105" 

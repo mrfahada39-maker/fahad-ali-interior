@@ -276,7 +276,8 @@ export default function TestimonialsSection() {
                       alt={currentItem.name} 
                       fill 
                       unoptimized
-                      loading="eager"
+                      loading="lazy"
+                      decoding="async"
                       sizes="48px"
                       className="object-cover" 
                       onError={() => setImgErrors(prev => ({ ...prev, [currentItem.id]: true }))}
@@ -490,7 +491,8 @@ export default function TestimonialsSection() {
                                   alt={item.name} 
                                   fill 
                                   unoptimized
-                                  loading="eager"
+                                  loading="lazy"
+                                  decoding="async"
                                   sizes="36px"
                                   className="object-cover" 
                                   onError={() => setImgErrors(prev => ({ ...prev, [item.id]: true }))}
@@ -524,7 +526,8 @@ export default function TestimonialsSection() {
                         alt={`${item.name} ${item.projectType}`} 
                         fill 
                         unoptimized
-                        loading="eager"
+                        loading="lazy"
+                        decoding="async"
                         sizes="(max-width: 1024px) 50vw, 400px"
                         className="object-cover transition-transform duration-700 group-hover:scale-108" 
                       />

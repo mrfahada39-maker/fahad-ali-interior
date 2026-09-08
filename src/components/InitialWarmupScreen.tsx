@@ -2,12 +2,6 @@
 
 import { useState, useEffect } from 'react';
 
-const CRITICAL_PRELOAD_ASSETS = [
-  'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_540/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg',
-  'https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,c_limit,w_550/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg',
-  'https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,c_limit,w_550/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg',
-];
-
 export default function InitialWarmupScreen() {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -20,16 +14,7 @@ export default function InitialWarmupScreen() {
       if (!alreadyWarmed) {
         setVisible(true);
 
-        // Preload and decode critical assets into browser GPU memory
-        CRITICAL_PRELOAD_ASSETS.forEach((src) => {
-          const img = new Image();
-          img.src = src;
-          if ('decode' in img) {
-            img.decode().catch(() => {});
-          }
-        });
-
-        // 450ms ultra-clean warmup: allows browser to complete layout and first paint
+        // 400ms ultra-clean warmup: allows browser to complete layout and first paint
         const fadeTimer = setTimeout(() => {
           setFading(true);
           sessionStorage.setItem('fahad_site_warmed', '1');
