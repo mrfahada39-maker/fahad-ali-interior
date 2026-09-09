@@ -63,7 +63,7 @@ export const CURATED_FALLBACK_PRODUCTS: StorefrontProduct[] = [
     description: 'Heavy-duty 4-door wardrobe with built-in locker, velvet jewelry drawers, and antique brass handles.',
     price: 195000,
     category: 'Luxury Wardrobes',
-    image: 'https://images.unsplash.com/photo-1595514535415-eb942f2ed805?auto=format&fit=crop&fm=webp&w=380&q=55',
+    image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_450/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg',
     material: 'Solid Sheesham & Walnut Veneer',
     dimensions: '84 x 72 x 24 in',
     stockCount: 5,
