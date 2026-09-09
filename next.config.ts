@@ -19,12 +19,7 @@ const withPWA = withPWAInit({
   runtimeCaching: [
     {
       urlPattern: ({ request }: { request: { mode?: string } }) => request.mode === 'navigate',
-      handler:    'NetworkFirst',
-      options: {
-        cacheName:  'pages-cache',
-        expiration: { maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 },
-        networkTimeoutSeconds: 2,
-      },
+      handler:    'NetworkOnly',
     },
     {
       urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,

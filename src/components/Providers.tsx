@@ -27,6 +27,22 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
       setSiteSettings(initialSettings);
     }
 
+    // Purge any stale PWA caches so visitors never see old loading screens
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem('fahad_site_warmed');
+      } catch {}
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          for (const name of names) {
+            if (name.includes('pages-cache') || name.includes('offline-v6') || name.includes('workbox-precache')) {
+              caches.delete(name);
+            }
+          }
+        }).catch(() => {});
+      }
+    }
+
     // Register & proactively check for new Service Worker update on live site
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw-push.js').catch(() => {});

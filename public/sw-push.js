@@ -1,7 +1,7 @@
 const APP_NAME = 'Fahad Ali Interior';
 const DEFAULT_ICON = '/icons/icon-192.png';
 const DEFAULT_BADGE = '/logo.svg';
-const CACHE_NAME = 'fahad-ali-offline-v6';
+const CACHE_NAME = 'fahad-ali-offline-v7';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE_ASSETS = [
   OFFLINE_URL,
@@ -23,13 +23,13 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// ACTIVATE: Clean up older caches & take control immediately
+// ACTIVATE: Clean up ALL older caches & take control immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME && !key.startsWith('workbox-')) {
+          if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })

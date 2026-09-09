@@ -2,7 +2,8 @@ import StoreShell from '@/components/layout/StoreShell';
 import HomePageInteractive from './HomePageInteractive';
 import { getHomePageData } from '@/lib/home-page-data';
 
-export const revalidate = 120;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function HomePage() {
   // Fetch homepage bundle data on the server with in-memory caching

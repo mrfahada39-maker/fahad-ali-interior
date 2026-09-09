@@ -24,7 +24,6 @@ import Image from 'next/image';
 import { resolveImageUrl } from '@/lib/images';
 import SettingsTab from '@/components/dashboards/SettingsTab';
 import TwoFactorSetup from '@/components/dashboards/TwoFactorSetup';
-import LuxuryLoadingScreen from '@/components/LuxuryLoadingScreen';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 import VoiceNotePlayer from '@/components/chat/VoiceNotePlayer';
 import VoiceNoteRecorder from '@/components/chat/VoiceNoteRecorder';
