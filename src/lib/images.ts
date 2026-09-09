@@ -29,17 +29,17 @@ const CATEGORY_MAP: Record<string, string> = {
 };
 
 /**
- * Automatically compress any Cloudinary URL to ultra-fast AVIF format and perceptual auto quality.
+ * Automatically compress any Cloudinary URL to ultra-fast AVIF/WebP format and perceptual auto quality.
  */
 export function compressCloudinaryUrl(url: string, width = 380): string {
   if (!url || typeof url !== 'string') return url;
   if (!url.includes('res.cloudinary.com')) return url;
   if (url.includes('/f_auto') || url.includes('/q_auto')) return url;
 
-  // Transform /image/upload/...
+  // Transform /image/upload/... — f_auto automatically serves next-gen AVIF to Chrome/Safari/Firefox
   return url.replace(
     /\/image\/upload\/(v\d+\/)?/,
-    `/image/upload/f_webp,q_auto:eco,c_limit,w_${width}/$1`
+    `/image/upload/f_auto,q_auto:good,c_limit,w_${width}/$1`
   ).replace(
     /\/video\/upload\/(v\d+\/)?/,
     `/video/upload/f_mp4,vc_h264:high:3.1,q_auto:good,ac_none,w_540,br_340k,fps_24/$1`
@@ -47,16 +47,15 @@ export function compressCloudinaryUrl(url: string, width = 380): string {
 }
 
 /**
- * Optimize Unsplash URLs to deliver lightweight WebP with width capping.
+ * Optimize Unsplash URLs to deliver lightweight AVIF/WebP with width capping.
  */
 export function optimizeUnsplashUrl(url: string, width = 380): string {
   if (!url || !url.includes('images.unsplash.com')) return url;
   try {
     const parsed = new URL(url);
     parsed.searchParams.set('auto', 'format');
-    parsed.searchParams.set('fm', 'webp');
     parsed.searchParams.set('fit', 'crop');
-    parsed.searchParams.set('q', '55');
+    parsed.searchParams.set('q', '65');
     parsed.searchParams.set('w', String(width));
     return parsed.toString();
   } catch {

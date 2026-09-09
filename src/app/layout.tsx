@@ -89,9 +89,18 @@ export const metadata: Metadata = {
   // ── PWA manifest & icons ────────────────────────────────────────────────
   manifest: "/manifest.json",
   icons: {
-    icon: [{ url: "https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039209/fahad-ali-interior/assets/fahad_ali_logo.svg", type: "image/svg+xml" }, { url: "/logo.svg" }],
-    apple: "https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039209/fahad-ali-interior/assets/fahad_ali_logo.svg",
-    shortcut: "https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039209/fahad-ali-interior/assets/fahad_ali_logo.svg",
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039209/fahad-ali-interior/assets/fahad_ali_logo.svg", type: "image/svg+xml" },
+      { url: "/logo.svg" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/icons/icon-192.png",
   },
   appleWebApp: {
     capable: true,
@@ -141,8 +150,23 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
-
-
+        {/* Instant LCP Acceleration: Preload Hero Video Posters in AVIF */}
+        <link
+          rel="preload"
+          as="image"
+          href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_1080/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg"
+          media="(min-width: 769px)"
+          // @ts-expect-error fetchpriority is standard HTML
+          fetchpriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_540/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg"
+          media="(max-width: 768px)"
+          // @ts-expect-error fetchpriority is standard HTML
+          fetchpriority="high"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{if('scrollRestoration' in history){history.scrollRestoration='manual';}window.scrollTo(0,0);}catch(e){}`,

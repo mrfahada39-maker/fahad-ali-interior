@@ -3,7 +3,19 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import UserDashboard from '@/components/dashboards/UserDashboard';
+import dynamic from 'next/dynamic';
+
+const UserDashboard = dynamic(() => import('@/components/dashboards/UserDashboard'), {
+  loading: () => (
+    <div className="min-h-screen flex items-center justify-center bg-[#FCFAF7]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 border-2 border-[#B88E4B] border-t-transparent rounded-full animate-spin" />
+        <p className="font-serif tracking-widest uppercase text-xs text-[#8C6239]">Loading Member Suite...</p>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -20,6 +32,5 @@ export default function DashboardPage() {
     }
   }, [status, role, router]);
 
-  // Instant zero-delay render — Dashboard (Image 2) displays immediately without any blank screen!
   return <UserDashboard />;
 }

@@ -144,12 +144,12 @@ export const getHomePageData = unstable_cache(
         }).catch(() => []),
       ]);
 
-      const formattedProducts = products.map((p) => ({
+      const formattedProducts = products.map((p: any) => ({
         ...p,
         price: Number(p.price),
       })) as unknown as StorefrontProduct[];
 
-      const formattedCategories = categories.map((c) => ({
+      const formattedCategories = categories.map((c: any) => ({
         name: c.name,
         count: Number(c.items || 0) || 12,
         image: c.image || '/images/placeholder.webp',

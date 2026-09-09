@@ -67,19 +67,19 @@ const withPWA = withPWAInit({
       },
     },
     {
-      urlPattern: /^https?:\/\/.*\/api\/v1\/public\/.*/i,
+      urlPattern: /^https?:\/\/.*\/api\/(?:v1\/)?public\/.*/i,
       handler:    'StaleWhileRevalidate',
       options: {
         cacheName:  'public-api',
-        expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+        expiration: { maxEntries: 100, maxAgeSeconds: 15 * 60 },
       },
     },
     {
-      urlPattern: /^https?:\/\/.*\/api\/v1\/products.*/i,
+      urlPattern: /^https?:\/\/.*\/api\/(?:v1\/)?products.*/i,
       handler:    'StaleWhileRevalidate',
       options: {
         cacheName:  'products-api',
-        expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+        expiration: { maxEntries: 100, maxAgeSeconds: 15 * 60 },
       },
     },
   ],
@@ -169,6 +169,7 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-separator',
       '@radix-ui/react-tabs',
       '@radix-ui/react-slot',
+      '@radix-ui/react-slider',
       'class-variance-authority',
       'date-fns',
     ],
@@ -198,6 +199,10 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 31536000, // 1 year cache for optimized images
     deviceSizes:     [390, 640, 750, 828, 1080, 1200, 1920],
     imageSizes:      [16, 32, 48, 64, 96, 128, 256],
+    qualities:       [60, 75, 85],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   async headers() {
     return [
@@ -226,15 +231,31 @@ const nextConfig: NextConfig = {
         source:  '/api/v1/products',
         headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
-      // Static images & assets — 1 year immutable cache in production only
-      ...(process.env.NODE_ENV === 'production'
-        ? [
-            {
-              source: '/images/(.*)',
-              headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-            },
-          ]
-        : []),
+      // Ultra-Fast Asset Delivery — 1 year immutable CDN & browser caching
+      {
+        source:  '/icons/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source:  '/images/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source:  '/(logo.svg|favicon.ico)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source:  '/manifest.json',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
+      {
+        source:  '/offline.html',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
+      {
+        source:  '/sw-push.js',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
+      },
     ];
   },
 };

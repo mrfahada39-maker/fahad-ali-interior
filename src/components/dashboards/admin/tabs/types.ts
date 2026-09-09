@@ -59,6 +59,7 @@ export type AdminBundle = {
   products: any[] | { products: any[] };
   orders: any[];
   customers: any[];
+  users?: any[];
   messages: any[];
   reviews: any[];
   inquiries: any[];

@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { isNextAuthInternalRoute, toNestApiPath } from '@/lib/api-config';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';

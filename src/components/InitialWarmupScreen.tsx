@@ -14,15 +14,15 @@ export default function InitialWarmupScreen() {
       if (!alreadyWarmed) {
         setVisible(true);
 
-        // 400ms ultra-clean warmup: allows browser to complete layout and first paint
+        // Instant zero-perceived-load warmup: vanishes rapidly so user immediately sees the site
         const fadeTimer = setTimeout(() => {
           setFading(true);
           sessionStorage.setItem('fahad_site_warmed', '1');
-        }, 450);
+        }, 60);
 
         const removeTimer = setTimeout(() => {
           setVisible(false);
-        }, 800);
+        }, 180);
 
         return () => {
           clearTimeout(fadeTimer);
@@ -39,7 +39,7 @@ export default function InitialWarmupScreen() {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[999999] flex flex-col items-center justify-center select-none pointer-events-none transition-opacity duration-350 ease-out ${
+      className={`fixed inset-0 z-[999999] flex flex-col items-center justify-center select-none pointer-events-none transition-opacity duration-150 ease-out ${
         fading ? 'opacity-0' : 'opacity-100'
       }`}
       style={{

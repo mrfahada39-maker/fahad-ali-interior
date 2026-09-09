@@ -31,7 +31,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized. Admin role required.' }, { status: 403 });
     }
 
-    const secret = process.env.NEXTAUTH_SECRET || 'fahad-ali-interior-enterprise-token-secret-2026';
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret || secret.length < 32) {
+      return NextResponse.json({ error: 'Authentication security error: NEXTAUTH_SECRET is invalid or missing.' }, { status: 500 });
+    }
     const timestamp = Date.now();
     const signature = crypto.createHmac('sha256', secret).update(`${user.id}:${timestamp}`).digest('hex');
     const token = `fai_token_${user.id}_${timestamp}_${signature}`;

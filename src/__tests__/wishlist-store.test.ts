@@ -4,8 +4,7 @@ jest.mock('zustand/middleware', () => ({
   persist: (config: unknown) => config,
 }));
 
-import { useWishlistStore } from '@/store/wishlistStore';
-import type { WishlistItem } from '@/store/wishlistStore';
+import { useWishlistStore, type WishlistItem } from '@/store/wishlistStore';
 
 const mockItem: WishlistItem = {
   id: '1',

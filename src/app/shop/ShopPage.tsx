@@ -317,7 +317,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
         const nameMatch = (p.name || '').toLowerCase().includes(q);
         const catMatch = (p.category || '').toLowerCase().includes(q);
         const descMatch = (p.description || '').toLowerCase().includes(q);
-        const woodMatch = (p.woodType || p.material || '').toLowerCase().includes(q);
+        const woodMatch = ((p as any).woodType || p.material || '').toLowerCase().includes(q);
         if (!nameMatch && !catMatch && !descMatch && !woodMatch) return false;
       }
 

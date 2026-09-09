@@ -7,14 +7,14 @@ export interface RateLimitOptions {
 }
 
 export const RATE_LIMITS = {
-  login: { windowMs: 60 * 1000, maxRequests: 100 },
-  register: { windowMs: 60 * 1000, maxRequests: 50 },
-  newsletter: { windowMs: 60 * 60 * 1000, maxRequests: 10 },
-  inquiry: { windowMs: 60 * 1000, maxRequests: 30 },
-  coupon: { windowMs: 60 * 1000, maxRequests: 50 },
-  admin: { windowMs: 60 * 1000, maxRequests: 500 },
-  api: { windowMs: 60 * 1000, maxRequests: 500 },
-  upload: { windowMs: 60 * 1000, maxRequests: 100 },
+  login: { windowMs: 60 * 1000, maxRequests: 10 },       // Strict brute-force protection
+  register: { windowMs: 60 * 1000, maxRequests: 5 },      // Anti-bot account flood protection
+  newsletter: { windowMs: 60 * 60 * 1000, maxRequests: 5 },
+  inquiry: { windowMs: 60 * 1000, maxRequests: 10 },
+  coupon: { windowMs: 60 * 1000, maxRequests: 20 },
+  admin: { windowMs: 60 * 1000, maxRequests: 200 },
+  api: { windowMs: 60 * 1000, maxRequests: 300 },
+  upload: { windowMs: 60 * 1000, maxRequests: 15 },       // Anti-DDoS storage protection
 } as const;
 
 type LimitName = keyof typeof RATE_LIMITS;
@@ -76,7 +76,12 @@ function cleanupMemoryBuckets() {
   }
 }
 
-setInterval(cleanupMemoryBuckets, 60 * 1000);
+if (typeof setInterval !== 'undefined') {
+  const cleanupTimer = setInterval(cleanupMemoryBuckets, 60 * 1000);
+  if (typeof cleanupTimer === 'object' && 'unref' in cleanupTimer) {
+    cleanupTimer.unref();
+  }
+}
 
 export async function rateLimit(
   identifier: string,

@@ -1,38 +1,103 @@
 {
-  "name": "Fahad Ali Interior",
+  "id": "/fahad-ali-interior-app",
+  "name": "Fahad Ali Interior — Luxury Handcrafted Furniture",
   "short_name": "FA Interior",
-  "description": "Premium luxury furniture — handcrafted in Lahore, Pakistan",
-  "start_url": "/",
+  "description": "Premium luxury handcrafted furniture from Lahore, Pakistan. Masterpieces in Sheesham, walnut, and brass.",
+  "start_url": "/?source=pwa",
   "scope": "/",
-  "display": "browser",
-  "orientation": "portrait-primary",
-  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0A0C0E",
   "theme_color": "#c9a96e",
-  "categories": ["shopping", "lifestyle"],
-  "lang": "en",
+  "categories": ["shopping", "lifestyle", "business"],
+  "lang": "en-PK",
   "dir": "ltr",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
   "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Fahad Ali Interior Atelier Catalog"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Bespoke Mobile Furniture Showroom"
     }
   ],
   "shortcuts": [
     {
-      "name": "Shop Now",
-      "short_name": "Shop",
-      "description": "Browse our furniture collection",
+      "name": "Browse Collection",
+      "short_name": "Collection",
+      "description": "Explore handcrafted luxury furniture",
       "url": "/shop",
-      "icons": [{ "src": "/logo.svg", "sizes": "any" }]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "My Orders",
+      "name": "My Orders & Tracking",
       "short_name": "Orders",
-      "description": "View your orders",
+      "description": "View active commissions and orders",
       "url": "/dashboard",
-      "icons": [{ "src": "/logo.svg", "sizes": "any" }]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "VIP Concierge & Inquiries",
+      "short_name": "Concierge",
+      "description": "Direct boutique assistance",
+      "url": "/contact",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Shopping Bag",
+      "short_name": "Cart",
+      "description": "Review selected pieces",
+      "url": "/cart",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
   "related_applications": [],

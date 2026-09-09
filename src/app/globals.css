@@ -136,19 +136,37 @@
     @apply bg-theme-bg text-theme-dark font-medium;
   }
 
-  /* Custom scrollbar */
+  /* Bespoke Royal Gold Selection */
+  ::selection {
+    background: #B88E4B !important;
+    color: #FFFFFF !important;
+  }
+  ::-moz-selection {
+    background: #B88E4B !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Accessible Royal Gold Focus Halo */
+  :focus-visible {
+    outline: 2px solid #B88E4B !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Bespoke Royal Gold Atelier Scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 7px;
+    height: 7px;
   }
   ::-webkit-scrollbar-track {
-    background: #EFE2D9;
+    background: #FAF6F0;
   }
   ::-webkit-scrollbar-thumb {
-    background: #E3D6CB;
-    border-radius: 3px;
+    background: linear-gradient(180deg, #D4AF37 0%, #B88E4B 100%);
+    border-radius: 9999px;
+    border: 1.5px solid #FAF6F0;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #B08552;
+    background: linear-gradient(180deg, #B88E4B 0%, #996515 100%);
   }
 
   /* Hide scrollbar for category tabs */

@@ -4,8 +4,7 @@ jest.mock('zustand/middleware', () => ({
   persist: (config: unknown) => config,
 }));
 
-import { useCartStore } from '@/store/cartStore';
-import type { CartItem } from '@/store/cartStore';
+import { useCartStore, type CartItem } from '@/store/cartStore';
 
 const initialState = {
   items: [],

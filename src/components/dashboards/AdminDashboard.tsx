@@ -17,20 +17,31 @@ import { apiFetch, apiFetchJsonWithStatus, clearEnterpriseTokens } from '@/lib/a
 import { apiErrorMessage, ensureEnterpriseTokens } from '@/hooks/use-enterprise-auth-sync';
 import { signOut } from 'next-auth/react';
 import { defaultProductImage } from '@/lib/images';
+import dynamic from 'next/dynamic';
 import OverviewTab from './admin/tabs/OverviewTab';
-import ProductsTab from './admin/tabs/ProductsTab';
-import OrdersTab from './admin/tabs/OrdersTab';
-import CustomersTab from './admin/tabs/CustomersTab';
-import MessagesTab from './admin/tabs/MessagesTab';
-import ReviewsTab from './admin/tabs/ReviewsTab';
-import BlogTab from './admin/tabs/BlogTab';
-import SettingsTab from './admin/tabs/SettingsTab';
-import CmsTab from './admin/tabs/CmsTab';
-import InquiriesTab from './admin/tabs/InquiriesTab';
-import AnalyticsTab from './admin/tabs/AnalyticsTab';
-import AiChatbotTab from './admin/tabs/AiChatbotTab';
-import AiRadarTab from './admin/tabs/AiRadarTab';
-import LuxuryCallModal from '@/components/chat/LuxuryCallModal';
+
+const tabLoading = () => (
+  <div className="min-h-[400px] flex items-center justify-center">
+    <div className="flex flex-col items-center gap-2">
+      <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      <span className="text-xs text-stone-400 font-sans">Loading module...</span>
+    </div>
+  </div>
+);
+
+const ProductsTab = dynamic(() => import('./admin/tabs/ProductsTab'), { loading: tabLoading, ssr: false });
+const OrdersTab = dynamic(() => import('./admin/tabs/OrdersTab'), { loading: tabLoading, ssr: false });
+const CustomersTab = dynamic(() => import('./admin/tabs/CustomersTab'), { loading: tabLoading, ssr: false });
+const MessagesTab = dynamic(() => import('./admin/tabs/MessagesTab'), { loading: tabLoading, ssr: false });
+const ReviewsTab = dynamic(() => import('./admin/tabs/ReviewsTab'), { loading: tabLoading, ssr: false });
+const BlogTab = dynamic(() => import('./admin/tabs/BlogTab'), { loading: tabLoading, ssr: false });
+const SettingsTab = dynamic(() => import('./admin/tabs/SettingsTab'), { loading: tabLoading, ssr: false });
+const CmsTab = dynamic(() => import('./admin/tabs/CmsTab'), { loading: tabLoading, ssr: false });
+const InquiriesTab = dynamic(() => import('./admin/tabs/InquiriesTab'), { loading: tabLoading, ssr: false });
+const AnalyticsTab = dynamic(() => import('./admin/tabs/AnalyticsTab'), { loading: tabLoading, ssr: false });
+const AiChatbotTab = dynamic(() => import('./admin/tabs/AiChatbotTab'), { loading: tabLoading, ssr: false });
+const AiRadarTab = dynamic(() => import('./admin/tabs/AiRadarTab'), { loading: tabLoading, ssr: false });
+const LuxuryCallModal = dynamic(() => import('@/components/chat/LuxuryCallModal'), { ssr: false });
 import { toneGenerator, WebRtcCallClient } from '@/lib/webrtc-call-manager';
 import { tabs, AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin/tabs/types';
 

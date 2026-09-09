@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { db } from '@/lib/db';
+import { sendVerificationEmail } from '@/lib/email';
+import { getSiteUrl } from '@/lib/site-url';
+import { shouldSkipEmailVerification } from '@/lib/email-verification';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -50,7 +54,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const skipVerification = shouldSkipEmailVerification();
 
     const user = await db.user.create({
       data: {
@@ -58,6 +63,7 @@ export async function POST(req: NextRequest) {
         email: normalizedEmail,
         password: hashedPassword,
         role: 'USER',
+        emailVerified: skipVerification ? new Date() : null,
       },
       select: {
         id: true,
@@ -68,8 +74,43 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    if (!skipVerification) {
+      try {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const token = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await db.emailVerificationToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: `${tokenHash}:${code}`,
+            expiresAt,
+          },
+        });
+
+        const siteUrl = getSiteUrl();
+        const verifyUrl = `${siteUrl}/verify-email?token=${token}&email=${encodeURIComponent(normalizedEmail)}`;
+
+        await sendVerificationEmail({
+          to: user.email,
+          name: user.name || 'Valued Client',
+          verifyUrl,
+          code,
+        });
+      } catch (err) {
+        console.error('Failed to send verification email upon registration:', err);
+      }
+    }
+
     return NextResponse.json(
-      { success: true, message: 'Account created successfully', user },
+      {
+        success: true,
+        message: skipVerification
+          ? 'Account created successfully'
+          : 'Account created! Please check your email to verify your account.',
+        user,
+      },
       { status: 201 }
     );
   } catch (error: any) {

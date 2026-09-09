@@ -1,16 +1,24 @@
 const APP_NAME = 'Fahad Ali Interior';
-const DEFAULT_ICON = '/logo.svg';
+const DEFAULT_ICON = '/icons/icon-192.png';
 const DEFAULT_BADGE = '/logo.svg';
-const CACHE_NAME = 'fahad-ali-offline-v5';
+const CACHE_NAME = 'fahad-ali-offline-v6';
 const OFFLINE_URL = '/offline.html';
+const PRECACHE_ASSETS = [
+  OFFLINE_URL,
+  '/logo.svg',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/apple-touch-icon.png',
+  '/manifest.json',
+];
 
 let VAPID_PUBLIC_KEY = null;
 
-// INSTALL: Cache the offline fallback page immediately
+// INSTALL: Precache core offline assets immediately
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([OFFLINE_URL, '/logo.svg']);
+      return cache.addAll(PRECACHE_ASSETS);
     }).then(() => self.skipWaiting())
   );
 });
@@ -30,16 +38,36 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// FETCH: Catch network failure on page navigation and serve cached offline.html
+// FETCH: Smart Offline Strategy (NetworkFirst for navigation with offline fallback, CacheFirst for precached assets)
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // 1. Navigation requests (HTML pages)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(async () => {
         const cache = await caches.open(CACHE_NAME);
         const cached = await cache.match(OFFLINE_URL);
-        return cached || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+        return cached || new Response('Offline Mode Active', { status: 503, headers: { 'Content-Type': 'text/plain' } });
       })
     );
+    return;
+  }
+
+  // 2. Precached static assets & icons (Cache-first)
+  if (PRECACHE_ASSETS.includes(url.pathname)) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        return cached || fetch(event.request).then((res) => {
+          if (res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+          }
+          return res;
+        });
+      })
+    );
+    return;
   }
 });
 

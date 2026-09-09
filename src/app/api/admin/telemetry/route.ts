@@ -263,7 +263,7 @@ export async function GET() {
         orderBy: { createdAt: 'desc' },
         select: { totalAmount: true },
       }).catch(() => []);
-      totalOrderValue = dbOrders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+      totalOrderValue = dbOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
     } catch (e) {}
 
     return NextResponse.json({

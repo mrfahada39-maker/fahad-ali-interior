@@ -38,6 +38,13 @@ import { useCartStore } from '@/store/cartStore';
 import { apiFetch } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { toast } from 'sonner';
+import {
+  PAKISTAN_CITIES,
+  PAKISTAN_PROVINCES,
+  detectPakistaniTelecom,
+  isValidPakistaniPhone,
+  RAAST_SBP_DETAILS,
+} from '@/lib/pakistan-localization';
 
 // ── Payment Method Types ────────────────────────────────────────────────────
 export type PaymentMethodType = 'cod' | 'jazzcash' | 'easypaisa' | 'card' | 'bank';
@@ -1092,34 +1099,6 @@ const BANKS_LIST: BankItem[] = [
   },
 ];
 
-const PAKISTAN_PROVINCES = [
-  'Punjab',
-  'Sindh',
-  'Khyber Pakhtunkhwa (KPK)',
-  'Balochistan',
-  'Islamabad Capital Territory',
-  'Gilgit-Baltistan',
-  'Azad Jammu & Kashmir (AJK)',
-];
-
-const PAKISTAN_CITIES_MAP: Record<string, string> = {
-  Lahore: 'Punjab',
-  Karachi: 'Sindh',
-  Islamabad: 'Islamabad Capital Territory',
-  Rawalpindi: 'Punjab',
-  Faisalabad: 'Punjab',
-  Multan: 'Punjab',
-  Peshawar: 'Khyber Pakhtunkhwa (KPK)',
-  Quetta: 'Balochistan',
-  Sialkot: 'Punjab',
-  Gujranwala: 'Punjab',
-  Bahawalpur: 'Punjab',
-  Sargodha: 'Punjab',
-  Sukkur: 'Sindh',
-  Hyderabad: 'Sindh',
-  Abbottabad: 'Khyber Pakhtunkhwa (KPK)',
-};
-
 export default function Checkout() {
   const { items: cartStoreItems, clearCart, updateQuantity, removeItem } = useCartStore();
   const { data: session } = useSession();
@@ -1197,10 +1176,16 @@ export default function Checkout() {
     }
   }, [session]);
 
-  // Sync province on city change
+  // Sync province & postal code on city change
   useEffect(() => {
-    const province = PAKISTAN_CITIES_MAP[form.city] || 'Punjab';
-    setForm((p) => ({ ...p, province }));
+    const cityData = PAKISTAN_CITIES[form.city];
+    if (cityData) {
+      setForm((p) => ({
+        ...p,
+        province: cityData.province,
+        postalCode: cityData.postalCode || p.postalCode,
+      }));
+    }
   }, [form.city]);
 
   // Close dropdown on click outside
@@ -1247,6 +1232,10 @@ export default function Checkout() {
   }
 
   const grandTotal = Math.max(0, itemsSubtotal - discountAmount + shippingFee + taxAmount);
+
+  // Pakistani Telecom & Phone Validation
+  const detectedTelecom = detectPakistaniTelecom(form.phone);
+  const isPhoneValid = isValidPakistaniPhone(form.phone);
 
   const handleItemQuantity = (id: string, delta: number) => {
     const item = cartStoreItems.find((i) => i.id === id);
@@ -1925,9 +1914,24 @@ export default function Checkout() {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
-                          Phone Number <span className="text-amber-700">*</span>
-                        </label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider font-sans">
+                            Phone Number <span className="text-amber-700">*</span>
+                          </label>
+                          {detectedTelecom && (
+                            <span
+                              className="text-[9.5px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs animate-fadeIn"
+                              style={{
+                                backgroundColor: `${detectedTelecom.brandColor}15`,
+                                color: detectedTelecom.brandColor,
+                                border: `1px solid ${detectedTelecom.brandColor}40`,
+                              }}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: detectedTelecom.brandColor }} />
+                              {detectedTelecom.name}
+                            </span>
+                          )}
+                        </div>
                         <div className="relative group">
                           <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-[#FAF5EE] border border-[#E2D9CD] flex items-center justify-center pointer-events-none transition-colors group-focus-within:border-[#B88E4B]">
                             <Phone size={14} className="text-[#8C6239]" />
@@ -1937,11 +1941,27 @@ export default function Checkout() {
                             name="phone"
                             value={form.phone}
                             onChange={handleInputChange}
-                            placeholder="+92 300 1234567"
+                            placeholder="0300 1234567"
                             required
-                            className="w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] focus:border-[#B88E4B] focus:bg-white rounded-xl pl-12 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-[#1F1612] placeholder:text-stone-400 outline-none transition-all font-sans shadow-2xs"
+                            className={`w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border ${
+                              form.phone && !isPhoneValid
+                                ? 'border-amber-400 focus:border-amber-500'
+                                : form.phone && isPhoneValid
+                                ? 'border-emerald-500/70 focus:border-emerald-600'
+                                : 'border-[#E2D9CD] focus:border-[#B88E4B]'
+                            } focus:bg-white rounded-xl pl-12 pr-10 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-[#1F1612] placeholder:text-stone-400 outline-none transition-all font-sans shadow-2xs`}
                           />
+                          {form.phone && isPhoneValid && (
+                            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-600" title="Valid Pakistani Mobile Number">
+                              <ShieldCheck size={16} />
+                            </div>
+                          )}
                         </div>
+                        {form.phone && !isPhoneValid && form.phone.length > 3 && (
+                          <p className="text-[10px] text-amber-700 mt-1 font-medium font-sans">
+                            Enter standard 11-digit Pakistani mobile number (e.g. 0300 1234567 or +92 300...)
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -2082,22 +2102,35 @@ export default function Checkout() {
                     {/* City & Province */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       <div>
-                        <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
-                          City <span className="text-amber-700">*</span>
-                        </label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider font-sans">
+                            City <span className="text-amber-700">*</span>
+                          </label>
+                          {PAKISTAN_CITIES[form.city] && (
+                            <span className="text-[9px] font-bold text-[#8C6239] bg-[#FAF5EE] border border-[#E2D9CD] px-1.5 py-0.5 rounded">
+                              {PAKISTAN_CITIES[form.city].province}
+                            </span>
+                          )}
+                        </div>
                         <select
                           name="city"
                           value={form.city}
                           onChange={handleInputChange}
                           className="w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] focus:border-[#B88E4B] focus:bg-white rounded-xl px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-[#1F1612] outline-none transition-all cursor-pointer shadow-2xs font-sans"
                         >
-                          {Object.keys(PAKISTAN_CITIES_MAP).map((c) => (
+                          {Object.keys(PAKISTAN_CITIES).map((c) => (
                             <option key={c} value={c}>
-                              {c}
+                              {c} — {PAKISTAN_CITIES[c].province}
                             </option>
                           ))}
                           <option value="Other">Other Pakistani City</option>
                         </select>
+                        {PAKISTAN_CITIES[form.city]?.estDeliveryDays && (
+                          <div className="mt-1.5 text-[10.5px] text-emerald-800 bg-emerald-50/80 border border-emerald-200/60 rounded-lg px-2.5 py-1 flex items-center gap-1.5 font-medium">
+                            <Truck size={12} className="text-emerald-700 shrink-0" />
+                            <span>Transit: <strong className="font-bold">{PAKISTAN_CITIES[form.city].estDeliveryDays}</strong></span>
+                          </div>
+                        )}
                       </div>
 
                       <div>
@@ -2828,37 +2861,74 @@ export default function Checkout() {
                             <span className="font-bold text-[#221814]">Fahad Ali Interior</span>
                           </div>
 
-                          <div className="flex justify-between items-center">
-                            <span className="text-stone-600 font-semibold">
-                              {paymentMethod === 'jazzcash'
-                                ? 'JazzCash Merchant Mobile:'
-                                : paymentMethod === 'easypaisa'
-                                ? 'Easypaisa Merchant Mobile:'
-                                : 'Meezan Bank Official IBAN:'}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-sans font-black text-[#1F1612] tracking-wider text-xs sm:text-sm bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
-                                {paymentMethod === 'jazzcash'
-                                  ? '0300 1234567'
-                                  : paymentMethod === 'easypaisa'
-                                  ? '0345 1234567'
-                                  : 'PK36MEZN01020103456789'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  copyToClipboard(
-                                    paymentMethod === 'bank' ? 'PK36MEZN01020103456789' : paymentMethod === 'jazzcash' ? '03001234567' : '03451234567',
-                                    'Account Number'
-                                  )
-                                }
-                                className="text-[#B88E4B] hover:text-[#8C6239] bg-white border border-[#E2D9CD] hover:border-[#B88E4B] p-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
-                                title="Copy Number"
-                              >
-                                {copiedField === 'Account Number' ? <CheckCheck size={14} className="text-green-600" /> : <Copy size={14} />}
-                              </button>
+                          {paymentMethod === 'bank' ? (
+                            <div className="space-y-2.5 border-t border-[#E7DDD0] pt-2">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <span className="text-stone-600 font-semibold block text-[11px]">State Bank Raast ID:</span>
+                                  <span className="text-[9px] text-emerald-700 font-medium">0% Fee Instant Settlement</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono font-black text-[#1F1612] text-xs sm:text-sm bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
+                                    {RAAST_SBP_DETAILS.raastId}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(RAAST_SBP_DETAILS.raastId, 'Raast ID')}
+                                    className="text-[#B88E4B] hover:text-[#8C6239] bg-white border border-[#E2D9CD] hover:border-[#B88E4B] p-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
+                                    title="Copy Raast ID"
+                                  >
+                                    {copiedField === 'Raast ID' ? <CheckCheck size={14} className="text-green-600" /> : <Copy size={14} />}
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <span className="text-stone-600 font-semibold block text-[11px]">Official IBAN:</span>
+                                  <span className="text-[9px] text-stone-500 font-medium">{RAAST_SBP_DETAILS.bankName}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono font-black text-[#1F1612] text-[11px] sm:text-xs bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
+                                    {RAAST_SBP_DETAILS.iban}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(RAAST_SBP_DETAILS.iban, 'IBAN')}
+                                    className="text-[#B88E4B] hover:text-[#8C6239] bg-white border border-[#E2D9CD] hover:border-[#B88E4B] p-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
+                                    title="Copy IBAN"
+                                  >
+                                    {copiedField === 'IBAN' ? <CheckCheck size={14} className="text-green-600" /> : <Copy size={14} />}
+                                  </button>
+                                </div>
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="flex justify-between items-center border-t border-[#E7DDD0] pt-2">
+                              <span className="text-stone-600 font-semibold">
+                                {paymentMethod === 'jazzcash'
+                                  ? 'JazzCash Merchant Mobile:'
+                                  : 'Easypaisa Merchant Mobile:'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-sans font-black text-[#1F1612] tracking-wider text-xs sm:text-sm bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
+                                  {paymentMethod === 'jazzcash' ? '0300 1234567' : '0345 1234567'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    copyToClipboard(
+                                      paymentMethod === 'jazzcash' ? '03001234567' : '03451234567',
+                                      'Account Number'
+                                    )
+                                  }
+                                  className="text-[#B88E4B] hover:text-[#8C6239] bg-white border border-[#E2D9CD] hover:border-[#B88E4B] p-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
+                                  title="Copy Number"
+                                >
+                                  {copiedField === 'Account Number' ? <CheckCheck size={14} className="text-green-600" /> : <Copy size={14} />}
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         <div className="bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] rounded-2xl p-4 space-y-2 shadow-2xs">
@@ -2896,10 +2966,21 @@ export default function Checkout() {
                         <span className="font-bold text-[#1F1612]">{form.city || 'Lahore'}, {form.province || 'Punjab'}</span>
                       </div>
                       <div className="flex justify-between items-center">
+                        <span className="font-semibold text-stone-600">Transit Timeline:</span>
+                        <span className="font-bold text-emerald-700">{PAKISTAN_CITIES[form.city]?.estDeliveryDays || '2-3 Working Days (TCS Express)'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
                         <span className="font-semibold text-stone-600">Selected Method:</span>
                         <span className="font-black text-[#8C6239] bg-[#FAF5EE] border border-[#B88E4B]/35 px-2 py-0.5 rounded-md uppercase text-[10.5px]">
                           {paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod.toUpperCase()}
                         </span>
+                      </div>
+
+                      <div className="pt-1">
+                        <div className="text-[10px] text-[#7A6354] bg-white border border-[#E7DDD0] rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 shadow-2xs">
+                          <ShieldCheck size={13} className="text-[#8C6239] shrink-0" />
+                          <span>FBR &amp; PRA Sales Tax Compliant (Digital Invoice Attached)</span>
+                        </div>
                       </div>
 
                       <div className="flex justify-between items-center pt-2.5 border-t border-[#DECDBB]">

@@ -1954,7 +1954,7 @@ export default function UserDashboard() {
                   {mergedWishlist.length > 0 && (
                     <Button
                       onClick={() => {
-                        mergedWishlist.forEach((item) => addItem(item.product, 1));
+                        mergedWishlist.forEach((item) => addItem(item.product));
                         openCart();
                         toast.success('All curated pieces transferred to Shopping Bag');
                       }}
@@ -2687,13 +2687,13 @@ export default function UserDashboard() {
                     <div className="text-left">
                       <span className="text-[9px] font-mono font-bold text-stone-400 uppercase block">Patron ID</span>
                       <span className="text-xs font-mono font-black text-[#1F1612]">
-                        #{(session?.user as any)?.id ? (session.user as any).id.slice(-6).toUpperCase() : '4AIB7N'}
+                        #{(session?.user as any)?.id ? ((session?.user as any).id.slice(-6).toUpperCase()) : '4AIB7N'}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => {
-                        const patronId = `#${(session?.user as any)?.id ? (session.user as any).id.slice(-6).toUpperCase() : '4AIB7N'}`;
+                        const patronId = `#${(session?.user as any)?.id ? ((session?.user as any).id.slice(-6).toUpperCase()) : '4AIB7N'}`;
                         navigator.clipboard.writeText(patronId);
                         setCopiedId(true);
                         toast.success(`Patron ID ${patronId} copied to clipboard`);
@@ -2909,7 +2909,7 @@ export default function UserDashboard() {
               {renderKpiGrid(settingsKpis)}
 
               <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-[#E7DDD0] p-6 shadow-2xs">
-                <SettingsTab />
+                <SettingsTab profile={profile} />
               </div>
             </motion.div>
           )}
@@ -3168,7 +3168,7 @@ export default function UserDashboard() {
               <div className="flex items-center gap-2">
                 <Button
                   onClick={() => {
-                    addItem(quickViewProduct, 1);
+                    addItem(quickViewProduct);
                     openCart();
                     setQuickViewProduct(null);
                     toast.success(`${quickViewProduct.name} added to Shopping Bag`);

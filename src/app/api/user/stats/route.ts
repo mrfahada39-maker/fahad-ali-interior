@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       db.order.findMany({ where: { userId, deletedAt: null }, select: { totalAmount: true } }).catch(() => []),
       db.wishlistItem.count({ where: { userId } }).catch(() => 0),
     ]);
-    const totalSpent = orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+    const totalSpent = orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
     const loyaltyPoints = Math.floor(totalSpent / 1000);
     return NextResponse.json({
       totalOrders: orderCount,

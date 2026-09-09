@@ -134,6 +134,9 @@ export default [
       "@next/next/no-img-element": "off",
       "no-empty": ["error", { "allowEmptyCatch": true }],
       "prefer-const": "error",
+      "no-var": "error",
+      "no-duplicate-imports": "error",
+      "eqeqeq": ["error", "always", { "null": "ignore" }],
     },
   },
   {

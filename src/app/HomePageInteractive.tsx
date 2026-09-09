@@ -10,7 +10,13 @@ import {
 import { apiFetchJson } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
-import TestimonialsSection from '@/components/home/TestimonialsSection';
+import dynamic from 'next/dynamic';
+import TrustBadges from '@/components/TrustBadges';
+
+const TestimonialsSection = dynamic(() => import('@/components/home/TestimonialsSection'), {
+  loading: () => <div className="min-h-[400px] bg-[#0d0907]" />,
+  ssr: true,
+});
 
 const CATEGORIES = [
   { name: 'Living Room', items: '25 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
@@ -217,6 +223,9 @@ export default function HomePageInteractive({
           <ChevronDown size={28} />
         </div>
       </section>
+
+      {/* ── ATELIER HERITAGE TRUST ASSURANCE BAR ── */}
+      <TrustBadges />
 
       {/* ── CATEGORIES SECTION (LOW-END PHONE OPTIMIZED JANK-FREE ENGINE) ── */}
       <section className="smooth-scroll-section w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 mb-16 relative z-10">

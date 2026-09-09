@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import InitialWarmupScreen from '@/components/InitialWarmupScreen';
+import BackToTop from '@/components/ui/BackToTop';
 
 const CartDrawer = dynamic(() => import('@/components/CartDrawer'), { ssr: false });
 const WishlistDrawerPanel = dynamic(
@@ -54,14 +55,21 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
       if ('requestIdleCallback' in window) {
-        window.requestIdleCallback(() => setInteractive(true), { timeout: 2000 });
+        window.requestIdleCallback(() => setInteractive(true), { timeout: 1000 });
       } else {
-        setTimeout(() => setInteractive(true), 1500);
+        setTimeout(() => setInteractive(true), 600);
       }
     }
     const handler = () => setAuthOpen(true);
+    const triggerInteractive = () => setInteractive(true);
     window.addEventListener('open-auth', handler);
-    return () => window.removeEventListener('open-auth', handler);
+    window.addEventListener('open-cart', triggerInteractive);
+    window.addEventListener('open-wishlist', triggerInteractive);
+    return () => {
+      window.removeEventListener('open-auth', handler);
+      window.removeEventListener('open-cart', triggerInteractive);
+      window.removeEventListener('open-wishlist', triggerInteractive);
+    };
   }, []);
 
   return (
@@ -79,6 +87,7 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       {authOpen && <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} googleEnabled={googleEnabled} />}
       {interactive && <PWAInstallPrompt />}
       {interactive && <AiInteriorChatbot />}
+      <BackToTop />
     </div>
   );
 }

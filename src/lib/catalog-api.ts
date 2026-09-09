@@ -54,7 +54,7 @@ export async function getStorefrontProducts(limit = 50): Promise<StorefrontProdu
       orderBy: { createdAt: 'desc' },
     });
     if (products && products.length > 0) {
-      const result = products.map(p => ({
+      const result = products.map((p: any) => ({
         ...p,
         price: Number(p.price),
       })) as unknown as StorefrontProduct[];

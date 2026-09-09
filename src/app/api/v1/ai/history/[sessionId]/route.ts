@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       });
     }
 
-    const formattedMessages = session.messages.map((m) => {
+    const formattedMessages = session.messages.map((m: any) => {
       const meta = (m.metadata as any) || {};
       return {
         id: m.id,

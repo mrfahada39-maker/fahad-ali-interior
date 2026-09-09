@@ -29,7 +29,8 @@ async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser 
       const timestamp = parseInt(timestampStr, 10);
       const maxAgeMs = 30 * 24 * 60 * 60 * 1000; // 30 days
       if (!isNaN(timestamp) && (Date.now() - timestamp) < maxAgeMs) {
-        const secret = process.env.NEXTAUTH_SECRET || 'fahad-ali-interior-enterprise-token-secret-2026';
+        const secret = process.env.NEXTAUTH_SECRET;
+        if (!secret || secret.length < 32) return null;
         const expectedSig = crypto.createHmac('sha256', secret).update(`${userId}:${timestamp}`).digest('hex');
         try {
           if (crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSig, 'hex'))) {
@@ -215,7 +216,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         },
         orderBy: { createdAt: 'desc' },
       });
-      const formatted = products.map((p) => ({
+      const formatted = products.map((p: any) => ({
         ...p,
         price: Number(p.price),
       }));
@@ -279,14 +280,14 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         take: 50,
       }).catch(() => []);
 
-      const formatted = orders.map((o) => ({
+      const formatted = orders.map((o: any) => ({
         ...o,
         discount: Number(o.discount),
         gst: Number(o.gst),
         subtotal: Number(o.subtotal),
         totalAmount: Number(o.totalAmount),
         total: Number(o.totalAmount),
-        items: (o.items || []).map((item) => ({
+        items: (o.items || []).map((item: any) => ({
           ...item,
           price: Number(item.price),
         })),
@@ -306,7 +307,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         db.order.findMany({ where: { userId: user.id, deletedAt: null }, select: { totalAmount: true } }).catch(() => []),
         db.wishlistItem.count({ where: { userId: user.id } }).catch(() => 0),
       ]);
-      const totalSpent = orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+      const totalSpent = orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
       const loyaltyPoints = Math.floor(totalSpent / 1000);
       return NextResponse.json({
         totalOrders: orderCount,
@@ -328,10 +329,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         include: { items: true },
         orderBy: { createdAt: 'desc' },
       }).catch(() => []);
-      const formatted = orders.map((o) => ({
+      const formatted = orders.map((o: any) => ({
         ...o,
         totalAmount: Number(o.totalAmount),
-        items: (o.items || []).map((i) => ({ ...i, price: Number(i.price) })),
+        items: (o.items || []).map((i: any) => ({ ...i, price: Number(i.price) })),
       }));
       return NextResponse.json(formatted);
     }
@@ -770,28 +771,57 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const shippingProvince = body.shippingProvince || shippingInfo.province || body.province || 'Punjab';
       const shippingNotes = body.shippingNotes || shippingInfo.notes || body.notes || '';
 
-      const newOrder = await db.order.create({
-        data: {
-          user: { connect: { id: targetUserId } },
-          shippingName,
-          shippingPhone,
-          shippingEmail: shippingEmail || 'customer@fahadaliinterior.com',
-          shippingAddress,
-          shippingCity,
-          shippingProvince,
-          shippingNotes,
-          paymentMethod: validPaymentMethod,
-          subtotal,
-          gst,
-          discount,
-          totalAmount,
-          status: 'PENDING',
-          paymentStatus: 'PENDING',
-          items: {
-            create: formattedItems,
+      const newOrder = await (db as any).$transaction(async (tx: any) => {
+        const order = await tx.order.create({
+          data: {
+            user: { connect: { id: targetUserId } },
+            shippingName,
+            shippingPhone,
+            shippingEmail: shippingEmail || 'customer@fahadaliinterior.com',
+            shippingAddress,
+            shippingCity,
+            shippingProvince,
+            shippingNotes,
+            paymentMethod: validPaymentMethod,
+            subtotal,
+            gst,
+            discount,
+            totalAmount,
+            status: 'PENDING',
+            paymentStatus: 'PENDING',
+            items: {
+              create: formattedItems,
+            },
           },
-        },
-        include: { items: true },
+          include: { items: true },
+        });
+
+        // Record audit trail within the transaction
+        await tx.auditLog.create({
+          data: {
+            userId: targetUserId,
+            action: 'ORDER_PLACED',
+            entity: 'Order',
+            entityId: order.id,
+            metadata: {
+              totalAmount: Number(totalAmount),
+              itemCount: formattedItems.length,
+              paymentMethod: validPaymentMethod,
+            },
+          },
+        }).catch(() => null);
+
+        // Atomic inventory stock decrement for purchased items
+        for (const item of formattedItems) {
+          if (item.productId) {
+            await tx.product.updateMany({
+              where: { id: item.productId, stockCount: { gte: item.quantity } },
+              data: { stockCount: { decrement: item.quantity } },
+            }).catch(() => null);
+          }
+        }
+
+        return order;
       });
 
       // Dispatch real confirmation email via Gmail SMTP
@@ -818,7 +848,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           subtotal: Number(newOrder.subtotal),
           gst: Number(newOrder.gst),
           discount: Number(newOrder.discount),
-          items: newOrder.items.map((i) => ({ ...i, price: Number(i.price) })),
+          items: newOrder.items.map((i: any) => ({ ...i, price: Number(i.price) })),
         },
       });
     }
@@ -853,7 +883,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           subtotal: Number(order.subtotal),
           totalAmount: Number(order.totalAmount),
           total: Number(order.totalAmount),
-          items: (order.items || []).map((item) => ({
+          items: (order.items || []).map((item: any) => ({
             ...item,
             price: Number(item.price),
           })),
@@ -881,14 +911,14 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         orderBy: { createdAt: 'desc' },
       }).catch(() => []);
 
-      const formattedOrders = orders.map((o) => ({
+      const formattedOrders = orders.map((o: any) => ({
         ...o,
         discount: Number(o.discount),
         gst: Number(o.gst),
         subtotal: Number(o.subtotal),
         totalAmount: Number(o.totalAmount),
         total: Number(o.totalAmount),
-        items: (o.items || []).map((item) => ({
+        items: (o.items || []).map((item: any) => ({
           ...item,
           price: Number(item.price),
         })),
@@ -908,13 +938,13 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         orderBy: { createdAt: 'desc' },
       }).catch(() => []);
 
-      const formattedProducts = products.map((p) => ({
+      const formattedProducts = products.map((p: any) => ({
         ...p,
         price: Number(p.price),
       }));
 
-      const totalSpent = formattedOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
-      const completedOrders = formattedOrders.filter((o) => o.status === 'DELIVERED').length;
+      const totalSpent = formattedOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount), 0);
+      const completedOrders = formattedOrders.filter((o: any) => o.status === 'DELIVERED').length;
 
       const userAddresses = await db.address.findMany({
         where: { userId: targetUserId, deletedAt: null },
@@ -988,12 +1018,12 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         currency: 'PKR',
       };
 
-      const messageThreads = usersWithMessages.map((u) => ({
+      const messageThreads = usersWithMessages.map((u: any) => ({
         id: u.id,
         name: u.name || 'Valued Client',
         email: u.email,
         phone: u.phone || '',
-        messages: u.messages.map((m) => ({
+        messages: u.messages.map((m: any) => ({
           id: m.id,
           text: m.text,
           sender: m.sender || 'user',
@@ -1001,18 +1031,18 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         })),
       }));
 
-      const formattedProducts = products.map((p) => ({
+      const formattedProducts = products.map((p: any) => ({
         ...p,
         price: Number(p.price),
       }));
 
-      const formattedOrders = orders.map((o) => ({
+      const formattedOrders = orders.map((o: any) => ({
         ...o,
         discount: Number(o.discount),
         gst: Number(o.gst),
         totalAmount: Number(o.totalAmount),
         subtotal: Number(o.subtotal),
-        items: (o.items || []).map((it) => ({
+        items: (o.items || []).map((it: any) => ({
           ...it,
           price: Number(it.price),
         })),
@@ -1020,7 +1050,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }));
 
       // Calculate stats
-      const totalRevenue = formattedOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+      const totalRevenue = formattedOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount), 0);
       const orderCount = formattedOrders.length;
       const userCount = users.length;
       const productCount = formattedProducts.length;
@@ -1034,7 +1064,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
       // Calculate revenue monthly chart data
       const revenueByMonth: Record<string, number> = {};
-      formattedOrders.forEach((o) => {
+      formattedOrders.forEach((o: any) => {
         const date = new Date(o.createdAt);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         revenueByMonth[monthKey] = (revenueByMonth[monthKey] || 0) + Number(o.totalAmount);
@@ -1042,7 +1072,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
       // Calculate category distribution chart data
       const categoryCounts: Record<string, number> = {};
-      formattedProducts.forEach((p) => {
+      formattedProducts.forEach((p: any) => {
         categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
       });
       const categoryDistribution = Object.entries(categoryCounts).map(([category, count]) => ({
@@ -1059,7 +1089,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         stats,
         products: formattedProducts,
         orders: formattedOrders,
-        customers: users.map((u) => ({ id: u.id, name: u.name, email: u.email, phone: u.phone, createdAt: u.createdAt })),
+        customers: users.map((u: any) => ({ id: u.id, name: u.name, email: u.email, phone: u.phone, createdAt: u.createdAt })),
         messages: messageThreads,
         reviews,
         inquiries,
@@ -1081,12 +1111,12 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         db.product.count({ where: { deletedAt: null } }).catch(() => 0),
       ]);
 
-      const formattedProducts = products.map((p) => ({
+      const formattedProducts = products.map((p: any) => ({
         ...p,
         price: Number(p.price),
       }));
 
-      const formattedCategories = categories.map((c) => ({
+      const formattedCategories = categories.map((c: any) => ({
         name: c.name,
         count: Number(c.items || 0) || 12,
         image: c.image || '/images/placeholder.webp',
@@ -1188,12 +1218,12 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         orderBy: { createdAt: 'desc' },
       }).catch(() => []);
 
-      const threads = usersWithMessages.map((u) => ({
+      const threads = usersWithMessages.map((u: any) => ({
         id: u.id,
         name: u.name || 'Valued Client',
         email: u.email,
         phone: u.phone || '',
-        messages: u.messages.map((m) => ({
+        messages: u.messages.map((m: any) => ({
           id: m.id,
           text: m.text,
           sender: m.sender || 'user',
@@ -1385,19 +1415,19 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     // 7.2 GET /api/v1/ai/admin/analytics
     if (method === 'GET' && (segment === 'ai/admin/analytics' || segment === 'v1/ai/admin/analytics' || segment === 'admin/ai/analytics')) {
       const allMessages = await db.message.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
-      const userIds = Array.from(new Set(allMessages.map((m) => m.userId).filter(Boolean)));
+      const userIds = Array.from(new Set(allMessages.map((m: any) => m.userId).filter(Boolean)));
       const users = await db.user.findMany({ where: { id: { in: userIds as string[] } } }).catch(() => []);
       const orders = await db.order.findMany({ where: { userId: { in: userIds as string[] } } }).catch(() => []);
 
-      const escalatedMsgs = allMessages.filter((m) => {
+      const escalatedMsgs = allMessages.filter((m: any) => {
         const txt = (m.text || '').toLowerCase();
         return txt.includes('whatsapp') || txt.includes('call') || txt.includes('agent') || txt.includes('human') || txt.includes('phone') || txt.includes('price');
       });
 
-      const userMap = new Map(users.map((u) => [u.id, u]));
+      const userMap = new Map(users.map((u: any) => [u.id, u]));
       const recentSessions = userIds.slice(0, 10).map((uid) => {
-        const uMsgs = allMessages.filter((m) => m.userId === uid);
-        const usr = userMap.get(uid as string);
+        const uMsgs = allMessages.filter((m: any) => m.userId === uid);
+        const usr = userMap.get(uid as string) as any;
         const lastMsg = uMsgs[0];
         return {
           sessionId: `sess_${(uid as string).slice(-6)}`,
@@ -1406,7 +1436,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           email: usr?.email || 'client@fahadali.com',
           messageCount: uMsgs.length,
           lastActive: lastMsg ? lastMsg.createdAt : new Date().toISOString(),
-          status: uMsgs.some((m) => (m.text || '').toLowerCase().includes('whatsapp')) ? 'Escalated' : 'Active',
+          status: uMsgs.some((m: any) => (m.text || '').toLowerCase().includes('whatsapp')) ? 'Escalated' : 'Active',
           lastText: lastMsg ? lastMsg.text : '',
         };
       });
@@ -1531,8 +1561,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         return (u.phone && !u.phone.includes('0000000')) ? u.phone : null;
       };
 
-      const data = users.map((u) => {
-        const totalSpent = (u.orders || []).reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+      const data = users.map((u: any) => {
+        const totalSpent = (u.orders || []).reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
         const orderCount = (u.orders || []).length;
         const lastOrder = u.orders && u.orders.length > 0 ? u.orders[0] : null;
         const dynamicTier = computeLoyaltyTier(totalSpent, orderCount);
@@ -1600,18 +1630,18 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }).catch(() => []);
       const orders = await db.order.findMany({ where: { deletedAt: null } }).catch(() => []);
 
-      const totalRevenue = orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+      const totalRevenue = orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
       const avgOrderVal = orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0;
       const ltv = users.length > 0 ? Math.round(totalRevenue / users.length) : 0;
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-      const activeUsersWithOrders = users.filter((u) => u.orders && u.orders.length > 0);
+      const activeUsersWithOrders = users.filter((u: any) => u.orders && u.orders.length > 0);
 
       return NextResponse.json({
         total: users.length,
         active: users.length,
-        newThisMonth: users.filter((u) => u.createdAt > thirtyDaysAgo).length,
-        blocked: users.filter((u) => u.lockedUntil && new Date(u.lockedUntil) > new Date()).length,
+        newThisMonth: users.filter((u: any) => u.createdAt > thirtyDaysAgo).length,
+        blocked: users.filter((u: any) => u.lockedUntil && new Date(u.lockedUntil) > new Date()).length,
         verified: users.length,
         unverified: 0,
         returning: Math.max(1, activeUsersWithOrders.length),
@@ -1633,8 +1663,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       let silverCount = 0;
       let bronzeCount = 0;
 
-      users.forEach((u) => {
-        const spent = (u.orders || []).reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+      users.forEach((u: any) => {
+        const spent = (u.orders || []).reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
         const count = (u.orders || []).length;
         if (spent >= 500000 || count >= 10) platinumCount++;
         else if (spent >= 200000 || count >= 5) goldCount++;
@@ -1662,7 +1692,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
       if (!u) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
 
-      const totalSpent = (u.orders || []).reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+      const totalSpent = (u.orders || []).reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
       const orderCount = (u.orders || []).length;
       const avgOrderVal = orderCount > 0 ? Math.round(totalSpent / orderCount) : 0;
 
@@ -1706,7 +1736,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
             isDefault: true,
           },
         ],
-        orders: (u.orders || []).map((o) => ({
+        orders: (u.orders || []).map((o: any) => ({
           id: o.id,
           totalAmount: Number(o.totalAmount),
           status: o.status,
@@ -1714,7 +1744,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           paymentMethod: o.paymentMethod || 'COD',
           createdAt: o.createdAt,
         })),
-        reviews: (u.reviews || []).map((r) => ({
+        reviews: (u.reviews || []).map((r: any) => ({
           id: r.id,
           rating: r.rating,
           comment: r.comment || '',
@@ -1723,7 +1753,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           product: { name: r.product?.name || 'Furniture Item' },
         })),
         wishlistItems: [],
-        messages: (u.messages || []).map((m) => ({
+        messages: (u.messages || []).map((m: any) => ({
           id: m.id,
           text: m.text,
           sender: m.sender || 'user',
@@ -1845,8 +1875,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         include: { orders: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' } } },
       });
 
-      const rows = users.map((u) => {
-        const totalSpent = (u.orders || []).reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+      const rows = users.map((u: any) => {
+        const totalSpent = (u.orders || []).reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
         const lastOrder = u.orders && u.orders.length > 0 ? u.orders[0] : null;
 
         return {
@@ -2065,7 +2095,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         orderBy: { createdAt: 'desc' },
         take: 50,
       }).catch(() => []);
-      const unreadCount = notifications.filter((n) => n.isNew).length;
+      const unreadCount = notifications.filter((n: any) => n.isNew).length;
       return NextResponse.json({ notifications, unreadCount });
     }
 
