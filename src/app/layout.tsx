@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter, Great_Vibes } from "next/font/google";
+import ReactDOM from "react-dom";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import JsonLd from "@/components/JsonLd";
@@ -139,45 +140,26 @@ export default async function RootLayout({
 }>) {
   const settings = await getCachedSettings();
 
+  // React 19 Native Head Hoisting: safe preconnects & DNS prefetching without hydration mismatch
+  ReactDOM.preconnect('https://res.cloudinary.com', { crossOrigin: 'anonymous' });
+  ReactDOM.prefetchDNS('https://res.cloudinary.com');
+  ReactDOM.preconnect('https://images.unsplash.com', { crossOrigin: 'anonymous' });
+  ReactDOM.prefetchDNS('https://images.unsplash.com');
+
+  ReactDOM.preload(
+    'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_1080/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg',
+    { as: 'image', fetchPriority: 'high' }
+  );
+
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Supersonic High-Priority CDN Preconnections */}
-        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
-
-        {/* Instant LCP Acceleration: Preload Hero Video Posters in AVIF */}
-        <link
-          rel="preload"
-          as="image"
-          href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_1080/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg"
-          media="(min-width: 769px)"
-          // @ts-expect-error fetchpriority is standard HTML
-          fetchpriority="high"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_540/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg"
-          media="(max-width: 768px)"
-          // @ts-expect-error fetchpriority is standard HTML
-          fetchpriority="high"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{if('scrollRestoration' in history){history.scrollRestoration='manual';}window.scrollTo(0,0);}catch(e){}`,
-          }}
-        />
-      </head>
       <body
         suppressHydrationWarning
         className={`${playfair.variable} ${inter.variable} ${greatVibes.variable} antialiased bg-theme-bg text-theme-dark`}
       >
         <JsonLd data={organizationJsonLd} />
         <Providers initialSettings={settings}>{children}</Providers>
-        {process.env.VERCEL && <SpeedInsights />}
+        <SpeedInsights />
       </body>
     </html>
   );
