@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import InitialWarmupScreen from '@/components/InitialWarmupScreen';
 import BackToTop from '@/components/ui/BackToTop';
 
 const CartDrawer = dynamic(() => import('@/components/CartDrawer'), { ssr: false });
@@ -74,7 +73,6 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
 
   return (
     <div className="min-h-screen bg-[#FCFAF7] text-[#221814]" style={{ backgroundColor: '#FCFAF7' }}>
-      <InitialWarmupScreen />
       <Suspense fallback={null}>
         <SearchParamsListener setAuthOpen={setAuthOpen} />
       </Suspense>
