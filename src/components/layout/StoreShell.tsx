@@ -1,7 +1,6 @@
 'use client';
 
-import { ReactNode, useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { ReactNode, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -26,18 +25,6 @@ const AiInteriorChatbot = dynamic(
 const googleEnabled =
   !!process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED &&
   process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === 'true';
-
-function SearchParamsListener({ setAuthOpen }: { setAuthOpen: (v: boolean) => void }) {
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    if (searchParams?.get('auth') === 'login') {
-      setAuthOpen(true);
-    }
-  }, [searchParams, setAuthOpen]);
-
-  return null;
-}
 
 interface StoreShellProps {
   children: ReactNode;
@@ -84,6 +71,12 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       } else {
         setTimeout(enableInteractive, 1200);
       }
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('auth') === 'login') {
+          setAuthOpen(true);
+        }
+      } catch {}
     }
 
     const handler = () => setAuthOpen(true);
@@ -109,9 +102,6 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
 
   return (
     <div className="min-h-screen bg-[#FCFAF7] text-[#221814]" style={{ backgroundColor: '#FCFAF7' }}>
-      <Suspense fallback={null}>
-        <SearchParamsListener setAuthOpen={setAuthOpen} />
-      </Suspense>
       {!hideNavbar && <Navbar onSearchOpen={() => setSearchOpen(true)} onAuthOpen={() => setAuthOpen(true)} />}
       {children}
       {showFooter && <Footer />}

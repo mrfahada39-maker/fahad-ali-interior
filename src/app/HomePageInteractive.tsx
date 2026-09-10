@@ -143,8 +143,7 @@ export default function HomePageInteractive({
               alt="Fahad Ali Interior Royal Luxury Showcase"
               className="w-full h-full object-cover object-center"
               decoding="async"
-              // @ts-expect-error - fetchpriority is standard HTML
-              fetchpriority="high"
+              fetchPriority="high"
             />
           </picture>
 

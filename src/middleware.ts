@@ -97,7 +97,7 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-request-id', requestId);
 
   if (pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.match(/\.[a-zA-Z0-9]+$/)) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    return NextResponse.next();
   }
 
   if (pathname.startsWith('/api/')) {
@@ -193,5 +193,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/:path*'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.json|offline.html|sw-push.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|bmp|mp4|webm)).*)',
+  ],
 };
