@@ -200,6 +200,14 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  async rewrites() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/icon',
+      },
+    ];
+  },
   async headers() {
     return [
       { source: '/(.*)', headers: securityHeaders },
