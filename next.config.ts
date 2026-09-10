@@ -106,7 +106,7 @@ const nextConfig: NextConfig = {
   staticPageGenerationTimeout: 300,
 
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   serverExternalPackages: ['@prisma/client', 'bcryptjs', 'sharp', 'nodemailer'],

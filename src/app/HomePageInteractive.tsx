@@ -15,7 +15,7 @@ import TrustBadges from '@/components/TrustBadges';
 
 const TestimonialsSection = dynamic(() => import('@/components/home/TestimonialsSection'), {
   loading: () => <div className="min-h-[400px] bg-[#0d0907]" />,
-  ssr: true,
+  ssr: false,
 });
 
 const CATEGORIES = [

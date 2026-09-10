@@ -2,8 +2,8 @@ import StoreShell from '@/components/layout/StoreShell';
 import HomePageInteractive from './HomePageInteractive';
 import { getHomePageData } from '@/lib/home-page-data';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// Next.js ISR (Incremental Static Regeneration) — edge cached for 0ms TTFB
+export const revalidate = 300;
 
 export default async function HomePage() {
   // Fetch homepage bundle data on the server with in-memory caching

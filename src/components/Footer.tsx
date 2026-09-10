@@ -40,7 +40,7 @@ export default function Footer() {
 
   return (
     <footer 
-      className="w-full relative bg-[#F7F3ED] text-[#2C1E18] pt-8 sm:pt-11 pb-24 sm:pb-28 lg:pb-6 border-t border-[#E8DFC8]/60 overflow-hidden font-sans select-none" 
+      className="w-full relative bg-[#F7F3ED] text-[#2C1E18] pt-8 sm:pt-11 pb-24 sm:pb-28 lg:pb-6 border-t border-[#E8DFC8]/60 overflow-hidden font-sans select-none cv-auto" 
       data-testid="footer"
     >
 

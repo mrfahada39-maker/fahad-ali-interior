@@ -8,6 +8,7 @@ import { getSiteUrl } from "@/lib/site-url";
 import { unstable_cache } from "next/cache";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { db } from "@/lib/db";
+import { CLOUDINARY_ASSETS } from "@/lib/cloudinary-assets";
 
 const getCachedSettings = unstable_cache(
   async () => {
@@ -147,8 +148,13 @@ export default async function RootLayout({
   ReactDOM.prefetchDNS('https://images.unsplash.com');
 
   ReactDOM.preload(
-    'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_1080/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg',
-    { as: 'image', fetchPriority: 'high' }
+    CLOUDINARY_ASSETS.heroDesktopPoster,
+    {
+      as: 'image',
+      fetchPriority: 'high',
+      imageSrcSet: `${CLOUDINARY_ASSETS.heroMobilePoster} 768w, ${CLOUDINARY_ASSETS.heroDesktopPoster} 1280w`,
+      imageSizes: '100vw',
+    }
   );
 
   return (
