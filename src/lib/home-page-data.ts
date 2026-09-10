@@ -33,6 +33,9 @@ export type HomeBanner = {
   subtitle: string | null;
   image: string;
   link: string | null;
+  ctaText?: string;
+  ctaLink?: string;
+  badgeText?: string;
   price?: number | string | null;
   colors?: string | null;
 };
@@ -184,11 +187,14 @@ export const getHomePageData = unstable_cache(
         banners: banners.map((b: any) => ({
           id: b.id,
           title: b.title,
-          subtitle: b.subtitle || '',
+          subtitle: b.subtitle || null,
+          link: b.link || '/shop',
           ctaText: 'EXPLORE COLLECTION',
           ctaLink: b.link || '/shop',
           image: b.image,
           badgeText: '',
+          price: b.price ?? null,
+          colors: b.colors ?? null,
         })),
       };
     } catch (err) {
