@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter, Great_Vibes } from "next/font/google";
-import ReactDOM from "react-dom";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import JsonLd from "@/components/JsonLd";
@@ -8,7 +7,6 @@ import { getSiteUrl } from "@/lib/site-url";
 import { unstable_cache } from "next/cache";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { db } from "@/lib/db";
-import { CLOUDINARY_ASSETS } from "@/lib/cloudinary-assets";
 
 const getCachedSettings = unstable_cache(
   async () => {
@@ -142,15 +140,8 @@ export default async function RootLayout({
 }>) {
   const settings = await getCachedSettings();
 
-  // React 19 Native Head Hoisting: safe preconnects & DNS prefetching without hydration mismatch
-  ReactDOM.preconnect('https://res.cloudinary.com', { crossOrigin: 'anonymous' });
-  ReactDOM.prefetchDNS('https://res.cloudinary.com');
-  ReactDOM.preconnect('https://images.unsplash.com', { crossOrigin: 'anonymous' });
-  ReactDOM.prefetchDNS('https://images.unsplash.com');
-  ReactDOM.preload(CLOUDINARY_ASSETS.heroMobilePoster, { as: 'image', fetchPriority: 'high' });
-
   return (
-    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="en" suppressHydrationWarning>
       <body
         suppressHydrationWarning
         className={`${playfair.variable} ${inter.variable} ${greatVibes.variable} antialiased bg-theme-bg text-theme-dark`}

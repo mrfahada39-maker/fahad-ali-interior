@@ -59,7 +59,7 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
       fetch('/api/public/settings')
         .then((res) => res.json())
         .then((data) => {
-          if (data) setSiteSettings(data);
+          if (data && !data.error && (data.siteName || data.id)) setSiteSettings(data);
         })
         .catch(() => {});
     }

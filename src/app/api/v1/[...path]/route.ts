@@ -1971,6 +1971,40 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       return NextResponse.json(updated);
     }
 
+    // 11.0 GET /public/settings, /v1/public/settings, /settings, /admin/settings
+    if (method === 'GET' && (
+      segment === 'public/settings' ||
+      segment === 'v1/public/settings' ||
+      segment === 'settings' ||
+      segment === 'v1/settings' ||
+      segment === 'admin/settings' ||
+      segment === 'v1/admin/settings'
+    )) {
+      const existing = await db.settings.findFirst().catch(() => null);
+      const defaultSettings = {
+        id: 'singleton',
+        siteName: 'Fahad Ali Interior',
+        adminEmail: 'mrfahada39@gmail.com',
+        contactPhone: '+92 320 7006110',
+        storeAddress: 'Main Boulevard, Gulberg III, Lahore, Pakistan',
+        currency: 'PKR',
+        socialInstagram: 'https://instagram.com/fahadaliinterior',
+        socialFacebook: 'https://facebook.com/fahadaliinterior',
+        socialWhatsapp: '923207006110',
+        foundedYear: '2020',
+        themeFontFamily: 'Playfair Display',
+        themeBgColor: '#FAF7F2',
+        themeSurfaceColor: '#FFFFFF',
+        themeBorderColor: '#EAE5DF',
+        themeDarkColor: '#1A1A1A',
+        themeMutedColor: '#8A8682',
+        themeAccentColor: '#2C251F',
+      };
+      return NextResponse.json(existing || defaultSettings, {
+        headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' }
+      });
+    }
+
     // 11.1 PUT & POST /admin/settings
     if ((method === 'PUT' || method === 'POST') && (segment === 'admin/settings' || segment === 'v1/admin/settings')) {
       const body = await req.json();
