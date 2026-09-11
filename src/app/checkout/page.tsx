@@ -1,4 +1,4 @@
-import StoreShell from '@/components/layout/StoreShell';
+﻿import StoreShell from '@/components/StoreShell';
 import dynamic from 'next/dynamic';
 
 const Checkout = dynamic(() => import('@/components/Checkout'), {

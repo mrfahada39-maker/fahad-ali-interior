@@ -1,8 +1,8 @@
-/**
+﻿/**
  * Storefront Product Data Layer (Direct PostgreSQL with in-memory caching)
  */
 
-import type { StorefrontProduct } from '@/lib/types/product';
+import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
 import { CURATED_FALLBACK_PRODUCTS } from '@/lib/curated-products';
 

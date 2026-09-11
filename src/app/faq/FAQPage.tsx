@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, MessageCircle, Phone, Search, Sparkles, HelpCircle, ShieldCheck, Truck, CreditCard, RotateCcw, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { faqCategories } from '@/lib/data/faq-data';
+import { faqCategories } from '@/lib/faq-data';
 
 const CATEGORY_ICONS: Record<string, any> = {
   'Orders & Delivery': Truck,

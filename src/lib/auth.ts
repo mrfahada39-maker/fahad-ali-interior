@@ -1,10 +1,10 @@
-import { NextAuthOptions } from 'next-auth';
+﻿import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { sessionRole } from '@/lib/enums';
-import { shouldSkipEmailVerification } from '@/lib/email-verification';
+import { shouldSkipEmailVerification } from '@/lib/utils';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isLocalAuth =
@@ -163,7 +163,7 @@ export const authOptions: NextAuthOptions = {
             token.role = sessionRole(dbUser.role);
           }
         } catch {
-          // Silently ignore DB errors — keep existing token role
+          // Silently ignore DB errors â€” keep existing token role
         }
       }
       return token;

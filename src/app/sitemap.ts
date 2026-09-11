@@ -1,6 +1,6 @@
-import { MetadataRoute } from 'next';
+﻿import { MetadataRoute } from 'next';
 import { getStorefrontProducts } from '@/lib/catalog-api';
-import { getSiteUrl } from '@/lib/site-url';
+import { getSiteUrl } from '@/lib/utils';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();

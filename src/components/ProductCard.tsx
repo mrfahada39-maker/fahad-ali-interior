@@ -1,18 +1,18 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Heart, Eye, ArrowUpRight, ShoppingBag, Sparkles, Star } from 'lucide-react';
-import { useWishlistStore } from '@/store/wishlistStore';
+import { useWishlistStore } from '@/store';
 import { useIsInWishlist } from '@/hooks/use-is-in-wishlist';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { apiFetch } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
-import { useCartStore } from '@/store/cartStore';
-import { useClientCacheStore } from '@/store/clientCacheStore';
+import { useCartStore } from '@/store';
+import { useClientCacheStore } from '@/store';
 import { toast } from 'sonner';
 
 type ProductCardProduct = {
@@ -89,7 +89,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
       image: product.image,
       category: product.category || '',
     });
-    toast.success(`Added ${product.name} to Cart 🛒`);
+    toast.success(`Added ${product.name} to Cart ðŸ›’`);
   };
 
   const imgSrc = resolveImageUrl(imgError ? null : product.image, product.category, 800);

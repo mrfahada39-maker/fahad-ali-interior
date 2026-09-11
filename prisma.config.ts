@@ -28,7 +28,7 @@ try {
 }
 
 export default defineConfig({
-  schema: 'Database/models/schema.prisma',
+  schema: 'Database/schema.prisma',
 });
 
 

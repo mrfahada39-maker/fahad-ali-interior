@@ -1,17 +1,17 @@
-import { Metadata } from 'next';
-import StoreShell from '@/components/layout/StoreShell';
+﻿import { Metadata } from 'next';
+import StoreShell from '@/components/StoreShell';
 import { getStorefrontProducts } from '@/lib/catalog-api';
 import ShopPage from './ShopPage';
 
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Shop | Fahad Ali Interior — Luxury Furniture Collection',
+  title: 'Shop | Fahad Ali Interior â€” Luxury Furniture Collection',
   description:
     'Browse our collection of handcrafted luxury furniture. Premium beds, sofas, dining sets, and wardrobes crafted in Pakistan.',
   openGraph: {
     title: 'Shop | Fahad Ali Interior',
-    description: 'Handcrafted luxury furniture collection — Beds, Sofas, Dining, Wardrobes.',
+    description: 'Handcrafted luxury furniture collection â€” Beds, Sofas, Dining, Wardrobes.',
     type: 'website',
   },
 };

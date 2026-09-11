@@ -1,9 +1,9 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter, Great_Vibes } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import JsonLd from "@/components/JsonLd";
-import { getSiteUrl } from "@/lib/site-url";
+import { getSiteUrl } from "@/lib/utils";
 import { unstable_cache } from "next/cache";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { db } from "@/lib/db";
@@ -63,7 +63,7 @@ const organizationJsonLd = {
   areaServed: "PK",
 };
 
-// Viewport config — theme-color for PWA browser chrome
+// Viewport config â€” theme-color for PWA browser chrome
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: dark)",  color: "#c9a96e" },
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
     "luxury furniture", "Pakistan", "Lahore", "handcrafted",
     "Sheesham wood", "interior design", "beds", "sofas", "dining", "wardrobes",
   ],
-  // ── PWA manifest & icons ────────────────────────────────────────────────
+  // â”€â”€ PWA manifest & icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -113,7 +113,7 @@ export const metadata: Metadata = {
     "msapplication-TileColor": "#c9a96e",
     "msapplication-tap-highlight": "no",
   },
-  // ── Open Graph ──────────────────────────────────────────────────────────
+  // â”€â”€ Open Graph â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   openGraph: {
     type: "website",
     locale: "en_PK",

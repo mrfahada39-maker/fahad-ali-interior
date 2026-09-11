@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect, beforeEach } from '@jest/globals';
-import { useClientCacheStore, CachedProduct } from '@/store/clientCacheStore';
+import { useClientCacheStore, CachedProduct } from '@/store';
 
 describe('Client Cache Zustand Store (Offline Product Cache)', () => {
   beforeEach(() => {

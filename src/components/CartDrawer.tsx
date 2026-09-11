@@ -1,13 +1,13 @@
-'use client';
+﻿'use client';
 
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Plus, ShoppingBag, Trash2, ArrowRight, ShieldCheck, Sparkles, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useCartStore } from '@/store/cartStore';
+import { Button } from '@/components/button';
+import { useCartStore } from '@/store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { formatPricePk } from '@/lib/format-price';
+import { formatPricePk } from '@/lib/utils';
 import { resolveImageUrl } from '@/lib/images';
 import Image from 'next/image';
 
@@ -207,7 +207,7 @@ export default function CartDrawer() {
                     <div className="flex justify-between items-baseline pt-2 border-t border-[#E7DDD0]">
                       <div>
                         <span className="font-serif font-black text-sm text-[#221814]">Grand Total</span>
-                        <p className="text-[9.5px] font-bold text-emerald-700">✓ Free White-Glove Dispatch</p>
+                        <p className="text-[9.5px] font-bold text-emerald-700">âœ“ Free White-Glove Dispatch</p>
                       </div>
                       <span className="font-serif font-black text-base sm:text-lg text-[#B88E4B]">
                         Rs. {formatPricePk(Math.round(getTotal()))}

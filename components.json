@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "new-york",
   "rsc": true,
@@ -13,7 +13,7 @@
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
-    "ui": "@/components/ui",
+    "ui": "@/components",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },

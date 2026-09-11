@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { SecurityGuardrails } from '@/lib/security/guardrails';
-import { AgentRouter, AgentRole } from '@/lib/ai/agents/agent-router';
-import { ENTERPRISE_AI_TOOLS, AiToolExecutor } from '@/lib/ai/tools/tool-registry';
-import { VectorIndexer } from '@/lib/ai/rag/vector-indexer';
-import { HybridSearchEngine } from '@/lib/ai/rag/hybrid-search';
-import { RoomAnalyzer } from '@/lib/ai/vision/room-analyzer';
+import { SecurityGuardrails } from '@/lib/guardrails';
+import { AgentRouter, AgentRole } from '@/lib/ai/agents';
+import { ENTERPRISE_AI_TOOLS, AiToolExecutor } from '@/lib/ai/tool-registry';
+import { VectorIndexer, HybridSearchEngine } from '@/lib/ai/rag';
+import { RoomAnalyzer } from '@/lib/ai/room-analyzer';
 import { MultiProviderLlm, LlmMessage } from '@/lib/ai/llm-provider';
 
 /** High-capacity Dynamic AI Response Generator (ChatGPT/Claude/Gemini style) */

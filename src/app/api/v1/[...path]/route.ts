@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 import { sendOrderConfirmationEmail, sendPasswordResetEmail, sendVerificationEmail } from '@/lib/email';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import { getSiteUrl } from '@/lib/site-url';
+import { getSiteUrl } from '@/lib/utils';
 
 interface SessionUser {
   id?: string;

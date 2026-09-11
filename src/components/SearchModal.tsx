@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,9 +7,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiFetchJson as fetchJson } from '@/lib/api-client';
-import { formatPricePk } from '@/lib/format-price';
+import { formatPricePk } from '@/lib/utils';
 import { resolveImageUrl } from '@/lib/images';
-import { useClientCacheStore, CachedProduct } from '@/store/clientCacheStore';
+import { useClientCacheStore, CachedProduct } from '@/store';
 
 interface Product {
   id: string;

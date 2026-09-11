@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -10,7 +10,7 @@ import {
 import { apiFetchJson } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
-import TestimonialsSection from '@/components/home/TestimonialsSection';
+import TestimonialsSection from '@/components/TestimonialsSection';
 
 const CATEGORIES = [
   { name: 'Living Room', items: '25 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
@@ -80,13 +80,13 @@ export default function HomePageInteractive({
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [mountVideo, setMountVideo] = useState(false);
 
-  // ── Defer heavy video stream until after initial page load paint ──
+  // â”€â”€ Defer heavy video stream until after initial page load paint â”€â”€
   useEffect(() => {
     const t = setTimeout(() => setMountVideo(true), 250);
     return () => clearTimeout(t);
   }, []);
 
-  // ── Always start at top of home page on load / reload ──
+  // â”€â”€ Always start at top of home page on load / reload â”€â”€
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -96,7 +96,7 @@ export default function HomePageInteractive({
     }
   }, []);
 
-  // ── Smart Viewport Observer: Pause video when scrolled down to eliminate lag on Infinix/Tecno ──
+  // â”€â”€ Smart Viewport Observer: Pause video when scrolled down to eliminate lag on Infinix/Tecno â”€â”€
   useEffect(() => {
     const el = heroSectionRef.current;
     if (!el || typeof window === 'undefined' || typeof window.IntersectionObserver === 'undefined') return;
@@ -131,7 +131,7 @@ export default function HomePageInteractive({
   return (
     <div className="contents">
 
-      {/* ── FULL SCREEN LUXURY HERO VIDEO SECTION (100SVH ON ALL MOBILE & DESKTOP) ── */}
+      {/* â”€â”€ FULL SCREEN LUXURY HERO VIDEO SECTION (100SVH ON ALL MOBILE & DESKTOP) â”€â”€ */}
       <section ref={heroSectionRef} className="gsap-hero-section relative w-full h-screen h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
         {/* Background Parallax & Video Container */}
         <div className="gsap-hero-bg absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
@@ -180,7 +180,7 @@ export default function HomePageInteractive({
           {/* Subtle Crystal Clear Lightweight Vignette & Contrast Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/60 pointer-events-none z-[2]" />
 
-          {/* Ambient Warm Center Glow — GPU Native Radial Gradient (Zero Lag on Low-End Chips) */}
+          {/* Ambient Warm Center Glow â€” GPU Native Radial Gradient (Zero Lag on Low-End Chips) */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(201,169,110,0.18)_0%,transparent_65%)] pointer-events-none z-[2]" />
         </div>
 
@@ -201,7 +201,7 @@ export default function HomePageInteractive({
 
           {/* Subtitle / Description */}
           <p className="gsap-hero-subtitle text-xs sm:text-base md:text-xl lg:text-2xl font-serif italic text-[#E6DCCF] drop-shadow-md max-w-xs sm:max-w-3xl mb-8 sm:mb-10 font-light px-2">
-            Masterpieces Crafted for Royalty — Comfort Meets Timeless Elegance
+            Masterpieces Crafted for Royalty â€” Comfort Meets Timeless Elegance
           </p>
 
           {/* Action Buttons */}
@@ -212,7 +212,7 @@ export default function HomePageInteractive({
               className="gsap-hero-magnetic w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] hover:brightness-110 text-white border border-white/20 font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 shadow-xl flex items-center justify-center gap-3 cursor-pointer will-change-transform active:scale-95"
             >
               <span>EXPLORE COLLECTION</span>
-              <span className="text-sm">→</span>
+              <span className="text-sm">â†’</span>
             </Link>
             <Link
               href="/shop"
@@ -230,11 +230,11 @@ export default function HomePageInteractive({
         </div>
       </section>
 
-      {/* ── CATEGORIES SECTION (LOW-END PHONE OPTIMIZED JANK-FREE ENGINE) ── */}
+      {/* â”€â”€ CATEGORIES SECTION (LOW-END PHONE OPTIMIZED JANK-FREE ENGINE) â”€â”€ */}
       <section className="smooth-scroll-section w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 mb-16 relative z-10">
         <div className="gsap-cat-header text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] shadow-xs mb-3.5">
-            <span className="text-[#B88E4B] text-sm font-bold">✦</span>
+            <span className="text-[#B88E4B] text-sm font-bold">âœ¦</span>
             <span className="text-xs sm:text-[13px] font-black uppercase tracking-[0.25em] text-[#7A6354]">
               HAUTE COUTURE COLLECTIONS
             </span>
@@ -279,7 +279,7 @@ export default function HomePageInteractive({
                   />
                 </div>
 
-                {/* Ambient Corner Glow — GPU Shader Gradient (Zero Blur Calculation on Budget Chips) */}
+                {/* Ambient Corner Glow â€” GPU Shader Gradient (Zero Blur Calculation on Budget Chips) */}
                 <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.22)_0%,transparent_70%)] opacity-80 z-10" />
 
                 {/* Subtle Light Sweep Luxury Overlay */}
@@ -308,7 +308,7 @@ export default function HomePageInteractive({
         </div>
       </section>
 
-      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION ── */}
+      {/* â”€â”€ 3D COVERFLOW LUXURY TESTIMONIALS SECTION â”€â”€ */}
       <TestimonialsSection />
 
     </div>

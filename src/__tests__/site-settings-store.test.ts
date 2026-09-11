@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect, beforeEach } from '@jest/globals';
-import { useSiteSettingsStore } from '@/store/siteSettingsStore';
+import { useSiteSettingsStore } from '@/store';
 
 describe('Site Settings Zustand Store', () => {
   beforeEach(() => {

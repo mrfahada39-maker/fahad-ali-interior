@@ -1,4 +1,4 @@
-import type { StorefrontProduct } from '@/lib/types/product';
+﻿import type { StorefrontProduct } from '@/lib/types';
 
 export const CURATED_FALLBACK_PRODUCTS: StorefrontProduct[] = [
   {

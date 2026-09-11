@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import StoreShell from '@/components/layout/StoreShell';
+import StoreShell from '@/components/StoreShell';
 import Link from 'next/link';
 import { Check, Truck, Package, Sparkles, Copy, ArrowRight, MessageSquare, ShieldCheck, Crown } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';

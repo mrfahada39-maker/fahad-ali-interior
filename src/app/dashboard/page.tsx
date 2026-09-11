@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
-const UserDashboard = dynamic(() => import('@/components/dashboards/UserDashboard'), {
+const UserDashboard = dynamic(() => import('@/components/UserDashboard'), {
   loading: () => (
     <div className="min-h-screen flex items-center justify-center bg-[#FCFAF7]">
       <div className="flex flex-col items-center gap-3">

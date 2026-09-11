@@ -1,5 +1,5 @@
-import { unstable_cache } from 'next/cache';
-import type { StorefrontProduct } from '@/lib/types/product';
+﻿import { unstable_cache } from 'next/cache';
+import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
 
 export type HomeStats = {

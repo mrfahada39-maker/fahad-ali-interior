@@ -1,4 +1,4 @@
-import js from "@eslint/js";
+﻿import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import nextPlugin from "@next/eslint-plugin-next";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
@@ -141,8 +141,8 @@ export default [
   },
   {
     files: [
-      "src/components/dashboards/**/*.ts",
-      "src/components/dashboards/**/*.tsx",
+      "src/components/**/*.ts",
+      "src/components/**/*.tsx",
       "src/components/home-v2/**/*.ts",
       "src/components/home-v2/**/*.tsx",
       "src/hooks/**/*.ts",
@@ -163,7 +163,7 @@ export default [
     },
   },
   {
-    // next.config.ts — allow unused vars (isDev used for conditional logic)
+    // next.config.ts â€” allow unused vars (isDev used for conditional logic)
     files: ["next.config.ts"],
     rules: {
       "@typescript-eslint/no-unused-vars": "off",

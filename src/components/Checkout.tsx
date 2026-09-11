@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -34,7 +34,7 @@ import {
   ShoppingBag,
   Crown,
 } from 'lucide-react';
-import { useCartStore } from '@/store/cartStore';
+import { useCartStore } from '@/store';
 import { apiFetch } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { toast } from 'sonner';
@@ -46,7 +46,7 @@ import {
   RAAST_SBP_DETAILS,
 } from '@/lib/pakistan-localization';
 
-// ── Payment Method Types ────────────────────────────────────────────────────
+// â”€â”€ Payment Method Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type PaymentMethodType = 'cod' | 'jazzcash' | 'easypaisa' | 'card' | 'bank';
 
 interface BankItem {
@@ -1217,7 +1217,7 @@ export default function Checkout() {
     setTiltStyle({ rotateX: 0, rotateY: 0, glareX: 50, glareY: 50 });
   };
 
-  // ── Pricing Calculations ───────────────────────────────────────────────────
+  // â”€â”€ Pricing Calculations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const itemsSubtotal = activeItems.reduce((sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 1), 0);
   const shippingFee = 0;
   const taxAmount = 0;
@@ -1295,13 +1295,13 @@ export default function Checkout() {
     if (!code) return;
     if (code === 'FAHAD10' || code === 'VIP10') {
       setAppliedCoupon({ code, percent: 10 });
-      toast.success('✦ VIP 10% Discount Applied!');
+      toast.success('âœ¦ VIP 10% Discount Applied!');
     } else if (code === 'FAHAD20') {
       setAppliedCoupon({ code, percent: 20 });
-      toast.success('✦ Royal Executive 20% Discount Applied!');
+      toast.success('âœ¦ Royal Executive 20% Discount Applied!');
     } else if (code === 'ROYAL50') {
       setAppliedCoupon({ code, fixed: 50000 });
-      toast.success('✦ Rs. 50,000 Luxury Voucher Applied!');
+      toast.success('âœ¦ Rs. 50,000 Luxury Voucher Applied!');
     } else {
       toast.error('Invalid Voucher Code. Try: FAHAD10, FAHAD20, or ROYAL50');
     }
@@ -1504,7 +1504,7 @@ export default function Checkout() {
     <div className="w-full min-h-screen bg-[#FAF6F0] text-[#1F1612] font-sans pt-21 sm:pt-22 lg:pt-23 pb-28 sm:pb-32 lg:pb-8 px-3 sm:px-5 lg:px-6 flex flex-col justify-start select-none">
       <div className="w-full flex-1 flex flex-col gap-2 sm:gap-2.5">
 
-        {/* ── 1. $100,000 LUXURY HEADER (DUAL RESPONSIVE: EXACT MATCH TO IMAGE 1) ── */}
+        {/* â”€â”€ 1. $100,000 LUXURY HEADER (DUAL RESPONSIVE: EXACT MATCH TO IMAGE 1) â”€â”€ */}
         <motion.div 
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1555,7 +1555,7 @@ export default function Checkout() {
           </div>
         </motion.div>
 
-        {/* ── 2. 4-SECTION PROGRESS STEPPER TABS ───────────────────────────── */}
+        {/* â”€â”€ 2. 4-SECTION PROGRESS STEPPER TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white border border-[#E7DDD0] p-1.5 rounded-2xl shadow-2xs shrink-0">
           {SECTIONS_CONFIG.map((sec) => {
             const isActive = currentSection === sec.id;
@@ -1604,11 +1604,11 @@ export default function Checkout() {
           })}
         </div>
 
-        {/* ── 3. ACTIVE SECTION CARD (FULL WIDTH & SCREEN FITTED) ─────────── */}
+        {/* â”€â”€ 3. ACTIVE SECTION CARD (FULL WIDTH & SCREEN FITTED) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <AnimatePresence mode="wait">
-          {/* ════════════════════════════════════════════════════════════════
-              SECTION 1: 🛒 ORDER SUMMARY & 🎟️ DISCOUNT
-          ════════════════════════════════════════════════════════════════ */}
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              SECTION 1: ðŸ›’ ORDER SUMMARY & ðŸŽŸï¸ DISCOUNT
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {currentSection === 1 && (
             <motion.div
               key="section-1"
@@ -1621,7 +1621,7 @@ export default function Checkout() {
               {/* Header Title */}
               <div className="flex justify-between items-center border-b border-[#E7DDD0]/80 pb-2.5 mb-3 shrink-0">
                 <h2 className="text-sm sm:text-base lg:text-lg font-black text-[#221814] flex items-center gap-2 font-serif">
-                  <span className="text-[#B88E4B]">✦</span>
+                  <span className="text-[#B88E4B]">âœ¦</span>
                   <ShoppingBag size={18} className="text-[#8C6239] stroke-[2.2]" />
                   <span>1. Order Summary & Review</span>
                 </h2>
@@ -1738,7 +1738,7 @@ export default function Checkout() {
                 <div className="lg:col-span-5 flex flex-col justify-between bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] p-4 sm:p-5 rounded-2xl border border-[#E7DDD0] shadow-[0_4px_20px_rgba(44,30,24,0.02)] hover:border-[#B88E4B]/40 transition-all">
                   {/* Top: Coupon + Breakdown */}
                   <div className="space-y-3.5">
-                    {/* 🎟️ Discount / Coupon Box */}
+                    {/* ðŸŽŸï¸ Discount / Coupon Box */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center">
                         <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5 font-sans">
@@ -1842,9 +1842,9 @@ export default function Checkout() {
             </motion.div>
           )}
 
-          {/* ════════════════════════════════════════════════════════════════
-              SECTION 2: 👤 CUSTOMER PROFILE & CONTACT
-          ════════════════════════════════════════════════════════════════ */}
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              SECTION 2: ðŸ‘¤ CUSTOMER PROFILE & CONTACT
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {currentSection === 2 && (
             <motion.div
               key="section-2"
@@ -1857,7 +1857,7 @@ export default function Checkout() {
               <div>
                 <div className="flex justify-between items-center border-b border-[#E7DDD0]/80 pb-2.5 mb-3.5">
                   <h2 className="text-sm sm:text-base lg:text-lg font-black text-[#221814] flex items-center gap-2 font-serif">
-                    <span className="text-[#B88E4B]">✦</span>
+                    <span className="text-[#B88E4B]">âœ¦</span>
                     <User size={18} className="text-[#8C6239] stroke-[2.2]" />
                     <span>2. Customer Profile & Contact Details</span>
                   </h2>
@@ -2036,7 +2036,7 @@ export default function Checkout() {
                   onClick={() => setCurrentSection(1)}
                   className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-[#DECDBB] text-stone-700 hover:bg-[#FAF6F0] font-sans font-bold text-xs cursor-pointer transition-colors"
                 >
-                  ← Back to Order Summary
+                  â† Back to Order Summary
                 </button>
                 <button
                   type="button"
@@ -2050,9 +2050,9 @@ export default function Checkout() {
             </motion.div>
           )}
 
-          {/* ════════════════════════════════════════════════════════════════
-              SECTION 3: 📍 SHIPPING ADDRESS & BESPOKE DELIVERY
-          ════════════════════════════════════════════════════════════════ */}
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              SECTION 3: ðŸ“ SHIPPING ADDRESS & BESPOKE DELIVERY
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {currentSection === 3 && (
             <motion.div
               key="section-3"
@@ -2065,7 +2065,7 @@ export default function Checkout() {
               <div>
                 <div className="flex justify-between items-center border-b border-[#E7DDD0]/80 pb-2.5 mb-3.5">
                   <h2 className="text-sm sm:text-base lg:text-lg font-black text-[#221814] flex items-center gap-2 font-serif">
-                    <span className="text-[#B88E4B]">✦</span>
+                    <span className="text-[#B88E4B]">âœ¦</span>
                     <MapPin size={18} className="text-[#8C6239] stroke-[2.2]" />
                     <span>3. Shipping Address & White-Glove Delivery</span>
                   </h2>
@@ -2120,7 +2120,7 @@ export default function Checkout() {
                         >
                           {Object.keys(PAKISTAN_CITIES).map((c) => (
                             <option key={c} value={c}>
-                              {c} — {PAKISTAN_CITIES[c].province}
+                              {c} â€” {PAKISTAN_CITIES[c].province}
                             </option>
                           ))}
                           <option value="Other">Other Pakistani City</option>
@@ -2177,7 +2177,7 @@ export default function Checkout() {
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             <span>Pakistan</span>
                           </span>
-                          <span className="text-base">🇵🇰</span>
+                          <span className="text-base">ðŸ‡µðŸ‡°</span>
                         </div>
                       </div>
                     </div>
@@ -2247,7 +2247,7 @@ export default function Checkout() {
                   onClick={() => setCurrentSection(2)}
                   className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-[#DECDBB] text-stone-700 hover:bg-[#FAF6F0] font-sans font-bold text-xs cursor-pointer transition-colors"
                 >
-                  ← Back to Customer Info
+                  â† Back to Customer Info
                 </button>
                 <button
                   type="button"
@@ -2261,9 +2261,9 @@ export default function Checkout() {
             </motion.div>
           )}
 
-          {/* ════════════════════════════════════════════════════════════════
-              SECTION 4: 💳 PAYMENT METHODS & AUTHORIZATIONS
-          ════════════════════════════════════════════════════════════════ */}
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+              SECTION 4: ðŸ’³ PAYMENT METHODS & AUTHORIZATIONS
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           {currentSection === 4 && (
             <motion.div
               key="section-4"
@@ -2277,7 +2277,7 @@ export default function Checkout() {
                 {/* Header */}
                 <div className="flex justify-between items-center border-b border-[#E7DDD0]/80 pb-2.5 mb-3.5">
                   <h2 className="text-sm sm:text-base lg:text-lg font-black text-[#221814] flex items-center gap-2 font-serif">
-                    <span className="text-[#B88E4B]">✦</span>
+                    <span className="text-[#B88E4B]">âœ¦</span>
                     <CreditCard size={18} className="text-[#8C6239] stroke-[2.2]" />
                     <span>4. Payment Methods & Authorizations</span>
                   </h2>
@@ -2465,12 +2465,12 @@ export default function Checkout() {
                               }}
                               className="w-full h-full relative rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]"
                             >
-                              {/* ════════════ FRONT SIDE ════════════ */}
+                              {/* â•â•â•â•â•â•â•â•â•â•â•â• FRONT SIDE â•â•â•â•â•â•â•â•â•â•â•â• */}
                               <div
                                 style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                                 className={`absolute inset-0 w-full h-full rounded-2xl p-4 sm:p-5 overflow-hidden bg-gradient-to-tr ${selectedBank.cardTheme.bgGradient} border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_-1px_2px_rgba(0,0,0,0.6)] flex flex-col justify-between`}
                               >
-                                {/* Security Guilloché Micro-Pattern Overlay */}
+                                {/* Security GuillochÃ© Micro-Pattern Overlay */}
                                 <div
                                   className="absolute inset-0 pointer-events-none opacity-15 mix-blend-overlay"
                                   style={{
@@ -2533,7 +2533,7 @@ export default function Checkout() {
                                     <div className="w-3.5 h-3 rounded bg-gradient-to-b from-[#FFD54F] to-[#C79100] border border-[#6D4C41]/40 shadow-inner z-10" />
                                   </div>
                                   <span className="text-[8px] font-mono font-bold text-white/60 uppercase tracking-[0.2em] bg-black/25 px-2 py-0.5 rounded backdrop-blur-xs border border-white/10">
-                                    {selectedBank.shortName.toUpperCase()} • ELECTRONIC USE ONLY
+                                    {selectedBank.shortName.toUpperCase()} â€¢ ELECTRONIC USE ONLY
                                   </span>
                                 </div>
 
@@ -2546,7 +2546,7 @@ export default function Checkout() {
                                       filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.6))',
                                     }}
                                   >
-                                    {cardDetails.number ? cardDetails.number : '4532 •••• •••• 3456'}
+                                    {cardDetails.number ? cardDetails.number : '4532 â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ 3456'}
                                   </div>
                                 </div>
 
@@ -2588,7 +2588,7 @@ export default function Checkout() {
                                 </div>
                               </div>
 
-                              {/* ════════════ BACK SIDE ════════════ */}
+                              {/* â•â•â•â•â•â•â•â•â•â•â•â• BACK SIDE â•â•â•â•â•â•â•â•â•â•â•â• */}
                               <div
                                 style={{
                                   backfaceVisibility: 'hidden',
@@ -2614,7 +2614,7 @@ export default function Checkout() {
                                 <div className="px-4 space-y-1 relative z-10">
                                   <div className="flex items-center justify-between">
                                     <span className="text-[7px] font-mono uppercase text-white/60 tracking-wider">
-                                      Authorized Signature • Not Valid Unless Signed
+                                      Authorized Signature â€¢ Not Valid Unless Signed
                                     </span>
                                     <span className="text-[7px] font-mono font-bold text-amber-300 uppercase tracking-widest">
                                       SECURITY CODE
@@ -2647,7 +2647,7 @@ export default function Checkout() {
                                 <div className="px-4 flex justify-between items-end relative z-10 pt-1 border-t border-white/15">
                                   <div className="max-w-[200px] space-y-0.5">
                                     <p className="text-[7px] font-sans text-white/70 leading-tight">
-                                      24/7 Helpline: <strong className="text-white">111-00-1987</strong> • Issued under license from State Bank of Pakistan. Property of {selectedBank.name}.
+                                      24/7 Helpline: <strong className="text-white">111-00-1987</strong> â€¢ Issued under license from State Bank of Pakistan. Property of {selectedBank.name}.
                                     </p>
                                     <span className="text-[6.5px] font-mono text-white/50 block">
                                       If found, return to nearest {selectedBank.shortName} Branch.
@@ -2678,7 +2678,7 @@ export default function Checkout() {
                             onClick={() => setIsCardFlipped((p) => !p)}
                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF5EE] hover:bg-[#F3EAD9] border border-[#B88E4B]/40 text-[#8C6239] text-[10.5px] font-black tracking-wider cursor-pointer shadow-2xs transition-colors"
                           >
-                            <span>🔄</span>
+                            <span>ðŸ”„</span>
                             <span>{isCardFlipped ? 'Click to show Front Side' : 'Click to show Back Side (CVC / CVV)'}</span>
                           </button>
                         </div>
@@ -2716,7 +2716,7 @@ export default function Checkout() {
                                     type="text"
                                     value={bankSearchQuery}
                                     onChange={(e) => setBankSearchQuery(e.target.value)}
-                                    placeholder="🔍 Search bank (Meezan, HBL, UBL, ABL...)"
+                                    placeholder="ðŸ” Search bank (Meezan, HBL, UBL, ABL...)"
                                     className="w-full bg-[#FAF5EE] border border-[#E2D9CD] focus:border-[#B88E4B] rounded-lg px-2.5 py-1 text-xs font-medium text-[#1F1612] outline-none"
                                     onClick={(e) => e.stopPropagation()}
                                   />
@@ -2766,7 +2766,7 @@ export default function Checkout() {
                                     : 'bg-white text-stone-700 border-[#E2D9CD] hover:border-[#B88E4B]'
                                 }`}
                               >
-                                <span>💳</span>
+                                <span>ðŸ’³</span>
                                 <span>Debit Card</span>
                               </button>
                               <button
@@ -2778,7 +2778,7 @@ export default function Checkout() {
                                     : 'bg-white text-stone-700 border-[#E2D9CD] hover:border-[#B88E4B]'
                                 }`}
                               >
-                                <span>✨</span>
+                                <span>âœ¨</span>
                                 <span>Credit Card</span>
                               </button>
                             </div>
@@ -2825,7 +2825,7 @@ export default function Checkout() {
                                 onBlur={() => setIsCardFlipped(false)}
                                 onChange={(e) => setCardDetails((p) => ({ ...p, cvv: e.target.value.slice(0, 4) }))}
                                 maxLength={4}
-                                placeholder="•••"
+                                placeholder="â€¢â€¢â€¢"
                                 className="w-full bg-white border border-[#E2D9CD] focus:border-[#B88E4B] rounded-xl px-3 py-2 text-xs sm:text-sm font-mono font-bold text-[#1F1612] outline-none text-center shadow-2xs"
                               />
                             </div>
@@ -3018,7 +3018,7 @@ export default function Checkout() {
                 onClick={() => setCurrentSection(3)}
                 className="px-5 py-2.5 rounded-xl border border-[#DECDBB] text-stone-700 hover:bg-[#FAF6F0] font-sans font-bold text-xs cursor-pointer transition-colors"
               >
-                ← Back to Shipping Address
+                â† Back to Shipping Address
               </button>
             </div>
           </motion.div>

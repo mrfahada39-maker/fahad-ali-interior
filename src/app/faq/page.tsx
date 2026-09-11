@@ -1,11 +1,11 @@
-import { Metadata } from 'next';
-import StoreShell from '@/components/layout/StoreShell';
+﻿import { Metadata } from 'next';
+import StoreShell from '@/components/StoreShell';
 import FAQPage from './FAQPage';
 
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: 'FAQ | Fahad Ali Interior — Frequently Asked Questions',
+  title: 'FAQ | Fahad Ali Interior â€” Frequently Asked Questions',
   description: 'Find answers to common questions about our luxury furniture, delivery, payment options, customization, and warranty policies.',
   openGraph: {
     title: 'FAQ | Fahad Ali Interior',

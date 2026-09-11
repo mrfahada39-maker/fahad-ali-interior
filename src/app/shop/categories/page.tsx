@@ -1,4 +1,4 @@
-import StoreShell from '@/components/layout/StoreShell';
+﻿import StoreShell from '@/components/StoreShell';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getHomePageData } from '@/lib/home-page-data';

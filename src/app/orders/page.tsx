@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import StoreShell from '@/components/layout/StoreShell';
+import StoreShell from '@/components/StoreShell';
 import OrdersPageClient from './OrdersPageClient';
 
 export default function OrdersPage() {

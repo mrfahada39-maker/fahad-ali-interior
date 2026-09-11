@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+﻿import { describe, it, expect, beforeEach } from '@jest/globals';
 
 jest.mock('zustand/middleware', () => ({
   persist: (config: unknown) => config,
 }));
 
-import { useWishlistStore, type WishlistItem } from '@/store/wishlistStore';
+import { useWishlistStore, type WishlistItem } from '@/store';
 
 const mockItem: WishlistItem = {
   id: '1',

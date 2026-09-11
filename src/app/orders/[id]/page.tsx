@@ -1,6 +1,6 @@
-import { Metadata } from 'next';
+﻿import { Metadata } from 'next';
 import OrderDetailClient from './OrderDetailClient';
-import StoreShell from '@/components/layout/StoreShell';
+import StoreShell from '@/components/StoreShell';
 
 export const metadata: Metadata = {
   title: 'Order Details | Fahad Ali Interior',

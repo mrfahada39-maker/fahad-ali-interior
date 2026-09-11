@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import StoreShell from '@/components/layout/StoreShell';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import StoreShell from '@/components/StoreShell';
+import { Button } from '@/components/button';
+import { Input } from '@/components/input';
+import { Label } from '@/components/label';
 import { toast } from 'sonner';
 import { apiFetchJsonWithStatus } from '@/lib/api-client';
 import Link from 'next/link';
@@ -179,7 +179,7 @@ function VerifyEmailContent() {
           </div>
           <Link href="/?auth=login">
             <Button className="w-full h-11 bg-[#1F1612] hover:bg-[#35251F] text-[#F5D77F] font-bold rounded-xl text-sm transition-all shadow-md">
-              Proceed to Login Portal →
+              Proceed to Login Portal â†’
             </Button>
           </Link>
         </div>

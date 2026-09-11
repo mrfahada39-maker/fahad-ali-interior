@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ import { apiFetchJsonWithStatus } from '@/lib/api-client';
 import { ensureEnterpriseTokens } from '@/hooks/use-enterprise-auth-sync';
 import { resolveImageUrl } from '@/lib/images';
 import { toast } from 'sonner';
-import { useCartStore } from '@/store/cartStore';
+import { useCartStore } from '@/store';
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat('en-PK').format(n);
@@ -224,8 +224,8 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
                   </button>
                 </div>
                 <p className="text-xs sm:text-sm text-[#7A6354] mt-1 font-medium flex items-center gap-2">
-                  <span>Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</span>
-                  <span>•</span>
+                  <span>Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' }) : 'â€”'}</span>
+                  <span>â€¢</span>
                   <span className="text-[#221814] font-bold">{order.items?.length || 1} Masterpiece Item(s)</span>
                 </p>
               </div>
@@ -282,7 +282,7 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
                               : 'bg-white border-[#E8DFC8] text-[#8C6239]'
                           }`}
                         >
-                          {isPassed ? '✓' : idx + 1}
+                          {isPassed ? 'âœ“' : idx + 1}
                           {isCurrent && (
                             <span className="absolute -inset-1 rounded-2xl border-2 border-[#D4AF37] animate-ping opacity-60 pointer-events-none" />
                           )}
@@ -325,7 +325,7 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
                       <div className="min-w-0">
                         <h3 className="font-serif font-bold text-sm sm:text-base text-[#221814] truncate">{productName}</h3>
                         <p className="text-xs text-[#7A6354] mt-0.5 font-medium">
-                          Quantity: <span className="font-bold text-[#221814]">{itemQty}</span> • 100% Solid Sheesham (10-Yr Warranty)
+                          Quantity: <span className="font-bold text-[#221814]">{itemQty}</span> â€¢ 100% Solid Sheesham (10-Yr Warranty)
                         </p>
                         <p className="font-serif text-xs font-bold text-[#8C6239] mt-0.5">PKR {formatPrice(itemPrice)} / unit</p>
                       </div>

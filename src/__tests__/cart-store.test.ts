@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+﻿import { describe, it, expect, beforeEach } from '@jest/globals';
 
 jest.mock('zustand/middleware', () => ({
   persist: (config: unknown) => config,
 }));
 
-import { useCartStore, type CartItem } from '@/store/cartStore';
+import { useCartStore, type CartItem } from '@/store';
 
 const initialState = {
   items: [],

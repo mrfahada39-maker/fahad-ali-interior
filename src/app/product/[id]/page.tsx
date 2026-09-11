@@ -1,8 +1,8 @@
-import { Metadata } from 'next';
+﻿import { Metadata } from 'next';
 import { getProductById } from '@/lib/catalog-api';
 import { resolveImageUrl } from '@/lib/images';
-import { getSiteUrl } from '@/lib/site-url';
-import StoreShell from '@/components/layout/StoreShell';
+import { getSiteUrl } from '@/lib/utils';
+import StoreShell from '@/components/StoreShell';
 import ProductPageClient from './ProductPageClient';
 import JsonLd from '@/components/JsonLd';
 import { headers } from 'next/headers';
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const absoluteImage = imageUrl.startsWith('http') ? imageUrl : `${getSiteUrl()}${imageUrl}`;
     return {
       title: product.name,
-      description: product.description || `Buy ${product.name} — handcrafted luxury furniture.`,
+      description: product.description || `Buy ${product.name} â€” handcrafted luxury furniture.`,
       openGraph: {
         title: product.name,
         description: product.description || '',

@@ -1,5 +1,5 @@
-import { describe, it, expect } from '@jest/globals';
-import { formatPricePk } from '@/lib/format-price';
+﻿import { describe, it, expect } from '@jest/globals';
+import { formatPricePk } from '@/lib/utils';
 
 describe('formatPricePk', () => {
   it('formats whole numbers with comma separators', () => {
