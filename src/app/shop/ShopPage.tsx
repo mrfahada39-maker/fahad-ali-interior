@@ -376,6 +376,8 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B88E4B]" />
             <input
               type="text"
+              id="shop-search-input"
+              name="search"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search furniture by title, wood finish, or design specification..."
@@ -391,6 +393,9 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
           <div className="flex items-center gap-2.5 shrink-0 flex-wrap relative z-10">
             {/* Sort Selector */}
             <select
+              id="shop-sort-select"
+              name="sortBy"
+              aria-label="Sort products"
               value={sortBy}
               onChange={e => setSortBy(e.target.value)}
               className="px-4 py-2.5 text-xs font-black border border-amber-300/60 rounded-xl bg-white text-[#221814] focus:outline-none focus:border-[#B88E4B] cursor-pointer hover:bg-[#FAF5EE] transition-all shadow-2xs"
@@ -497,6 +502,8 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
                     </div>
                     <input
                       type="range"
+                      id="price-range-slider"
+                      name="maxPrice"
                       min={0}
                       max={500000}
                       step={5000}
@@ -584,21 +591,21 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
                       <h3 className="text-xl font-bold text-theme-dark font-serif mb-4">Request a Bespoke Quotation</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="text-xs font-bold text-theme-muted uppercase block mb-1">Full Name *</label>
-                          <input required type="text" value={inquiryForm.name} onChange={e => setInquiryForm({ ...inquiryForm, name: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="Fahad Ali" />
+                          <label htmlFor="inquiry-full-name" className="text-xs font-bold text-theme-muted uppercase block mb-1">Full Name *</label>
+                          <input id="inquiry-full-name" name="fullName" required type="text" value={inquiryForm.name} onChange={e => setInquiryForm({ ...inquiryForm, name: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="Fahad Ali" />
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-theme-muted uppercase block mb-1">Email Address *</label>
-                          <input required type="email" value={inquiryForm.email} onChange={e => setInquiryForm({ ...inquiryForm, email: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="client@fahadali.com" />
+                          <label htmlFor="inquiry-email" className="text-xs font-bold text-theme-muted uppercase block mb-1">Email Address *</label>
+                          <input id="inquiry-email" name="email" required type="email" value={inquiryForm.email} onChange={e => setInquiryForm({ ...inquiryForm, email: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="client@fahadali.com" />
                         </div>
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-theme-muted uppercase block mb-1">WhatsApp Phone</label>
-                        <input type="text" value={inquiryForm.phone} onChange={e => setInquiryForm({ ...inquiryForm, phone: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="+92 300 0000000" />
+                        <label htmlFor="inquiry-phone" className="text-xs font-bold text-theme-muted uppercase block mb-1">WhatsApp Phone</label>
+                        <input id="inquiry-phone" name="phone" type="text" value={inquiryForm.phone} onChange={e => setInquiryForm({ ...inquiryForm, phone: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="+92 300 0000000" />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-theme-muted uppercase block mb-1">Project Specifications</label>
-                        <textarea required rows={4} value={inquiryForm.message} onChange={e => setInquiryForm({ ...inquiryForm, message: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark font-mono" />
+                        <label htmlFor="inquiry-message" className="text-xs font-bold text-theme-muted uppercase block mb-1">Project Specifications</label>
+                        <textarea id="inquiry-message" name="message" required rows={4} value={inquiryForm.message} onChange={e => setInquiryForm({ ...inquiryForm, message: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark font-mono" />
                       </div>
                       <button type="submit" disabled={inquirySubmitting} className="w-full py-3.5 bg-theme-accent hover:bg-theme-dark text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md">
                         {inquirySubmitting ? 'Sending Request...' : '✦ Submit Custom Design Inquiry'}

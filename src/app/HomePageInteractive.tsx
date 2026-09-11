@@ -10,12 +10,7 @@ import {
 import { apiFetchJson } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
-import dynamic from 'next/dynamic';
-
-const TestimonialsSection = dynamic(() => import('@/components/home/TestimonialsSection'), {
-  loading: () => <div className="min-h-[400px] bg-[#0d0907]" />,
-  ssr: false,
-});
+import TestimonialsSection from '@/components/home/TestimonialsSection';
 
 const CATEGORIES = [
   { name: 'Living Room', items: '25 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
@@ -83,6 +78,13 @@ export default function HomePageInteractive({
     initialCategories && initialCategories.length > 0 ? initialCategories : CATEGORIES
   );
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [mountVideo, setMountVideo] = useState(false);
+
+  // ── Defer heavy video stream until after initial page load paint ──
+  useEffect(() => {
+    const t = setTimeout(() => setMountVideo(true), 250);
+    return () => clearTimeout(t);
+  }, []);
 
   // ── Always start at top of home page on load / reload ──
   useEffect(() => {
@@ -144,33 +146,36 @@ export default function HomePageInteractive({
               height={1080}
               style={{ aspectRatio: '16/9' }}
               className="w-full h-full object-cover object-center"
-              decoding="async"
+              loading="eager"
+              decoding="sync"
               fetchPriority="high"
             />
           </picture>
 
           {/* CINEMATIC LUXURY VIDEO (Single Responsive Hardware Accelerated Stream) */}
-          <video
-            ref={heroVideoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            crossOrigin="anonymous"
-            preload="metadata"
-            disablePictureInPicture
-            disableRemotePlayback
-            onLoadedData={(e) => { e.currentTarget.play().catch(() => {}); setVideoLoaded(true); }}
-            onPlaying={() => setVideoLoaded(true)}
-            onCanPlay={() => setVideoLoaded(true)}
-            aria-label="Fahad Ali Interior Luxury Showcase Video"
-            style={{ willChange: 'opacity', transform: 'translateZ(0)' }}
-            className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1] transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
-          >
-            <source media="(max-width: 768px)" src={CLOUDINARY_ASSETS.heroMobileVideo} type="video/mp4" />
-            <source media="(min-width: 769px)" src={CLOUDINARY_ASSETS.heroDesktopVideo} type="video/mp4" />
-            <track kind="captions" srcLang="en" label="English" default />
-          </video>
+          {mountVideo && (
+            <video
+              ref={heroVideoRef}
+              autoPlay
+              loop
+              muted
+              playsInline
+              crossOrigin="anonymous"
+              preload="metadata"
+              disablePictureInPicture
+              disableRemotePlayback
+              onLoadedData={(e) => { e.currentTarget.play().catch(() => {}); setVideoLoaded(true); }}
+              onPlaying={() => setVideoLoaded(true)}
+              onCanPlay={() => setVideoLoaded(true)}
+              aria-label="Fahad Ali Interior Luxury Showcase Video"
+              style={{ willChange: 'opacity', transform: 'translateZ(0)' }}
+              className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1] transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <source media="(max-width: 768px)" src={CLOUDINARY_ASSETS.heroMobileVideo} type="video/mp4" />
+              <source media="(min-width: 769px)" src={CLOUDINARY_ASSETS.heroDesktopVideo} type="video/mp4" />
+              <track kind="captions" srcLang="en" label="English" default />
+            </video>
+          )}
 
           {/* Subtle Crystal Clear Lightweight Vignette & Contrast Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/60 pointer-events-none z-[2]" />
@@ -256,7 +261,7 @@ export default function HomePageInteractive({
             >
               <Link 
                 href={`/shop?category=${encodeURIComponent(cat.name)}`} 
-                prefetch={true}
+                prefetch={false}
                 className="gsap-cat-card group relative aspect-[5/4] rounded-[24px] overflow-hidden bg-[#FAF5EE] shadow-[0_3px_14px_rgba(184,142,75,0.08)] hover:shadow-[0_12px_32px_rgba(184,142,75,0.18)] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] transition-all duration-300 block"
               >
                 {/* Background Image Wrap */}
@@ -264,13 +269,13 @@ export default function HomePageInteractive({
                   <Image 
                     src={resolveImageUrl(cat.image, cat.name, 550)} 
                     alt={cat.name} 
-                    fill 
+                    width={550}
+                    height={440}
                     unoptimized
                     loading={i < 2 ? 'eager' : 'lazy'}
                     decoding="async"
                     style={{ aspectRatio: '5/4' }}
-                    className="gsap-cat-img object-cover transition-transform duration-500 group-hover:scale-105" 
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" 
+                    className="gsap-cat-img w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                   />
                 </div>
 

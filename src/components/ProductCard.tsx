@@ -105,7 +105,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
 
         <Link
           href={`/product/${product.id}`}
-          prefetch={true}
+          prefetch={false}
           onClick={handleProductClick}
           onMouseEnter={primeProductCache}
           onTouchStart={primeProductCache}
@@ -143,7 +143,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             </div>
             <Link
               href={`/product/${product.id}`}
-              prefetch={true}
+              prefetch={false}
               onClick={handleProductClick}
               onMouseEnter={primeProductCache}
               onTouchStart={primeProductCache}
@@ -198,7 +198,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
       <div className="relative aspect-[4/3] rounded-[18px] overflow-hidden bg-[#FAF5EE] mb-3.5 border border-amber-200/60">
         <Link
           href={`/product/${product.id}`}
-          prefetch={true}
+          prefetch={false}
           onClick={handleProductClick}
           onMouseEnter={primeProductCache}
           onTouchStart={primeProductCache}
@@ -260,7 +260,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
         <div>
           <Link
             href={`/product/${product.id}`}
-            prefetch={true}
+            prefetch={false}
             onClick={handleProductClick}
             onMouseEnter={primeProductCache}
             onTouchStart={primeProductCache}

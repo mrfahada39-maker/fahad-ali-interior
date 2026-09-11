@@ -235,12 +235,12 @@ export default function TestimonialsSection() {
                   <Image 
                     src={currentItem.roomImage} 
                     alt={`${currentItem.name} - ${currentItem.projectType}`} 
-                    fill 
+                    width={420}
+                    height={315}
                     loading="lazy"
                     decoding="async"
                     style={{ aspectRatio: '4/3' }}
-                    sizes="(max-width: 640px) 100vw, 420px"
-                    className="object-cover" 
+                    className="w-full h-full object-cover" 
                   />
 
                   {/* Floating Rating Pill with Shining Amber Glow */}
@@ -527,13 +527,13 @@ export default function TestimonialsSection() {
                       <Image 
                         src={item.roomImage} 
                         alt={`${item.name} ${item.projectType}`} 
-                        fill 
+                        width={400}
+                        height={300}
                         unoptimized
                         loading="lazy"
                         decoding="async"
                         style={{ aspectRatio: '4/3' }}
-                        sizes="(max-width: 1024px) 50vw, 400px"
-                        className="object-cover transition-transform duration-700 group-hover:scale-108" 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108" 
                       />
 
                       {/* Smooth Left Gradient Blend that seamlessly fades into the left cream side */}

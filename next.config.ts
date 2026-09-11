@@ -104,6 +104,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress:        true,
   staticPageGenerationTimeout: 300,
+  httpAgentOptions: {
+    keepAlive: true,
+  },
 
   typescript: {
     ignoreBuildErrors: false,
