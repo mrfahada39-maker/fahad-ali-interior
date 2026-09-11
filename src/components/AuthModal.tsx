@@ -260,7 +260,13 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                   </div>
 
                   <div className="space-y-1">
+                    <label htmlFor="twoFactorCode" className="sr-only">
+                      Two-Factor Authentication Code
+                    </label>
                     <input
+                      id="twoFactorCode"
+                      name="twoFactorCode"
+                      autoComplete="one-time-code"
                       value={twoFactorCode}
                       onChange={(e) => setTwoFactorCode(e.target.value.replace(/\s/g, '').slice(0, 8))}
                       placeholder="000000"
@@ -336,12 +342,15 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                     <form onSubmit={handleLogin} className="space-y-3.5">
                       {/* Email Field */}
                       <div className="space-y-1">
-                        <label className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
+                        <label htmlFor="login-email-input" className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
                           Email Address *
                         </label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9C8272]" size={15} />
                           <input
+                            id="login-email-input"
+                            name="email"
+                            autoComplete="email"
                             type="email"
                             required
                             value={loginData.email}
@@ -356,7 +365,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                       {/* Password Field */}
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
-                          <label className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
+                          <label htmlFor="login-password-input" className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
                             Password *
                           </label>
                           <a
@@ -374,6 +383,9 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                         <div className="relative">
                           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9C8272]" size={15} />
                           <input
+                            id="login-password-input"
+                            name="password"
+                            autoComplete="current-password"
                             type={showPassword ? 'text' : 'password'}
                             required
                             value={loginData.password}
@@ -430,12 +442,15 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                     <form onSubmit={handleRegister} className="space-y-3">
                       {/* Full Name */}
                       <div className="space-y-1">
-                        <label className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
+                        <label htmlFor="register-name-input" className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
                           Full Name *
                         </label>
                         <div className="relative">
                           <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9C8272]" size={15} />
                           <input
+                            id="register-name-input"
+                            name="name"
+                            autoComplete="name"
                             type="text"
                             required
                             value={registerData.name}
@@ -449,12 +464,15 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
 
                       {/* Email Address */}
                       <div className="space-y-1">
-                        <label className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
+                        <label htmlFor="register-email-input" className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
                           Email Address *
                         </label>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9C8272]" size={15} />
                           <input
+                            id="register-email-input"
+                            name="email"
+                            autoComplete="email"
                             type="email"
                             required
                             value={registerData.email}
@@ -468,12 +486,15 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
 
                       {/* Phone Number */}
                       <div className="space-y-1">
-                        <label className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
+                        <label htmlFor="register-phone-input" className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
                           Mobile Contact
                         </label>
                         <div className="relative">
                           <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9C8272]" size={15} />
                           <input
+                            id="register-phone-input"
+                            name="phone"
+                            autoComplete="tel"
                             type="tel"
                             value={registerData.phone}
                             onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
@@ -486,11 +507,14 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                       {/* Dual Password Row */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                         <div className="space-y-1">
-                          <label className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
+                          <label htmlFor="register-password-input" className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
                             Password *
                           </label>
                           <div className="relative">
                             <input
+                              id="register-password-input"
+                              name="password"
+                              autoComplete="new-password"
                               type={showPassword ? 'text' : 'password'}
                               required
                               value={registerData.password}
@@ -503,11 +527,14 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
+                          <label htmlFor="register-confirm-password-input" className="block text-[10.5px] sm:text-[11px] font-sans font-bold tracking-wider text-[#7A6354] uppercase">
                             Confirm *
                           </label>
                           <div className="relative">
                             <input
+                              id="register-confirm-password-input"
+                              name="confirmPassword"
+                              autoComplete="new-password"
                               type={showConfirmPassword ? 'text' : 'password'}
                               required
                               value={registerData.confirmPassword}

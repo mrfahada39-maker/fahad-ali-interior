@@ -192,6 +192,9 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <Search size={22} className="text-[#B88E4B] shrink-0 stroke-[2.2]" />
                 
                 <input
+                  id="global-search-input"
+                  name="search"
+                  aria-label="Search furniture catalog"
                   autoFocus
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
