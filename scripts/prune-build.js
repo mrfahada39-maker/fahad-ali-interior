@@ -9,7 +9,7 @@ function pruneDir(dir) {
     try {
       const stat = fs.statSync(full);
       if (stat.isDirectory()) {
-        if (f === 'cache' || f === 'types' || f === 'diagnostics') {
+        if (f === 'cache' || f === 'types' || f === 'diagnostics' || f === 'dev') {
           fs.rmSync(full, { recursive: true, force: true });
           continue;
         }
