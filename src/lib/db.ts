@@ -27,7 +27,10 @@ if (!envStatus.valid && isProd && isNextBuildPhase) {
   logger.warn('env.invalid_during_build', { errors: envStatus.errors, warnings: envStatus.warnings });
 }
 
-const databaseUrl = process.env.DATABASE_URL;
+const isTestEnv = process.env.NODE_ENV === 'test';
+const databaseUrl =
+  process.env.DATABASE_URL ||
+  (isTestEnv ? 'postgresql://test_mock:test_mock@localhost:5432/test_db' : undefined);
 if (!databaseUrl) {
   throw new Error('DATABASE_URL is required');
 }
@@ -84,7 +87,7 @@ async function executeWithRetry<T>(
       return await fn();
     } catch (err) {
       attempt++;
-      if (attempt < MAX_TRANSIENT_RETRIES && isTransientDbError(err) && !isNextBuildPhase) {
+      if (attempt < MAX_TRANSIENT_RETRIES && isTransientDbError(err) && !isNextBuildPhase && !isTestEnv) {
         const jitter = Math.floor(Math.random() * 50);
         const delay = BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1) + jitter;
         logger.warn('db.transient_retry', {

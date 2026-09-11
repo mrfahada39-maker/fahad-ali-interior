@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { isTransientDbError, checkDatabaseHealth } from '@/lib/db';
+import { isTransientDbError, checkDatabaseHealth, db } from '@/lib/db';
 import { recordAuditLog, executeTransaction } from '@/lib/db-utils';
 
 describe('Database Resiliency & Transient Fault Detection', () => {
@@ -36,6 +36,7 @@ describe('Database Resiliency & Transient Fault Detection', () => {
 
 describe('checkDatabaseHealth Probe', () => {
   it('returns a structured health report with latency and postgresql dialect', async () => {
+    jest.spyOn(db as any, '$queryRawUnsafe').mockResolvedValueOnce([{ ping: 1 }]);
     const health = await checkDatabaseHealth();
     expect(health).toHaveProperty('ok');
     expect(typeof health.ok).toBe('boolean');
@@ -44,10 +45,19 @@ describe('checkDatabaseHealth Probe', () => {
     expect(health.dialect).toBe('postgresql');
     expect(health).toHaveProperty('timestamp');
   });
+
+  it('handles database probe failure gracefully', async () => {
+    jest.spyOn(db as any, '$queryRawUnsafe').mockRejectedValueOnce(new Error('Connection failed'));
+    const health = await checkDatabaseHealth();
+    expect(health.ok).toBe(false);
+    expect(health.error).toBe('Connection failed');
+    expect(health.dialect).toBe('postgresql');
+  });
 });
 
 describe('Database Utility Helpers', () => {
   it('recordAuditLog executes safely without throwing unhandled exceptions', async () => {
+    jest.spyOn(db.auditLog, 'create').mockResolvedValueOnce({ id: 'mock_audit_id' } as any);
     await expect(
       recordAuditLog({
         userId: 'test_user_1',

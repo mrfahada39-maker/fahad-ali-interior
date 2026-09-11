@@ -71,6 +71,10 @@ jobs:
         run: npm run db:generate
 
       - name: Run Root Unit Tests
+        env:
+          DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test_db'
+          NEXTAUTH_SECRET: 'test-secret-at-least-32-characters-long-key'
+          INTERNAL_PROXY_KEY: 'test-proxy-key-123456789012345'
         run: npm run test:unit -- --passWithNoTests
 
       - name: Run Backend Unit Tests (Optional)
