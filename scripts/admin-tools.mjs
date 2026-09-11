@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const action = process.argv[2] || 'list';
@@ -13,6 +13,20 @@ async function main() {
         data: { role: 'ADMIN', emailVerified: new Date() },
       });
       console.log('✅ User is now ADMIN:', user.email);
+    } else if (action === 'verify-user') {
+      const q = arg || '';
+      const res = await prisma.user.updateMany({
+        where: { email: { contains: q } },
+        data: { emailVerified: new Date() },
+      });
+      console.log('✅ Marked as verified:', res);
+    } else if (action === 'check-user') {
+      const q = arg || '';
+      const users = await prisma.user.findMany({
+        where: { email: { contains: q } },
+        select: { id: true, email: true, name: true, role: true, emailVerified: true, password: true },
+      });
+      console.log('Found users:', users.map((u) => ({ ...u, password: u.password ? 'set' : 'none' })));
     } else if (action === 'check-db') {
       const orders = await prisma.order.findMany({
         include: { items: true, user: true },

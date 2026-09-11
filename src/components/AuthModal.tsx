@@ -108,7 +108,11 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
       });
 
       if (authRes?.error) {
-        toast.error('Invalid email or password');
+        if (authRes.error.toLowerCase().includes('verify')) {
+          toast.error(authRes.error);
+        } else {
+          toast.error('Invalid email or password. Please check your credentials.');
+        }
       } else {
         setEnterpriseTokens('present', '');
         toast.success('Welcome back to Fahad Ali Interior!');
