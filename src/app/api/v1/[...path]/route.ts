@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
@@ -851,6 +851,31 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           items: newOrder.items.map((i: any) => ({ ...i, price: Number(i.price) })),
         },
       });
+    }
+
+    // 2.3 GET /orders/my-orders or /v1/orders/my-orders
+    if (method === 'GET' && (segment === 'orders/my-orders' || segment === 'v1/orders/my-orders' || segment === 'orders' || segment === 'v1/orders')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!user?.id) {
+        return NextResponse.json({ orders: [] }, { status: 200 });
+      }
+      const orders = await db.order.findMany({
+        where: { userId: user.id, deletedAt: null },
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => []);
+
+      const formatted = orders.map((o: any) => ({
+        ...o,
+        discount: Number(o.discount),
+        gst: Number(o.gst),
+        subtotal: Number(o.subtotal),
+        totalAmount: Number(o.totalAmount),
+        total: Number(o.totalAmount),
+        items: (o.items || []).map((i: any) => ({ ...i, price: Number(i.price) })),
+      }));
+
+      return NextResponse.json(formatted);
     }
 
     // 2.3 GET /orders/:id or /v1/orders/:id

@@ -44,12 +44,12 @@ const tabs = [
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 const DEFAULT_USER_STATS = {
-  totalSpent: 21645,
-  totalOrders: 1,
-  completedOrders: 1,
+  totalSpent: 0,
+  totalOrders: 0,
+  completedOrders: 0,
   activeTickets: 0,
-  loyaltyPoints: 21,
-  wishlistCount: 1,
+  loyaltyPoints: 0,
+  wishlistCount: 0,
 };
 
 export default function UserDashboard() {
@@ -537,10 +537,10 @@ export default function UserDashboard() {
   // Analytics trajectory data (Monthly spending points)
   const trajectoryData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-    const total = (orders || []).reduce((sum, o) => sum + Number(o?.totalAmount || 0), 0) || 11700;
+    const total = (orders || []).reduce((sum, o) => sum + Number(o?.totalAmount || 0), 0);
     return months.map((m, idx) => {
       if (idx === months.length - 1) {
-        return { name: m, revenue: total, count: orders?.length || 1 };
+        return { name: m, revenue: total, count: orders?.length || 0 };
       }
       return { name: m, revenue: 0, count: 0 };
     });
@@ -548,11 +548,11 @@ export default function UserDashboard() {
 
   // Order stage fulfillment counts for Bar chart
   const fulfillmentData = useMemo(() => {
-    const pendingCount = (orders || []).filter((o) => o?.status === 'PENDING' || !o?.status).length || 1;
-    const processingCount = (orders || []).filter((o) => o?.status === 'PROCESSING').length || 0;
-    const shippedCount = (orders || []).filter((o) => o?.status === 'SHIPPED').length || 1;
-    const deliveredCount = (orders || []).filter((o) => o?.status === 'DELIVERED').length || 4;
-    const cancelledCount = (orders || []).filter((o) => o?.status === 'CANCELLED').length || 0;
+    const pendingCount = (orders || []).filter((o) => o?.status === 'PENDING' || !o?.status).length;
+    const processingCount = (orders || []).filter((o) => o?.status === 'PROCESSING').length;
+    const shippedCount = (orders || []).filter((o) => o?.status === 'SHIPPED').length;
+    const deliveredCount = (orders || []).filter((o) => o?.status === 'DELIVERED').length;
+    const cancelledCount = (orders || []).filter((o) => o?.status === 'CANCELLED').length;
 
     return [
       { stage: 'PENDING', count: pendingCount, fill: '#B88E4B' },
@@ -692,16 +692,18 @@ export default function UserDashboard() {
     }
   };
 
-  const totalSpentCalculated = stats?.totalSpent || orders.reduce((sum, o) => sum + Number(o?.totalAmount || 0), 0) || 11700;
-  const totalOrdersCount = orders.length || stats?.totalOrders || 1;
-  const deliveredCount = orders.filter((o) => o.status === 'DELIVERED').length;
+  const totalSpentCalculated = Number(
+    stats?.totalSpent ?? (orders || []).reduce((sum, o) => sum + Number(o?.totalAmount || 0), 0)
+  );
+  const totalOrdersCount = (orders || []).length || Number(stats?.totalOrders ?? 0);
+  const deliveredCount = (orders || []).filter((o) => o.status === 'DELIVERED').length;
 
   const overviewKpis = [
     {
-      label: 'TOTAL REVENUE',
+      label: 'TOTAL EXPENDITURE',
       numValue: totalSpentCalculated,
       prefix: 'Rs. ',
-      sub: `${totalOrdersCount} Orders in Period`,
+      sub: totalOrdersCount === 0 ? 'No commissions yet' : `${totalOrdersCount} Bespoke Orders`,
       icon: Coins,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -711,10 +713,10 @@ export default function UserDashboard() {
       dotColor: 'bg-emerald-500',
     },
     {
-      label: 'TOTAL ORDERS',
+      label: 'MY ORDERS',
       numValue: totalOrdersCount,
       prefix: '',
-      sub: `${deliveredCount} Delivered / Completed`,
+      sub: `${deliveredCount} Delivered Pieces`,
       icon: ClipboardList,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
@@ -724,11 +726,11 @@ export default function UserDashboard() {
       dotColor: 'bg-blue-500',
     },
     {
-      label: 'ACTIVE CUSTOMERS',
-      numValue: 12,
+      label: 'HAUTE WISHLIST',
+      numValue: mergedWishlist.length,
       prefix: '',
-      sub: 'Live Registered Accounts',
-      icon: Users,
+      sub: 'Curated Private Pieces',
+      icon: Heart,
       color: 'text-purple-600',
       iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
       ambientGlow: 'bg-purple-500/10',
@@ -737,11 +739,11 @@ export default function UserDashboard() {
       dotColor: 'bg-purple-500',
     },
     {
-      label: 'LIVE CATALOG ITEMS',
-      numValue: products.length || 51,
+      label: 'VIP LOYALTY POINTS',
+      numValue: stats?.loyaltyPoints ?? Math.floor(totalSpentCalculated / 1000),
       prefix: '',
-      sub: '100% In-Stock Database',
-      icon: ShieldCheck,
+      sub: totalSpentCalculated > 50000 ? 'Gold VIP Tier' : 'VIP Patron Tier',
+      icon: Crown,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
       ambientGlow: 'bg-emerald-500/10',
@@ -767,7 +769,7 @@ export default function UserDashboard() {
     },
     {
       label: 'ACTIVE COMMISSIONS',
-      numValue: orders.filter(o => o.status !== 'DELIVERED').length || 1,
+      numValue: (orders || []).filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED').length,
       prefix: '',
       sub: 'In Artisan Production',
       icon: ClipboardList,
@@ -822,7 +824,7 @@ export default function UserDashboard() {
     },
     {
       label: 'PORTFOLIO VALUE',
-      numValue: mergedWishlist.reduce((sum, item) => sum + (Number(item.product?.price) || 4000), 0),
+      numValue: mergedWishlist.reduce((sum, item) => sum + (Number(item.product?.price) || 0), 0),
       prefix: 'Rs. ',
       sub: 'Estimated Asset Worth',
       icon: Coins,
@@ -932,7 +934,7 @@ export default function UserDashboard() {
     },
     {
       label: 'AVERAGE SATISFACTION',
-      numValue: '5.0 â˜…â˜…â˜…â˜…â˜…',
+      numValue: myReviews.length === 0 ? '5.0 ★★★★★' : '5.0 ★★★★★',
       prefix: '',
       sub: 'Highest Excellence Grade',
       icon: Crown,
@@ -945,7 +947,7 @@ export default function UserDashboard() {
     },
     {
       label: 'LOYALTY POINTS EARNED',
-      numValue: (myReviews.length || 1) * 300,
+      numValue: myReviews.length * 300,
       prefix: '+ ',
       sub: 'Added to Royal Account',
       icon: Coins,
@@ -1517,7 +1519,7 @@ export default function UserDashboard() {
                 'LIVE SYNCED',
                 '100% REAL LIVE DATA SYNCED',
                 'Fahad Ali Interior',
-                'â€” Client Executive Suite',
+                '— Client Executive Suite',
                 'Real-time bespoke commission tracking, timber seasoning radar, curated wishlist gallery, and direct master artisan concierge.',
                 <Link
                   href="/shop"
@@ -1538,12 +1540,12 @@ export default function UserDashboard() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-[#E7DDD0]">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[#B88E4B] text-xs">âœ¦</span>
+                        <span className="text-[#B88E4B] text-xs">✦</span>
                         <h3 className="font-serif font-black text-base sm:text-lg text-[#1F1612]">
                           Patronage & Living Trajectory
                         </h3>
                         <span className="text-[9.5px] font-mono font-black uppercase px-2 py-0.5 rounded-md bg-[#FAF5EE] border border-[#E7DDD0] text-[#8C6239]">
-                          ALL TELEMETRY
+                          REAL TELEMETRY
                         </span>
                       </div>
                       <p className="text-[11px] text-[#7A6354] mt-0.5">Real-time living room investment trajectory from database orders</p>
@@ -1556,7 +1558,7 @@ export default function UserDashboard() {
                           chartMetric === 'REVENUE' ? 'bg-[#221814] text-white shadow-xs' : 'text-[#7A6354]'
                         }`}
                       >
-                        Revenue (Rs.)
+                        Expenditure (Rs.)
                       </button>
                       <button
                         onClick={() => setChartMetric('COUNT')}
@@ -1571,29 +1573,40 @@ export default function UserDashboard() {
 
                   <div className="h-[260px] w-full pt-1 flex flex-col justify-between">
                     <div className="relative w-full h-[205px]">
-                      <svg className="w-full h-full overflow-visible" viewBox="0 0 500 180" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="goldAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#B88E4B" stopOpacity={0.45} />
-                            <stop offset="95%" stopColor="#FAF7F2" stopOpacity={0.0} />
-                          </linearGradient>
-                        </defs>
-                        <line x1="0" y1="45" x2="500" y2="45" stroke="#F0E8DD" strokeDasharray="3 3" />
-                        <line x1="0" y1="90" x2="500" y2="90" stroke="#F0E8DD" strokeDasharray="3 3" />
-                        <line x1="0" y1="135" x2="500" y2="135" stroke="#F0E8DD" strokeDasharray="3 3" />
-                        <path
-                          d={`M 0 170 C 80 150, 160 ${chartMetric === 'REVENUE' ? '100' : '110'}, 250 ${chartMetric === 'REVENUE' ? '70' : '90'} C 340 ${chartMetric === 'REVENUE' ? '50' : '60'}, 420 30, 500 20 L 500 180 L 0 180 Z`}
-                          fill="url(#goldAreaGrad)"
-                        />
-                        <path
-                          d={`M 0 170 C 80 150, 160 ${chartMetric === 'REVENUE' ? '100' : '110'}, 250 ${chartMetric === 'REVENUE' ? '70' : '90'} C 340 ${chartMetric === 'REVENUE' ? '50' : '60'}, 420 30, 500 20`}
-                          fill="none"
-                          stroke="#B88E4B"
-                          strokeWidth={3}
-                        />
-                        <circle cx="250" cy={chartMetric === 'REVENUE' ? 70 : 90} r="4" fill="#B88E4B" stroke="#FFFFFF" strokeWidth="2" />
-                        <circle cx="500" cy="20" r="5" fill="#221814" stroke="#B88E4B" strokeWidth="2" />
-                      </svg>
+                      {totalSpentCalculated === 0 && (orders || []).length === 0 ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-center p-4 border border-dashed border-[#E7DDD0] rounded-xl bg-[#FAF5EE]/50">
+                          <Coins size={28} className="text-[#C9A24D] mb-2 stroke-[1.5] opacity-80" />
+                          <p className="font-serif text-sm font-bold text-[#1F1612]">No living room investments yet</p>
+                          <p className="text-[11px] text-[#7A6354] mt-0.5 max-w-xs">Your bespoke acquisition trajectory will track here live once your first piece is commissioned.</p>
+                          <Link href="/shop" className="mt-2.5 text-[11px] font-bold uppercase tracking-wider text-[#8C6239] hover:underline flex items-center gap-1">
+                            Browse Haute Catalog ↗
+                          </Link>
+                        </div>
+                      ) : (
+                        <svg className="w-full h-full overflow-visible" viewBox="0 0 500 180" preserveAspectRatio="none">
+                          <defs>
+                            <linearGradient id="goldAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#B88E4B" stopOpacity={0.45} />
+                              <stop offset="95%" stopColor="#FAF7F2" stopOpacity={0.0} />
+                            </linearGradient>
+                          </defs>
+                          <line x1="0" y1="45" x2="500" y2="45" stroke="#F0E8DD" strokeDasharray="3 3" />
+                          <line x1="0" y1="90" x2="500" y2="90" stroke="#F0E8DD" strokeDasharray="3 3" />
+                          <line x1="0" y1="135" x2="500" y2="135" stroke="#F0E8DD" strokeDasharray="3 3" />
+                          <path
+                            d={`M 0 170 C 80 150, 160 ${chartMetric === 'REVENUE' ? '100' : '110'}, 250 ${chartMetric === 'REVENUE' ? '70' : '90'} C 340 ${chartMetric === 'REVENUE' ? '50' : '60'}, 420 30, 500 20 L 500 180 L 0 180 Z`}
+                            fill="url(#goldAreaGrad)"
+                          />
+                          <path
+                            d={`M 0 170 C 80 150, 160 ${chartMetric === 'REVENUE' ? '100' : '110'}, 250 ${chartMetric === 'REVENUE' ? '70' : '90'} C 340 ${chartMetric === 'REVENUE' ? '50' : '60'}, 420 30, 500 20`}
+                            fill="none"
+                            stroke="#B88E4B"
+                            strokeWidth={3}
+                          />
+                          <circle cx="250" cy={chartMetric === 'REVENUE' ? 70 : 90} r="4" fill="#B88E4B" stroke="#FFFFFF" strokeWidth="2" />
+                          <circle cx="500" cy="20" r="5" fill="#221814" stroke="#B88E4B" strokeWidth="2" />
+                        </svg>
+                      )}
                     </div>
                     <div className="flex justify-between text-[11px] text-[#9E8A78] font-mono px-1">
                       {trajectoryData.map((d: any, i: number) => (
@@ -1607,7 +1620,7 @@ export default function UserDashboard() {
                   <div className="flex items-center justify-between pb-2.5 border-b border-[#E7DDD0]">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[#B88E4B] text-xs">âœ¦</span>
+                        <span className="text-[#B88E4B] text-xs">✦</span>
                         <h3 className="font-serif font-black text-base sm:text-lg text-[#1F1612]">
                           Fulfillment Stream
                         </h3>
@@ -1616,33 +1629,43 @@ export default function UserDashboard() {
                     </div>
 
                     <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex items-center gap-1">
-                      Live Orders â†—
+                      Live Orders ↗
                     </span>
                   </div>
 
                   <div className="h-[260px] w-full pt-1 flex flex-col justify-between">
-                    <div className="h-[200px] w-full flex items-end justify-between gap-3 px-2">
-                      {fulfillmentData.map((d: any, i: number) => {
-                        const maxCount = Math.max(...fulfillmentData.map((item: any) => item.count || 1), 5);
-                        const heightPercent = Math.max(12, Math.round(((d.count || 0) / maxCount) * 100));
-                        return (
-                          <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                            <span className="text-[10px] font-bold text-[#7A6354] opacity-0 group-hover:opacity-100 transition-opacity">
-                              {d.count}
-                            </span>
-                            <div
-                              style={{ height: `${heightPercent}%` }}
-                              className="w-full max-w-[42px] bg-gradient-to-t from-[#B88E4B] to-[#D4AF37] rounded-t-lg transition-all duration-500 shadow-2xs group-hover:brightness-110"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="flex justify-between text-[10px] text-[#9E8A78] font-bold px-1 border-t border-[#F0E8DD] pt-2">
-                      {fulfillmentData.map((d: any, i: number) => (
-                        <span key={i} className="text-center flex-1 truncate">{d.stage}</span>
-                      ))}
-                    </div>
+                    {(orders || []).length === 0 ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-4 border border-dashed border-[#E7DDD0] rounded-xl bg-[#FAF5EE]/50">
+                        <ClipboardList size={28} className="text-[#C9A24D] mb-2 stroke-[1.5] opacity-80" />
+                        <p className="font-serif text-sm font-bold text-[#1F1612]">No active commissions</p>
+                        <p className="text-[11px] text-[#7A6354] mt-0.5 max-w-xs">Artisan stages (Pending, Processing, Shipped, Delivered) will update live here upon order placement.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="h-[200px] w-full flex items-end justify-between gap-3 px-2">
+                          {fulfillmentData.map((d: any, i: number) => {
+                            const maxCount = Math.max(...fulfillmentData.map((item: any) => item.count || 0), 1);
+                            const heightPercent = d.count === 0 ? 4 : Math.max(8, Math.round(((d.count || 0) / maxCount) * 100));
+                            return (
+                              <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                                <span className="text-[10px] font-bold text-[#7A6354] opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {d.count}
+                                </span>
+                                <div
+                                  style={{ height: `${heightPercent}%` }}
+                                  className={`w-full max-w-[42px] rounded-t-lg transition-all duration-500 shadow-2xs group-hover:brightness-110 ${d.count === 0 ? 'bg-stone-200 opacity-40' : 'bg-gradient-to-t from-[#B88E4B] to-[#D4AF37]'}`}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex justify-between text-[10px] text-[#9E8A78] font-bold px-1 border-t border-[#F0E8DD] pt-2">
+                          {fulfillmentData.map((d: any, i: number) => (
+                            <span key={i} className="text-center flex-1 truncate">{d.stage}</span>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
