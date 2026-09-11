@@ -9,7 +9,7 @@ import { db } from '@/lib/db';
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
+    return NextResponse.json({ authenticated: false, error: 'Not signed in' }, { status: 200 });
   }
 
   let userId = (session.user as { id?: string }).id;
@@ -21,7 +21,7 @@ export async function GET() {
     userId = row?.id;
   }
   if (!userId) {
-    return NextResponse.json({ error: 'User not found' }, { status: 401 });
+    return NextResponse.json({ authenticated: false, error: 'User not found' }, { status: 200 });
   }
 
   // Issue session token directly in Next.js

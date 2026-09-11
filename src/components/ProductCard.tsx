@@ -1,18 +1,16 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Heart, Eye, ArrowUpRight, ShoppingBag, Sparkles, Star } from 'lucide-react';
-import { useWishlistStore } from '@/store';
+import { useWishlistStore, useCartStore, useClientCacheStore } from '@/store';
 import { useIsInWishlist } from '@/hooks/use-is-in-wishlist';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { apiFetch } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
-import { useCartStore } from '@/store';
-import { useClientCacheStore } from '@/store';
 import { toast } from 'sonner';
 
 type ProductCardProduct = {

@@ -1,10 +1,9 @@
-﻿'use client';
+'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { Button } from '@/components/button';
-import { useWishlistStore } from '@/store';
-import { useCartStore } from '@/store';
+import { useWishlistStore, useCartStore } from '@/store';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';

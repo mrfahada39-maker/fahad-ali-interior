@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -10,10 +10,8 @@ import {
 } from 'lucide-react';
 import type { StorefrontProduct } from '@/lib/types';
 import { resolveImageUrl, LOCAL_IMAGES } from '@/lib/images';
-import { useCartStore } from '@/store';
-import { useWishlistStore } from '@/store';
+import { useCartStore, useWishlistStore, useClientCacheStore, type CachedProduct } from '@/store';
 import { useIsInWishlist } from '@/hooks/use-is-in-wishlist';
-import { useClientCacheStore, CachedProduct } from '@/store';
 import { useSession } from 'next-auth/react';
 import { apiFetch } from '@/lib/api-client';
 import { toast } from 'sonner';

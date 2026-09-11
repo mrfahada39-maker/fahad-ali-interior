@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,8 +12,7 @@ import ProductCard from '@/components/ProductCard';
 import { apiFetchJson as fetchJson } from '@/lib/api-client';
 import type { StorefrontProduct } from '@/lib/types';
 import { resolveImageUrl } from '@/lib/images';
-import { useCartStore } from '@/store';
-import { useClientCacheStore, CachedProduct } from '@/store';
+import { useCartStore, useClientCacheStore, type CachedProduct } from '@/store';
 import { CURATED_FALLBACK_PRODUCTS } from '@/lib/curated-products';
 import { toast } from 'sonner';
 

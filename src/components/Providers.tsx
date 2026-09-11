@@ -1,9 +1,8 @@
-﻿'use client';
+'use client';
 
 import { SessionProvider } from 'next-auth/react';
 import { ReactNode, useEffect, useRef } from 'react';
-import { useSiteSettingsStore, SiteSettings } from '@/store';
-import { useClientCacheStore } from '@/store';
+import { useSiteSettingsStore, useClientCacheStore, type SiteSettings } from '@/store';
 import TelemetryTracker from '@/components/TelemetryTracker';
 
 import { Toaster } from 'sonner';

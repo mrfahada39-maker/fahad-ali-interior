@@ -1,9 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useWishlistStore } from '@/store';
-import { useCartStore } from '@/store';
+import { useWishlistStore, useCartStore } from '@/store';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import {

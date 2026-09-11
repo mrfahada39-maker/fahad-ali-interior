@@ -1,10 +1,9 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { sendVerificationEmail } from '@/lib/email';
-import { getSiteUrl } from '@/lib/utils';
-import { shouldSkipEmailVerification } from '@/lib/utils';
+import { getSiteUrl, shouldSkipEmailVerification } from '@/lib/utils';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
