@@ -117,7 +117,13 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
         setEnterpriseTokens('present', '');
         toast.success('Welcome back to Fahad Ali Interior!');
         onClose();
-        router.refresh();
+        const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const nextUrl = searchParams?.get('next') || (typeof window !== 'undefined' && window.location.pathname === '/checkout' ? window.location.href : '/dashboard');
+        if (typeof window !== 'undefined') {
+          window.location.href = nextUrl;
+        } else {
+          router.push(nextUrl);
+        }
       }
     } finally {
       setLoading(false);
@@ -153,7 +159,13 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
       } else {
         toast.success('Welcome back!');
         onClose();
-        router.refresh();
+        const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const nextUrl = searchParams?.get('next') || (typeof window !== 'undefined' && window.location.pathname === '/checkout' ? window.location.href : '/dashboard');
+        if (typeof window !== 'undefined') {
+          window.location.href = nextUrl;
+        } else {
+          router.push(nextUrl);
+        }
       }
     } catch {
       toast.error('Verification failed. Please try logging in again.');
@@ -194,7 +206,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        toast.error(err.message || 'Registration failed');
+        toast.error(err.error || err.message || 'Registration failed');
         return;
       }
       toast.success('VIP Account created successfully! Please sign in.');
