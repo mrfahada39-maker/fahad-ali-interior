@@ -72,9 +72,9 @@ jobs:
 
       - name: Run Root Unit Tests
         env:
-          DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test_db'
-          NEXTAUTH_SECRET: 'test-secret-at-least-32-characters-long-key'
-          INTERNAL_PROXY_KEY: 'test-proxy-key-123456789012345'
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/test_db' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-at-least-32-characters-long-key' }}
+          INTERNAL_PROXY_KEY: ${{ secrets.INTERNAL_PROXY_KEY || 'test-proxy-key-123456789012345' }}
         run: npm run test:unit -- --passWithNoTests
 
       - name: Run Backend Unit Tests (Optional)
@@ -128,6 +128,10 @@ jobs:
 
       - name: Build Frontend
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://test_mock:test_mock@localhost:5432/test_db' }}
+          DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL || secrets.DATABASE_URL || 'postgresql://test_mock:test_mock@localhost:5432/test_db' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-at-least-32-characters-long-key' }}
+          INTERNAL_PROXY_KEY: ${{ secrets.INTERNAL_PROXY_KEY || 'test-proxy-key-123456789012345' }}
           NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED: 'false'
           NEXT_PUBLIC_BACKEND_URL: 'https://api.yourdomain.com'
           SKIP_ENV_VALIDATION: 'true'

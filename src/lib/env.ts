@@ -17,6 +17,10 @@ const productionRecommended = [
 ] as const;
 
 export function validateEnv(): { valid: boolean; errors: string[]; warnings: string[] } {
+  if (process.env.SKIP_ENV_VALIDATION === 'true') {
+    return { valid: true, errors: [], warnings: [] };
+  }
+
   const errors: string[] = [];
   const warnings: string[] = [];
 

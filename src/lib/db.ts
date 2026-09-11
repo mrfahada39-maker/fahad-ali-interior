@@ -28,9 +28,14 @@ if (!envStatus.valid && isProd && isNextBuildPhase) {
 }
 
 const isTestEnv = process.env.NODE_ENV === 'test';
+const isBuildOrCI =
+  isNextBuildPhase ||
+  process.env.SKIP_ENV_VALIDATION === 'true' ||
+  process.env.CI === 'true' ||
+  isTestEnv;
 const databaseUrl =
   process.env.DATABASE_URL ||
-  (isTestEnv ? 'postgresql://test_mock:test_mock@localhost:5432/test_db' : undefined);
+  (isBuildOrCI ? 'postgresql://test_mock:test_mock@localhost:5432/test_db' : undefined);
 if (!databaseUrl) {
   throw new Error('DATABASE_URL is required');
 }
