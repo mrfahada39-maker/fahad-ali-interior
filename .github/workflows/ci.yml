@@ -27,26 +27,14 @@ jobs:
       - name: Install Root Dependencies
         run: npm ci
 
-      - name: Install Backend Dependencies (Optional)
-        run: if [ -d "Backend" ]; then npm ci --prefix Backend; fi
-
       - name: Generate Root Prisma Client
         run: npm run db:generate
-
-      - name: Generate Backend Prisma Client (Optional)
-        run: if [ -d "Backend" ]; then npm run prisma:generate --prefix Backend; fi
 
       - name: Lint Frontend
         run: npm run lint
 
-      - name: Lint Backend (Optional)
-        run: if [ -d "Backend" ]; then npm run lint --prefix Backend; fi
-
       - name: Typecheck Frontend
         run: npx tsc --noEmit
-
-      - name: Typecheck Backend (Optional)
-        run: if [ -d "Backend" ]; then npx tsc --noEmit --project Backend/tsconfig.json; fi
 
   unit-tests:
     name: Unit Tests
@@ -64,9 +52,6 @@ jobs:
       - name: Install Root Dependencies
         run: npm ci
 
-      - name: Install Backend Dependencies (Optional)
-        run: if [ -d "Backend" ]; then npm ci --prefix Backend; fi
-
       - name: Generate Root Prisma Client
         run: npm run db:generate
 
@@ -76,9 +61,6 @@ jobs:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-at-least-32-characters-long-key' }}
           INTERNAL_PROXY_KEY: ${{ secrets.INTERNAL_PROXY_KEY || 'test-proxy-key-123456789012345' }}
         run: npm run test:unit -- --passWithNoTests
-
-      - name: Run Backend Unit Tests (Optional)
-        run: if [ -d "Backend" ]; then npm run test --prefix Backend; fi
 
   security-audit:
     name: Security Vulnerability Audit
@@ -96,9 +78,6 @@ jobs:
       - name: Audit Root Dependencies
         run: npm audit --audit-level=high || true
 
-      - name: Audit Backend Dependencies (Optional)
-        run: if [ -d "Backend" ]; then npm audit --audit-level=high --prefix Backend || true; fi
-
   build-verification:
     name: Build Verification
     runs-on: ubuntu-latest
@@ -114,17 +93,10 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: |
-          npm ci
-          if [ -d "Backend" ]; then npm ci --prefix Backend; fi
+        run: npm ci
 
-      - name: Generate Prisma Clients
-        run: |
-          npm run db:generate
-          if [ -d "Backend" ]; then npm run prisma:generate --prefix Backend; fi
-
-      - name: Build Backend (Optional)
-        run: if [ -d "Backend" ]; then npm run build --prefix Backend; fi
+      - name: Generate Prisma Client
+        run: npm run db:generate
 
       - name: Build Frontend
         env:
