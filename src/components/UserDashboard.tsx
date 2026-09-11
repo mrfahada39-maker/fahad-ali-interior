@@ -976,7 +976,7 @@ export default function UserDashboard() {
   const addressesKpis = [
     {
       label: 'REGISTERED HAVENS',
-      numValue: addresses.length || 1,
+      numValue: addresses.length,
       prefix: '',
       sub: 'Verified VIP Locations',
       icon: Home,
@@ -989,7 +989,7 @@ export default function UserDashboard() {
     },
     {
       label: 'PRIMARY DISPATCH CITY',
-      numValue: addresses[0]?.city || 'Lahore',
+      numValue: addresses[0]?.city || (addresses.length > 0 ? 'Verified' : 'Not Registered'),
       prefix: '',
       sub: 'Default Installation Hub',
       icon: MapPin,
@@ -1031,9 +1031,9 @@ export default function UserDashboard() {
   const profileKpis = [
     {
       label: 'MEMBERSHIP TIER',
-      numValue: 'Royal Gold ðŸ‘‘',
+      numValue: totalSpentCalculated > 200000 ? 'Diamond 👑' : totalSpentCalculated > 50000 ? 'Gold 👑' : 'VIP Patron 👑',
       prefix: '',
-      sub: 'Tier-1 Client Club',
+      sub: 'Verified Patron Account',
       icon: Crown,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -1044,7 +1044,7 @@ export default function UserDashboard() {
     },
     {
       label: 'PATRONAGE SENIORITY',
-      numValue: 'Since 2026',
+      numValue: `Since ${new Date().getFullYear()}`,
       prefix: '',
       sub: 'Registered VIP Account',
       icon: Clock,
@@ -1057,7 +1057,7 @@ export default function UserDashboard() {
     },
     {
       label: 'COMMISSION PRIORITY',
-      numValue: 'Fast-Track',
+      numValue: 'Standard VIP',
       prefix: '',
       sub: 'Dedicated Artisan Line',
       icon: Sparkles,
@@ -1086,7 +1086,7 @@ export default function UserDashboard() {
   const securityKpis = [
     {
       label: 'SECURITY SHIELD',
-      numValue: 'Enterprise ðŸ›¡ï¸',
+      numValue: 'Enterprise 🛡️',
       prefix: '',
       sub: 'Zero Vulnerabilities Detected',
       icon: ShieldCheck,
@@ -1141,7 +1141,7 @@ export default function UserDashboard() {
   const settingsKpis = [
     {
       label: 'DEFAULT CURRENCY',
-      numValue: 'PKR (â‚¨)',
+      numValue: 'PKR (Rs.)',
       prefix: '',
       sub: 'National Currency Standard',
       icon: Coins,
@@ -1154,7 +1154,7 @@ export default function UserDashboard() {
     },
     {
       label: 'VIP DROP ALERTS',
-      numValue: 'Enabled ðŸ””',
+      numValue: 'Enabled 🔔',
       prefix: '',
       sub: 'Instant In-App Alerts',
       icon: Sparkles,
@@ -1705,8 +1705,8 @@ export default function UserDashboard() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white/80 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-[#E7DDD0] shadow-xs">
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
                   {[
-                    { id: 'ALL', label: 'All Orders', count: orders.length || 1 },
-                    { id: 'PENDING', label: 'Pending', count: orders.filter(o => !o.status || o.status === 'PENDING').length || 1 },
+                    { id: 'ALL', label: 'All Orders', count: orders.length },
+                    { id: 'PENDING', label: 'Pending', count: orders.filter(o => !o.status || o.status === 'PENDING').length },
                     { id: 'SHIPPED', label: 'In-Transit', count: orders.filter(o => o.status === 'SHIPPED').length },
                     { id: 'DELIVERED', label: 'Delivered', count: orders.filter(o => o.status === 'DELIVERED').length },
                   ].map((f) => (
@@ -1742,7 +1742,7 @@ export default function UserDashboard() {
                       onClick={() => setSearchQuery('')}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs"
                     >
-                      âœ•
+                      ✕
                     </button>
                   )}
                 </div>
@@ -1775,7 +1775,10 @@ export default function UserDashboard() {
                         filteredOrders.map((order, idx) => {
                           const isDelivered = order.status === 'DELIVERED';
                           const isShipped = order.status === 'SHIPPED';
-                          const orderRef = `#${(order.id || 'XT0B0KPE').slice(-8).toUpperCase()}`;
+                          const orderRef = `#${(order.id || 'ORDER').slice(-8).toUpperCase()}`;
+                          const clientName = order.customerName || session?.user?.name || profile?.name || 'VIP Client';
+                          const clientEmail = order.customerEmail || session?.user?.email || profile?.email || '';
+                          const clientPhone = order.customerPhone || profileForm.phone || '';
 
                           return (
                             <tr key={order.id || idx} className="hover:bg-[#FAF5EE]/50 transition-colors group">
@@ -1796,23 +1799,27 @@ export default function UserDashboard() {
                               <td className="py-4 px-5">
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#B88E4B] to-[#5A3A1A] text-white flex items-center justify-center font-serif font-black text-xs shrink-0 shadow-2xs">
-                                    {(session?.user?.name || profile?.name || 'Z')[0].toUpperCase()}
+                                    {clientName[0].toUpperCase()}
                                   </div>
                                   <div>
                                     <span className="font-bold text-[#1F1612] block">
-                                      {session?.user?.name || profile?.name || 'zain mailk'}
+                                      {clientName}
                                     </span>
-                                    <span className="text-[11px] text-stone-500 block truncate max-w-[180px]">
-                                      {session?.user?.email || profile?.email || 'likafaw536@epaynine.com'}
-                                    </span>
-                                    <a
-                                      href={`https://wa.me/${(profileForm.phone || '03238006110').replace(/[^0-9]/g, '')}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-[10.5px] font-mono font-bold text-[#8C6239] hover:underline flex items-center gap-1 mt-0.5"
-                                    >
-                                      ðŸ“ž {profileForm.phone || '03238006110'}
-                                    </a>
+                                    {clientEmail && (
+                                      <span className="text-[11px] text-stone-500 block truncate max-w-[180px]">
+                                        {clientEmail}
+                                      </span>
+                                    )}
+                                    {clientPhone && (
+                                      <a
+                                        href={`https://wa.me/${clientPhone.replace(/[^0-9]/g, '')}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[10.5px] font-mono font-bold text-[#8C6239] hover:underline flex items-center gap-1 mt-0.5"
+                                      >
+                                        📞 {clientPhone}
+                                      </a>
+                                    )}
                                   </div>
                                 </div>
                               </td>
@@ -1820,11 +1827,11 @@ export default function UserDashboard() {
                               <td className="py-4 px-5">
                                 <div>
                                   <span className="font-serif font-black text-sm sm:text-base text-[#1F1612] block">
-                                    Rs. {formatPrice(order.totalAmount || 11700)}
+                                    Rs. {formatPrice(order.totalAmount || 0)}
                                   </span>
                                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-stone-500 mt-0.5">
                                     <Package size={10} className="text-[#B88E4B]" />
-                                    {(order.items || []).length || 1} Bespoke Item(s)
+                                    {(order.items || []).length} Bespoke Item(s)
                                   </span>
                                 </div>
                               </td>
@@ -1867,7 +1874,7 @@ export default function UserDashboard() {
                                     ? 'bg-sky-50 border-sky-200 text-sky-800'
                                     : 'bg-[#FAF5EE] border-[#E7DDD0] text-[#1F1612]'
                                 }`}>
-                                  {isDelivered ? 'Delivered âœ“' : isShipped ? 'In-Transit ðŸšš' : 'Pending â³'}
+                                  {isDelivered ? 'Delivered ✓' : isShipped ? 'In-Transit 🚚' : 'Pending ⏳'}
                                 </span>
                               </td>
 
@@ -2428,10 +2435,10 @@ export default function UserDashboard() {
               
               {/* Top Luxury Header Bar */}
               {renderHeaderBanner(
-                'âœ¦ HAVENS REGISTRY',
-                'âœ¦ RESIDENTIAL REGISTRY V2.4',
-                `${addresses.length || 1} HAVENS`,
-                `${addresses.length || 1} SAVED ESTATES`,
+                '✦ HAVENS REGISTRY',
+                '✦ RESIDENTIAL REGISTRY V2.4',
+                `${addresses.length} HAVENS`,
+                `${addresses.length} SAVED ESTATES`,
                 'Registered Residences',
                 '& Estates',
                 'Manage delivery addresses for insured white-glove installations across Pakistan.',
@@ -2457,7 +2464,7 @@ export default function UserDashboard() {
                   <div className="flex items-center justify-between pb-2 border-b border-[#E7DDD0]">
                     <div>
                       <span className="text-[9px] font-mono font-black uppercase tracking-wider text-[#8C6239] block">
-                        âœ¦ DISPATCH LOCATION REGISTRATION
+                        ✦ DISPATCH LOCATION REGISTRATION
                       </span>
                       <h3 className="font-serif font-black text-base text-[#1F1612]">Register New VIP Residence</h3>
                     </div>
@@ -2466,7 +2473,7 @@ export default function UserDashboard() {
                       onClick={() => setShowAddrForm(false)}
                       className="w-7 h-7 rounded-full bg-[#FAF5EE] text-stone-500 hover:text-black flex items-center justify-center text-xs cursor-pointer"
                     >
-                      âœ•
+                      ✕
                     </button>
                   </div>
 
@@ -2476,7 +2483,7 @@ export default function UserDashboard() {
                         <User size={12} className="text-[#B88E4B]" /> Recipient Full Name
                       </label>
                       <Input
-                        placeholder="e.g. Zain Malik"
+                        placeholder="e.g. Your Full Name"
                         value={addrForm.name}
                         onChange={(e) => setAddrForm({ ...addrForm, name: e.target.value })}
                         className="rounded-xl border-[#E7DDD0] bg-[#FAF5EE]/40 text-xs h-9.5 focus:ring-[#B88E4B]"
@@ -2489,7 +2496,7 @@ export default function UserDashboard() {
                         <Phone size={12} className="text-[#B88E4B]" /> Contact Phone
                       </label>
                       <Input
-                        placeholder="e.g. 0323 8006110"
+                        placeholder="e.g. 0300 1234567"
                         value={addrForm.phone}
                         onChange={(e) => setAddrForm({ ...addrForm, phone: e.target.value })}
                         className="rounded-xl border-[#E7DDD0] bg-[#FAF5EE]/40 text-xs h-9.5 focus:ring-[#B88E4B] font-mono"
@@ -2502,7 +2509,7 @@ export default function UserDashboard() {
                         <Home size={12} className="text-[#B88E4B]" /> Street Address / Villa / Estate / Phase
                       </label>
                       <Input
-                        placeholder="e.g. Villa #14, Block Z, Phase 6, DHA"
+                        placeholder="e.g. House / Villa, Street, Sector, Phase"
                         value={addrForm.address}
                         onChange={(e) => setAddrForm({ ...addrForm, address: e.target.value })}
                         className="rounded-xl border-[#E7DDD0] bg-[#FAF5EE]/40 text-xs h-9.5 focus:ring-[#B88E4B]"
@@ -2587,83 +2594,93 @@ export default function UserDashboard() {
               )}
 
               {/* Saved Residences Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {(addresses.length === 0 ? [
-                  {
-                    id: 'default-est',
-                    name: session?.user?.name || profile?.name || 'zain mailk',
-                    phone: profileForm.phone || '03238006110',
-                    address: 'Villa 14, Block Z, Phase 6, DHA',
-                    city: 'Lahore',
-                    province: 'Punjab',
-                    isDefault: true,
-                  }
-                ] : addresses).map((addr) => (
-                  <div
-                    key={addr.id}
-                    className="bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-[22px] border border-[#E7DDD0] p-5 shadow-[0_4px_20px_rgba(44,30,24,0.03)] space-y-3 relative group hover:border-[#B88E4B] hover:shadow-[0_8px_24px_rgba(184,142,75,0.1)] transition-all"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 text-[#8C6239] flex items-center justify-center font-serif font-black text-xs shadow-2xs">
-                          <Home size={14} />
-                        </div>
-                        <div>
-                          <span className="font-serif font-black text-sm text-[#1F1612] block">{addr.name}</span>
-                          <span className="text-[10px] text-stone-400 font-mono">ESTATE ID: #{addr.id.slice(-6).toUpperCase()}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {addr.isDefault && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[8.5px] font-black bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/40 shadow-2xs flex items-center gap-1">
-                            <Crown size={9} /> PRIMARY HAVEN
-                          </span>
-                        )}
-                        <button
-                          onClick={() => handleDeleteAddress(addr.id)}
-                          className="w-7 h-7 rounded-lg bg-stone-50 hover:bg-rose-50 text-stone-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
-                          title="Delete Residence"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-[#FAF5EE]/60 border border-[#E7DDD0]/80 space-y-1">
-                      <p className="text-xs text-[#1F1612] font-medium leading-relaxed flex items-start gap-1.5">
-                        <MapPin size={13} className="text-[#B88E4B] shrink-0 mt-0.5" />
-                        <span>{addr.address}, {addr.city}, {addr.province}</span>
-                      </p>
-                      <p className="text-xs font-mono font-bold text-[#8C6239] pl-5 flex items-center gap-1">
-                        ðŸ“ž {addr.phone}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] pt-1">
-                      <span className="text-stone-400 font-medium flex items-center gap-1">
-                        <Truck size={12} className="text-emerald-600" /> White-Glove Direct Zone
-                      </span>
-                      <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 text-[10px]">
-                        âœ“ Verified Transit Hub
-                      </span>
-                    </div>
+              {addresses.length === 0 ? (
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-[22px] border-2 border-dashed border-[#E7DDD0] p-10 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-[#8C6239] flex items-center justify-center mx-auto shadow-xs">
+                    <Home size={22} />
                   </div>
-                ))}
-              </div>
+                  <h3 className="font-serif font-black text-base text-[#1F1612]">No Residences Registered Yet</h3>
+                  <p className="text-xs text-[#7A6354] max-w-sm mx-auto">
+                    Save your primary residence or architectural project address for seamless insured white-glove installations.
+                  </p>
+                  <Button
+                    onClick={() => setShowAddrForm(true)}
+                    className="rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#8C6239] text-white text-xs font-bold px-4 py-2 shadow-xs cursor-pointer active:scale-95"
+                  >
+                    <Plus size={13} className="mr-1" /> Add Your Residence
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {addresses.map((addr) => (
+                    <div
+                      key={addr.id}
+                      className="bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-[22px] border border-[#E7DDD0] p-5 shadow-[0_4px_20px_rgba(44,30,24,0.03)] space-y-3 relative group hover:border-[#B88E4B] hover:shadow-[0_8px_24px_rgba(184,142,75,0.1)] transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 text-[#8C6239] flex items-center justify-center font-serif font-black text-xs shadow-2xs">
+                            <Home size={14} />
+                          </div>
+                          <div>
+                            <span className="font-serif font-black text-sm text-[#1F1612] block">{addr.name}</span>
+                            <span className="text-[10px] text-stone-400 font-mono">ESTATE ID: #{addr.id.slice(-6).toUpperCase()}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {addr.isDefault && (
+                            <span className="px-2.5 py-0.5 rounded-full text-[8.5px] font-black bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/40 shadow-2xs flex items-center gap-1">
+                              <Crown size={9} /> PRIMARY HAVEN
+                            </span>
+                          )}
+                          <button
+                            onClick={() => handleDeleteAddress(addr.id)}
+                            className="w-7 h-7 rounded-lg bg-stone-50 hover:bg-rose-50 text-stone-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                            title="Delete Residence"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-[#FAF5EE]/60 border border-[#E7DDD0]/80 space-y-1">
+                        <p className="text-xs text-[#1F1612] font-medium leading-relaxed flex items-start gap-1.5">
+                          <MapPin size={13} className="text-[#B88E4B] shrink-0 mt-0.5" />
+                          <span>{addr.address}, {addr.city}, {addr.province}</span>
+                        </p>
+                        {addr.phone && (
+                          <p className="text-xs font-mono font-bold text-[#8C6239] pl-5 flex items-center gap-1">
+                            📞 {addr.phone}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] pt-1">
+                        <span className="text-stone-400 font-medium flex items-center gap-1">
+                          <Truck size={12} className="text-emerald-600" /> White-Glove Direct Zone
+                        </span>
+                        <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 text-[10px]">
+                          ✓ Verified Transit Hub
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ══════════════════════════════════════════════════════════ */}
           {/* TAB 7: VIP CLIENT PROFILE                                 */}
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ══════════════════════════════════════════════════════════ */}
           {activeTab === 'profile' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               
               {/* Top Luxury Header Bar */}
               {renderHeaderBanner(
-                'âœ¦ CLIENT PROFILE',
-                'âœ¦ CLIENT CREDENTIALS V2.4',
+                '✦ CLIENT PROFILE',
+                '✦ CLIENT CREDENTIALS V2.4',
                 'VIP STATUS',
                 'VERIFIED VIP PATRON',
                 'VIP Client Profile',
@@ -2684,7 +2701,7 @@ export default function UserDashboard() {
                   {/* Shimmering Royal Avatar */}
                   <div className="relative mt-2">
                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#B88E4B] via-[#996515] to-[#5A3A1A] border-4 border-white shadow-xl flex items-center justify-center text-white text-3xl sm:text-4xl font-serif font-black">
-                      {(session?.user?.name || profile?.name || 'Z')[0].toUpperCase()}
+                      {(session?.user?.name || profile?.name || 'VIP Client')[0].toUpperCase()}
                     </div>
                     <span className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gradient-to-br from-[#B88E4B] to-[#5A3A1A] border-2 border-white flex items-center justify-center text-amber-200 text-xs shadow-md">
                       <Crown size={15} />
@@ -2694,13 +2711,15 @@ export default function UserDashboard() {
                   <div className="space-y-1">
                     <div className="flex items-center justify-center gap-1.5">
                       <h3 className="font-serif font-black text-xl text-[#1F1612]">
-                        {session?.user?.name || profile?.name || 'zain mailk'}
+                        {session?.user?.name || profile?.name || 'VIP Client'}
                       </h3>
-                      <span className="text-emerald-600 text-xs" title="Verified VIP Patron">âœ“</span>
+                      <span className="text-emerald-600 text-xs" title="Verified VIP Patron">✓</span>
                     </div>
-                    <p className="text-xs text-[#8C6239] font-medium">
-                      {session?.user?.email || profile?.email || 'likafaw536@epaynine.com'}
-                    </p>
+                    {session?.user?.email || profile?.email ? (
+                      <p className="text-xs text-[#8C6239] font-medium">
+                        {session?.user?.email || profile?.email}
+                      </p>
+                    ) : null}
                   </div>
 
                   {/* Patron ID with Instant Copy Button */}
@@ -2708,13 +2727,13 @@ export default function UserDashboard() {
                     <div className="text-left">
                       <span className="text-[9px] font-mono font-bold text-stone-400 uppercase block">Patron ID</span>
                       <span className="text-xs font-mono font-black text-[#1F1612]">
-                        #{(session?.user as any)?.id ? ((session?.user as any).id.slice(-6).toUpperCase()) : '4AIB7N'}
+                        #{(session?.user as any)?.id ? ((session?.user as any).id.slice(-6).toUpperCase()) : 'VIP'}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => {
-                        const patronId = `#${(session?.user as any)?.id ? ((session?.user as any).id.slice(-6).toUpperCase()) : '4AIB7N'}`;
+                        const patronId = `#${(session?.user as any)?.id ? ((session?.user as any).id.slice(-6).toUpperCase()) : 'VIP'}`;
                         navigator.clipboard.writeText(patronId);
                         setCopiedId(true);
                         toast.success(`Patron ID ${patronId} copied to clipboard`);
@@ -2722,7 +2741,7 @@ export default function UserDashboard() {
                       }}
                       className="px-2.5 py-1 rounded-lg bg-white hover:bg-[#B88E4B] text-[#8C6239] hover:text-white border border-[#E7DDD0] text-[10.5px] font-bold transition-all cursor-pointer shadow-2xs"
                     >
-                      {copiedId ? 'Copied! âœ“' : 'Copy ID'}
+                      {copiedId ? 'Copied! ✓' : 'Copy ID'}
                     </button>
                   </div>
 
@@ -2730,15 +2749,24 @@ export default function UserDashboard() {
                   <div className="w-full text-left space-y-2 pt-2 border-t border-[#E7DDD0]">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-black text-[#8C6239] font-serif flex items-center gap-1">
-                        <Crown size={12} /> Royal Gold Tier
+                        <Crown size={12} /> {totalSpentCalculated >= 200000 ? 'Diamond Tier' : totalSpentCalculated >= 50000 ? 'Royal Gold Tier' : 'VIP Patron Tier'}
                       </span>
-                      <span className="text-[10px] font-mono text-stone-400">84% to Diamond</span>
+                      <span className="text-[10px] font-mono text-stone-400">
+                        {totalSpentCalculated >= 200000 ? 'Top Tier' : `${Math.min(100, Math.round((totalSpentCalculated / (totalSpentCalculated >= 50000 ? 200000 : 50000)) * 100))}% to next`}
+                      </span>
                     </div>
                     <div className="w-full bg-[#E7DDD0]/60 rounded-full h-2 overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-[#B88E4B] to-[#D4AF37] w-[84%] rounded-full" />
+                      <div
+                        className="h-full bg-gradient-to-r from-[#B88E4B] to-[#D4AF37] rounded-full transition-all duration-500"
+                        style={{ width: `${totalSpentCalculated >= 200000 ? 100 : Math.max(5, Math.min(100, Math.round((totalSpentCalculated / (totalSpentCalculated >= 50000 ? 200000 : 50000)) * 100)))}%` }}
+                      />
                     </div>
                     <p className="text-[10px] text-stone-500 italic">
-                      Spend Rs. 80,000 more to unlock Royal Diamond Atelier tier.
+                      {totalSpentCalculated >= 200000
+                        ? 'Highest atelier recognition unlocked. Priority artisan line active.'
+                        : totalSpentCalculated >= 50000
+                        ? `Spend Rs. ${formatPrice(200000 - totalSpentCalculated)} more to unlock Royal Diamond Atelier tier.`
+                        : `Spend Rs. ${formatPrice(50000 - totalSpentCalculated)} more to unlock Royal Gold Atelier tier.`}
                     </p>
                   </div>
 
@@ -2762,7 +2790,7 @@ export default function UserDashboard() {
                   <form onSubmit={handleSaveProfile} className="space-y-4">
                     <div className="pb-2 border-b border-[#E7DDD0]">
                       <span className="text-[9px] font-mono font-black uppercase tracking-wider text-[#8C6239] block">
-                        âœ¦ ARCHITECTURAL SPECIFICATIONS & CONTACT
+                        ✦ ARCHITECTURAL SPECIFICATIONS & CONTACT
                       </span>
                       <h3 className="font-serif font-black text-lg text-[#1F1612]">Client Credentials & Bespoke Preferences</h3>
                     </div>
@@ -2775,7 +2803,7 @@ export default function UserDashboard() {
                         <Input
                           value={profileForm.name}
                           onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                          placeholder="zain mailk"
+                          placeholder="e.g. Your Full Name"
                           className="rounded-xl border-[#E7DDD0] bg-[#FAF5EE]/40 text-xs h-10 focus:ring-[#B88E4B]"
                         />
                       </div>
@@ -2787,7 +2815,7 @@ export default function UserDashboard() {
                         <Input
                           value={profileForm.phone}
                           onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                          placeholder="03238006110"
+                          placeholder="e.g. 0300 1234567"
                           className="rounded-xl border-[#E7DDD0] bg-[#FAF5EE]/40 text-xs h-10 focus:ring-[#B88E4B] font-mono"
                         />
                       </div>
@@ -2799,12 +2827,12 @@ export default function UserDashboard() {
                       </label>
                       <div className="relative">
                         <Input
-                          value={session?.user?.email || profile?.email || 'likafaw536@epaynine.com'}
+                          value={session?.user?.email || profile?.email || ''}
                           disabled
                           className="rounded-xl border-[#E7DDD0] bg-[#FAF5EE] text-xs h-10 text-stone-600 font-mono pr-24"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-300">
-                          âœ“ VERIFIED
+                          ✓ VERIFIED
                         </span>
                       </div>
                     </div>
@@ -2917,8 +2945,8 @@ export default function UserDashboard() {
               
               {/* Top Luxury Header Bar */}
               {renderHeaderBanner(
-                'âœ¦ PORTAL CONFIG',
-                'âœ¦ PORTAL CONFIG V2.4',
+                '✦ PORTAL CONFIG',
+                '✦ PORTAL CONFIG V2.4',
                 'AUTO SYNC',
                 'AUTOMATIC PREFERENCE SYNC',
                 'Client Suite',
@@ -2938,7 +2966,7 @@ export default function UserDashboard() {
         </main>
       </div>
 
-      {/* â”€â”€ MODAL: ORDER DETAILS / INVOICE MODAL â”€â”€ */}
+      {/* ── MODAL: ORDER DETAILS / INVOICE MODAL ── */}
       {selectedOrderDetails && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <motion.div
@@ -2950,7 +2978,7 @@ export default function UserDashboard() {
             <div className="flex items-center justify-between pb-2.5 border-b border-[#E7DDD0]">
               <div>
                 <p className="text-xs font-mono font-bold text-[#8C6239]">
-                  COMMISSION #{selectedOrderDetails.id.slice(-8).toUpperCase()}
+                  COMMISSION #{(selectedOrderDetails.id || '').slice(-8).toUpperCase()}
                 </p>
                 <h3 className="font-serif font-black text-base text-[#1F1612]">Invoice & Crafting Specifications</h3>
               </div>
@@ -2958,7 +2986,7 @@ export default function UserDashboard() {
                 onClick={() => setSelectedOrderDetails(null)}
                 className="w-7 h-7 rounded-full bg-[#FAF5EE] text-stone-500 hover:text-black flex items-center justify-center cursor-pointer"
               >
-                âœ•
+                ✕
               </button>
             </div>
 
@@ -3001,7 +3029,7 @@ export default function UserDashboard() {
         </div>
       )}
 
-      {/* â”€â”€ MODAL: LIVE CRAFTING & FULFILLMENT TRACKER â”€â”€ */}
+      {/* ── MODAL: LIVE CRAFTING & FULFILLMENT TRACKER ── */}
       {trackingOrder && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <motion.div
@@ -3017,7 +3045,7 @@ export default function UserDashboard() {
                 </div>
                 <div>
                   <p className="text-[10px] font-mono font-black text-[#8C6239] uppercase tracking-wider">
-                    LIVE CRAFTING RADAR #{trackingOrder.id.slice(-8).toUpperCase()}
+                    LIVE CRAFTING RADAR #{(trackingOrder.id || '').slice(-8).toUpperCase()}
                   </p>
                   <h3 className="font-serif font-black text-base text-[#1F1612]">
                     Bespoke Order Journey & Stage Radar
@@ -3028,7 +3056,7 @@ export default function UserDashboard() {
                 onClick={() => setTrackingOrder(null)}
                 className="w-8 h-8 rounded-full bg-[#FAF5EE] text-stone-500 hover:text-black flex items-center justify-center cursor-pointer transition-colors"
               >
-                âœ•
+                ✕
               </button>
             </div>
 
@@ -3110,7 +3138,7 @@ export default function UserDashboard() {
                 <span className="text-xs font-bold text-[#1F1612]">Master Artisan Fahad Ali</span>
               </div>
               <a
-                href={`https://wa.me/923000000000?text=Hello%20Fahad%20Ali,%20tracking%20Bespoke%20Commission%20%23${trackingOrder.id.slice(-8).toUpperCase()}`}
+                href={`https://wa.me/923000000000?text=Hello%20Fahad%20Ali,%20tracking%20Bespoke%20Commission%20%23${(trackingOrder.id || '').slice(-8).toUpperCase()}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-2xs"
@@ -3122,7 +3150,7 @@ export default function UserDashboard() {
         </div>
       )}
 
-      {/* â”€â”€ MODAL: QUICK VIEW PRODUCT CRAFTING SPECIFICATIONS â”€â”€ */}
+      {/* ── MODAL: QUICK VIEW PRODUCT CRAFTING SPECIFICATIONS ── */}
       {quickViewProduct && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <motion.div
@@ -3133,13 +3161,13 @@ export default function UserDashboard() {
           >
             <div className="flex items-center justify-between pb-2 border-b border-[#E7DDD0]">
               <span className="text-[9px] font-mono font-black text-[#8C6239] uppercase tracking-wider">
-                âœ¦ BESPOKE SPECIFICATION SHEET
+                ✦ BESPOKE SPECIFICATION SHEET
               </span>
               <button
                 onClick={() => setQuickViewProduct(null)}
                 className="w-7 h-7 rounded-full bg-[#FAF5EE] text-stone-500 hover:text-black flex items-center justify-center cursor-pointer"
               >
-                âœ•
+                ✕
               </button>
             </div>
 
