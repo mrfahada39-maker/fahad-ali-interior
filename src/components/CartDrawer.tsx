@@ -131,6 +131,9 @@ export default function CartDrawer() {
                         <img
                           src={resolveImageUrl(item.image, item.name)}
                           alt={item.name}
+                          width={64}
+                          height={64}
+                          style={{ aspectRatio: '1/1' }}
                           className="object-cover w-full h-full"
                         />
                       </div>

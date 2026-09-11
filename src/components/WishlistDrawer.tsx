@@ -141,6 +141,7 @@ export function WishlistDrawerPanel() {
                           src={resolveImageUrl(item.image, item.category)}
                           alt={item.name}
                           fill
+                          style={{ aspectRatio: '1/1' }}
                           className="object-cover"
                           sizes="80px"
                         />

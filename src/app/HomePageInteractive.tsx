@@ -11,7 +11,6 @@ import { apiFetchJson } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
 import dynamic from 'next/dynamic';
-import TrustBadges from '@/components/TrustBadges';
 
 const TestimonialsSection = dynamic(() => import('@/components/home/TestimonialsSection'), {
   loading: () => <div className="min-h-[400px] bg-[#0d0907]" />,
@@ -141,6 +140,9 @@ export default function HomePageInteractive({
             <img
               src={CLOUDINARY_ASSETS.heroMobilePoster}
               alt="Fahad Ali Interior Royal Luxury Showcase"
+              width={1920}
+              height={1080}
+              style={{ aspectRatio: '16/9' }}
               className="w-full h-full object-cover object-center"
               decoding="async"
               fetchPriority="high"
@@ -223,9 +225,6 @@ export default function HomePageInteractive({
         </div>
       </section>
 
-      {/* ── ATELIER HERITAGE TRUST ASSURANCE BAR ── */}
-      <TrustBadges />
-
       {/* ── CATEGORIES SECTION (LOW-END PHONE OPTIMIZED JANK-FREE ENGINE) ── */}
       <section className="smooth-scroll-section w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 mb-16 relative z-10">
         <div className="gsap-cat-header text-center mb-10">
@@ -269,6 +268,7 @@ export default function HomePageInteractive({
                     unoptimized
                     loading={i < 2 ? 'eager' : 'lazy'}
                     decoding="async"
+                    style={{ aspectRatio: '5/4' }}
                     className="gsap-cat-img object-cover transition-transform duration-500 group-hover:scale-105" 
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" 
                   />

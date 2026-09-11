@@ -238,6 +238,7 @@ export default function TestimonialsSection() {
                     fill 
                     loading="lazy"
                     decoding="async"
+                    style={{ aspectRatio: '4/3' }}
                     sizes="(max-width: 640px) 100vw, 420px"
                     className="object-cover" 
                   />
@@ -274,12 +275,13 @@ export default function TestimonialsSection() {
                     <Image 
                       src={imgErrors[currentItem.id] ? currentItem.fallbackAvatar : currentItem.avatar} 
                       alt={currentItem.name} 
-                      fill 
+                      width={48}
+                      height={48}
                       unoptimized
                       loading="lazy"
                       decoding="async"
-                      sizes="48px"
-                      className="object-cover" 
+                      style={{ aspectRatio: '1/1' }}
+                      className="object-cover w-full h-full" 
                       onError={() => setImgErrors(prev => ({ ...prev, [currentItem.id]: true }))}
                     />
                   </div>
@@ -489,12 +491,13 @@ export default function TestimonialsSection() {
                                 <Image 
                                   src={imgErrors[item.id] ? item.fallbackAvatar : item.avatar} 
                                   alt={item.name} 
-                                  fill 
+                                  width={36}
+                                  height={36}
                                   unoptimized
                                   loading="lazy"
                                   decoding="async"
-                                  sizes="36px"
-                                  className="object-cover" 
+                                  style={{ aspectRatio: '1/1' }}
+                                  className="object-cover w-full h-full" 
                                   onError={() => setImgErrors(prev => ({ ...prev, [item.id]: true }))}
                                 />
                               </div>
@@ -528,6 +531,7 @@ export default function TestimonialsSection() {
                         unoptimized
                         loading="lazy"
                         decoding="async"
+                        style={{ aspectRatio: '4/3' }}
                         sizes="(max-width: 1024px) 50vw, 400px"
                         className="object-cover transition-transform duration-700 group-hover:scale-108" 
                       />

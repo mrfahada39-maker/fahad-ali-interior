@@ -270,6 +270,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                               src={resolveImageUrl(product.image, product.category)}
                               alt={product.name}
                               fill
+                              style={{ aspectRatio: '1/1' }}
                               className="object-cover group-hover:scale-105 transition-transform duration-300"
                               sizes="64px"
                             />

@@ -86,7 +86,7 @@ function applyPageSecurityHeaders(
   return response;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isProduction = process.env.NODE_ENV === 'production';
   const nonce = btoa(crypto.randomUUID());
@@ -166,7 +166,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── Role-based dashboard redirect (runs at EDGE — no session cache issues) ──
+  // ── Role-based dashboard redirect (runs at Proxy layer — no session cache issues) ──
   if (pathname === '/dashboard') {
     if (!token) {
       const login = new URL('/', request.url);
@@ -191,6 +191,8 @@ export async function middleware(request: NextRequest) {
 
   return applyPageSecurityHeaders(request, requestHeaders, nonce, requestId, isProduction);
 }
+
+export default proxy;
 
 export const config = {
   matcher: [
