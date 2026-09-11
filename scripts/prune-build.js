@@ -22,12 +22,7 @@ function pruneDir(dir) {
           (f.endsWith('.txt') && !f.includes('robots')) ||
           f.endsWith('.LICENSE') ||
           f.endsWith('.license') ||
-          f.startsWith('trace') ||
-          f.includes('cockroachdb') ||
-          f.includes('sqlserver') ||
-          f.includes('mysql') ||
-          f.includes('sqlite') ||
-          f.includes('mariadb')
+          f.startsWith('trace')
         ) {
           fs.unlinkSync(full);
         }

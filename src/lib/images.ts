@@ -75,6 +75,11 @@ export function resolveImageUrl(
     return (category && CATEGORY_MAP[category]) ? CATEGORY_MAP[category] : LOCAL_IMAGES.sofa;
   }
 
+  // Filter out known deleted or 404 remote assets (e.g. removed Unsplash photos)
+  if (image.includes('photo-1595514535415-eb942f2ed805')) {
+    return (category && CATEGORY_MAP[category]) ? CATEGORY_MAP[category] : LOCAL_IMAGES.sofa;
+  }
+
   if (image.startsWith('http://') || image.startsWith('https://')) {
     if (image.includes('res.cloudinary.com')) {
       return compressCloudinaryUrl(image, width);

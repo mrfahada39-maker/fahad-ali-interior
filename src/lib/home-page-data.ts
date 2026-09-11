@@ -193,7 +193,7 @@ export const getHomePageData = unstable_cache(
           ctaLink: b.link || '/shop',
           image: b.image,
           badgeText: '',
-          price: b.price ?? null,
+          price: b.price != null ? Number(b.price) : null,
           colors: b.colors ?? null,
         })),
       };

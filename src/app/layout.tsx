@@ -148,25 +148,15 @@ export default async function RootLayout({
   ReactDOM.preconnect('https://images.unsplash.com', { crossOrigin: 'anonymous' });
   ReactDOM.prefetchDNS('https://images.unsplash.com');
 
-  ReactDOM.preload(
-    CLOUDINARY_ASSETS.heroDesktopPoster,
-    {
-      as: 'image',
-      fetchPriority: 'high',
-      imageSrcSet: `${CLOUDINARY_ASSETS.heroMobilePoster} 768w, ${CLOUDINARY_ASSETS.heroDesktopPoster} 1280w`,
-      imageSizes: '100vw',
-    }
-  );
-
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body
         suppressHydrationWarning
         className={`${playfair.variable} ${inter.variable} ${greatVibes.variable} antialiased bg-theme-bg text-theme-dark`}
       >
         <JsonLd data={organizationJsonLd} />
         <Providers initialSettings={settings}>{children}</Providers>
-        <SpeedInsights />
+        {process.env.NODE_ENV === 'production' && <SpeedInsights />}
       </body>
     </html>
   );
