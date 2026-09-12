@@ -66,8 +66,8 @@ export default function ReviewsTab({
     {
       label: 'AVERAGE CLIENT RATING',
       numValue: parseFloat(avgRating),
-      suffix: ' â˜…',
-      sub: 'â­ 5-Star Premium Score',
+      suffix: ' ★',
+      sub: '⭐ 5-Star Premium Score',
       icon: Star,
       color: 'text-amber-500',
       iconBg: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100/80 border-amber-300/70 text-amber-600 shadow-[0_3px_12px_rgba(245,158,11,0.2)]',
@@ -79,7 +79,7 @@ export default function ReviewsTab({
     {
       label: 'TOTAL REPUTATION REVIEWS',
       numValue: totalCount,
-      sub: 'âœ“ Verified Client Testimonials',
+      sub: '✓ Verified Client Testimonials',
       icon: Award,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -91,7 +91,7 @@ export default function ReviewsTab({
     {
       label: 'MODERATION PENDING QUEUE',
       numValue: pendingCount,
-      sub: pendingCount === 0 ? 'âœ“ All Reviews Cleared' : 'âš¡ Action Required',
+      sub: pendingCount === 0 ? '✓ All Reviews Cleared' : '⚡ Action Required',
       icon: Sparkles,
       color: 'text-purple-600',
       iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
@@ -104,7 +104,7 @@ export default function ReviewsTab({
       label: 'PUBLIC APPROVAL RATE',
       numValue: 98.2,
       suffix: '%',
-      sub: 'ðŸ›¡ï¸ High Quality Feedback',
+      sub: '🛡ï¸ High Quality Feedback',
       icon: ShieldCheck,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -118,7 +118,7 @@ export default function ReviewsTab({
   return (
     <div className="space-y-4 font-sans">
       
-      {/* â”€â”€ $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -164,7 +164,7 @@ export default function ReviewsTab({
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -209,7 +209,7 @@ export default function ReviewsTab({
         ))}
       </div>
 
-      {/* â”€â”€ LUXURY TOOLBAR & FILTERS â”€â”€ */}
+      {/* ── LUXURY TOOLBAR & FILTERS ── */}
       <div className="bg-white border border-[#E7DDD0] rounded-[20px] p-3 shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
         
         {/* Filter Pills */}
@@ -257,7 +257,7 @@ export default function ReviewsTab({
 
       </div>
 
-      {/* â”€â”€ REVIEWS CARDS GRID â”€â”€ */}
+      {/* ── REVIEWS CARDS GRID ── */}
       {filteredReviews.length === 0 ? (
         <div className="bg-white border border-[#E7DDD0] rounded-[24px] p-16 text-center shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
           <div className="w-16 h-16 rounded-2xl bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center mx-auto mb-3 text-[#B88E4B]">
@@ -294,7 +294,7 @@ export default function ReviewsTab({
                           {r.customerName || r.user?.name || 'Valued Client'}
                         </h4>
                         <p className="text-stone-400 text-[10.5px] font-semibold mt-1">
-                          {new Date(r.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} â€¢ <span className="text-emerald-700 font-bold">âœ“ Verified Purchase</span>
+                          {new Date(r.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} • <span className="text-emerald-700 font-bold">✓ Verified Purchase</span>
                         </p>
                       </div>
                     </div>

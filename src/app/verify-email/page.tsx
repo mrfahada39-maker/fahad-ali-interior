@@ -179,7 +179,7 @@ function VerifyEmailContent() {
           </div>
           <Link href="/?auth=login">
             <Button className="w-full h-11 bg-[#1F1612] hover:bg-[#35251F] text-[#F5D77F] font-bold rounded-xl text-sm transition-all shadow-md">
-              Proceed to Login Portal â†’
+              Proceed to Login Portal →
             </Button>
           </Link>
         </div>

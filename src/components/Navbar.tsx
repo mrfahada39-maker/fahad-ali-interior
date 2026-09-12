@@ -53,7 +53,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
   return (
     <>
-      {/* â”€â”€ STICKY EDITORIAL LUXURY HEADER â”€â”€ */}
+      {/* ── STICKY EDITORIAL LUXURY HEADER ── */}
       <header className="fixed top-0 left-0 right-0 z-50 w-full transition-colors duration-500 font-sans">
         
       {/* Main Full-Width Editorial Navbar */}
@@ -185,7 +185,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         </nav>
       </header>
 
-      {/* â”€â”€ LUXURY CURVED MOBILE DRAWER (EXACT 100% REPLICA OF SCREENSHOT IMAGE) â”€â”€ */}
+      {/* ── LUXURY CURVED MOBILE DRAWER (EXACT 100% REPLICA OF SCREENSHOT IMAGE) ── */}
       <div
         onClick={() => setMobileOpen(false)}
         className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden transition-opacity duration-500 ${
@@ -213,7 +213,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             {/* Ornate Gold Flourish Line */}
             <div className="flex items-center gap-2 mt-2 w-36">
               <div className="h-px w-full bg-gradient-to-r from-[#C9A96E] to-transparent" />
-              <span className="text-[#C9A96E] text-[10px]">â–</span>
+              <span className="text-[#C9A96E] text-[10px]">✦</span>
               <div className="h-px w-full bg-gradient-to-l from-[#C9A96E] to-transparent" />
             </div>
           </div>
@@ -374,7 +374,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* Ornate Gold Flourish Divider */}
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-20 bg-[#C9A96E]/40" />
-            <span className="text-[#C9A96E] text-xs">â–</span>
+            <span className="text-[#C9A96E] text-xs">✦</span>
             <div className="h-px w-20 bg-[#C9A96E]/40" />
           </div>
 
@@ -443,7 +443,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         </div>
       </div>
 
-      {/* â”€â”€ 100% FLUSH BOTTOM NAVBAR (HAUTE COUTURE 24K ROYAL GOLD & OBSIDIAN GLASS) â”€â”€ */}
+      {/* ── 100% FLUSH BOTTOM NAVBAR (HAUTE COUTURE 24K ROYAL GOLD & OBSIDIAN GLASS) ── */}
       <nav 
         aria-label="Mobile Navigation Bar"
         className="fixed bottom-0 left-0 right-0 w-full z-40 lg:hidden bg-[#0D0704]/96 backdrop-blur-3xl border-t border-[#D4AF37]/50 text-white shadow-[0_-12px_45px_rgba(0,0,0,0.9),0_0_30px_rgba(212,175,55,0.15)] px-1 pt-1.5 pb-2 h-[66px] sm:h-[70px] flex items-center justify-around select-none overflow-visible before:absolute before:inset-x-0 before:top-0 before:h-[1.5px] before:bg-gradient-to-r before:from-transparent before:via-[#FFEAA0] before:to-transparent before:animate-pulse"
@@ -490,7 +490,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           </span>
         </button>
 
-        {/* 3. ðŸ‘‘ HOME (PROMINENT 24K GOLD JEWEL IN THE CENTER) */}
+        {/* 3. 👑 HOME (PROMINENT 24K GOLD JEWEL IN THE CENTER) */}
         <Link
           href="/"
           className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${

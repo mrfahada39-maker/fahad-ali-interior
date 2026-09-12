@@ -73,7 +73,7 @@ export default function AiChatbotTab() {
     {
       label: 'WHATSAPP CONCIERGE ESCALATIONS',
       numValue: escalatedCount,
-      sub: escalatedCount === 0 ? 'âœ“ Autonomous AI Handling' : 'âš¡ Handed to Specialists',
+      sub: escalatedCount === 0 ? '✓ Autonomous AI Handling' : '⚡ Handed to Specialists',
       icon: PhoneCall,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -86,7 +86,7 @@ export default function AiChatbotTab() {
       label: 'CHAT-TO-QUOTE CONVERSION',
       numValue: conversionRate,
       suffix: '%',
-      sub: 'âš¡ High-Intent Buying Ratio',
+      sub: '⚡ High-Intent Buying Ratio',
       icon: TrendingUp,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
@@ -99,7 +99,7 @@ export default function AiChatbotTab() {
       label: 'CATALOG GROUNDING ACCURACY',
       numValue: 99.4,
       suffix: '%',
-      sub: 'â­ Zero-Hallucination Verified',
+      sub: '⭐ Zero-Hallucination Verified',
       icon: Sparkles,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -113,7 +113,7 @@ export default function AiChatbotTab() {
   return (
     <div className="space-y-4 font-sans">
       
-      {/* â”€â”€ $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -157,7 +157,7 @@ export default function AiChatbotTab() {
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -202,14 +202,14 @@ export default function AiChatbotTab() {
         ))}
       </div>
 
-      {/* â”€â”€ TWO-COLUMN INTELLIGENCE SECTION (INTENT BREAKDOWN & TRANSCRIPTS TABLE) â”€â”€ */}
+      {/* ── TWO-COLUMN INTELLIGENCE SECTION (INTENT BREAKDOWN & TRANSCRIPTS TABLE) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
         
         {/* Left Column: Customer Intent Distribution (4 Cols) */}
         <div className="lg:col-span-4 bg-white border border-[#E7DDD0] rounded-[22px] p-4 shadow-[0_4px_20px_rgba(44,30,24,0.015)] space-y-4">
           <div className="border-b border-neutral-100 pb-2.5">
             <h3 className="text-sm font-black text-[#221814] flex items-center gap-1.5 font-serif">
-              <span className="text-[#B88E4B]">âœ¦</span> Customer Query Intent Breakdown
+              <span className="text-[#B88E4B]">✦</span> Customer Query Intent Breakdown
             </h3>
             <p className="text-stone-400 text-[10px] font-semibold">Semantic classification of incoming shopper questions</p>
           </div>
@@ -250,7 +250,7 @@ export default function AiChatbotTab() {
           <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
             <div>
               <h3 className="text-sm font-black text-[#221814] flex items-center gap-1.5 font-serif">
-                <span className="text-[#B88E4B]">âœ¦</span> Recent Chat Transcripts & Neural Audits
+                <span className="text-[#B88E4B]">✦</span> Recent Chat Transcripts & Neural Audits
               </h3>
               <p className="text-stone-400 text-[10px] font-semibold">Inspect verbatim customer interactions and AI responses</p>
             </div>
@@ -331,7 +331,7 @@ export default function AiChatbotTab() {
 
       </div>
 
-      {/* â”€â”€ TRANSCRIPT AUDIT LUXURY MODAL â”€â”€ */}
+      {/* ── TRANSCRIPT AUDIT LUXURY MODAL ── */}
       <AnimatePresence>
         {selectedSession && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -346,7 +346,7 @@ export default function AiChatbotTab() {
               <div className="flex justify-between items-center border-b border-neutral-100 pb-3">
                 <div>
                   <h4 className="font-serif font-black text-[#221814] text-base flex items-center gap-2">
-                    <span className="text-[#B88E4B]">âœ¦</span> Verbatim Transcript â€” {selectedSession.sessionId}
+                    <span className="text-[#B88E4B]">✦</span> Verbatim Transcript — {selectedSession.sessionId}
                   </h4>
                   <p className="text-stone-400 text-xs font-semibold mt-0.5">
                     End-to-end conversation logs with grounded luxury responses
@@ -375,7 +375,7 @@ export default function AiChatbotTab() {
                     >
                       <div className="flex items-center justify-between gap-2 mb-1 border-b border-black/5 pb-1">
                         <span className={`font-black uppercase text-[9px] tracking-wider ${isAssistant ? 'text-[#8C6239]' : 'text-stone-500'}`}>
-                          {isAssistant ? 'ðŸ¤– FAHAD ALI AI LUXURY CONCIERGE' : 'ðŸ‘¤ VERIFIED CLIENT'}
+                          {isAssistant ? '🤖 FAHAD ALI AI LUXURY CONCIERGE' : '👤 VERIFIED CLIENT'}
                         </span>
                       </div>
                       <p className="whitespace-pre-line text-xs font-medium leading-relaxed">{m.content}</p>

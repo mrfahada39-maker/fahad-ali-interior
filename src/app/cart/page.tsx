@@ -131,7 +131,7 @@ export default function CartPage() {
                   <span className="block text-xs font-black uppercase tracking-wider text-[#7A6354] mb-3 relative z-10">Privilege Coupon Code</span>
                   {couponApplied ? (
                     <div className="flex items-center gap-2 text-xs text-emerald-800 font-bold bg-emerald-50 border border-emerald-300/80 rounded-xl px-4 py-3 shadow-2xs">
-                      âœ“ Coupon "FAHAD10" applied â€” 10% Royal Privilege Off!
+                      ✓ Coupon "FAHAD10" applied — 10% Royal Privilege Off!
                     </div>
                   ) : (
                     <div className="flex relative z-10">
@@ -192,7 +192,7 @@ export default function CartPage() {
                       prefetch={true}
                       className="block w-full text-center text-stone-500 text-xs mt-3.5 hover:text-[#B88E4B] transition-colors relative z-10 font-bold"
                     >
-                      â† Continue Curating Collection
+                      ← Continue Curating Collection
                     </Link>
                   </div>
                 </div>

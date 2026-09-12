@@ -80,7 +80,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
     {
       label: 'PENDING ACTION REQUIRED',
       numValue: pendingCount,
-      sub: pendingCount === 0 ? 'âœ“ All Inquiries Actioned' : 'âš¡ Awaiting Response',
+      sub: pendingCount === 0 ? '✓ All Inquiries Actioned' : '⚡ Awaiting Response',
       icon: Clock,
       color: 'text-amber-600',
       iconBg: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100/80 border-amber-300/70 text-amber-600 shadow-[0_3px_12px_rgba(245,158,11,0.2)]',
@@ -92,7 +92,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
     {
       label: 'CLIENTS CONTACTED',
       numValue: contactedCount,
-      sub: 'ðŸ’¬ Consultation in Progress',
+      sub: '💬 Consultation in Progress',
       icon: PhoneCall,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
@@ -104,7 +104,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
     {
       label: 'PROPOSALS FINALIZED',
       numValue: reviewedCount,
-      sub: 'â­ Approved Transformations',
+      sub: '⭐ Approved Transformations',
       icon: ShieldCheck,
       color: 'text-purple-600',
       iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
@@ -118,7 +118,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
   return (
     <div className="space-y-4 font-sans">
       
-      {/* â”€â”€ $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -164,7 +164,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -209,7 +209,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
         ))}
       </div>
 
-      {/* â”€â”€ LUXURY TOOLBAR & FILTERS â”€â”€ */}
+      {/* ── LUXURY TOOLBAR & FILTERS ── */}
       <div className="bg-white border border-[#E7DDD0] rounded-[20px] p-3 shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
         
         {/* Filter Pills */}
@@ -258,7 +258,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
 
       </div>
 
-      {/* â”€â”€ CONSULTATIONS CARDS GRID â”€â”€ */}
+      {/* ── CONSULTATIONS CARDS GRID ── */}
       {filteredInquiries.length === 0 ? (
         <div className="bg-white border border-[#E7DDD0] rounded-[24px] p-16 text-center shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
           <div className="w-16 h-16 rounded-2xl bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center mx-auto mb-3 text-[#B88E4B]">
@@ -308,7 +308,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
                           {clientName}
                         </h4>
                         <p className="text-stone-400 text-[10.5px] font-semibold mt-1">
-                          {clientEmail} {clientPhone ? `â€¢ ${clientPhone}` : ''}
+                          {clientEmail} {clientPhone ? `• ${clientPhone}` : ''}
                         </p>
                       </div>
                     </div>
@@ -404,7 +404,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
         </div>
       )}
 
-      {/* â”€â”€ 360Â° PROPOSAL DOSSIER LUXURY MODAL â”€â”€ */}
+      {/* ── 360° PROPOSAL DOSSIER LUXURY MODAL ── */}
       <AnimatePresence>
         {selectedInquiryModal && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -419,7 +419,7 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
               <div className="flex justify-between items-center border-b border-neutral-100 pb-3">
                 <div>
                   <h4 className="font-serif font-black text-[#221814] text-base flex items-center gap-2">
-                    <span className="text-[#B88E4B]">âœ¦</span> Consultation Dossier
+                    <span className="text-[#B88E4B]">✦</span> Consultation Dossier
                   </h4>
                   <p className="text-stone-400 text-xs font-semibold mt-0.5">
                     {selectedInquiryModal.roomType || 'Interior Space'} Proposal Specification

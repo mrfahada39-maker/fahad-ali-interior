@@ -7,7 +7,7 @@ import { Sparkles, Award, ShieldCheck, ArrowRight } from 'lucide-react';
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: 'About Us | Fahad Ali Interior â€” Lahore Heritage Craftsmanship',
+  title: 'About Us | Fahad Ali Interior — Lahore Heritage Craftsmanship',
   description: 'Learn about Fahad Ali Interior: handcrafted solid Sheesham luxury furniture, generational woodworking masters, and bespoke royal craftsmanship from Lahore, Pakistan.',
 };
 
@@ -48,7 +48,7 @@ export default function AboutPage() {
 
             <div className="lg:col-span-6 space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300/80 text-emerald-800 text-xs font-bold">
-                âœ“ 100% Solid Seasoned Wood
+                ✓ 100% Solid Seasoned Wood
               </div>
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#221814] leading-tight">
                 Generations of Craft, Engineered for Eternity

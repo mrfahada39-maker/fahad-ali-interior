@@ -129,7 +129,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
       label: 'ACTION REQUIRED (PENDING)',
       numValue: statusCounts.pending,
       prefix: '',
-      sub: statusCounts.pending === 0 ? 'âœ“ All Orders Processed' : 'âš¡ Awaiting Verification',
+      sub: statusCounts.pending === 0 ? '✓ All Orders Processed' : '⚡ Awaiting Verification',
       icon: Clock,
       color: 'text-amber-600',
       iconBg: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100/80 border-amber-300/70 text-amber-600 shadow-[0_3px_12px_rgba(245,158,11,0.2)]',
@@ -155,7 +155,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
       label: 'DELIVERED & COMPLETED',
       numValue: statusCounts.delivered,
       prefix: '',
-      sub: 'âœ“ 100% Fulfilled & Verified',
+      sub: '✓ 100% Fulfilled & Verified',
       icon: ShieldCheck,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -169,7 +169,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
   return (
     <div className="space-y-4 font-sans">
       
-      {/* â”€â”€ $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -215,7 +215,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -262,7 +262,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
         ))}
       </div>
 
-      {/* â”€â”€ STATUS FILTER PILLS & SEARCH TOOLBAR â”€â”€ */}
+      {/* ── STATUS FILTER PILLS & SEARCH TOOLBAR ── */}
       <div className="bg-white border border-[#E7DDD0] p-3 rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex flex-col lg:flex-row items-center justify-between gap-3">
         
         {/* Status Filter Pills */}
@@ -310,7 +310,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
 
       </div>
 
-      {/* â”€â”€ ORDERS MASTER TABLE â”€â”€ */}
+      {/* ── ORDERS MASTER TABLE ── */}
       {filteredOrders.length === 0 ? (
         <div className="text-center py-16 bg-white border border-[#E7DDD0] rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
           <ShoppingBag size={48} className="mx-auto text-stone-300 mb-3 opacity-60" />
@@ -441,7 +441,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
         </div>
       )}
 
-      {/* â”€â”€ QUICK ORDER DETAILS LUXURY MODAL â”€â”€ */}
+      {/* ── QUICK ORDER DETAILS LUXURY MODAL ── */}
       <AnimatePresence>
         {selectedOrderDetails && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -470,14 +470,14 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                   Order #{selectedOrderDetails.id?.slice(-8).toUpperCase()}
                 </h3>
                 <p className="text-stone-500 text-xs mt-0.5">
-                  Placed on {selectedOrderDetails.createdAt ? new Date(selectedOrderDetails.createdAt).toLocaleString() : 'â€”'}
+                  Placed on {selectedOrderDetails.createdAt ? new Date(selectedOrderDetails.createdAt).toLocaleString() : '—'}
                 </p>
               </div>
 
               {/* Ordered Items Table */}
               <div className="space-y-2 mb-5 bg-[#FCFAF7] p-4 rounded-2xl border border-[#E7DDD0]">
                 <p className="text-xs font-black text-[#221814] uppercase tracking-wider font-serif border-b border-stone-200/70 pb-2 flex items-center gap-1.5">
-                  <span className="text-[#B88E4B]">âœ¦</span> Ordered Furniture Masterpieces
+                  <span className="text-[#B88E4B]">✦</span> Ordered Furniture Masterpieces
                 </p>
                 {(selectedOrderDetails.items || []).length === 0 ? (
                   <p className="text-xs text-stone-500 py-2">Standard Custom Furniture Order</p>

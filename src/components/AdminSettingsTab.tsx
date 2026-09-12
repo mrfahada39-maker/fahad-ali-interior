@@ -128,7 +128,7 @@ export default function SettingsTab({
       label: 'SYSTEM SECURITY HEALTH',
       numValue: 100,
       suffix: '%',
-      sub: 'ðŸ›¡ï¸ Encrypted & Guarded',
+      sub: '🛡ï¸ Encrypted & Guarded',
       icon: ShieldCheck,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -140,7 +140,7 @@ export default function SettingsTab({
     {
       label: 'BRAND PALETTE & THEME',
       numValue: 7,
-      sub: 'âœ¨ Tailored Luxury Tokens',
+      sub: '✨ Tailored Luxury Tokens',
       icon: Palette,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -152,7 +152,7 @@ export default function SettingsTab({
     {
       label: 'SETTLEMENT GATEWAY',
       numValue: 4,
-      sub: 'âœ“ Verified Payment Channels',
+      sub: '✓ Verified Payment Channels',
       icon: CreditCard,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
@@ -165,7 +165,7 @@ export default function SettingsTab({
       label: 'TWO-FACTOR 2FA STATUS',
       numValue: 100,
       suffix: '%',
-      sub: 'âš¡ Biometric & TOTP Ready',
+      sub: '⚡ Biometric & TOTP Ready',
       icon: Key,
       color: 'text-purple-600',
       iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
@@ -179,7 +179,7 @@ export default function SettingsTab({
   return (
     <div className="space-y-4 font-sans">
       
-      {/* â”€â”€ $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -223,7 +223,7 @@ export default function SettingsTab({
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -268,7 +268,7 @@ export default function SettingsTab({
         ))}
       </div>
 
-      {/* â”€â”€ SETTINGS NAVIGATION PILLS â”€â”€ */}
+      {/* ── SETTINGS NAVIGATION PILLS ── */}
       <div className="bg-white border border-[#E7DDD0] rounded-[20px] p-2.5 shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex items-center gap-1.5 overflow-x-auto scrollbar-hide shrink-0">
         {[
           { id: 'general', label: 'Store Identity & Address', icon: Store },
@@ -295,7 +295,7 @@ export default function SettingsTab({
         })}
       </div>
 
-      {/* â”€â”€ ACTIVE CONFIGURATION SECTION PANELS â”€â”€ */}
+      {/* ── ACTIVE CONFIGURATION SECTION PANELS ── */}
       <motion.div
         key={activeSettingsSection}
         initial={{ opacity: 0, y: 8 }}
@@ -475,7 +475,7 @@ export default function SettingsTab({
                       type={safeShowPassword.current ? 'text' : 'password'}
                       value={safePasswordForm.current ?? ''}
                       onChange={(e) => setPasswordForm({ ...safePasswordForm, current: e.target.value })}
-                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="••••••••"
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono rounded-xl h-9.5 pl-3 pr-8 text-xs focus:border-[#B88E4B] outline-none"
                     />
                     <button
@@ -495,7 +495,7 @@ export default function SettingsTab({
                       type={safeShowPassword.next ? 'text' : 'password'}
                       value={safePasswordForm.next ?? ''}
                       onChange={(e) => setPasswordForm({ ...safePasswordForm, next: e.target.value })}
-                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="••••••••"
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono rounded-xl h-9.5 pl-3 pr-8 text-xs focus:border-[#B88E4B] outline-none"
                     />
                     <button
@@ -515,7 +515,7 @@ export default function SettingsTab({
                       type={safeShowPassword.confirm ? 'text' : 'password'}
                       value={safePasswordForm.confirm ?? ''}
                       onChange={(e) => setPasswordForm({ ...safePasswordForm, confirm: e.target.value })}
-                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="••••••••"
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono rounded-xl h-9.5 pl-3 pr-8 text-xs focus:border-[#B88E4B] outline-none"
                     />
                     <button

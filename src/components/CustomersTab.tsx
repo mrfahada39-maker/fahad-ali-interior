@@ -137,7 +137,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
         method: 'POST',
       });
       if (res.ok) {
-        toast.success(`Client ${block ? 'blocked' : 'unblocked'} successfully âœ“`);
+        toast.success(`Client ${block ? 'blocked' : 'unblocked'} successfully ✓`);
         fetchData();
       } else {
         toast.error('Failed to update client status');
@@ -163,7 +163,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
     a.download = `clients-export-${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Client registry exported to CSV âœ“');
+    toast.success('Client registry exported to CSV ✓');
   };
 
   const filteredCustomers = customers.filter((c) => {
@@ -208,7 +208,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
       label: 'ACTIVE VERIFIED PROFILES',
       numValue: activeClients,
       prefix: '',
-      sub: 'âœ“ 100% Account Integrity',
+      sub: '✓ 100% Account Integrity',
       icon: UserCheck,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -248,7 +248,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
   return (
     <div className="space-y-4 font-sans">
       
-      {/* â”€â”€ $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -300,7 +300,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -347,7 +347,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
         ))}
       </div>
 
-      {/* â”€â”€ FILTER PILLS & SEARCH TOOLBAR â”€â”€ */}
+      {/* ── FILTER PILLS & SEARCH TOOLBAR ── */}
       <div className="bg-white border border-[#E7DDD0] p-3 rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex flex-col lg:flex-row items-center justify-between gap-3">
         
         {/* Segment Filter Pills */}
@@ -394,7 +394,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
 
       </div>
 
-      {/* â”€â”€ CLIENTS MASTER TABLE â”€â”€ */}
+      {/* ── CLIENTS MASTER TABLE ── */}
       {loading ? (
         <div className="text-center py-16 bg-white border border-[#E7DDD0] rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
           <Loader2 size={36} className="mx-auto text-[#B88E4B] animate-spin mb-2" />
@@ -573,7 +573,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
         </div>
       )}
 
-      {/* â”€â”€ CLIENT PROFILE QUICK MODAL â”€â”€ */}
+      {/* ── CLIENT PROFILE QUICK MODAL ── */}
       <AnimatePresence>
         {selectedCustomer && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">

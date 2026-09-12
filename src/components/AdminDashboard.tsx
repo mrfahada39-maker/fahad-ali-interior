@@ -130,7 +130,7 @@ export default function AdminDashboard() {
   const seenUserMessageIdsRef = useRef<Set<string>>(new Set());
   const initializedMessageTrackingRef = useRef(false);
 
-  // â”€â”€ ADMIN CALLING & VOICE NOTE SYSTEM â”€â”€
+  // ── ADMIN CALLING & VOICE NOTE SYSTEM ──
   const [isCallOpen, setIsCallOpen] = useState(false);
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
   const [callStatus, setCallStatus] = useState<'outgoing' | 'incoming' | 'connected' | 'ended'>('outgoing');
@@ -884,7 +884,7 @@ export default function AdminDashboard() {
         </div>
       )}
       
-      {/* â”€â”€ LEFT SIDEBAR NAVIGATION ($100,000 ULTRA-LUXURY CAPSULE STYLE) â”€â”€ */}
+      {/* ── LEFT SIDEBAR NAVIGATION ($100,000 ULTRA-LUXURY CAPSULE STYLE) ── */}
       <aside className="hidden lg:flex w-18 flex-col gap-2.5 h-full shrink-0 z-30">
         
         {/* Top Navigation Capsule */}
@@ -902,7 +902,7 @@ export default function AdminDashboard() {
             {/* Tooltip */}
             <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
               <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3 py-1.5 rounded-xl shadow-xl whitespace-nowrap border border-white/10 flex items-center gap-1.5">
-                <span className="text-[#B88E4B]">âœ¦</span>
+                <span className="text-[#B88E4B]">✦</span>
                 <span>Go to Storefront Website</span>
               </div>
             </div>
@@ -939,7 +939,7 @@ export default function AdminDashboard() {
                 {/* Floating Tooltip Bubble */}
                 <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
                   <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3 py-1.5 rounded-xl shadow-xl whitespace-nowrap border border-white/10 flex items-center gap-1.5">
-                    <span className="text-[#B88E4B]">âœ¦</span>
+                    <span className="text-[#B88E4B]">✦</span>
                     {tab.label}
                   </div>
                 </div>
@@ -967,7 +967,7 @@ export default function AdminDashboard() {
             {/* Tooltip */}
             <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
               <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3 py-1.5 rounded-xl shadow-xl whitespace-nowrap border border-white/10">
-                âš™ï¸ Enterprise Settings
+                ⚙ï¸ Enterprise Settings
               </div>
             </div>
           </div>
@@ -996,7 +996,7 @@ export default function AdminDashboard() {
 
       </aside>
 
-      {/* â”€â”€ MOBILE & TABLET DUAL FLOATING LUXURY CARDS (SEPARATE TOP NAVBAR & SEPARATE TAB SLIDER) â”€â”€ */}
+      {/* ── MOBILE & TABLET DUAL FLOATING LUXURY CARDS (SEPARATE TOP NAVBAR & SEPARATE TAB SLIDER) ── */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 p-2 sm:p-3 flex flex-col gap-2 bg-gradient-to-b from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent pointer-events-none">
         
         {/* 1. SEPARATE TOP BRAND NAVBAR CARD (ULTRA-LUXURY MASTERPIECE EDITION) */}

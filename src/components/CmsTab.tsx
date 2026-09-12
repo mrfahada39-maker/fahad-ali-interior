@@ -34,16 +34,16 @@ import { resolveImageUrl } from '@/lib/images';
 import AnimatedCounter from '@/components/AnimatedCounter';
 
 const COLLECTION_BADGES = [
-  'ðŸ‘‘ Royal Heritage',
-  'âœ¦ Living Room Flagship',
-  'ðŸ’Ž Master Bedroom Suite',
-  'âœ¨ Imperial Dining',
-  'ðŸ“º Modern Media & LED Walls',
-  'âš¡ Luxury TV Consoles & Racks',
-  'ðŸšª Royal Walk-In Wardrobes',
-  'ðŸ›‹ï¸ Bespoke Lounge',
-  'ðŸ’¼ Executive Study & Office',
-  'ðŸªµ Seasoned Sheesham',
+  '👑 Royal Heritage',
+  '✦ Living Room Flagship',
+  '💎 Master Bedroom Suite',
+  '✨ Imperial Dining',
+  '📺 Modern Media & LED Walls',
+  '⚡ Luxury TV Consoles & Racks',
+  '🚪 Royal Walk-In Wardrobes',
+  '🛋ï¸ Bespoke Lounge',
+  '💼 Executive Study & Office',
+  '🪵 Seasoned Sheesham',
 ];
 
 const PRESET_COLLECTION_IMAGES = [
@@ -72,7 +72,7 @@ export default function CmsTab() {
     items: '',
     order: 0,
     isActive: true,
-    badge: 'ðŸ‘‘ Royal Heritage',
+    badge: '👑 Royal Heritage',
     slug: '',
   });
 
@@ -117,7 +117,7 @@ export default function CmsTab() {
       });
 
       if (res.ok) {
-        toast.success(editingCategoryId ? 'Showroom collection updated successfully âœ“' : 'New collection published to showroom âœ“');
+        toast.success(editingCategoryId ? 'Showroom collection updated successfully ✓' : 'New collection published to showroom ✓');
         setEditingCategoryId(null);
         setShowCategoryForm(false);
         setCategoryForm({
@@ -127,7 +127,7 @@ export default function CmsTab() {
           items: '',
           order: 0,
           isActive: true,
-          badge: 'ðŸ‘‘ Royal Heritage',
+          badge: '👑 Royal Heritage',
           slug: '',
         });
         loadCategories();
@@ -151,7 +151,7 @@ export default function CmsTab() {
       items: c.items || '',
       order: c.order || 0,
       isActive: c.isActive !== false,
-      badge: c.badge || 'ðŸ‘‘ Royal Heritage',
+      badge: c.badge || '👑 Royal Heritage',
       slug: c.slug || (c.name ? c.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : ''),
     });
   };
@@ -177,7 +177,7 @@ export default function CmsTab() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...targetCat, order: currentOrder }),
       });
-      toast.success('Collection sequence updated âœ“');
+      toast.success('Collection sequence updated ✓');
       loadCategories();
     } catch {
       toast.error('Failed to reorder collections');
@@ -191,7 +191,7 @@ export default function CmsTab() {
         method: 'DELETE',
       });
       if (res.ok) {
-        toast.success('Showroom collection removed âœ“');
+        toast.success('Showroom collection removed ✓');
         loadCategories();
       }
     } catch {
@@ -214,7 +214,7 @@ export default function CmsTab() {
     {
       label: 'SHOWROOM TAXONOMY COLLECTIONS',
       numValue: totalCount,
-      sub: 'âœ“ Curated Room Masterpieces',
+      sub: '✓ Curated Room Masterpieces',
       icon: FolderClosed,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -226,7 +226,7 @@ export default function CmsTab() {
     {
       label: 'ACTIVE ON LIVE STOREFRONT',
       numValue: activeCount,
-      sub: 'âš¡ Synchronized in Navbar',
+      sub: '⚡ Synchronized in Navbar',
       icon: CheckCircle2,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -238,7 +238,7 @@ export default function CmsTab() {
     {
       label: 'PRESTIGE HERITAGE BADGES',
       numValue: 6,
-      sub: 'ðŸ‘‘ Royal Collection Classifications',
+      sub: '👑 Royal Collection Classifications',
       icon: Crown,
       color: 'text-purple-600',
       iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
@@ -251,7 +251,7 @@ export default function CmsTab() {
       label: 'VISUAL ASSET OPTIMIZATION',
       numValue: 100,
       suffix: '%',
-      sub: 'ðŸ›¡ï¸ Cloudinary High-Res CDN',
+      sub: '🛡ï¸ Cloudinary High-Res CDN',
       icon: ShieldCheck,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
@@ -265,7 +265,7 @@ export default function CmsTab() {
   return (
     <div className="space-y-4 font-sans">
       
-      {/* â”€â”€ $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -302,7 +302,7 @@ export default function CmsTab() {
           <button
             onClick={() => {
               loadCategories();
-              toast.success('Showroom collections synchronized âœ“');
+              toast.success('Showroom collections synchronized ✓');
             }}
             className="p-2.5 rounded-xl bg-white border border-[#E7DDD0] text-stone-500 hover:text-[#221814] transition-colors cursor-pointer shadow-2xs"
             title="Refresh Collections"
@@ -321,7 +321,7 @@ export default function CmsTab() {
                 items: '',
                 order: categories.length,
                 isActive: true,
-                badge: 'ðŸ‘‘ Royal Heritage',
+                badge: '👑 Royal Heritage',
                 slug: '',
               });
               setShowCategoryForm(true);
@@ -334,7 +334,7 @@ export default function CmsTab() {
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -379,7 +379,7 @@ export default function CmsTab() {
         ))}
       </div>
 
-      {/* â”€â”€ SHOWROOM TAXONOMIES & MASTER COLLECTIONS GRID â”€â”€ */}
+      {/* ── SHOWROOM TAXONOMIES & MASTER COLLECTIONS GRID ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -428,7 +428,7 @@ export default function CmsTab() {
           </div>
         </div>
 
-        {/* â”€â”€ ULTRA-MODERN PREMIUM SHOWROOM COLLECTION CARDS GRID â”€â”€ */}
+        {/* ── ULTRA-MODERN PREMIUM SHOWROOM COLLECTION CARDS GRID ── */}
         {filteredCategories.length === 0 ? (
           <div className="text-center py-16 bg-[#FCFAF7] border border-[#E7DDD0] rounded-2xl">
             <FolderClosed size={40} className="mx-auto text-[#B88E4B]/40 mb-2" />
@@ -471,7 +471,7 @@ export default function CmsTab() {
                     {/* Floating Top Badge */}
                     <div className="absolute top-2.5 left-2.5">
                       <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-black/65 backdrop-blur-md text-amber-300 border border-white/20 shadow-sm">
-                        {c.badge || 'ðŸ‘‘ Royal Heritage'}
+                        {c.badge || '👑 Royal Heritage'}
                       </span>
                     </div>
 
@@ -573,7 +573,7 @@ export default function CmsTab() {
         )}
       </motion.div>
 
-      {/* â”€â”€ ADVANCED DUAL-PANE SHOWROOM COLLECTION EDITOR MODAL ($100K ARCHITECTURE) â”€â”€ */}
+      {/* ── ADVANCED DUAL-PANE SHOWROOM COLLECTION EDITOR MODAL ($100K ARCHITECTURE) ── */}
       <AnimatePresence>
         {showCategoryForm && (
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
@@ -594,7 +594,7 @@ export default function CmsTab() {
                   </div>
                   <div>
                     <h3 className="text-base sm:text-lg font-black text-[#221814] font-serif flex items-center gap-2">
-                      <span className="text-[#B88E4B]">âœ¦</span> {editingCategoryId ? 'Edit Showroom Collection' : 'Create Masterpiece Collection'}
+                      <span className="text-[#B88E4B]">✦</span> {editingCategoryId ? 'Edit Showroom Collection' : 'Create Masterpiece Collection'}
                     </h3>
                     <p className="text-stone-400 text-xs font-semibold mt-0.5">
                       Configure taxonomy metadata, visual branding presets, and live shop routing
@@ -613,7 +613,7 @@ export default function CmsTab() {
               {/* Modal Body: Split Dual Pane Workspace */}
               <div className="flex-1 overflow-y-auto p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
-                {/* â”€â”€ LEFT PANE: CONFIGURATION CONTROLS (7 Cols) â”€â”€ */}
+                {/* ── LEFT PANE: CONFIGURATION CONTROLS (7 Cols) ── */}
                 <div className="lg:col-span-7 space-y-4">
                   
                   {/* Modal Sub-Tabs */}
@@ -680,7 +680,7 @@ export default function CmsTab() {
                         {/* Custom Input */}
                         <div className="relative">
                           <input
-                            placeholder="Type custom badge e.g. ðŸ“º Modern Media & LED Walls..."
+                            placeholder="Type custom badge e.g. 📺 Modern Media & LED Walls..."
                             value={categoryForm.badge ?? ''}
                             onChange={(e) => setCategoryForm({ ...categoryForm, badge: e.target.value })}
                             className="w-full bg-white border border-[#E7DDD0] text-[#1F1612] font-black rounded-xl h-10 px-3 text-xs focus:border-[#B88E4B] outline-none shadow-2xs placeholder:text-stone-400"
@@ -824,7 +824,7 @@ export default function CmsTab() {
 
                 </div>
 
-                {/* â”€â”€ RIGHT PANE: REAL-TIME LIVE CARD PREVIEW (5 Cols) â”€â”€ */}
+                {/* ── RIGHT PANE: REAL-TIME LIVE CARD PREVIEW (5 Cols) ── */}
                 <div className="lg:col-span-5 bg-[#FAF5EE]/70 border-2 border-dashed border-[#B88E4B]/40 p-4 sm:p-5 rounded-[24px] space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest text-[#8C6239] flex items-center gap-1.5">
@@ -842,13 +842,13 @@ export default function CmsTab() {
                         <img src={resolveImageUrl(categoryForm.image)} alt={categoryForm.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[#B88E4B] font-serif font-black text-2xl bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3]">
-                          {categoryForm.name?.slice(0, 2).toUpperCase() || 'âœ¦'}
+                          {categoryForm.name?.slice(0, 2).toUpperCase() || '✦'}
                         </div>
                       )}
 
                       <div className="absolute top-2 left-2">
                         <span className="px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-black/70 backdrop-blur-md text-amber-300 border border-white/20 shadow-xs">
-                          {categoryForm.badge || 'ðŸ‘‘ Royal Heritage'}
+                          {categoryForm.badge || '👑 Royal Heritage'}
                         </span>
                       </div>
                     </div>

@@ -43,7 +43,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
   return (
     <div className="flex-1 flex flex-col justify-between gap-2.5 min-h-0 font-sans overflow-y-auto lg:overflow-hidden lg:h-full pr-0.5 pb-6 lg:pb-0">
       
-      {/* â”€â”€ TOP LUXURY HEADER (SHORT, CLEAN & COMPACT FOR MOBILE) â”€â”€ */}
+      {/* ── TOP LUXURY HEADER (SHORT, CLEAN & COMPACT FOR MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -103,7 +103,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         
         {/* Top Active Region */}
@@ -257,7 +257,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
       </div>
 
-      {/* â”€â”€ INTERACTIVE RADAR SCANNER & VISITOR TELEMETRY STREAM (EXACT OVERVIEW PANEL QUALITY) â”€â”€ */}
+      {/* ── INTERACTIVE RADAR SCANNER & VISITOR TELEMETRY STREAM (EXACT OVERVIEW PANEL QUALITY) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 flex-1 min-h-0">
         
         {/* Left Column: Modern Premium Radar Scanner (5 Cols) */}
@@ -267,7 +267,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
           <div className="flex items-center justify-between border-b border-neutral-100 pb-2 shrink-0">
             <div>
               <h2 className="text-sm sm:text-base font-black text-[#221814] flex items-center gap-1.5 font-serif">
-                <span className="text-[#B88E4B]">âœ¦</span> Spatial Radar Array
+                <span className="text-[#B88E4B]">✦</span> Spatial Radar Array
               </h2>
               <p className="text-stone-400 text-[10px] font-semibold">Live geospatial telemetry & shopper frequency</p>
             </div>
@@ -289,10 +289,10 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
               <div className="absolute inset-13 rounded-full border border-[#B88E4B]/35 pointer-events-none" />
               
               {/* Tactical Degree Coordinates */}
-              <span className="absolute top-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">N 0Â°</span>
-              <span className="absolute bottom-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">S 180Â°</span>
-              <span className="absolute right-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">E 90Â°</span>
-              <span className="absolute left-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">W 270Â°</span>
+              <span className="absolute top-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">N 0°</span>
+              <span className="absolute bottom-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">S 180°</span>
+              <span className="absolute right-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">E 90°</span>
+              <span className="absolute left-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">W 270°</span>
 
               {/* Crosshair Axes */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -332,7 +332,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
                     </span>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/blip:flex flex-col bg-[#1F1612]/95 backdrop-blur-md text-white text-[9.5px] font-bold py-1.5 px-2.5 rounded-xl whitespace-nowrap shadow-2xl border border-white/15 z-30 pointer-events-none">
                       <span className="text-[#D4AF37] flex items-center gap-1 font-serif">
-                        <span>ðŸ“</span> {vis.location}
+                        <span>📍</span> {vis.location}
                       </span>
                       <span className="text-stone-300 truncate max-w-[150px] font-medium">{vis.currentPage}</span>
                     </div>
@@ -385,7 +385,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 pb-2 shrink-0">
             <div>
               <h2 className="text-sm sm:text-base font-black text-[#221814] flex items-center gap-1.5 font-serif">
-                <span className="text-[#B88E4B]">âœ¦</span> Real-Time Live Shopper Stream
+                <span className="text-[#B88E4B]">✦</span> Real-Time Live Shopper Stream
               </h2>
               <p className="text-stone-400 text-[10px] font-semibold">Live verbatim page visits, device hardware, and traffic sources</p>
             </div>

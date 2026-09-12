@@ -361,7 +361,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
             <div className="h-[1.5px] w-20 sm:w-28 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
           </div>
           <p className="text-[#7A6048] text-xs sm:text-sm md:text-base font-serif italic max-w-xl mx-auto">
-            100% Solid Seasoned Sheesham & Walnut wood â€” traditional joinery tailored for luxury living.
+            100% Solid Seasoned Sheesham & Walnut wood — traditional joinery tailored for luxury living.
           </p>
         </motion.div>
 
@@ -579,7 +579,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
                         Custom Furniture <span className="text-[#C9A96E]">Crafted to Specs</span>
                       </h2>
                       <p className="text-white/60 text-xs sm:text-sm leading-relaxed">
-                        Configure solid Sheesham wood finishes, dimensions, and royal velvet fabrics â€” receive instant budget estimations and consultation.
+                        Configure solid Sheesham wood finishes, dimensions, and royal velvet fabrics — receive instant budget estimations and consultation.
                       </p>
                     </div>
                   </div>
@@ -607,7 +607,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
                         <textarea id="inquiry-message" name="message" required rows={4} value={inquiryForm.message} onChange={e => setInquiryForm({ ...inquiryForm, message: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark font-mono" />
                       </div>
                       <button type="submit" disabled={inquirySubmitting} className="w-full py-3.5 bg-theme-accent hover:bg-theme-dark text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md">
-                        {inquirySubmitting ? 'Sending Request...' : 'âœ¦ Submit Custom Design Inquiry'}
+                        {inquirySubmitting ? 'Sending Request...' : '✦ Submit Custom Design Inquiry'}
                       </button>
                     </form>
                   </div>
@@ -693,7 +693,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
                   <div>
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#B88E4B] mb-1">
                       <Star size={13} className="fill-[#B88E4B] text-[#B88E4B]" />
-                      <span>5.0 â€¢ Handcrafted Masterwork</span>
+                      <span>5.0 • Handcrafted Masterwork</span>
                     </div>
                     <h3 className="text-2xl sm:text-3xl font-black text-[#221814] font-serif tracking-tight leading-tight">
                       {quickViewProduct.name}
@@ -733,7 +733,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
                           image: quickViewProduct.image,
                           category: quickViewProduct.category || '',
                         });
-                        toast.success(`Added ${quickViewProduct.name} to Cart ðŸ›’`);
+                        toast.success(`Added ${quickViewProduct.name} to Cart 🛒`);
                         setQuickViewProduct(null);
                       }}
                       className="flex-1 py-3.5 bg-[#221814] hover:bg-gradient-to-r hover:from-[#B88E4B] hover:to-[#996515] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"

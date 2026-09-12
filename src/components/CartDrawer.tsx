@@ -207,7 +207,7 @@ export default function CartDrawer() {
                     <div className="flex justify-between items-baseline pt-2 border-t border-[#E7DDD0]">
                       <div>
                         <span className="font-serif font-black text-sm text-[#221814]">Grand Total</span>
-                        <p className="text-[9.5px] font-bold text-emerald-700">âœ“ Free White-Glove Dispatch</p>
+                        <p className="text-[9.5px] font-bold text-emerald-700">✓ Free White-Glove Dispatch</p>
                       </div>
                       <span className="font-serif font-black text-base sm:text-lg text-[#B88E4B]">
                         Rs. {formatPricePk(Math.round(getTotal()))}

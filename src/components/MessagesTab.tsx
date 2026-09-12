@@ -137,7 +137,7 @@ export default function MessagesTab({
     {
       label: 'TOTAL MESSAGES EXCHANGED',
       numValue: totalMessagesCount,
-      sub: 'âœ“ Bi-Directional Live Sync',
+      sub: '✓ Bi-Directional Live Sync',
       icon: Mail,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -150,7 +150,7 @@ export default function MessagesTab({
       label: 'AVG FIRST RESPONSE SPEED',
       numValue: 2,
       suffix: ' mins',
-      sub: 'âš¡ VIP Concierge Hotline',
+      sub: '⚡ VIP Concierge Hotline',
       icon: Zap,
       color: 'text-amber-600',
       iconBg: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100/80 border-amber-300/70 text-amber-600 shadow-[0_3px_12px_rgba(245,158,11,0.2)]',
@@ -163,7 +163,7 @@ export default function MessagesTab({
       label: 'SUPPORT SATISFACTION (CSAT)',
       numValue: 99.4,
       suffix: '%',
-      sub: 'â­ 5-Star Client Rating',
+      sub: '⭐ 5-Star Client Rating',
       icon: Star,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -189,7 +189,7 @@ export default function MessagesTab({
   return (
     <div className="space-y-3 font-sans">
       
-      {/* â”€â”€ $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -244,7 +244,7 @@ export default function MessagesTab({
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -289,7 +289,7 @@ export default function MessagesTab({
         ))}
       </div>
 
-      {/* â”€â”€ MAIN ADVANCED TWO-PANE CHAT CONSOLE â”€â”€ */}
+      {/* ── MAIN ADVANCED TWO-PANE CHAT CONSOLE ── */}
       {normalizedThreads.length === 0 ? (
         <div className="bg-white border border-[#E7DDD0] rounded-[24px] p-16 text-center shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
           <div className="w-16 h-16 rounded-2xl bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center mx-auto mb-3 text-[#B88E4B]">
@@ -303,7 +303,7 @@ export default function MessagesTab({
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start h-[560px] lg:h-[520px]">
           
-          {/* â”€â”€ LEFT PANE: INBOX THREADS SIDEBAR (4 COLS) â”€â”€ */}
+          {/* ── LEFT PANE: INBOX THREADS SIDEBAR (4 COLS) ── */}
           <div className={`lg:col-span-4 bg-white border border-[#E7DDD0] rounded-[22px] p-3.5 shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex-col justify-between h-full overflow-hidden ${
             mobileView === 'chat' ? 'hidden lg:flex' : 'flex'
           }`}>
@@ -419,7 +419,7 @@ export default function MessagesTab({
             </div>
           </div>
 
-          {/* â”€â”€ RIGHT PANE: ADVANCED LIVE CHAT WORKSPACE (8 COLS) â”€â”€ */}
+          {/* ── RIGHT PANE: ADVANCED LIVE CHAT WORKSPACE (8 COLS) ── */}
           <div className={`lg:col-span-8 bg-white border border-[#E7DDD0] rounded-[22px] overflow-hidden shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex-col h-full justify-between ${
             mobileView === 'list' ? 'hidden lg:flex' : 'flex'
           }`}>
@@ -448,7 +448,7 @@ export default function MessagesTab({
                     </span>
                   </h3>
                   <p className="text-stone-500 text-[9.5px] sm:text-[10px] font-semibold mt-0.5 truncate max-w-[170px] sm:max-w-none">
-                    {activeThread?.email} {activeThread?.phone ? `â€¢ ${activeThread.phone}` : ''}
+                    {activeThread?.email} {activeThread?.phone ? `• ${activeThread.phone}` : ''}
                   </p>
                 </div>
               </div>
@@ -506,7 +506,7 @@ export default function MessagesTab({
                   className="px-2 py-0.5 rounded-lg bg-white border border-[#E7DDD0] hover:border-[#B88E4B] text-[#1F1612] hover:text-[#B88E4B] text-[9.5px] font-semibold whitespace-nowrap shadow-2xs transition-all cursor-pointer"
                   title="Click to insert into reply draft"
                 >
-                  âš¡ {reply.slice(0, 26)}...
+                  ⚡ {reply.slice(0, 26)}...
                 </button>
               ))}
             </div>

@@ -91,7 +91,7 @@ export default function ProductPageClient({
       });
     }
     setAddedToCart(true);
-    toast.success(`Added ${product.name} to Luxury Cart ðŸ›’`);
+    toast.success(`Added ${product.name} to Luxury Cart 🛒`);
     setTimeout(() => setAddedToCart(false), 2000);
     openCart();
   };
@@ -111,7 +111,7 @@ export default function ProductPageClient({
         body: JSON.stringify({ productId: product.id }),
       }).catch(() => {});
     }
-    toast.success(wishlisted ? 'Removed from Wishlist' : 'Saved to Royal Wishlist â¤ï¸');
+    toast.success(wishlisted ? 'Removed from Wishlist' : 'Saved to Royal Wishlist ❤️');
   };
 
   const handleShare = () => {
@@ -123,7 +123,7 @@ export default function ProductPageClient({
       }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
-      toast.success('Link copied to clipboard! ðŸ“‹');
+      toast.success('Link copied to clipboard! 📋');
     }
   };
 
@@ -148,7 +148,7 @@ export default function ProductPageClient({
     <div className="min-h-screen bg-[#FCFAF7] text-[#221814] pt-24 sm:pt-28 pb-28 sm:pb-32 lg:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* â”€â”€ BREADCRUMB HEADER â”€â”€ */}
+        {/* ── BREADCRUMB HEADER ── */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-[#E7DDD0]">
           <div className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-[#7A6048]">
             <Link href="/" className="hover:text-[#B88E4B] transition-colors">Home</Link>
@@ -169,7 +169,7 @@ export default function ProductPageClient({
           </div>
         </div>
 
-        {/* â”€â”€ MAIN PRODUCT HERO (2-COLUMN EXECUTIVE SHOWCASE) â”€â”€ */}
+        {/* ── MAIN PRODUCT HERO (2-COLUMN EXECUTIVE SHOWCASE) ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-16 items-start">
 
           {/* LEFT: INTERACTIVE HD MEDIA GALLERY (7 Cols) */}
@@ -226,7 +226,7 @@ export default function ProductPageClient({
 
               {/* Hover Zoom Notice */}
               <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                ðŸ” Hover to Magnify Grain Texture
+                🔍 Hover to Magnify Grain Texture
               </div>
             </div>
 
@@ -269,7 +269,7 @@ export default function ProductPageClient({
             {/* Header: Category Badge + Title + Rating */}
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF5EE] border border-amber-300/60 shadow-2xs">
-                <span className="text-[#B88E4B] text-xs font-bold">âœ¦</span>
+                <span className="text-[#B88E4B] text-xs font-bold">✦</span>
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7A6354]">
                   {product.category || 'Atelier Masterpiece'}
                 </span>
@@ -315,7 +315,7 @@ export default function ProductPageClient({
               </div>
 
               <div className="pt-2 border-t border-amber-200/60 flex items-center justify-between text-xs text-[#7A6048] relative z-10">
-                <span>ðŸ’³ 0% Markup Installment Option:</span>
+                <span>💳 0% Markup Installment Option:</span>
                 <span className="font-bold text-[#221814]">From Rs. {monthlyInstallment.toLocaleString()}/mo</span>
               </div>
             </div>
@@ -358,7 +358,7 @@ export default function ProductPageClient({
                   className="flex-1 h-13 bg-[#221814] hover:bg-gradient-to-r hover:from-[#B88E4B] hover:to-[#996515] text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_8px_25px_rgba(34,24,20,0.15)] flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
                   <ShoppingBag size={16} />
-                  <span>{addedToCart ? 'âœ“ Added to Cart!' : 'âœ¦ Add to Luxury Cart'}</span>
+                  <span>{addedToCart ? '✓ Added to Cart!' : '✦ Add to Luxury Cart'}</span>
                 </button>
               </div>
 

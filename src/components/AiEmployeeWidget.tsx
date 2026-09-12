@@ -106,13 +106,13 @@ export function AiEmployeeWidget() {
         {
           id: 'welcome',
           sender: 'ai',
-          text: "Assalam-o-Alaikum! Welcome to **FAHAD ALI INTERIOR** ðŸ‘‘\n\nHamare store me Total **15 Luxury Categories** (54 Live Items) available hain:\n\n1. ðŸ›‹ï¸ Living Room | 2. ðŸ›ï¸ Bedroom | 3. ðŸ½ï¸ Dining Room\n4. ðŸ’¼ Office | 5. ðŸ›‹ï¸ Luxury Sofas | 6. ðŸª‘ Coffee Chairs\n7. ðŸ“º TV Units | 8. ðŸ“¦ Storage | 9. ðŸ› ï¸ Custom Solutions\n10. ðŸŒ¿ Outdoor | 11. ðŸªž Mirrors | 12. ðŸº Accessories\n13. â˜• Center Tables | 14. ðŸ‘‘ Showcase | 15. ðŸšª Wardrobes\n\nAap kis category ke products dekhna chahte hain?",
+          text: "Assalam-o-Alaikum! Welcome to **FAHAD ALI INTERIOR** 👑\n\nHamare store me Total **15 Luxury Categories** (54 Live Items) available hain:\n\n1. 🛋️ Living Room | 2. 🛏️ Bedroom | 3. 🍽️ Dining Room\n4. 💼 Office | 5. 🛋️ Luxury Sofas | 6. 🪑 Coffee Chairs\n7. 📺 TV Units | 8. 📦 Storage | 9. 🛋️ Custom Solutions\n10. 🌿 Outdoor | 11. 🪞 Mirrors | 12. 🏺 Accessories\n13. ☕ Center Tables | 14. 👑 Showcase | 15. 🚪 Wardrobes\n\nAap kis category ke products dekhna chahte hain?",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           suggestedPrompts: [
-            'ðŸŽ View Room Packages & Bundles',
-            'ðŸ›‹ï¸ View Sheesham Sofas',
-            'ðŸ›ï¸ Royal Sheesham Beds',
-            'ðŸ‘‘ Request Custom Quote',
+            '🎁 View Room Packages & Bundles',
+            '🛋️ View Sheesham Sofas',
+            '🛏️ Royal Sheesham Beds',
+            '👑 Request Custom Quote',
           ],
         },
       ]);
@@ -183,7 +183,7 @@ export function AiEmployeeWidget() {
       const fallbackMsg: Message = {
         id: `ai_err_${Date.now()}`,
         sender: 'ai',
-        text: "Assalam-o-Alaikum! Welcome to FAHAD ALI INTERIOR ðŸ‘‘\nHamare store me Total 15 Luxury Categories (54 Live Items) hain: Living Room, Bedroom, Dining, Office, Sofas, Coffee Chairs, TV Units, Storage, Custom Solutions, Outdoor, Mirrors, Accessories, Center Tables, Showcase, Wardrobes.",
+        text: "Assalam-o-Alaikum! Welcome to FAHAD ALI INTERIOR 👑\nHamare store me Total 15 Luxury Categories (54 Live Items) hain: Living Room, Bedroom, Dining, Office, Sofas, Coffee Chairs, TV Units, Storage, Custom Solutions, Outdoor, Mirrors, Accessories, Center Tables, Showcase, Wardrobes.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
@@ -257,7 +257,7 @@ export function AiEmployeeWidget() {
 
   return (
     <>
-      {/* â”€â”€ DRAGGABLE FLOATING AI CHATBOT TRIGGER (MOVE ANYWHERE ON SCREEN) â”€â”€ */}
+      {/* ── DRAGGABLE FLOATING AI CHATBOT TRIGGER (MOVE ANYWHERE ON SCREEN) ── */}
       {!isOpen && (
         <button
           onPointerDown={handlePointerDown}
@@ -332,7 +332,7 @@ export function AiEmployeeWidget() {
                   : 'bg-white text-[#7A6048] hover:text-[#2C1810] border border-[#E5DDD0]'
               }`}
             >
-              ðŸ‘‘ Senior Sales
+              👑 Senior Sales
             </button>
             <button
               onClick={() => handleRoleTabChange('interior')}
@@ -342,7 +342,7 @@ export function AiEmployeeWidget() {
                   : 'bg-white text-[#7A6048] hover:text-[#2C1810] border border-[#E5DDD0]'
               }`}
             >
-              ðŸŽ¨ Designer
+              🎨 Designer
             </button>
             <button
               onClick={() => handleRoleTabChange('quote')}
@@ -352,7 +352,7 @@ export function AiEmployeeWidget() {
                   : 'bg-white text-[#7A6048] hover:text-[#2C1810] border border-[#E5DDD0]'
               }`}
             >
-              ðŸ§® Custom Quote
+              🧮 Custom Quote
             </button>
             <button
               onClick={() => handleRoleTabChange('support')}
@@ -362,7 +362,7 @@ export function AiEmployeeWidget() {
                   : 'bg-white text-[#7A6048] hover:text-[#2C1810] border border-[#E5DDD0]'
               }`}
             >
-              ðŸ“¦ Support
+              📦 Support
             </button>
           </div>
 
@@ -441,7 +441,7 @@ export function AiEmployeeWidget() {
                         <span>Bespoke Estimate</span>
                         <span className="font-mono text-xs text-[#9B6B38]">{m.quote.quoteId}</span>
                       </div>
-                      <p className="text-[11px] text-stone-600">{m.quote.dimensions} â€¢ {m.quote.woodStain}</p>
+                      <p className="text-[11px] text-stone-600">{m.quote.dimensions} • {m.quote.woodStain}</p>
                       <div className="pt-2 border-t border-[#EAE2D5] flex justify-between font-bold text-[#8A5A2B] text-sm">
                         <span>Total:</span>
                         <span>{m.quote.formattedTotal || `PKR ${m.quote.finalTotalAmount}`}</span>
@@ -455,7 +455,7 @@ export function AiEmployeeWidget() {
                       <div className="flex justify-between items-start">
                         <div>
                           <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-[#8A5A2B] text-white px-2 py-0.5 rounded-full">
-                            ðŸŽ Smart Room Package
+                            🎁 Smart Room Package
                           </span>
                           <h4 className="font-serif font-extrabold text-sm text-[#2C1810] mt-1">{m.bundle.title}</h4>
                         </div>
@@ -469,7 +469,7 @@ export function AiEmployeeWidget() {
                       <div className="space-y-1 pt-1.5 border-t border-[#EAE2D5]">
                         {m.bundle.items?.map((item: any) => (
                           <div key={item.id} className="flex justify-between items-center text-[11px]">
-                            <span className="text-stone-700 font-medium truncate max-w-[210px]">â€¢ {item.name}</span>
+                            <span className="text-stone-700 font-medium truncate max-w-[210px]">• {item.name}</span>
                             <span className="font-mono text-[#8A5A2B] font-bold">PKR {new Intl.NumberFormat('en-PK').format(item.price)}</span>
                           </div>
                         ))}
@@ -569,13 +569,13 @@ export function AiEmployeeWidget() {
           {roomImage && (
             <div className="px-3 py-1.5 bg-[#F4ECE1] border-t border-[#E5DDD0] flex items-center justify-between text-xs">
               <span className="text-[#8A5A2B] font-bold flex items-center gap-1.5">
-                ðŸ–¼ï¸ Room Photo Attached (Vision AI Ready)
+                🖼ï¸ Room Photo Attached (Vision AI Ready)
               </span>
               <button
                 onClick={() => setRoomImage(null)}
                 className="text-stone-500 hover:text-rose-600 text-xs font-bold"
               >
-                âœ• Remove
+                ✕ Remove
               </button>
             </div>
           )}

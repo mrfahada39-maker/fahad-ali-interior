@@ -86,11 +86,11 @@ export default function OfflineClient() {
   return (
     <div className="min-h-screen w-full bg-[#FAF7F2] text-[#2D231E] font-sans selection:bg-[#B88E4B] selection:text-black flex flex-col justify-between px-4 sm:px-8 lg:px-16 py-5 sm:py-8 lg:py-10 relative overflow-hidden select-none">
       
-      {/* â”€â”€ BACKGROUND SOFT AMBIENT LIGHT (REVIEWS SECTION EXACT GLOW) â”€â”€ */}
+      {/* ── BACKGROUND SOFT AMBIENT LIGHT (REVIEWS SECTION EXACT GLOW) ── */}
       <div className="absolute -top-[10%] left-[15%] w-[600px] h-[600px] bg-gradient-to-r from-[#FAF5EE]/90 via-[#F3E7D3]/60 to-[#FAF5EE]/90 rounded-full blur-3xl pointer-events-none -z-0" />
       <div className="absolute -bottom-[10%] right-[15%] w-[700px] h-[700px] bg-gradient-to-r from-[#FAF5EE]/90 via-[#F0E3D0]/60 to-[#FAF5EE]/90 rounded-full blur-3xl pointer-events-none -z-0" />
 
-      {/* â”€â”€ TOP HEADER: BRAND LOGO & TAGLINE â”€â”€ */}
+      {/* ── TOP HEADER: BRAND LOGO & TAGLINE ── */}
       <motion.header
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -103,11 +103,11 @@ export default function OfflineClient() {
           </span>
         </Link>
         <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-[#8C6239] mt-1.5 font-sans">
-          HAUTE COUTURE INTERIORS Â· LAHORE
+          HAUTE COUTURE INTERIORS · LAHORE
         </span>
       </motion.header>
 
-      {/* â”€â”€ MAIN LUXURY CARD SHOWCASE â”€â”€ */}
+      {/* ── MAIN LUXURY CARD SHOWCASE ── */}
       <motion.main
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -121,12 +121,12 @@ export default function OfflineClient() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
             
-            {/* â”€â”€ LEFT COLUMN (7 COLS ON DESKTOP): HERO MESSAGE & ACTIONS â”€â”€ */}
+            {/* ── LEFT COLUMN (7 COLS ON DESKTOP): HERO MESSAGE & ACTIONS ── */}
             <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left">
               
               {/* Badge */}
               <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FAF5EE] border border-amber-300/70 shadow-2xs mb-3">
-                <span className="text-[#B88E4B] text-[11px]">âœ¦</span>
+                <span className="text-[#B88E4B] text-[11px]">✦</span>
                 <span className="text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider text-[#7A6354]">
                   STANDBY & RESILIENCE MODE
                 </span>
@@ -157,7 +157,7 @@ export default function OfflineClient() {
                   className="w-full sm:w-auto py-3.5 px-7 rounded-2xl bg-gradient-to-r from-[#B88E4B] via-[#A87E47] to-[#996515] hover:from-[#C49A57] hover:to-[#8C6239] text-white font-serif font-bold text-xs sm:text-sm shadow-[0_6px_20px_rgba(184,142,75,0.38)] hover:shadow-[0_8px_25px_rgba(184,142,75,0.48)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 border border-white/20"
                 >
                   <RefreshCw size={15} className={`stroke-[2.4] ${isChecking ? 'animate-spin' : ''}`} />
-                  <span>{isChecking ? 'Checking Connection...' : 'âœ¦ Reconnect Now'}</span>
+                  <span>{isChecking ? 'Checking Connection...' : '✦ Reconnect Now'}</span>
                 </button>
 
                 <Link
@@ -193,7 +193,7 @@ export default function OfflineClient() {
 
             </div>
 
-            {/* â”€â”€ RIGHT COLUMN (5 COLS ON DESKTOP): LARGE MAJESTIC LUXURY BEACON â”€â”€ */}
+            {/* ── RIGHT COLUMN (5 COLS ON DESKTOP): LARGE MAJESTIC LUXURY BEACON ── */}
             <div className="lg:col-span-5 flex flex-col items-center justify-center text-center">
               
               {/* Glowing Luxury Beacon Sphere with Large Concentric Rings */}
@@ -230,7 +230,7 @@ export default function OfflineClient() {
         </div>
       </motion.main>
 
-      {/* â”€â”€ FOOTER SIGNATURE â”€â”€ */}
+      {/* ── FOOTER SIGNATURE ── */}
       <footer className="relative z-10 w-full max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-[#E7DDD0]/70 text-[10.5px] sm:text-[11px] font-mono text-[#8C6239] uppercase tracking-wider">
         <span>Fahad Ali Interior Flagship</span>
         <span>Lahore, Pakistan</span>

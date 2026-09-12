@@ -31,7 +31,7 @@ export default function TermsPage() {
             </h1>
 
             <p className="text-xs sm:text-sm font-serif font-bold text-[#8C6239] uppercase tracking-widest mb-4">
-              Last Updated & Certified: August 2026 â€¢ Official Commerce Agreement
+              Last Updated & Certified: August 2026 • Official Commerce Agreement
             </p>
 
             <div className="flex items-center justify-center gap-3 my-4">
@@ -114,7 +114,7 @@ export default function TermsPage() {
                 <span>3. Delivery, Assembly & Inspection</span>
               </div>
               <p className="text-xs sm:text-sm text-[#5C483E] leading-relaxed pl-6">
-                Standard ready-to-dispatch luxury sets are delivered within 3â€“5 business days in Lahore and 5â€“7 business days nationwide (Karachi, Islamabad, Rawalpindi, Peshawar, Multan, Faisalabad). Our white-glove team will place the furniture in your designated room and complete all bolt assemblies. Customers are requested to inspect the pieces upon handover.
+                Standard ready-to-dispatch luxury sets are delivered within 3–5 business days in Lahore and 5–7 business days nationwide (Karachi, Islamabad, Rawalpindi, Peshawar, Multan, Faisalabad). Our white-glove team will place the furniture in your designated room and complete all bolt assemblies. Customers are requested to inspect the pieces upon handover.
               </p>
             </section>
 

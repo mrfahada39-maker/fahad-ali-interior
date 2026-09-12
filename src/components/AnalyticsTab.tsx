@@ -235,7 +235,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
       label: 'AVG ORDER VALUE (AOV)',
       numValue: avgOrderValue,
       prefix: 'Rs. ',
-      sub: 'âš¡ Premium Ticket Average',
+      sub: '⚡ Premium Ticket Average',
       icon: Activity,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
@@ -247,7 +247,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
     {
       label: 'CATALOG MASTERPIECES',
       numValue: totalProductsCount,
-      sub: 'âœ“ Verified Active Stock',
+      sub: '✓ Verified Active Stock',
       icon: Package,
       color: 'text-purple-600',
       iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
@@ -259,7 +259,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
     {
       label: 'REGISTERED PATRON CLIENTS',
       numValue: totalCustomersCount,
-      sub: 'â­ VIP Accounts Active',
+      sub: '⭐ VIP Accounts Active',
       icon: Users,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -347,7 +347,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
                     className="bg-white/90 border border-[#D9C4AC] rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-[#18110D] focus:outline-none focus:border-[#B88E4B] focus:ring-1 focus:ring-[#B88E4B]/40 shadow-2xs cursor-pointer"
                   />
                 </div>
-                <span className="text-[#B88E4B] font-black text-xs">â†’</span>
+                <span className="text-[#B88E4B] font-black text-xs">→</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[#8C6239] font-serif font-black text-[10.5px] uppercase tracking-wider">To:</span>
                   <input
@@ -415,7 +415,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
         ))}
       </div>
 
-      {/* â”€â”€ REVENUE & ORDER ACQUISITION STREAM CHART â”€â”€ */}
+      {/* ── REVENUE & ORDER ACQUISITION STREAM CHART ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -424,7 +424,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-neutral-100 pb-3">
           <div>
             <h3 className="text-base font-black text-[#221814] flex items-center gap-2 font-serif">
-              <span className="text-[#B88E4B]">âœ¦</span> Revenue & Order Acquisition Stream
+              <span className="text-[#B88E4B]">✦</span> Revenue & Order Acquisition Stream
             </h3>
             <p className="text-stone-400 text-xs font-semibold mt-0.5">
               Historical revenue trajectory mapped against total completed transactions
@@ -516,7 +516,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
         </div>
       </motion.div>
 
-      {/* â”€â”€ DUAL INTELLIGENCE PANELS (CATEGORY SPLIT & FULFILLMENT FUNNEL) â”€â”€ */}
+      {/* ── DUAL INTELLIGENCE PANELS (CATEGORY SPLIT & FULFILLMENT FUNNEL) ── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 items-start">
         
         {/* Category Volume Distribution */}
@@ -527,7 +527,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
         >
           <div className="border-b border-neutral-100 pb-2.5">
             <h3 className="text-sm font-black text-[#221814] flex items-center gap-1.5 font-serif">
-              <span className="text-[#B88E4B]">âœ¦</span> Category Volume & Catalog Density
+              <span className="text-[#B88E4B]">✦</span> Category Volume & Catalog Density
             </h3>
             <p className="text-stone-400 text-[10.5px] font-semibold">Active inventory distribution across showroom categories</p>
           </div>
@@ -567,7 +567,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
         >
           <div className="border-b border-neutral-100 pb-2.5">
             <h3 className="text-sm font-black text-[#221814] flex items-center gap-1.5 font-serif">
-              <span className="text-[#B88E4B]">âœ¦</span> Order Fulfillment Pipeline
+              <span className="text-[#B88E4B]">✦</span> Order Fulfillment Pipeline
             </h3>
             <p className="text-stone-400 text-[10.5px] font-semibold">Real-time status breakdown across manufacturing and dispatch</p>
           </div>
@@ -604,7 +604,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
 
       </div>
 
-      {/* â”€â”€ FLAGSHIP PRODUCTS LEADERBOARD â”€â”€ */}
+      {/* ── FLAGSHIP PRODUCTS LEADERBOARD ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -632,7 +632,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {topProducts.map((p, idx) => {
-                const medals = ['ðŸ¥‡ #1', 'ðŸ¥ˆ #2', 'ðŸ¥‰ #3', 'âœ¦ #4', 'âœ¦ #5'];
+                const medals = ['🥇 #1', '🥈 #2', '🥉 #3', '✦ #4', '✦ #5'];
 
                 return (
                   <tr key={p.id || idx} className="hover:bg-[#FCFAF7] transition-colors">

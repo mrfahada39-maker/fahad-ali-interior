@@ -163,7 +163,7 @@ export const authOptions: NextAuthOptions = {
             token.role = sessionRole(dbUser.role);
           }
         } catch {
-          // Silently ignore DB errors â€” keep existing token role
+          // Silently ignore DB errors — keep existing token role
         }
       }
       return token;

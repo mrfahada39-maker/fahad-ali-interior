@@ -31,7 +31,7 @@ export default function PrivacyPage() {
             </h1>
 
             <p className="text-xs sm:text-sm font-serif font-bold text-[#8C6239] uppercase tracking-widest mb-4">
-              Last Updated & Verified: August 2026 â€¢ Version 2.4 Enterprise
+              Last Updated & Verified: August 2026 • Version 2.4 Enterprise
             </p>
 
             <div className="flex items-center justify-center gap-3 my-4">

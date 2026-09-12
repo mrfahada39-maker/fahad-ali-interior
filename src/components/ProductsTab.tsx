@@ -155,7 +155,7 @@ export default function ProductsTab({
     {
       label: 'TOTAL CATALOG PRODUCTS',
       numValue: totalProducts,
-      sub: 'âœ“ 100% In-Stock Database',
+      sub: '✓ 100% In-Stock Database',
       icon: Package,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -167,7 +167,7 @@ export default function ProductsTab({
     {
       label: 'PREMIUM MASTERPIECES',
       numValue: premiumCount,
-      sub: 'â­ VIP Exclusive Designs',
+      sub: '⭐ VIP Exclusive Designs',
       icon: Crown,
       color: 'text-amber-600',
       iconBg: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100/80 border-amber-300/70 text-amber-600 shadow-[0_3px_12px_rgba(245,158,11,0.2)]',
@@ -179,7 +179,7 @@ export default function ProductsTab({
     {
       label: 'OUT OF STOCK ITEMS',
       numValue: outOfStockCount,
-      sub: outOfStockCount === 0 ? 'âœ“ All Items Available' : 'âš ï¸ Restock Required',
+      sub: outOfStockCount === 0 ? '✓ All Items Available' : '⚠ï¸ Restock Required',
       icon: AlertCircle,
       color: 'text-rose-600',
       iconBg: 'bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100/80 border-rose-300/70 text-rose-600 shadow-[0_3px_12px_rgba(244,63,94,0.2)]',
@@ -191,7 +191,7 @@ export default function ProductsTab({
     {
       label: 'LOW STOCK THRESHOLD',
       numValue: lowStockCount,
-      sub: lowStockCount === 0 ? 'âœ“ Inventory Healthy' : 'âš¡ Less than 5 units left',
+      sub: lowStockCount === 0 ? '✓ Inventory Healthy' : '⚡ Less than 5 units left',
       icon: ShieldAlert,
       color: 'text-orange-600',
       iconBg: 'bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100/80 border-orange-300/70 text-orange-600 shadow-[0_3px_12px_rgba(249,115,22,0.2)]',
@@ -205,7 +205,7 @@ export default function ProductsTab({
   return (
     <div className="space-y-4 font-sans">
       
-      {/* â”€â”€ $100,000 LUXURY HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 LUXURY HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -254,7 +254,7 @@ export default function ProductsTab({
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -298,7 +298,7 @@ export default function ProductsTab({
         ))}
       </div>
 
-      {/* â”€â”€ CREATE / EDIT PRODUCT EXPANDABLE PANEL â”€â”€ */}
+      {/* ── CREATE / EDIT PRODUCT EXPANDABLE PANEL ── */}
       <AnimatePresence>
         {showAddProduct && (
           <motion.div
@@ -312,7 +312,7 @@ export default function ProductsTab({
             <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#221814] font-serif flex items-center gap-2">
-                  <span className="text-[#B88E4B] text-xl">âœ¦</span>
+                  <span className="text-[#B88E4B] text-xl">✦</span>
                   {editingProductId ? 'Edit Product Specifications' : 'Add New Luxury Furniture Piece'}
                 </h3>
                 <p className="text-stone-400 text-xs font-semibold mt-0.5">
@@ -399,7 +399,7 @@ export default function ProductsTab({
             {/* Furniture Craftsmanship & Construction Block */}
             <div className="bg-[#FCFAF7] border border-[#E7DDD0] p-4 rounded-2xl space-y-3">
               <span className="text-[#221814] text-xs font-black font-serif uppercase tracking-wider block border-b border-neutral-200/70 pb-2 flex items-center gap-1.5">
-                <span className="text-[#B88E4B]">âœ¦</span> Furniture Craftsmanship & Material Specifications
+                <span className="text-[#B88E4B]">✦</span> Furniture Craftsmanship & Material Specifications
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
@@ -467,7 +467,7 @@ export default function ProductsTab({
                   id="isPremium"
                 />
                 <label htmlFor="isPremium" className="text-[#221814] text-xs font-black select-none cursor-pointer flex items-center gap-1">
-                  â­ Mark as VIP / Premium Member Exclusive Piece
+                  ⭐ Mark as VIP / Premium Member Exclusive Piece
                 </label>
               </div>
             </div>
@@ -484,7 +484,7 @@ export default function ProductsTab({
                   currentImage={productForm.image}
                   onUpload={(result) => {
                     setProductForm({ ...productForm, image: result.secureUrl });
-                    toast.success('Primary image uploaded to Cloudinary âœ“');
+                    toast.success('Primary image uploaded to Cloudinary ✓');
                   }}
                 />
                 <Input
@@ -509,7 +509,7 @@ export default function ProductsTab({
                       : (Array.isArray(productForm.images) ? productForm.images : []);
                     const combined = [...existing, result.secureUrl].join(', ');
                     setProductForm({ ...productForm, images: combined });
-                    toast.success('Gallery angle uploaded âœ“');
+                    toast.success('Gallery angle uploaded ✓');
                   }}
                   onUploadMultiple={(results) => {
                     const urls = results.map((r) => r.secureUrl);
@@ -518,7 +518,7 @@ export default function ProductsTab({
                       : (Array.isArray(productForm.images) ? productForm.images : []);
                     const combined = [...existing, ...urls].join(', ');
                     setProductForm({ ...productForm, images: combined });
-                    toast.success(`${results.length} gallery images uploaded âœ“`);
+                    toast.success(`${results.length} gallery images uploaded ✓`);
                   }}
                 />
                 <Textarea
@@ -581,7 +581,7 @@ export default function ProductsTab({
         )}
       </AnimatePresence>
 
-      {/* â”€â”€ FILTER, SEARCH & VIEW MODE TOOLBAR â”€â”€ */}
+      {/* ── FILTER, SEARCH & VIEW MODE TOOLBAR ── */}
       <div className="bg-white border border-[#E7DDD0] p-3 rounded-[18px] flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
         
         {/* Search Input */}
@@ -651,7 +651,7 @@ export default function ProductsTab({
         </div>
       </div>
 
-      {/* â”€â”€ PRODUCT ITEMS LIST / GRID RENDER â”€â”€ */}
+      {/* ── PRODUCT ITEMS LIST / GRID RENDER ── */}
       {filteredProducts.length === 0 ? (
         <div className="text-center py-12 bg-white border border-[#E7DDD0] rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
           <Package className="mx-auto text-stone-300 mb-3 opacity-60" size={48} />
@@ -659,7 +659,7 @@ export default function ProductsTab({
           <p className="text-stone-500 text-xs mt-1">Try adjusting your search query or category filter.</p>
         </div>
       ) : viewMode === 'list' ? (
-        /* â”€â”€ DYNAMIC LUXURY FLOATING LIST ROWS VIEW â”€â”€ */
+        /* ── DYNAMIC LUXURY FLOATING LIST ROWS VIEW ── */
         <div className="space-y-2.5">
           {filteredProducts.map((p) => {
             let discountPercent = 0;
@@ -702,7 +702,7 @@ export default function ProductsTab({
                       {p.material && <span>{p.material}</span>}
                       {p.dimensions && (
                         <>
-                          <span className="text-stone-300">â€¢</span>
+                          <span className="text-stone-300">•</span>
                           <span>{p.dimensions}</span>
                         </>
                       )}
@@ -788,7 +788,7 @@ export default function ProductsTab({
           })}
         </div>
       ) : (
-        /* â”€â”€ DYNAMIC LUXURY CARD GRID VIEW â”€â”€ */
+        /* ── DYNAMIC LUXURY CARD GRID VIEW ── */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((p) => {
             let discountPercent = 0;

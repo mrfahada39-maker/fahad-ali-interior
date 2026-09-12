@@ -69,14 +69,14 @@ const getCustomerEmail = (o: any) => {
 };
 
 const getCustomerPhone = (o: any) => {
-  if (!o) return 'â€”';
+  if (!o) return '—';
   const raw =
     (typeof o.shippingPhone === 'string' && o.shippingPhone.trim() && !o.shippingPhone.includes('0000000') && !o.shippingPhone.includes('1234567')) ? o.shippingPhone.trim() :
     (o.user?.phone && o.user.phone.trim() && !o.user.phone.includes('0000000') && !o.user.phone.includes('1234567')) ? o.user.phone.trim() :
     (typeof o.shippingAddress === 'object' && o.shippingAddress?.phone && !o.shippingAddress.phone.includes('0000000')) ? o.shippingAddress.phone :
     (typeof o.shippingInfo === 'object' && o.shippingInfo?.phone && !o.shippingInfo.phone.includes('0000000')) ? o.shippingInfo.phone :
     null;
-  return raw || 'â€”';
+  return raw || '—';
 };
 
 const getCustomerAddress = (o: any) => {
@@ -151,7 +151,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
     return new Date().toISOString().split('T')[0];
   });
 
-  // â”€â”€ 1. REAL FILTERED ORDERS BY TIMEFRAME â”€â”€
+  // ── 1. REAL FILTERED ORDERS BY TIMEFRAME ──
   const filteredOrders = useMemo(() => {
     const valid = Array.isArray(orders) ? orders : [];
     const now = new Date();
@@ -190,12 +190,12 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
     return valid;
   }, [orders, selectedTimeframe, customStartDate, customEndDate]);
 
-  // â”€â”€ 2. 100% REAL Dynamic Revenue & Orders Timeframe Data for Graphs â”€â”€
+  // ── 2. 100% REAL Dynamic Revenue & Orders Timeframe Data for Graphs ──
   const revenueChartData = useMemo(() => {
     const validOrders = Array.isArray(orders) ? orders : [];
     const now = new Date();
 
-    // â”€â”€ ALL TIME BREAKDOWN â”€â”€
+    // ── ALL TIME BREAKDOWN ──
     if (selectedTimeframe === 'all') {
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const monthMap: Record<string, { name: string; fullDate: string; revenue: number; ordersCount: number }> = {};
@@ -218,7 +218,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
       return result.slice(0, activeIdx);
     }
 
-    // â”€â”€ CUSTOM DATE RANGE BREAKDOWN â”€â”€
+    // ── CUSTOM DATE RANGE BREAKDOWN ──
     if (selectedTimeframe === 'custom') {
       const start = new Date(customStartDate + 'T00:00:00');
       const end = new Date(customEndDate + 'T23:59:59');
@@ -270,7 +270,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
       }
     }
 
-    // â”€â”€ 7 DAYS BREAKDOWN â”€â”€
+    // ── 7 DAYS BREAKDOWN ──
     if (selectedTimeframe === '7d') {
       const days: { name: string; fullDate: string; revenue: number; ordersCount: number }[] = [];
       for (let i = 6; i >= 0; i--) {
@@ -299,7 +299,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
       return days;
     }
 
-    // â”€â”€ 30 DAYS BREAKDOWN â”€â”€
+    // ── 30 DAYS BREAKDOWN ──
     if (selectedTimeframe === '30d') {
       const weeks: { name: string; fullDate: string; revenue: number; ordersCount: number }[] = [
         { name: 'Wk 1', fullDate: 'Days 1-7', revenue: 0, ordersCount: 0 },
@@ -331,7 +331,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
       return weeks;
     }
 
-    // â”€â”€ 1 YEAR BREAKDOWN â”€â”€
+    // ── 1 YEAR BREAKDOWN ──
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonthIdx = now.getMonth();
     const monthData = months.slice(0, Math.max(currentMonthIdx + 1, 6)).map((m) => ({
@@ -354,7 +354,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
     return monthData;
   }, [orders, filteredOrders, selectedTimeframe, customStartDate, customEndDate]);
 
-  // â”€â”€ 3. 100% REAL Order Status Breakdown Strictly Filtered by Active Timeframe â”€â”€
+  // ── 3. 100% REAL Order Status Breakdown Strictly Filtered by Active Timeframe ──
   const orderStatusData = useMemo(() => {
     const statusCounts: Record<string, { count: number; color: string; bg: string }> = {
       PENDING: { count: 0, color: '#D4AF37', bg: '#FAF5EE' },
@@ -382,7 +382,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
     }));
   }, [filteredOrders]);
 
-  // â”€â”€ FINANCIAL STATEMENT AUDIT & EXPORT LOGIC â”€â”€
+  // ── FINANCIAL STATEMENT AUDIT & EXPORT LOGIC ──
   const [showStatementModal, setShowStatementModal] = useState(false);
   const [statementSearchQuery, setStatementSearchQuery] = useState('');
 
@@ -575,7 +575,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
   return (
     <div className="flex-1 flex flex-col gap-3 font-sans pb-2">
 
-      {/* â”€â”€ $100,000 LUXURY EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE - MATCHING IMAGE 1) â”€â”€ */}
+      {/* ── $100,000 LUXURY EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE - MATCHING IMAGE 1) ── */}
       <motion.div 
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -610,7 +610,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
 
             {/* Desktop: Full Title */}
             <span className="hidden sm:inline">
-              Fahad Ali Interior <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">â€” Executive Dashboard</span>
+              Fahad Ali Interior <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">— Executive Dashboard</span>
             </span>
           </h1>
           <p className="hidden sm:block text-stone-500 text-[11px] sm:text-xs font-medium mt-0.5">
@@ -631,7 +631,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
         </div>
       </motion.div>
 
-      {/* â”€â”€ KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -678,10 +678,10 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
         ))}
       </div>
 
-      {/* â”€â”€ CHARTS SECTION (FLEX-1 MIN-H-0 FITS 100% SCREEN HEIGHT DYNAMICALLY) â”€â”€ */}
+      {/* ── CHARTS SECTION (FLEX-1 MIN-H-0 FITS 100% SCREEN HEIGHT DYNAMICALLY) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-2.5 flex-1 min-h-0">
 
-        {/* â”€â”€ 1. Revenue & Acquisition Registry (Area Chart - 3 Cols) â”€â”€ */}
+        {/* ── 1. Revenue & Acquisition Registry (Area Chart - 3 Cols) ── */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }} 
           animate={{ opacity: 1, y: 0 }} 
@@ -693,7 +693,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xs sm:text-sm lg:text-base font-black text-[#221814] flex items-center gap-1.5 font-serif">
-                  <span className="text-[#B88E4B]">âœ¦</span> Revenue & Acquisition Registry
+                  <span className="text-[#B88E4B]">✦</span> Revenue & Acquisition Registry
                 </h2>
                 <span className="text-[9px] font-black text-[#B08552] bg-gradient-to-r from-[#FAF5EE] to-[#F3E7D3] border border-[#B88E4B]/35 px-2 py-0.5 rounded-full shadow-2xs">
                   {selectedTimeframe.toUpperCase()} TELEMETRY
@@ -770,7 +770,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                   onChange={(e) => setCustomStartDate(e.target.value)}
                   className="bg-white border border-[#D9C4AC] rounded-full px-2.5 py-0.5 text-[10px] font-bold text-[#18110D] focus:outline-none focus:border-[#B88E4B] shadow-2xs cursor-pointer"
                 />
-                <span className="text-[#B88E4B] font-black text-xs">â†’</span>
+                <span className="text-[#B88E4B] font-black text-xs">→</span>
                 <input
                   type="date"
                   value={customEndDate}
@@ -851,7 +851,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
           </div>
         </motion.div>
 
-        {/* â”€â”€ 2. Fulfillment Stream (Interactive Bar Chart - 2 Cols) â”€â”€ */}
+        {/* ── 2. Fulfillment Stream (Interactive Bar Chart - 2 Cols) ── */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }} 
           animate={{ opacity: 1, y: 0 }} 
@@ -863,7 +863,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
             <div className="border-b border-neutral-100 pb-2 flex items-center justify-between flex-wrap gap-2 shrink-0">
               <div>
                 <h2 className="text-xs sm:text-sm lg:text-base font-black text-[#221814] flex items-center gap-1.5 font-serif">
-                  <span className="text-[#B88E4B]">âœ¦</span> Fulfillment Stream
+                  <span className="text-[#B88E4B]">✦</span> Fulfillment Stream
                 </h2>
                 <p className="text-stone-400 text-[10px] font-medium">Click any bar to inspect in Orders Registry</p>
               </div>
@@ -940,7 +940,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                               {data.value} {data.value === 1 ? 'Order' : 'Orders'}
                             </p>
                             <p className="mt-1 pt-1 border-t border-white/10 text-[9.5px] text-amber-300 font-semibold flex items-center gap-1">
-                              <span>ðŸ‘‰ Tap to open Orders</span>
+                              <span>👉 Tap to open Orders</span>
                             </p>
                           </div>
                         );
@@ -966,7 +966,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
         </motion.div>
       </div>
 
-      {/* â”€â”€ $10,000,000 EXECUTIVE FINANCIAL & AUDIT STATEMENT MODAL (ULTRA-LUXURY MODERN EDITION) â”€â”€ */}
+      {/* ── $10,000,000 EXECUTIVE FINANCIAL & AUDIT STATEMENT MODAL (ULTRA-LUXURY MODERN EDITION) ── */}
       <AnimatePresence>
         {showStatementModal && (
           <div className="fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4 lg:p-6 bg-stone-900/60 backdrop-blur-xl overflow-y-auto">
@@ -993,7 +993,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                     </span>
                   </div>
                   <h2 className="text-base sm:text-xl font-black text-[#221814] tracking-tight font-serif">
-                    Fahad Ali Interior <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">â€” Financial Statement & Audit Ledger</span>
+                    Fahad Ali Interior <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">— Financial Statement & Audit Ledger</span>
                   </h2>
                 </div>
 
@@ -1067,7 +1067,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                         onChange={(e) => setCustomStartDate(e.target.value)}
                         className="bg-white border border-[#D9C4AC] rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-[#18110D] focus:outline-none focus:border-[#B88E4B] shadow-2xs cursor-pointer"
                       />
-                      <span className="text-[#B88E4B] font-black text-xs">â†’</span>
+                      <span className="text-[#B88E4B] font-black text-xs">→</span>
                       <span className="text-[#8C6239] font-serif font-black text-[10.5px] uppercase">To:</span>
                       <input
                         type="date"
@@ -1117,7 +1117,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                         </span>
                       </div>
                       <p className="text-xs text-stone-600 font-medium">Bespoke Architectural Interiors, Sovereign Decor & Luxury Catalog</p>
-                      <p className="text-[11px] text-stone-400 mt-0.5">Lahore & Karachi, Pakistan â€¢ Support: +92 300 1234567 â€¢ NTN: #FAI-PK-9821</p>
+                      <p className="text-[11px] text-stone-400 mt-0.5">Lahore & Karachi, Pakistan • Support: +92 300 1234567 • NTN: #FAI-PK-9821</p>
                     </div>
 
                     <div className="text-left sm:text-right text-xs bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3] border border-[#D9C4AC] rounded-2xl p-3.5 shadow-xs shrink-0 min-w-[210px]">
@@ -1219,7 +1219,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                   <div className="p-3.5 sm:p-4 bg-gradient-to-r from-[#FAF5EE] via-white to-[#FAF5EE] border-b border-[#E7DDD0] flex flex-col sm:flex-row justify-between sm:items-center gap-2">
                     <div>
                       <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#221814] flex items-center gap-1.5 font-serif">
-                        <span className="text-[#B88E4B]">âœ¦</span> Customer & Order Audit Ledger ({statementFilteredOrders.length} Entries)
+                        <span className="text-[#B88E4B]">✦</span> Customer & Order Audit Ledger ({statementFilteredOrders.length} Entries)
                       </h3>
                       <p className="text-[10px] text-stone-500 font-medium mt-0.5">Includes Time, Date, Day, Customer Name, Phone, Gmail, Delivery City & Purchased Items</p>
                     </div>
@@ -1344,7 +1344,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                 <div className="pt-3 border-t border-[#E7DDD0] flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-stone-500 font-medium">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
-                    <span>Certified Financial Ledger â€¢ Complete Customer Registry Verified by Fahad Ali Interior Executive Engine</span>
+                    <span>Certified Financial Ledger • Complete Customer Registry Verified by Fahad Ali Interior Executive Engine</span>
                   </div>
                   <div className="font-mono text-stone-500 font-bold">
                     HASH: {Math.random().toString(36).substring(2, 10).toUpperCase()}-VERIFIED-PK

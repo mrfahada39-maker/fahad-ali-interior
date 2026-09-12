@@ -2,7 +2,7 @@
 import HomePageInteractive from './HomePageInteractive';
 import { getHomePageData } from '@/lib/home-page-data';
 
-// Next.js ISR (Incremental Static Regeneration) â€” edge cached for 0ms TTFB
+// Next.js ISR (Incremental Static Regeneration) — edge cached for 0ms TTFB
 export const revalidate = 300;
 
 export default async function HomePage() {

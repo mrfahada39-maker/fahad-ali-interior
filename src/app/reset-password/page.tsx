@@ -236,7 +236,7 @@ function ResetPasswordContent() {
                 type={showPassword ? 'text' : 'password'}
                 required
                 minLength={8}
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10 pr-10 h-11 bg-[#FAF7F2] border-[#E2D9CD] focus:border-[#B88E4B] text-[#221814] rounded-xl text-sm"
@@ -262,7 +262,7 @@ function ResetPasswordContent() {
                 type={showPassword ? 'text' : 'password'}
                 required
                 minLength={8}
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="pl-10 pr-10 h-11 bg-[#FAF7F2] border-[#E2D9CD] focus:border-[#B88E4B] text-[#221814] rounded-xl text-sm"
@@ -286,7 +286,7 @@ function ResetPasswordContent() {
                 onClick={() => setStep('REQUEST')}
                 className="text-xs text-[#7A6354] hover:underline"
               >
-                â† Back to Request Reset
+                ← Back to Request Reset
               </button>
             </div>
           )}
@@ -302,7 +302,7 @@ function ResetPasswordContent() {
 
           <Link href="/?auth=login">
             <Button className="w-full h-11 bg-[#1F1612] hover:bg-[#35251F] text-[#F5D77F] font-bold rounded-xl text-sm transition-all shadow-md">
-              Proceed to Login Portal â†’
+              Proceed to Login Portal →
             </Button>
           </Link>
         </div>

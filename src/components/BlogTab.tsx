@@ -69,7 +69,7 @@ export default function BlogTab({
     {
       label: 'TOTAL EDITORIAL ARTICLES',
       numValue: totalCount,
-      sub: 'âœ“ Luxury Journal Publications',
+      sub: '✓ Luxury Journal Publications',
       icon: BookOpen,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -81,7 +81,7 @@ export default function BlogTab({
     {
       label: 'LIVE PUBLISHED STORIES',
       numValue: publishedCount,
-      sub: 'âš¡ Active on Storefront',
+      sub: '⚡ Active on Storefront',
       icon: CheckCircle2,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -93,7 +93,7 @@ export default function BlogTab({
     {
       label: 'DRAFT / IN REVIEW',
       numValue: draftCount,
-      sub: draftCount === 0 ? 'âœ“ All Posts Live' : 'âš¡ Pending Approval',
+      sub: draftCount === 0 ? '✓ All Posts Live' : '⚡ Pending Approval',
       icon: Clock,
       color: 'text-purple-600',
       iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
@@ -106,7 +106,7 @@ export default function BlogTab({
       label: 'EDITORIAL SEO HEALTH',
       numValue: 98.6,
       suffix: '%',
-      sub: 'â­ High Google Ranking',
+      sub: '⭐ High Google Ranking',
       icon: Sparkles,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
@@ -120,7 +120,7 @@ export default function BlogTab({
   return (
     <div className="space-y-4 font-sans">
       
-      {/* â”€â”€ $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) â”€â”€ */}
+      {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -178,7 +178,7 @@ export default function BlogTab({
         </div>
       </motion.div>
 
-      {/* â”€â”€ 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) â”€â”€ */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -223,7 +223,7 @@ export default function BlogTab({
         ))}
       </div>
 
-      {/* â”€â”€ LUXURY TOOLBAR & FILTERS â”€â”€ */}
+      {/* ── LUXURY TOOLBAR & FILTERS ── */}
       <div className="bg-white border border-[#E7DDD0] rounded-[20px] p-3 shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
         
         {/* Filter Pills */}
@@ -270,7 +270,7 @@ export default function BlogTab({
 
       </div>
 
-      {/* â”€â”€ ARTICLES TABLE & GRID VIEW â”€â”€ */}
+      {/* ── ARTICLES TABLE & GRID VIEW ── */}
       {filteredBlogs.length === 0 ? (
         <div className="bg-white border border-[#E7DDD0] rounded-[24px] p-16 text-center shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
           <div className="w-16 h-16 rounded-2xl bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center mx-auto mb-3 text-[#B88E4B]">
@@ -364,7 +364,7 @@ export default function BlogTab({
         </div>
       )}
 
-      {/* â”€â”€ LUXURY ARTICLE CREATOR / EDITOR MODAL â”€â”€ */}
+      {/* ── LUXURY ARTICLE CREATOR / EDITOR MODAL ── */}
       <AnimatePresence>
         {showAddBlog && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -379,7 +379,7 @@ export default function BlogTab({
               <div className="flex justify-between items-center border-b border-neutral-100 pb-3">
                 <div>
                   <h4 className="font-serif font-black text-[#221814] text-base flex items-center gap-2">
-                    <span className="text-[#B88E4B]">âœ¦</span> {blogForm.id ? 'Edit Journal Article' : 'Compose New Article'}
+                    <span className="text-[#B88E4B]">✦</span> {blogForm.id ? 'Edit Journal Article' : 'Compose New Article'}
                   </h4>
                   <p className="text-stone-400 text-xs font-semibold mt-0.5">
                     Share craftsmanship heritage, interior design tips, and furniture styling guides

@@ -87,7 +87,7 @@ export default function UserDashboard() {
   const [selectedFabricPreference, setSelectedFabricPreference] = useState('Turkish Champagne Velvet');
   const userChatBottomRef = useRef<HTMLDivElement>(null);
 
-  // â”€â”€ CALLING STATES & HANDLERS â”€â”€
+  // ── CALLING STATES & HANDLERS ──
   const [isCallOpen, setIsCallOpen] = useState(false);
   const [callType, setCallType] = useState<'voice' | 'video'>('voice');
   const [callStatus, setCallStatus] = useState<'outgoing' | 'incoming' | 'connected' | 'ended'>('outgoing');
@@ -1295,7 +1295,7 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#1F1612] flex flex-col font-sans selection:bg-[#B88E4B]/20 relative">
 
-      {/* â”€â”€ DESKTOP FLOATING CAPSULE SIDEBAR (ULTRA-LUXURY MASTERPIECE EDITION) â”€â”€ */}
+      {/* ── DESKTOP FLOATING CAPSULE SIDEBAR (ULTRA-LUXURY MASTERPIECE EDITION) ── */}
       <aside className="hidden lg:flex fixed left-5 top-5 bottom-5 z-50 flex-col items-center justify-between w-20 select-none pointer-events-auto">
         
         {/* Top Navigation Capsule */}
@@ -1313,7 +1313,7 @@ export default function UserDashboard() {
             {/* Tooltip */}
             <div className="absolute left-full ml-3.5 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
               <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3.5 py-2 rounded-xl shadow-2xl whitespace-nowrap border border-[#B88E4B]/30 flex items-center gap-1.5">
-                <span className="text-[#D4AF37]">âœ¦</span>
+                <span className="text-[#D4AF37]">✦</span>
                 <span>Go to Storefront Catalog</span>
               </div>
             </div>
@@ -1357,7 +1357,7 @@ export default function UserDashboard() {
                 {/* Floating Tooltip Bubble */}
                 <div className="absolute left-full ml-3.5 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
                   <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3.5 py-2 rounded-xl shadow-2xl whitespace-nowrap border border-[#B88E4B]/30 flex items-center gap-1.5">
-                    <span className="text-[#D4AF37]">âœ¦</span>
+                    <span className="text-[#D4AF37]">✦</span>
                     {tab.label}
                   </div>
                 </div>
@@ -1383,7 +1383,7 @@ export default function UserDashboard() {
             </button>
             <div className="absolute left-full ml-3.5 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
               <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3.5 py-2 rounded-xl shadow-2xl whitespace-nowrap border border-white/10 flex items-center gap-1.5">
-                <span>âš™ï¸</span> Portal Preferences
+                <span>⚙ï¸</span> Portal Preferences
               </div>
             </div>
           </div>
@@ -1409,7 +1409,7 @@ export default function UserDashboard() {
 
       </aside>
 
-      {/* â”€â”€ MOBILE DUAL FLOATING LUXURY CARDS â”€â”€ */}
+      {/* ── MOBILE DUAL FLOATING LUXURY CARDS ── */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 p-2 sm:p-3 flex flex-col gap-2 bg-gradient-to-b from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent pointer-events-none">
         
         {/* Brand Header Card */}
@@ -1457,12 +1457,12 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* â”€â”€ MAIN CONTENT VIEWPORT â”€â”€ */}
+      {/* ── MAIN CONTENT VIEWPORT ── */}
       <div className="flex-1 lg:pl-[108px] pt-[124px] lg:pt-0 flex flex-col min-w-0">
         
         <main className="flex-1 flex flex-col min-w-0 p-3 sm:p-4 lg:p-5 gap-3.5 max-w-[1700px] w-full mx-auto">
 
-          {/* â”€â”€ TOP HORIZONTAL LUXURY TAB SWITCHER DOCK (IN-PAGE EXECUTIVE NAVIGATION) â”€â”€ */}
+          {/* ── TOP HORIZONTAL LUXURY TAB SWITCHER DOCK (IN-PAGE EXECUTIVE NAVIGATION) ── */}
           <div className="hidden lg:flex items-center justify-between gap-3 bg-white/90 backdrop-blur-xl border border-[#E7DDD0] shadow-[0_4px_24px_rgba(44,30,24,0.03)] p-1.5 rounded-2xl">
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
               {tabs.map((tab) => {
@@ -1506,9 +1506,9 @@ export default function UserDashboard() {
             </div>
           </div>
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {/* TAB 1: EXECUTIVE OVERVIEW                                 */}
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {activeTab === 'overview' && (
             <div className="flex-1 flex flex-col gap-3 font-sans pb-2">
               
@@ -1674,16 +1674,16 @@ export default function UserDashboard() {
             </div>
           )}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {/* TAB 2: BESPOKE ORDERS                                      */}
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {activeTab === 'orders' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               
               {/* Top Luxury Header Bar */}
               {renderHeaderBanner(
-                'âœ¦ FULFILLMENT REGISTRY',
-                'âœ¦ FULFILLMENT REGISTRY V2.4',
+                '✦ FULFILLMENT REGISTRY',
+                '✦ FULFILLMENT REGISTRY V2.4',
                 'LIVE SYNCED',
                 '100% REAL DATABASE ORDERS SYNCED',
                 'Fulfillment',
@@ -1918,16 +1918,16 @@ export default function UserDashboard() {
             </motion.div>
           )}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {/* TAB 3: HAUTE WISHLIST                                     */}
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {activeTab === 'wishlist' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               
               {/* Top Luxury Header Bar */}
               {renderHeaderBanner(
-                'âœ¦ HAUTE GALLERY',
-                'âœ¦ HAUTE GALLERY REGISTRY',
+                '✦ HAUTE GALLERY',
+                '✦ HAUTE GALLERY REGISTRY',
                 `${mergedWishlist.length} CURATIONS`,
                 `${mergedWishlist.length} ACTIVE CURATIONS`,
                 'Private Curated',
@@ -1960,7 +1960,7 @@ export default function UserDashboard() {
                       onClick={() => setSearchQuery('')}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs"
                     >
-                      âœ•
+                      ✕
                     </button>
                   )}
                 </div>
@@ -2111,16 +2111,16 @@ export default function UserDashboard() {
             </motion.div>
           )}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {/* TAB 4: VIP CONCIERGE DESK                                 */}
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {activeTab === 'concierge' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               
               {/* Top Luxury Header Bar */}
               {renderHeaderBanner(
-                'âœ¦ ATELIER HOTLINE',
-                'âœ¦ ATELIER PRIVATE HOTLINE',
+                '✦ ATELIER HOTLINE',
+                '✦ ATELIER PRIVATE HOTLINE',
                 'ONLINE',
                 'MASTER CRAFTSMAN ONLINE',
                 'VIP Concierge',
@@ -2180,14 +2180,14 @@ export default function UserDashboard() {
                       <div className="flex items-center gap-1.5">
                         <h4 className="font-serif font-black text-sm text-[#1F1612]">Master Artisan Atelier</h4>
                         <span className="px-2 py-0.2 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-amber-50 text-[#8C6239] border border-[#B88E4B]/30">
-                          ðŸ‘‘ HEAD DESIGNER
+                          👑 HEAD DESIGNER
                         </span>
                       </div>
                       <p className="text-[10.5px] text-[#7A6354] font-medium flex items-center gap-2 mt-0.5">
                         <span className="flex items-center gap-1 text-emerald-700 font-bold">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active in Lahore Atelier
                         </span>
-                        <span>â€¢</span>
+                        <span>•</span>
                         <span className="font-mono text-stone-400">Avg response &lt; 2 min</span>
                       </p>
                     </div>
@@ -2254,7 +2254,7 @@ export default function UserDashboard() {
                                 {new Date(m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                               {isMe && (
-                                <span className="text-[10px] text-amber-200 font-bold ml-0.5">âœ“âœ“</span>
+                                <span className="text-[10px] text-amber-200 font-bold ml-0.5">✓✓</span>
                               )}
                             </div>
                           </div>
@@ -2269,10 +2269,10 @@ export default function UserDashboard() {
                 <div className="px-4 py-2 bg-[#FAF5EE]/70 border-t border-[#E7DDD0]/80 flex items-center gap-1.5 overflow-x-auto scrollbar-none text-[11px]">
                   <span className="text-[10px] font-mono font-black uppercase text-[#8C6239] shrink-0">Quick Ask:</span>
                   {[
-                    'ðŸªµ Sheesham Polish Options',
-                    'ðŸšš Delivery to my address',
-                    'ðŸ“ Custom Dimensions Inquiry',
-                    'ðŸ“¸ Request Workshop Video',
+                    '🪵 Sheesham Polish Options',
+                    '🚚 Delivery to my address',
+                    '📍 Custom Dimensions Inquiry',
+                    '📸 Request Workshop Video',
                   ].map((chip, idx) => (
                     <button
                       key={idx}
@@ -2310,16 +2310,16 @@ export default function UserDashboard() {
             </motion.div>
           )}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {/* TAB 5: MY REVIEWS                                         */}
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {activeTab === 'reviews' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               
               {/* Top Luxury Header Bar */}
               {renderHeaderBanner(
-                'âœ¦ ARTISAN RATINGS',
-                'âœ¦ ARTISAN RATINGS V2.4',
+                '✦ ARTISAN RATINGS',
+                '✦ ARTISAN RATINGS V2.4',
                 `${myReviews.length} REVIEWS`,
                 `${myReviews.length} VERIFIED REVIEWS`,
                 'My Atelier',
@@ -2427,9 +2427,9 @@ export default function UserDashboard() {
             </motion.div>
           )}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {/* TAB 6: SAVED RESIDENCES (ADDRESSES)                       */}
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {activeTab === 'addresses' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               
@@ -2911,16 +2911,16 @@ export default function UserDashboard() {
             </motion.div>
           )}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {/* TAB 8: SECURITY & 2FA                                     */}
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {activeTab === 'security' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               
               {/* Top Luxury Header Bar */}
               {renderHeaderBanner(
-                'âœ¦ SECURITY SHIELD',
-                'âœ¦ ENCRYPTION SHIELD V2.4',
+                '✦ SECURITY SHIELD',
+                '✦ ENCRYPTION SHIELD V2.4',
                 'ACTIVE 256-BIT',
                 'ENTERPRISE ENCRYPTION ACTIVE',
                 'Security & Two-Factor',
@@ -2937,9 +2937,9 @@ export default function UserDashboard() {
             </motion.div>
           )}
 
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {/* TAB 9: SETTINGS                                           */}
-          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+          {/* ═══════════════════════════════════════════════════════════ */}
           {activeTab === 'settings' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               

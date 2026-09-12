@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const absoluteImage = imageUrl.startsWith('http') ? imageUrl : `${getSiteUrl()}${imageUrl}`;
     return {
       title: product.name,
-      description: product.description || `Buy ${product.name} â€” handcrafted luxury furniture.`,
+      description: product.description || `Buy ${product.name} — handcrafted luxury furniture.`,
       openGraph: {
         title: product.name,
         description: product.description || '',

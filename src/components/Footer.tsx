@@ -44,11 +44,11 @@ export default function Footer() {
       data-testid="footer"
     >
 
-      {/* â”€â”€ Soft Ambient Animated Glow in Background â”€â”€ */}
+      {/* ── Soft Ambient Animated Glow in Background ── */}
       <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-amber-400/10 blur-3xl pointer-events-none z-0 animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-[#B88E4B]/10 blur-3xl pointer-events-none z-0 animate-pulse" />
 
-      {/* â”€â”€ MAIN FOOTER LAYOUT (DESKTOP GRID & MOBILE ACCORDIONS) â”€â”€ */}
+      {/* ── MAIN FOOTER LAYOUT (DESKTOP GRID & MOBILE ACCORDIONS) ── */}
       <div className="w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-5 sm:px-8 relative z-20">
         
         {/* DESKTOP 5-COLUMN GRID (>= lg) WITH ANIMATED STAGGER */}
@@ -393,7 +393,7 @@ export default function Footer() {
 
       </div>
 
-      {/* â”€â”€ GIANT ELEGANT WATERMARK TEXT (ANIMATED BREATHING SHIMMER) â”€â”€ */}
+      {/* ── GIANT ELEGANT WATERMARK TEXT (ANIMATED BREATHING SHIMMER) ── */}
       <div className="w-full text-center mt-5 sm:mt-6 overflow-hidden pointer-events-none z-10 select-none flex justify-center">
         <motion.span 
           animate={{ opacity: [0.06, 0.12, 0.06] }}

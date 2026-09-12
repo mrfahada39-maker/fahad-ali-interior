@@ -63,7 +63,7 @@ const organizationJsonLd = {
   areaServed: "PK",
 };
 
-// Viewport config â€” theme-color for PWA browser chrome
+// Viewport config — theme-color for PWA browser chrome
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: dark)",  color: "#c9a96e" },
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
     "luxury furniture", "Pakistan", "Lahore", "handcrafted",
     "Sheesham wood", "interior design", "beds", "sofas", "dining", "wardrobes",
   ],
-  // â”€â”€ PWA manifest & icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── PWA manifest & icons ────────────────────────────────────────────────
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -113,7 +113,7 @@ export const metadata: Metadata = {
     "msapplication-TileColor": "#c9a96e",
     "msapplication-tap-highlight": "no",
   },
-  // â”€â”€ Open Graph â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Open Graph ──────────────────────────────────────────────────────────
   openGraph: {
     type: "website",
     locale: "en_PK",

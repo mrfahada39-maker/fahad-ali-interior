@@ -87,7 +87,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
       image: product.image,
       category: product.category || '',
     });
-    toast.success(`Added ${product.name} to Cart ðŸ›’`);
+    toast.success(`Added ${product.name} to Cart 🛒`);
   };
 
   const imgSrc = resolveImageUrl(imgError ? null : product.image, product.category, 800);
