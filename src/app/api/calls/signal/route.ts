@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getToken } from 'next-auth/jwt';
 
 interface CallSession {
   id: string;
@@ -38,6 +39,19 @@ export async function POST(req: NextRequest) {
       candidate,
       userAliases = [],
     } = body;
+
+    // Verify admin identity if caller claims to be admin
+    if (fromUserId === 'admin' || userAliases.includes('admin')) {
+      const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
+      const token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
+                    (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
+      const role = String(token?.role ?? '').toUpperCase();
+      const adminCookie = req.cookies.get('fai_admin_token')?.value;
+      const isAdminToken = Boolean(adminCookie && adminCookie.includes('fai_token_'));
+      if (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && !isAdminToken) {
+        return NextResponse.json({ error: 'Unauthorized: Admin authentication required to act as admin in call.' }, { status: 403 });
+      }
+    }
 
     const now = Date.now();
     const allAliases: string[] = Array.from(

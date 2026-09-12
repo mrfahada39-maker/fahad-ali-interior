@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = await rateLimit(`admin_login:${ip}`, 'login');
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many login attempts. Please wait a minute and try again.' }, { status: 429 });
+    }
+
     const body = await req.json().catch(() => null);
     const email = body?.email?.toLowerCase()?.trim();
     const password = body?.password;
@@ -21,9 +28,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid executive credentials' }, { status: 401 });
     }
 
+    // Check account lockout
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      const remainingMinutes = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
+      return NextResponse.json(
+        { error: `Account temporarily locked due to excessive failed attempts. Try again in ${remainingMinutes} minute(s).` },
+        { status: 423 }
+      );
+    }
+
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
+      const attempts = (user.loginAttempts || 0) + 1;
+      const shouldLock = attempts >= 5;
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          loginAttempts: attempts,
+          lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+        },
+      });
       return NextResponse.json({ error: 'Invalid executive credentials' }, { status: 401 });
+    }
+
+    // Reset failed attempts on success
+    if (user.loginAttempts > 0 || user.lockedUntil) {
+      await db.user.update({
+        where: { id: user.id },
+        data: { loginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
+      });
     }
 
     const roleUpper = String(user.role).toUpperCase();

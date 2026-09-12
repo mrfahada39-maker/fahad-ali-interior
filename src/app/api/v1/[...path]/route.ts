@@ -111,8 +111,13 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }
     }
 
-    // Uploads Image Fallback
+    // Uploads Image Fallback (Protected)
     if (method === 'POST' && (segment.startsWith('uploads/image') || segment.startsWith('v1/uploads/image'))) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized. Sign in to upload images.' }, { status: 401 });
+      }
+
       const folder = req.nextUrl.searchParams.get('folder') || 'fahad-ali-interior/products';
       const formData = await req.formData().catch(() => null);
       const file = (formData?.get('file') || formData?.get('image')) as File | null;
@@ -123,41 +128,44 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const buffer = Buffer.from(bytes);
       const base64 = `data:${file.type || 'image/jpeg'};base64,${buffer.toString('base64')}`;
 
-      const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'dfd8rzojj';
-      const API_KEY = process.env.CLOUDINARY_API_KEY || '349178888815894';
-      const API_SECRET = process.env.CLOUDINARY_API_SECRET || 'ZeZe39YqYU2RgC_JBEkWC3AO_Js';
-      const timestamp = Math.round(Date.now() / 1000);
-      const crypto = await import('crypto');
-      const paramsToSign = `folder=${folder}&timestamp=${timestamp}${API_SECRET}`;
-      const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
+      const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+      const API_KEY = process.env.CLOUDINARY_API_KEY;
+      const API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
-      const cFormData = new FormData();
-      cFormData.append('file', base64);
-      cFormData.append('api_key', API_KEY);
-      cFormData.append('timestamp', String(timestamp));
-      cFormData.append('folder', folder);
-      cFormData.append('signature', signature);
+      if (CLOUD_NAME && API_KEY && API_SECRET) {
+        const timestamp = Math.round(Date.now() / 1000);
+        const crypto = await import('crypto');
+        const paramsToSign = `folder=${folder}&timestamp=${timestamp}${API_SECRET}`;
+        const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
 
-      try {
-        const cRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-          method: 'POST',
-          body: cFormData,
-        });
-        if (cRes.ok) {
-          const cData = await cRes.json();
-          const result = {
-            url: cData.secure_url || cData.url,
-            secureUrl: cData.secure_url || cData.url,
-            publicId: cData.public_id,
-            format: cData.format || 'jpg',
-            resourceType: cData.resource_type || 'image',
-            width: cData.width,
-            height: cData.height,
-            bytes: cData.bytes || buffer.length,
-          };
-          return NextResponse.json({ success: true, data: result, url: result.secureUrl, secureUrl: result.secureUrl });
-        }
-      } catch {}
+        const cFormData = new FormData();
+        cFormData.append('file', base64);
+        cFormData.append('api_key', API_KEY);
+        cFormData.append('timestamp', String(timestamp));
+        cFormData.append('folder', folder);
+        cFormData.append('signature', signature);
+
+        try {
+          const cRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+            method: 'POST',
+            body: cFormData,
+          });
+          if (cRes.ok) {
+            const cData = await cRes.json();
+            const result = {
+              url: cData.secure_url || cData.url,
+              secureUrl: cData.secure_url || cData.url,
+              publicId: cData.public_id,
+              format: cData.format || 'jpg',
+              resourceType: cData.resource_type || 'image',
+              width: cData.width,
+              height: cData.height,
+              bytes: cData.bytes || buffer.length,
+            };
+            return NextResponse.json({ success: true, data: result, url: result.secureUrl, secureUrl: result.secureUrl });
+          }
+        } catch {}
+      }
 
       const localResult = {
         url: base64,
@@ -171,6 +179,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     if (method === 'POST' && (segment.startsWith('uploads/multiple') || segment.startsWith('v1/uploads/multiple'))) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized. Sign in to upload images.' }, { status: 401 });
+      }
       const folder = req.nextUrl.searchParams.get('folder') || 'fahad-ali-interior/products';
       const formData = await req.formData().catch(() => null);
       const files = (formData?.getAll('files') || []) as File[];
@@ -1298,6 +1310,15 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           candidate,
           userAliases = [],
         } = body;
+
+        // Verify admin identity if caller claims to be admin
+        if (fromUserId === 'admin' || userAliases.includes('admin')) {
+          const user = await getUserFromSessionOrToken(req);
+          if (!requireAdmin(user)) {
+            return NextResponse.json({ error: 'Unauthorized: Admin authentication required.' }, { status: 403 });
+          }
+        }
+
         const now = Date.now();
         const allAliases: string[] = Array.from(
           new Set([fromUserId, fromUserEmail, ...(Array.isArray(userAliases) ? userAliases : [])].filter(Boolean))
@@ -1554,6 +1575,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     if (method === 'POST' && (segment.includes('blog'))) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json().catch(() => ({}));
       const blog = await db.blogPost.create({
         data: {
@@ -1571,6 +1596,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     if ((method === 'PATCH' || method === 'PUT') && segment.includes('blog')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Admin credentials required.' }, { status: 403 });
+      }
       const parts = segment.split('/');
       const lastPart = parts[parts.length - 1];
       const body = await req.json().catch(() => ({}));
@@ -1595,6 +1624,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     if (method === 'DELETE' && segment.includes('blog')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Admin credentials required.' }, { status: 403 });
+      }
       const parts = segment.split('/');
       const lastPart = parts[parts.length - 1];
       const searchId = req.nextUrl.searchParams.get('id');
@@ -2234,15 +2267,19 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const user = await getUserFromSessionOrToken(req);
       if (!user) return NextResponse.json({ enabled: false });
       const u = await db.user.findFirst({ where: { id: user.id } }).catch(() => null);
-      return NextResponse.json({ enabled: Boolean((u as any)?.twoFactorSecret) });
+      return NextResponse.json({ enabled: Boolean(u?.totpEnabled) });
     }
 
     if (segment.includes('auth/2fa/setup')) {
       const user = await getUserFromSessionOrToken(req);
       if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      const mockSecret = 'FAHADALI2FA' + user.id?.slice(-6).toUpperCase();
-      const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`otpauth://totp/FahadAliInterior:${user.email}?secret=${mockSecret}&issuer=FahadAliInterior`)}`;
-      return NextResponse.json({ qrCode, manualKey: mockSecret });
+      const randomSecret = crypto.randomBytes(16).toString('hex').toUpperCase();
+      await db.user.update({
+        where: { id: user.id },
+        data: { totpSecret: randomSecret },
+      }).catch(() => {});
+      const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`otpauth://totp/FahadAliInterior:${user.email}?secret=${randomSecret}&issuer=FahadAliInterior`)}`;
+      return NextResponse.json({ qrCode, manualKey: randomSecret });
     }
 
     if (segment.includes('auth/2fa/enable')) {
@@ -2251,7 +2288,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const backupCodes = Array.from({ length: 8 }, () => Math.random().toString(36).substring(2, 10).toUpperCase());
       await db.user.update({
         where: { id: user.id },
-        data: { isTwoFactorEnabled: true } as any,
+        data: { totpEnabled: true, backupCodes },
       }).catch(() => {});
       return NextResponse.json({ enabled: true, backupCodes });
     }
@@ -2261,7 +2298,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       await db.user.update({
         where: { id: user.id },
-        data: { isTwoFactorEnabled: false } as any,
+        data: { totpEnabled: false, totpSecret: null, backupCodes: [] },
       }).catch(() => {});
       return NextResponse.json({ disabled: true });
     }

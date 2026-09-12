@@ -1,5 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getToken } from 'next-auth/jwt';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -130,8 +134,61 @@ export async function POST(req: Request) {
   }
 }
 
-// GET /api/admin/telemetry — Returns 100% Real Live Visitor Telemetry
-export async function GET() {
+async function isAuthorizedAdmin(req: NextRequest): Promise<boolean> {
+  // 1. HMAC signed admin token check
+  const adminCookie = req.cookies.get('fai_admin_token')?.value;
+  const authHeader = req.headers.get('authorization') || req.headers.get('x-enterprise-token') || adminCookie;
+  if (authHeader && authHeader.includes('fai_token_')) {
+    const match = authHeader.match(/fai_token_([^_]+)_([^_]+)_([a-f0-9]+)/);
+    if (match) {
+      const [, userId, timestampStr, signature] = match;
+      const timestamp = parseInt(timestampStr, 10);
+      const maxAgeMs = 30 * 24 * 60 * 60 * 1000;
+      if (!isNaN(timestamp) && (Date.now() - timestamp) < maxAgeMs) {
+        const secret = process.env.NEXTAUTH_SECRET;
+        if (secret && secret.length >= 32) {
+          const expectedSig = crypto.createHmac('sha256', secret).update(`${userId}:${timestamp}`).digest('hex');
+          try {
+            if (crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSig, 'hex'))) {
+              const dbUser = await db.user.findUnique({
+                where: { id: userId },
+                select: { role: true },
+              });
+              const r = String(dbUser?.role ?? '').toUpperCase();
+              if (r === 'ADMIN' || r === 'SUPER_ADMIN') return true;
+            }
+          } catch {}
+        }
+      }
+    }
+  }
+
+  // 2. JWT token check
+  try {
+    const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
+    const token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
+                  (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
+    const role = String(token?.role ?? '').toUpperCase();
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') return true;
+  } catch {}
+
+  // 3. Server Session check
+  try {
+    const session = await getServerSession(authOptions);
+    const role = String((session?.user as any)?.role ?? '').toUpperCase();
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') return true;
+  } catch {}
+
+  return false;
+}
+
+// GET /api/admin/telemetry — Returns 100% Real Live Visitor Telemetry (Protected: Admin Only)
+export async function GET(req: NextRequest) {
+  const isAdmin = await isAuthorizedAdmin(req);
+  if (!isAdmin) {
+    return NextResponse.json({ error: 'Unauthorized. Admin credentials required.' }, { status: 403 });
+  }
+
   try {
     const now = Date.now();
     

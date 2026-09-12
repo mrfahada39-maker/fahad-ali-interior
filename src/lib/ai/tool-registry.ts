@@ -196,7 +196,7 @@ export class AiToolExecutor {
         let order: any = null;
         try {
           order = await db.order.findFirst({
-            where: { OR: [{ id: orderIdOrNumber }, { couponCode: orderIdOrNumber }] },
+            where: { OR: [{ id: orderIdOrNumber }, { trackingNumber: orderIdOrNumber }] },
             include: { items: { include: { product: true } } },
           });
         } catch (e) {

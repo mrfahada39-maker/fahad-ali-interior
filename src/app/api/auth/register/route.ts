@@ -113,8 +113,9 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
+    console.error('[REGISTRATION_ERROR]', error);
     return NextResponse.json(
-      { error: error?.message || 'Failed to register account' },
+      { error: 'An unexpected error occurred during registration. Please try again.' },
       { status: 500 }
     );
   }

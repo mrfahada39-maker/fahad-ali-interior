@@ -17,11 +17,11 @@ export interface OrderEmailData {
 
 // Pure Node.js TLS SMTP Sender - 0 External Dependencies, 100% Reliable across all Next.js/Vercel versions
 function sendSmtpTls({
-  host = 'smtp.gmail.com',
-  port = 465,
-  user = 'mrfahada39@gmail.com',
-  pass = 'naqxyqlglbvegztw',
-  from = 'Fahad Ali Interior <mrfahada39@gmail.com>',
+  host = process.env.SMTP_HOST || 'smtp.gmail.com',
+  port = Number(process.env.SMTP_PORT) || 465,
+  user = process.env.SMTP_USER || '',
+  pass = process.env.SMTP_PASS || '',
+  from = process.env.SMTP_FROM || (process.env.SMTP_USER ? `Fahad Ali Interior <${process.env.SMTP_USER}>` : 'Fahad Ali Interior <info@fahadaliinterior.com>'),
   to,
   subject,
   html,
@@ -35,13 +35,17 @@ function sendSmtpTls({
   subject: string;
   html: string;
 }): Promise<boolean> {
+  if (!user || !pass) {
+    console.error('[SMTP ERROR] Cannot send email: SMTP_USER or SMTP_PASS environment variable is missing.');
+    return Promise.resolve(false);
+  }
   return new Promise((resolve) => {
     try {
       const socket = tls.connect(
         {
           host,
           port,
-          rejectUnauthorized: false,
+          rejectUnauthorized: true,
         },
         () => {
           let step = 0;
@@ -114,9 +118,9 @@ function sendSmtpTls({
 }
 
 export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise<{ success: boolean; error?: string }> {
-  const user = process.env.SMTP_USER || 'mrfahada39@gmail.com';
-  const pass = process.env.SMTP_PASS || 'naqxyqlglbvegztw';
-  const from = process.env.SMTP_FROM || `Fahad Ali Interior <${user}>`;
+  const user = process.env.SMTP_USER || '';
+  const pass = process.env.SMTP_PASS || '';
+  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <info@fahadaliinterior.com>');
 
   const itemsHtml = order.items
     .map(
@@ -277,9 +281,9 @@ export async function sendPasswordResetEmail({
   resetUrl: string;
   code?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const user = process.env.SMTP_USER || 'mrfahada39@gmail.com';
-  const pass = process.env.SMTP_PASS || 'naqxyqlglbvegztw';
-  const from = process.env.SMTP_FROM || `Fahad Ali Interior <${user}>`;
+  const user = process.env.SMTP_USER || '';
+  const pass = process.env.SMTP_PASS || '';
+  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <info@fahadaliinterior.com>');
 
   const html = `
     <!DOCTYPE html>
@@ -343,9 +347,9 @@ export async function sendVerificationEmail({
   verifyUrl: string;
   code?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const user = process.env.SMTP_USER || 'mrfahada39@gmail.com';
-  const pass = process.env.SMTP_PASS || 'naqxyqlglbvegztw';
-  const from = process.env.SMTP_FROM || `Fahad Ali Interior <${user}>`;
+  const user = process.env.SMTP_USER || '';
+  const pass = process.env.SMTP_PASS || '';
+  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <info@fahadaliinterior.com>');
 
   const html = `
     <!DOCTYPE html>

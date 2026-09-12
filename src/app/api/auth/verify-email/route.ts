@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import crypto from 'crypto';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = await rateLimit(`verify_email:${ip}`, 'register');
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many verification attempts. Please try again later.' }, { status: 429 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const { token, code, email } = body;
 
@@ -35,6 +42,10 @@ export async function POST(req: NextRequest) {
       });
 
       if (existingUser) {
+        if (existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date()) {
+          return NextResponse.json({ error: 'Account temporarily locked due to failed attempts. Please try again later.' }, { status: 423 });
+        }
+
         const verifyRecord = await db.emailVerificationToken.findFirst({
           where: {
             userId: existingUser.id,
@@ -45,6 +56,16 @@ export async function POST(req: NextRequest) {
 
         if (verifyRecord) {
           user = existingUser;
+        } else {
+          const attempts = (existingUser.loginAttempts || 0) + 1;
+          const shouldLock = attempts >= 5;
+          await db.user.update({
+            where: { id: existingUser.id },
+            data: {
+              loginAttempts: attempts,
+              lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+            },
+          });
         }
       }
     }
