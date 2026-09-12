@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -395,7 +395,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
       </div>
 
       {/* ── CLIENTS MASTER TABLE ── */}
-      {loading ? (
+      {customers.length === 0 && loading ? (
         <div className="text-center py-16 bg-white border border-[#E7DDD0] rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
           <Loader2 size={36} className="mx-auto text-[#B88E4B] animate-spin mb-2" />
           <p className="text-stone-500 font-bold text-xs">Loading Real Client Database...</p>

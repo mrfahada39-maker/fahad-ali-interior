@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Users, MessageSquare, Star,
   Loader2, Trash2, CheckCircle, XCircle, DollarSign, TrendingUp, Box, Plus, Send, Sparkles,
@@ -19,28 +19,18 @@ import { signOut } from 'next-auth/react';
 import { defaultProductImage } from '@/lib/images';
 import dynamic from 'next/dynamic';
 import OverviewTab from './OverviewTab';
-
-const tabLoading = () => (
-  <div className="min-h-[400px] flex items-center justify-center">
-    <div className="flex flex-col items-center gap-2">
-      <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-      <span className="text-xs text-stone-400 font-sans">Loading module...</span>
-    </div>
-  </div>
-);
-
-const ProductsTab = dynamic(() => import('./ProductsTab'), { loading: tabLoading, ssr: false });
-const OrdersTab = dynamic(() => import('./OrdersTab'), { loading: tabLoading, ssr: false });
-const CustomersTab = dynamic(() => import('./CustomersTab'), { loading: tabLoading, ssr: false });
-const MessagesTab = dynamic(() => import('./MessagesTab'), { loading: tabLoading, ssr: false });
-const ReviewsTab = dynamic(() => import('./ReviewsTab'), { loading: tabLoading, ssr: false });
-const BlogTab = dynamic(() => import('./BlogTab'), { loading: tabLoading, ssr: false });
-const SettingsTab = dynamic(() => import('./AdminSettingsTab'), { loading: tabLoading, ssr: false });
-const CmsTab = dynamic(() => import('./CmsTab'), { loading: tabLoading, ssr: false });
-const InquiriesTab = dynamic(() => import('./InquiriesTab'), { loading: tabLoading, ssr: false });
-const AnalyticsTab = dynamic(() => import('./AnalyticsTab'), { loading: tabLoading, ssr: false });
-const AiChatbotTab = dynamic(() => import('./AiChatbotTab'), { loading: tabLoading, ssr: false });
-const AiRadarTab = dynamic(() => import('./AiRadarTab'), { loading: tabLoading, ssr: false });
+import ProductsTab from './ProductsTab';
+import OrdersTab from './OrdersTab';
+import CustomersTab from './CustomersTab';
+import MessagesTab from './MessagesTab';
+import ReviewsTab from './ReviewsTab';
+import BlogTab from './BlogTab';
+import SettingsTab from './AdminSettingsTab';
+import CmsTab from './CmsTab';
+import InquiriesTab from './InquiriesTab';
+import AnalyticsTab from './AnalyticsTab';
+import AiChatbotTab from './AiChatbotTab';
+import AiRadarTab from './AiRadarTab';
 const LuxuryCallModal = dynamic(() => import('@/components/LuxuryCallModal'), { ssr: false });
 import { toneGenerator, WebRtcCallClient } from '@/lib/webrtc-call-manager';
 import { tabs, AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
@@ -65,11 +55,75 @@ function normalizeWhatsapp(value: string): string {
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState<any>(null);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+
+  // Synchronous cache snapshot for instant 0ms initial render (Zero blank page / zero loading delay)
+  const [stats, setStats] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.stats) return parsed.stats;
+        }
+      } catch {}
+    }
+    return DEFAULT_ADMIN_STATS;
+  });
+
+  const [analytics, setAnalytics] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.analytics) return parsed.analytics;
+        }
+      } catch {}
+    }
+    return null;
+  });
+
+  const [products, setProducts] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.products) {
+            return Array.isArray(parsed.products) ? parsed.products : (parsed.products?.products || []);
+          }
+        }
+      } catch {}
+    }
+    return [];
+  });
+
+  const [orders, setOrders] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed?.orders)) return parsed.orders;
+        }
+      } catch {}
+    }
+    return [];
+  });
+
+  const [users, setUsers] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed?.users)) return parsed.users;
+        }
+      } catch {}
+    }
+    return [];
+  });
+
   const [categories, setCategories] = useState<any[]>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [telemetry, setTelemetry] = useState<any>(null);
@@ -91,12 +145,77 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const [messages, setMessages] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed?.messages)) return parsed.messages;
+        }
+      } catch {}
+    }
+    return [];
+  });
+
+  const [reviews, setReviews] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed?.reviews)) return parsed.reviews;
+        }
+      } catch {}
+    }
+    return [];
+  });
+
   const [blogs, setBlogs] = useState<any[]>([]);
-  const [inquiries, setInquiries] = useState<any[]>([]);
-  const [siteSettings, setSiteSettings] = useState<any>({});
-  const [adminAccount, setAdminAccount] = useState({ name: '', email: '', phone: '' });
+  const [inquiries, setInquiries] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed?.inquiries)) return parsed.inquiries;
+        }
+      } catch {}
+    }
+    return [];
+  });
+
+  const [siteSettings, setSiteSettings] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.siteSettings) return parsed.siteSettings;
+        }
+      } catch {}
+    }
+    return {};
+  });
+
+  const [adminAccount, setAdminAccount] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.account) {
+            return {
+              name: parsed.account.name || 'Fahad Ali',
+              email: parsed.account.email || 'mrfahada39@gmail.com',
+              phone: parsed.account.phone || '+92 300 1234567',
+            };
+          }
+        }
+      } catch {}
+    }
+    return { name: 'Fahad Ali', email: 'mrfahada39@gmail.com', phone: '+92 300 1234567' };
+  });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState({ current: false, next: false, confirm: false });
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
@@ -1097,15 +1216,13 @@ export default function AdminDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full pr-0 pt-[130px] lg:pt-0 min-h-0 overflow-y-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex-1 flex flex-col min-h-0 pb-3"
-          >
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0.9 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.05 }}
+          className="flex-1 flex flex-col min-h-0 pb-3"
+        >
 
             {/* OVERVIEW */}
             {activeTab === 'overview' && (
@@ -1236,7 +1353,6 @@ export default function AdminDashboard() {
 
 
           </motion.div>
-        </AnimatePresence>
       </main>
 
       {/* Royal Luxury Call Modal for Admin */}
