@@ -207,7 +207,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Persist or fetch ChatSession
+    const isEscalationIntent = /whatsapp|agent|human|call|phone|talk to person|specialist|contact/i.test(sanitizedUserQuery);
+
+    // 3. Persist or fetch ChatSession and record user message
     try {
       await db.chatSession.upsert({
         where: { sessionId },
@@ -215,11 +217,25 @@ export async function POST(request: NextRequest) {
           sessionId,
           customerName: body.customerName || null,
           city: body.city || null,
+          status: isEscalationIntent ? 'escalated' : 'active',
         },
-        update: { updatedAt: new Date() },
+        update: {
+          updatedAt: new Date(),
+          ...(isEscalationIntent ? { status: 'escalated' } : {}),
+        },
+      });
+
+      // Save user query to ChatMessage
+      await db.chatMessage.create({
+        data: {
+          sessionId,
+          role: 'user',
+          content: sanitizedUserQuery,
+          intent: requestedRole.toUpperCase(),
+        },
       });
     } catch (e) {
-      console.warn('Session upsert notice:', e);
+      console.warn('Session upsert / user message notice:', e);
     }
 
     // 4. Fetch past chat history (last 10)
@@ -362,6 +378,11 @@ TOTAL STORE PRODUCTS: 64 luxury Sheesham items across Living, Bedroom, Dining, O
           metadata,
         },
       });
+
+      await db.chatSession.update({
+        where: { sessionId },
+        data: { updatedAt: new Date() },
+      }).catch(() => {});
     } catch (e) {
       console.warn('Chat message save notice:', e);
     }

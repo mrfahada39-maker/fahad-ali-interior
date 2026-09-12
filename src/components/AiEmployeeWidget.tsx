@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
@@ -30,6 +30,18 @@ export function AiEmployeeWidget() {
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const [roomImage, setRoomImage] = useState<string | null>(null);
   const [isListeningMic, setIsListeningMic] = useState(false);
+  const [sessionId, setSessionId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('fahad_ai_session_id');
+      if (stored) return stored;
+      const newId = `session-${Date.now()}`;
+      try {
+        sessionStorage.setItem('fahad_ai_session_id', newId);
+      } catch {}
+      return newId;
+    }
+    return `session-${Date.now()}`;
+  });
 
   // Custom Quote Interactive Form State
   const [customLength, setCustomLength] = useState('78');
@@ -154,6 +166,7 @@ export function AiEmployeeWidget() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          sessionId,
           message: textToSend,
           agentRole: activeRole,
           roomImage: roomImage,
