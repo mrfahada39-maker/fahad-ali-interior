@@ -101,7 +101,9 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
         setInquiryForm({ name: '', email: '', phone: '', roomType: 'Living Room', budget: '', message: '' });
       }
     } catch (err) {
-      console.error('Failed to submit inquiry:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to submit inquiry:', err);
+      }
     } finally {
       setInquirySubmitting(false);
     }

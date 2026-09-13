@@ -11,7 +11,10 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Application error:', error);
+    // Log application errors — dev only (production errors tracked via Vercel monitoring)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Application error:', error);
+    }
   }, [error]);
 
   return (

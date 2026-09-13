@@ -74,7 +74,7 @@ export default function TelemetryTracker() {
           try {
             const isBrave = await (navigator as any).brave.isBrave();
             if (isBrave) browser = 'Brave';
-          } catch (e) {}
+          } catch (_e) { /* Brave detection failed — use Chrome as fallback */ }
         }
 
         if (!isSubscribed) return;
@@ -174,7 +174,9 @@ export default function TelemetryTracker() {
           clearInterval(interval);
         };
       } catch (err) {
-        console.error('TelemetryTracker error:', err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('TelemetryTracker error:', err);
+        }
       }
     };
 

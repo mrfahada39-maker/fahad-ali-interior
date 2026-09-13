@@ -7,6 +7,7 @@ import { sendOrderConfirmationEmail, sendPasswordResetEmail, sendVerificationEma
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { getSiteUrl } from '@/lib/utils';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 interface SessionUser {
   id?: string;
@@ -103,6 +104,36 @@ const fallbackCategories = [
 // Handles queries directly from the database if the NestJS backend is offline
 async function handleDatabaseFallback(method: string, segment: string, req: NextRequest): Promise<NextResponse> {
   try {
+    // ── Rate limiting for sensitive endpoints ─────────────────────────
+    const ip = getClientIp(req);
+
+    // Order creation — prevent order flooding
+    if (method === 'POST' && (segment === 'orders' || segment === 'v1/orders')) {
+      const rl = await rateLimit(`orders:${ip}`, 'api');
+      if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many requests. Please wait and try again.' }, { status: 429 });
+      }
+    }
+
+    // Contact/inquiry spam protection
+    if (method === 'POST' && (segment === 'contact' || segment === 'v1/contact' || segment === 'inquiries' || segment === 'v1/inquiries')) {
+      const rl = await rateLimit(`contact:${ip}`, 'inquiry');
+      if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many requests. Please wait a minute and try again.' }, { status: 429 });
+      }
+    }
+
+    // Register — anti-bot account flood protection
+    if (method === 'POST' && (segment === 'auth/register' || segment === 'v1/auth/register' || segment === 'register' || segment === 'v1/register')) {
+      const rl = await rateLimit(`register:${ip}`, 'register');
+      if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many registration attempts. Please wait and try again.' }, { status: 429 });
+      }
+    }
+
+    // AI chat message length limit in v1 route
+    // (also enforced in dedicated ai/chat route)
+
     // Admin segments fallback - Enforce Executive RBAC
     if (segment.startsWith('admin') || segment.startsWith('v1/admin')) {
       const user = await getUserFromSessionOrToken(req);
@@ -372,11 +403,13 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         return NextResponse.json(item || { success: true });
       }
       if (method === 'DELETE') {
+        if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const id = req.nextUrl.searchParams.get('id');
         const productId = req.nextUrl.searchParams.get('productId');
         if (id) {
-          await db.wishlistItem.deleteMany({ where: { id, ...(user?.id ? { userId: user.id } : {}) } }).catch(() => {});
-        } else if (productId && user?.id) {
+          // Always scope deletion to the authenticated user — prevents cross-user deletion
+          await db.wishlistItem.deleteMany({ where: { id, userId: user.id } }).catch(() => {});
+        } else if (productId) {
           await db.wishlistItem.deleteMany({ where: { userId: user.id, productId } }).catch(() => {});
         }
         return NextResponse.json({ success: true });
@@ -683,14 +716,15 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
       let targetUserId = user?.id;
       if (!targetUserId && body.shippingEmail) {
+        const emailLower = body.shippingEmail.toLowerCase().trim();
         let existingUser = await db.user.findUnique({
-          where: { email: body.shippingEmail.toLowerCase().trim() },
+          where: { email: emailLower },
         }).catch(() => null);
 
         if (!existingUser) {
           existingUser = await db.user.create({
             data: {
-              email: body.shippingEmail.toLowerCase().trim(),
+              email: emailLower,
               name: body.shippingName || 'Guest Customer',
               phone: body.shippingPhone || '',
             },
@@ -699,18 +733,12 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         targetUserId = existingUser?.id;
       }
 
+      // Require either authenticated user or valid shippingEmail — never link to random user
       if (!targetUserId) {
-        let guestUser = await db.user.findFirst({ where: { deletedAt: null } }).catch(() => null);
-        if (!guestUser) {
-          guestUser = await db.user.create({
-            data: {
-              email: 'guest@fahad-ali-interior.com',
-              name: 'Guest Customer',
-              role: 'USER',
-            },
-          }).catch(() => null);
-        }
-        targetUserId = guestUser?.id || '';
+        return NextResponse.json(
+          { error: 'Please provide a shipping email address to complete your order.' },
+          { status: 400 }
+        );
       }
 
       const parseNum = (val: any, fallback = 0) => {

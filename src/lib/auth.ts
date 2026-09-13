@@ -1,4 +1,4 @@
-﻿import { NextAuthOptions } from 'next-auth';
+import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
@@ -17,6 +17,25 @@ export const isGoogleOAuthEnabled =
   !!process.env.GOOGLE_CLIENT_SECRET &&
   !process.env.GOOGLE_CLIENT_ID.includes('your-google') &&
   !process.env.GOOGLE_CLIENT_SECRET.includes('your-google');
+
+/**
+ * Admin emails — loaded from ADMIN_EMAILS env var (comma-separated).
+ * Fallback to defaults if env var not configured.
+ * Example: ADMIN_EMAILS=admin@example.com,owner@example.com
+ */
+function getAdminEmails(): string[] {
+  const envEmails = process.env.ADMIN_EMAILS;
+  if (envEmails && envEmails.trim()) {
+    return envEmails.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+  }
+  // Fallback defaults (set ADMIN_EMAILS in .env to override)
+  return ['mrfahada39@gmail.com', 'admin@fahadali.com'];
+}
+
+function isAdminEmail(email: string): boolean {
+  return getAdminEmails().includes(email.toLowerCase().trim());
+}
+
 
 const providers: NextAuthOptions['providers'] = [
   CredentialsProvider({
@@ -125,8 +144,8 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
-        const isAdminEmail = emailLower === 'mrfahada39@gmail.com' || emailLower === 'admin@fahadali.com';
-        if (isAdminEmail && dbUser && dbUser.role !== 'ADMIN') {
+        const isAdminEmailFlag = isAdminEmail(emailLower);
+        if (isAdminEmailFlag && dbUser && dbUser.role !== 'ADMIN') {
           await db.user.update({
             where: { id: dbUser.id },
             data: { role: 'ADMIN' },
@@ -136,7 +155,7 @@ export const authOptions: NextAuthOptions = {
 
         if (dbUser) {
           user.id = dbUser.id;
-          (user as { role?: string }).role = isAdminEmail ? 'ADMIN' : sessionRole(dbUser.role);
+          (user as { role?: string }).role = isAdminEmailFlag ? 'ADMIN' : sessionRole(dbUser.role);
         }
         return true;
       }
@@ -149,7 +168,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
       }
       const emailLower = (token.email || '').toLowerCase().trim();
-      if (emailLower === 'mrfahada39@gmail.com' || emailLower === 'admin@fahadali.com') {
+      if (isAdminEmail(emailLower)) {
         token.role = 'ADMIN';
       }
       // Only re-fetch role from DB on explicit session.update() triggers

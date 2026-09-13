@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      token,
+      // Token intentionally NOT returned in response body — set in httpOnly cookie only
       user: {
         id: user.id,
         email: user.email,
@@ -83,13 +83,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Set secure persistent admin session cookie (30 days)
+    // Set secure persistent admin session cookie (7 days, strict SameSite)
     res.cookies.set('fai_admin_token', token, {
       path: '/',
       httpOnly: true,
       secure: req.url.startsWith('https://') || process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60,
     });
 
     return res;

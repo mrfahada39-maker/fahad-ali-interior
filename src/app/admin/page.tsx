@@ -11,10 +11,11 @@ export default function AdminPage() {
   const [hasAdminCookie, setHasAdminCookie] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const hasToken = typeof window !== 'undefined' && (
-      document.cookie.includes('fai_admin_token=') ||
-      Boolean(localStorage.getItem('fai_admin_token'))
-    );
+    // Only check the httpOnly admin cookie presence via document.cookie
+    // (localStorage check removed — tokens are httpOnly cookies only for security)
+    const hasToken =
+      typeof window !== 'undefined' &&
+      document.cookie.includes('fai_admin_token=');
     setHasAdminCookie(hasToken);
 
     if (status === 'unauthenticated' && !hasToken) {

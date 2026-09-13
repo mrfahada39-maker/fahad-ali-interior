@@ -82,12 +82,14 @@ const withPWA = withPWAInit({
 
 // Security headers (CDN/edge layer — CSP is nonce-based in middleware)
 const securityHeaders = [
-  { key: 'X-DNS-Prefetch-Control',  value: 'on' },
-  { key: 'X-Frame-Options',         value: 'DENY' },
-  { key: 'X-Content-Type-Options',  value: 'nosniff' },
-  { key: 'Referrer-Policy',         value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy',      value: 'camera=(self), microphone=(self), geolocation=(), payment=()' },
-  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+  { key: 'X-DNS-Prefetch-Control',       value: 'on' },
+  { key: 'X-Frame-Options',              value: 'DENY' },
+  { key: 'X-Content-Type-Options',       value: 'nosniff' },
+  { key: 'Referrer-Policy',              value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy',           value: 'camera=(self), microphone=(self), geolocation=(), payment=()' },
+  { key: 'Cross-Origin-Opener-Policy',   value: 'same-origin-allow-popups' },
+  // HSTS: enforce HTTPS for 2 years, include subdomains, allow preload
+  { key: 'Strict-Transport-Security',    value: 'max-age=63072000; includeSubDomains; preload' },
 ];
 
 function remotePatterns() {
@@ -115,7 +117,9 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@prisma/client', 'bcryptjs', 'sharp', 'nodemailer'],
   productionBrowserSourceMaps: false,
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : false,
+    // Strip all console.* calls in production — errors guarded by dev checks in code
+    // API route errors still go to server logs (not browser console)
+    removeConsole: process.env.NODE_ENV === 'production' ? true : false,
   },
 
   outputFileTracingExcludes: {

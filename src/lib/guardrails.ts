@@ -33,7 +33,9 @@ export class SecurityGuardrails {
         if (match && match[1]) {
           const mentionedPrice = parseFloat(match[1].replace(/,/g, ''));
           if (Math.abs(mentionedPrice - product.price) > 100) {
-            console.warn(`Price mismatch detected for ${product.name}: mentioned ${mentionedPrice}, actual ${product.price}`);
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(`Price mismatch detected for ${product.name}: mentioned ${mentionedPrice}, actual ${product.price}`);
+            }
             return false;
           }
         }

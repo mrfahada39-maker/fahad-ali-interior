@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -86,7 +86,9 @@ export default function CmsTab() {
         setCategories(Array.isArray(list) ? list.sort((a, b) => (a.order || 0) - (b.order || 0)) : []);
       }
     } catch (e) {
-      console.error('Failed to load categories', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to load categories', e);
+      }
     } finally {
       setLoadingCategories(false);
     }

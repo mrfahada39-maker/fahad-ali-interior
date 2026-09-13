@@ -86,7 +86,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       setIsSubscribed(true);
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[PushNotifications] Subscribe error:', err);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -106,7 +108,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       setIsSubscribed(false);
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[PushNotifications] Unsubscribe error:', err);
+      }
     } finally {
       setIsLoading(false);
     }

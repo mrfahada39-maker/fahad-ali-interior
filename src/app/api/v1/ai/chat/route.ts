@@ -6,6 +6,7 @@ import { ENTERPRISE_AI_TOOLS, AiToolExecutor } from '@/lib/ai/tool-registry';
 import { VectorIndexer, HybridSearchEngine } from '@/lib/ai/rag';
 import { RoomAnalyzer } from '@/lib/ai/room-analyzer';
 import { MultiProviderLlm, LlmMessage } from '@/lib/ai/llm-provider';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 /** High-capacity Dynamic AI Response Generator (ChatGPT/Claude/Gemini style) */
 function generateDynamicResponse(
@@ -178,9 +179,20 @@ function generateDynamicResponse(
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate limiting: 30 AI requests per minute per IP ──────────────
+    const ip = getClientIp(request);
+    const rl = await rateLimit(`ai_chat:${ip}`, 'api');
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please wait a moment and try again.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const sessionId = body.sessionId || `session-${Date.now()}`;
-    const rawUserQuery = (body.message || 'Show catalog').trim();
+    // ── Input length cap: max 2000 chars to prevent token exhaustion ──
+    const rawUserQuery = (body.message || 'Show catalog').trim().slice(0, 2000);
     const requestedRole: AgentRole = body.agentRole || 'sales';
     const roomImageBase64 = body.roomImage || null;
 

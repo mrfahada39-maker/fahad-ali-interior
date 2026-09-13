@@ -114,7 +114,9 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
         if (statsData) setStats(statsData);
       }
     } catch (e) {
-      console.error('Failed to load customers:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to load customers:', e);
+      }
     } finally {
       setLoading(false);
     }
