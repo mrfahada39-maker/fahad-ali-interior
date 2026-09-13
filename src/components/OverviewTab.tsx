@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
@@ -1122,10 +1122,10 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
 
                     <div className="text-left sm:text-right text-xs bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3] border border-[#D9C4AC] rounded-2xl p-3.5 shadow-xs shrink-0 min-w-[210px]">
                       <p className="text-[#8C6239] font-black uppercase text-[9px] tracking-widest font-serif">STATEMENT AUDIT REF</p>
-                      <p className="font-mono font-black text-[#1F1612] text-sm mt-0.5">
+                      <p className="font-mono font-black text-[#1F1612] text-sm mt-0.5" suppressHydrationWarning>
                         FAI-STMT-{selectedTimeframe.toUpperCase()}-{new Date().getFullYear()}
                       </p>
-                      <p className="text-[10px] text-stone-600 mt-1 font-semibold">
+                      <p className="text-[10px] text-stone-600 mt-1 font-semibold" suppressHydrationWarning>
                         Generated: {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} at {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                       <span className="inline-block mt-1 text-[9.5px] font-black text-[#8C6239] bg-white border border-[#D9C4AC] px-2 py-0.5 rounded-full shadow-2xs">
@@ -1347,7 +1347,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                     <span>Certified Financial Ledger • Complete Customer Registry Verified by Fahad Ali Interior Executive Engine</span>
                   </div>
                   <div className="font-mono text-stone-500 font-bold">
-                    HASH: {Math.random().toString(36).substring(2, 10).toUpperCase()}-VERIFIED-PK
+                    HASH: FA-EXEC-VERIFIED-PK
                   </div>
                 </div>
               </div>

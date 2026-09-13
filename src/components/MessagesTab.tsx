@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -515,7 +515,7 @@ export default function MessagesTab({
             <div className="flex-1 p-4 space-y-3 overflow-y-auto bg-white min-h-0">
               {/* Date Badge */}
               <div className="flex items-center justify-center my-0.5">
-                <span className="text-[9px] font-black text-stone-400 bg-[#FCFAF7] px-2.5 py-0.2 rounded-full border border-[#E7DDD0]">
+                <span className="text-[9px] font-black text-stone-400 bg-[#FCFAF7] px-2.5 py-0.2 rounded-full border border-[#E7DDD0]" suppressHydrationWarning>
                   Today, {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               </div>
