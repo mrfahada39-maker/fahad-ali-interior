@@ -138,7 +138,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
     }
 
-    if (!pathname.startsWith('/api/v1') && !pathname.startsWith('/api/admin/telemetry')) {
+    if (!pathname.startsWith('/api/v1') && !pathname.startsWith('/api/admin/telemetry') && !pathname.startsWith('/api/admin/categories')) {
       const mapped = toNestApiPath(`${pathname}${request.nextUrl.search}`);
       const q = mapped.indexOf('?');
       const rewriteUrl = request.nextUrl.clone();

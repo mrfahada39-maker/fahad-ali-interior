@@ -134,8 +134,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     // AI chat message length limit in v1 route
     // (also enforced in dedicated ai/chat route)
 
-    // Admin segments fallback - Enforce Executive RBAC
-    if (segment.startsWith('admin') || segment.startsWith('v1/admin')) {
+    // Admin segments fallback - Enforce Executive RBAC (except public GET reads like categories)
+    if ((segment.startsWith('admin') || segment.startsWith('v1/admin')) && !(method === 'GET' && segment.includes('categories'))) {
       const user = await getUserFromSessionOrToken(req);
       if (!requireAdmin(user)) {
         return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
@@ -1262,13 +1262,124 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       });
     }
 
-    // 4. GET /admin/categories & /public/categories
-    if (method === 'GET' && (segment === 'admin/categories' || segment === 'v1/admin/categories' || segment === 'public/categories' || segment === 'v1/public/categories' || segment === 'categories' || segment === 'v1/categories')) {
-      const categories = await db.category.findMany({ where: { deletedAt: null }, orderBy: { createdAt: 'asc' } }).catch(() => []);
-      if (categories.length === 0) {
-        return NextResponse.json(fallbackCategories);
+    // 4. Categories CRUD (GET, POST, PUT, PATCH, DELETE, OPTIONS)
+    if (segment.includes('categories')) {
+      if (method === 'OPTIONS') {
+        return new NextResponse(null, {
+          status: 204,
+          headers: {
+            Allow: 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+          },
+        });
       }
-      return NextResponse.json(categories);
+
+      // GET /admin/categories, /public/categories, /categories
+      if (method === 'GET') {
+        const categories = await db.category.findMany({
+          where: { deletedAt: null },
+          orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+        }).catch(() => []);
+
+        if (categories.length === 0) {
+          return NextResponse.json(fallbackCategories);
+        }
+        return NextResponse.json(categories);
+      }
+
+      // Mutation methods require Admin privileges
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
+
+      // POST /admin/categories - Create new category
+      if (method === 'POST') {
+        const body = await req.json().catch(() => ({}));
+        if (!body?.name?.trim()) {
+          return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
+        }
+
+        const category = await db.category.upsert({
+          where: { name: body.name.trim() },
+          create: {
+            name: body.name.trim(),
+            description: body.description || '',
+            image: body.image || '',
+            icon: body.icon || 'Sparkles',
+            items: body.items || '',
+            isPromo: Boolean(body.isPromo),
+            order: Number(body.order) || 0,
+            isActive: body.isActive !== undefined ? Boolean(body.isActive) : true,
+          },
+          update: {
+            description: body.description !== undefined ? body.description : undefined,
+            image: body.image !== undefined ? body.image : undefined,
+            icon: body.icon !== undefined ? body.icon : undefined,
+            items: body.items !== undefined ? body.items : undefined,
+            isPromo: body.isPromo !== undefined ? Boolean(body.isPromo) : undefined,
+            order: body.order !== undefined ? Number(body.order) : undefined,
+            isActive: body.isActive !== undefined ? Boolean(body.isActive) : undefined,
+            deletedAt: null,
+          },
+        });
+
+        return NextResponse.json({ success: true, data: category, category });
+      }
+
+      // PUT / PATCH /admin/categories - Update category
+      if (method === 'PUT' || method === 'PATCH') {
+        const body = await req.json().catch(() => ({}));
+        const searchId = req.nextUrl.searchParams.get('id');
+        const id = body.id || searchId;
+
+        const updateData: any = {};
+        if (body.name !== undefined) updateData.name = body.name.trim();
+        if (body.description !== undefined) updateData.description = body.description;
+        if (body.image !== undefined) updateData.image = body.image;
+        if (body.icon !== undefined) updateData.icon = body.icon;
+        if (body.items !== undefined) updateData.items = body.items;
+        if (body.isPromo !== undefined) updateData.isPromo = Boolean(body.isPromo);
+        if (body.order !== undefined) updateData.order = Number(body.order);
+        if (body.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
+
+        let updated: any = null;
+        if (id) {
+          updated = await db.category.update({
+            where: { id },
+            data: updateData,
+          });
+        } else if (body.name) {
+          updated = await db.category.update({
+            where: { name: body.name.trim() },
+            data: updateData,
+          });
+        } else {
+          return NextResponse.json({ error: 'Category ID or name is required' }, { status: 400 });
+        }
+
+        return NextResponse.json({ success: true, data: updated, category: updated });
+      }
+
+      // DELETE /admin/categories - Soft delete category
+      if (method === 'DELETE') {
+        const searchId = req.nextUrl.searchParams.get('id');
+        const body = await req.json().catch(() => ({}));
+        const id = searchId || body?.id;
+
+        if (!id) {
+          return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
+        }
+
+        await db.category.update({
+          where: { id },
+          data: { deletedAt: new Date(), isActive: false },
+        }).catch(async () => {
+          await db.category.delete({ where: { id } });
+        });
+
+        return NextResponse.json({ success: true, deletedId: id });
+      }
     }
 
     // 5. GET /admin/reviews
