@@ -455,28 +455,25 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         <Link
           href="/shop"
           className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
-            pathname === '/shop' || pathname.startsWith('/product') ? '-top-3.5' : 'py-1'
+            mounted && (pathname === '/shop' || pathname.startsWith('/product')) ? '-top-3.5' : 'py-1'
           }`}
         >
-          {pathname === '/shop' || pathname.startsWith('/product') ? (
-            /* 24K Gold Liquid Bubble Dome (Active) */
-            <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] flex items-center justify-center">
-              <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
-                <LayoutGrid size={24} strokeWidth={2.4} className="text-[#FFEAA0] drop-shadow-[0_0_10px_rgba(255,234,160,0.95)]" />
-              </div>
+          {/* 24K Gold Liquid Bubble Dome (Active) */}
+          <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] items-center justify-center ${mounted && (pathname === '/shop' || pathname.startsWith('/product')) ? 'flex' : 'hidden'}`}>
+            <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
+              <LayoutGrid size={24} strokeWidth={2.4} className="text-[#FFEAA0] drop-shadow-[0_0_10px_rgba(255,234,160,0.95)]" />
             </div>
-          ) : (
-            /* Flat Inactive Item */
-            <LayoutGrid size={23} strokeWidth={1.8} className="text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200" />
-          )}
+          </div>
+          {/* Flat Inactive Item */}
+          <LayoutGrid size={23} strokeWidth={1.8} className={`text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200 ${mounted && (pathname === '/shop' || pathname.startsWith('/product')) ? 'hidden' : 'block'}`} />
           <span className={`text-[9.5px] mt-0.5 font-serif uppercase tracking-widest transition-colors ${
-            pathname === '/shop' || pathname.startsWith('/product')
+            mounted && (pathname === '/shop' || pathname.startsWith('/product'))
               ? 'font-black bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#FFEAA0] bg-clip-text text-transparent drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]'
               : 'font-medium text-[#D4C3B3] group-hover:text-[#FFEAA0]'
           }`}>
             Shop
           </span>
-          {(pathname === '/shop' || pathname.startsWith('/product')) && (
+          {mounted && (pathname === '/shop' || pathname.startsWith('/product')) && (
             <span className="w-3.5 h-0.5 rounded-full bg-gradient-to-r from-[#FFDF78] via-[#FFEAA0] to-[#FFDF78] shadow-[0_0_8px_#FFEAA0] mt-0.5 animate-pulse" />
           )}
         </Link>
@@ -497,28 +494,25 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         <Link
           href="/"
           className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
-            pathname === '/' ? '-top-3.5' : 'py-1'
+            mounted && pathname === '/' ? '-top-3.5' : 'py-1'
           }`}
         >
-          {pathname === '/' ? (
-            /* 24K Gold Liquid Bubble Dome (Active) */
-            <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] flex items-center justify-center">
-              <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
-                <Compass size={25} strokeWidth={2.4} className="text-[#FFEAA0] drop-shadow-[0_0_10px_rgba(255,234,160,0.95)]" />
-              </div>
+          {/* 24K Gold Liquid Bubble Dome (Active) */}
+          <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] items-center justify-center ${mounted && pathname === '/' ? 'flex' : 'hidden'}`}>
+            <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
+              <Compass size={25} strokeWidth={2.4} className="text-[#FFEAA0] drop-shadow-[0_0_10px_rgba(255,234,160,0.95)]" />
             </div>
-          ) : (
-            /* Flat Inactive Item */
-            <Compass size={24} strokeWidth={1.8} className="text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200" />
-          )}
+          </div>
+          {/* Flat Inactive Item */}
+          <Compass size={24} strokeWidth={1.8} className={`text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200 ${mounted && pathname === '/' ? 'hidden' : 'block'}`} />
           <span className={`text-[9.5px] mt-0.5 font-serif uppercase tracking-widest transition-colors ${
-            pathname === '/'
+            mounted && pathname === '/'
               ? 'font-black bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#FFEAA0] bg-clip-text text-transparent drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]'
               : 'font-medium text-[#D4C3B3] group-hover:text-[#FFEAA0]'
           }`}>
             Home
           </span>
-          {pathname === '/' && (
+          {mounted && pathname === '/' && (
             <span className="w-4 h-0.5 rounded-full bg-gradient-to-r from-[#FFDF78] via-[#FFEAA0] to-[#FFDF78] shadow-[0_0_8px_#FFEAA0] mt-0.5 animate-pulse" />
           )}
         </Link>
@@ -550,17 +544,14 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? '-top-3.5' : 'py-1'
           }`}
         >
-          {mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? (
-            /* 24K Gold Liquid Bubble Dome (Active) */
-            <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] flex items-center justify-center">
-              <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
-                <Crown size={24} strokeWidth={2.4} className="text-[#FFEAA0] drop-shadow-[0_0_10px_rgba(255,234,160,0.95)]" />
-              </div>
+          {/* 24K Gold Liquid Bubble Dome (Active) */}
+          <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] items-center justify-center ${mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? 'flex' : 'hidden'}`}>
+            <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
+              <Crown size={24} strokeWidth={2.4} className="text-[#FFEAA0] drop-shadow-[0_0_10px_rgba(255,234,160,0.95)]" />
             </div>
-          ) : (
-            /* Flat Inactive Item */
-            <Crown size={23} strokeWidth={1.8} className="text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200" />
-          )}
+          </div>
+          {/* Flat Inactive Item */}
+          <Crown size={23} strokeWidth={1.8} className={`text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200 ${mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? 'hidden' : 'block'}`} />
           <span className={`text-[9.5px] mt-0.5 font-serif uppercase tracking-widest transition-colors ${
             mounted && (pathname.includes('dashboard') || pathname.includes('admin'))
               ? 'font-black bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#FFEAA0] bg-clip-text text-transparent drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]'
