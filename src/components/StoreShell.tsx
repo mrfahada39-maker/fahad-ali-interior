@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { ReactNode, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
@@ -101,7 +101,11 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FCFAF7] text-[#221814]" style={{ backgroundColor: '#FCFAF7' }}>
+    <div
+      suppressHydrationWarning
+      className="min-h-screen bg-[#FCFAF7] text-[#221814]"
+      style={{ backgroundColor: '#FCFAF7' }}
+    >
       {!hideNavbar && <Navbar onSearchOpen={() => setSearchOpen(true)} onAuthOpen={() => setAuthOpen(true)} />}
       {children}
       {showFooter && <Footer />}

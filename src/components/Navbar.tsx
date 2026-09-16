@@ -19,7 +19,8 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname || '/';
   const roleUpper = (session?.user as { role?: string })?.role?.toUpperCase();
   const isAdmin = roleUpper === 'ADMIN' || roleUpper === 'SUPER_ADMIN';
   const [isScrolled, setIsScrolled] = useState(false);
@@ -54,10 +55,11 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   return (
     <>
       {/* ── STICKY EDITORIAL LUXURY HEADER ── */}
-      <header className="fixed top-0 left-0 right-0 z-50 w-full transition-colors duration-500 font-sans">
+      <header suppressHydrationWarning className="fixed top-0 left-0 right-0 z-50 w-full transition-colors duration-500 font-sans">
         
       {/* Main Full-Width Editorial Navbar */}
       <nav 
+        suppressHydrationWarning
         className={`w-full transition-all duration-500 border-b ${
           isSolid 
             ? "bg-[#FCFAF7]/95 backdrop-blur-xl text-[#221814] border-[#E7DDD0] shadow-[0_4px_25px_rgba(44,30,24,0.04)]" 
@@ -445,6 +447,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
       {/* ── 100% FLUSH BOTTOM NAVBAR (HAUTE COUTURE 24K ROYAL GOLD & OBSIDIAN GLASS) ── */}
       <nav 
+        suppressHydrationWarning
         aria-label="Mobile Navigation Bar"
         className="fixed bottom-0 left-0 right-0 w-full z-40 lg:hidden bg-[#0D0704]/96 backdrop-blur-3xl border-t border-[#D4AF37]/50 text-white shadow-[0_-12px_45px_rgba(0,0,0,0.9),0_0_30px_rgba(212,175,55,0.15)] px-1 pt-1.5 pb-2 h-[66px] sm:h-[70px] flex items-center justify-around select-none overflow-visible before:absolute before:inset-x-0 before:top-0 before:h-[1.5px] before:bg-gradient-to-r before:from-transparent before:via-[#FFEAA0] before:to-transparent before:animate-pulse"
       >
