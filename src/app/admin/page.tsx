@@ -8,31 +8,32 @@ import AdminDashboard from '@/components/AdminDashboard';
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [hasAdminCookie, setHasAdminCookie] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Only check the httpOnly admin cookie presence via document.cookie
-    // (localStorage check removed — tokens are httpOnly cookies only for security)
-    const hasToken =
-      typeof window !== 'undefined' &&
-      document.cookie.includes('fai_admin_token=');
-    setHasAdminCookie(hasToken);
-
-    if (status === 'unauthenticated' && !hasToken) {
+    if (status === 'unauthenticated') {
       router.replace('/admin/login?next=/admin');
     } else if (status === 'authenticated') {
       const role = String((session?.user as { role?: string })?.role ?? '').toUpperCase();
-      if (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && !hasToken) {
+      if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
         router.replace('/dashboard');
       }
     }
   }, [status, session, router]);
 
-  if (status === 'loading' && hasAdminCookie === null) {
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
     return null;
   }
 
-  if (status === 'unauthenticated' && !hasAdminCookie) {
+  const role = String((session?.user as { role?: string })?.role ?? '').toUpperCase();
+  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
     return null;
   }
 

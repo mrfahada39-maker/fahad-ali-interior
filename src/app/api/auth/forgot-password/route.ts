@@ -1,11 +1,21 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { getSiteUrl } from '@/lib/utils';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = await rateLimit(`forgot_pw:${ip}`, 'login');
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many password reset requests. Please wait a minute and try again.' },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const email = (body.email || '').trim().toLowerCase();
 

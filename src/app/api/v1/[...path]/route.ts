@@ -456,10 +456,14 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         return NextResponse.json(newAddr);
       }
       if (method === 'DELETE') {
-        const id = req.nextUrl.searchParams.get('id');
-        if (id) {
-          await db.address.deleteMany({ where: { id, ...(user?.id ? { userId: user.id } : {}) } }).catch(() => {});
+        if (!user?.id) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+        const id = req.nextUrl.searchParams.get('id');
+        if (!id) {
+          return NextResponse.json({ error: 'Address ID is required' }, { status: 400 });
+        }
+        await db.address.deleteMany({ where: { id, userId: user.id } }).catch(() => {});
         return NextResponse.json({ success: true });
       }
     }
@@ -520,6 +524,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 2.85 Authentication: Forgot Password
     if (method === 'POST' && (segment === 'auth/forgot-password' || segment === 'v1/auth/forgot-password')) {
+      const rl = await rateLimit(`forgot_pw:${ip}`, 'login');
+      if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many password reset requests. Please wait a minute and try again.' }, { status: 429 });
+      }
+
       const body = await req.json().catch(() => ({}));
       const email = (body.email || '').trim().toLowerCase();
       if (!email || !email.includes('@')) {
@@ -543,8 +552,13 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       return NextResponse.json({ success: true, message: 'Password reset instructions have been sent to your email.' });
     }
 
-    // 2.86 Authentication: Reset Password
+    // 2.86 Authentication: Reset Password (Hardened against Brute-Force OTP)
     if (method === 'POST' && (segment === 'auth/reset-password' || segment === 'v1/auth/reset-password')) {
+      const rl = await rateLimit(`reset_pw:${ip}`, 'register');
+      if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many reset attempts. Please try again later.' }, { status: 429 });
+      }
+
       const body = await req.json().catch(() => ({}));
       const { token, code, email, password } = body;
       if (!password || password.length < 8) {
@@ -560,18 +574,38 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         if (record?.user) user = record.user;
       }
       if (!user && email && code) {
-        const existing = await db.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        const cleanEmail = email.trim().toLowerCase();
+        const existing = await db.user.findUnique({ where: { email: cleanEmail } });
         if (existing) {
+          if (existing.lockedUntil && new Date(existing.lockedUntil) > new Date()) {
+            return NextResponse.json({ error: 'Account temporarily locked due to excessive failed attempts. Please try again later.' }, { status: 423 });
+          }
+
           const record = await db.passwordResetToken.findFirst({
             where: { userId: existing.id, tokenHash: { endsWith: String(code).trim() }, expiresAt: { gt: new Date() } },
           });
-          if (record) user = existing;
+          if (record) {
+            user = existing;
+          } else {
+            const attempts = (existing.loginAttempts || 0) + 1;
+            const shouldLock = attempts >= 5;
+            await db.user.update({
+              where: { id: existing.id },
+              data: {
+                loginAttempts: attempts,
+                lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+              },
+            });
+            if (shouldLock) {
+              await db.passwordResetToken.deleteMany({ where: { userId: existing.id } }).catch(() => {});
+            }
+          }
         }
       }
       if (!user) {
         return NextResponse.json({ error: 'Invalid or expired reset code/link. Please request a new one.' }, { status: 400 });
       }
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, 12);
       await db.user.update({
         where: { id: user.id },
         data: { password: hashedPassword, loginAttempts: 0, lockedUntil: null },
@@ -582,6 +616,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 2.87 Authentication: Verify Email
     if (method === 'POST' && (segment === 'auth/verify-email' || segment === 'v1/auth/verify-email')) {
+      const rl = await rateLimit(`verify_email:${ip}`, 'register');
+      if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many verification attempts. Please wait and try again later.' }, { status: 429 });
+      }
+
       const body = await req.json().catch(() => ({}));
       const { token, code, email } = body;
       let user = null;
@@ -594,12 +633,29 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         if (record?.user) user = record.user;
       }
       if (!user && email && code) {
-        const existing = await db.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        const cleanEmail = email.trim().toLowerCase();
+        const existing = await db.user.findUnique({ where: { email: cleanEmail } });
         if (existing) {
+          if (existing.lockedUntil && new Date(existing.lockedUntil) > new Date()) {
+            return NextResponse.json({ error: 'Account temporarily locked due to failed attempts. Please try again later.' }, { status: 423 });
+          }
+
           const record = await db.emailVerificationToken.findFirst({
             where: { userId: existing.id, tokenHash: { endsWith: String(code).trim() }, expiresAt: { gt: new Date() } },
           });
-          if (record) user = existing;
+          if (record) {
+            user = existing;
+          } else {
+            const attempts = (existing.loginAttempts || 0) + 1;
+            const shouldLock = attempts >= 5;
+            await db.user.update({
+              where: { id: existing.id },
+              data: {
+                loginAttempts: attempts,
+                lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+              },
+            });
+          }
         }
       }
       if (!user) {
@@ -607,7 +663,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }
       await db.user.update({
         where: { id: user.id },
-        data: { emailVerified: new Date() },
+        data: { emailVerified: new Date(), loginAttempts: 0, lockedUntil: null },
       });
       await db.emailVerificationToken.deleteMany({ where: { userId: user.id } }).catch(() => {});
       return NextResponse.json({ success: true, message: 'Your email address has been successfully verified! You can now log in.' });
@@ -615,6 +671,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 2.88 Authentication: Resend Verification
     if (method === 'POST' && (segment === 'auth/resend-verification' || segment === 'v1/auth/resend-verification')) {
+      const rl = await rateLimit(`resend_verify:${ip}`, 'register');
+      if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many verification requests. Please wait a minute and try again.' }, { status: 429 });
+      }
+
       const body = await req.json().catch(() => ({}));
       const email = (body.email || '').trim().toLowerCase();
       if (!email || !email.includes('@')) {
@@ -789,10 +850,40 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         })
       );
 
-      // Secure Server-Side Financial Calculation (Prevents Client-Side Price Tampering)
+      // Secure Server-Side Financial Calculation (Prevents Client-Side Price & Discount Tampering)
       const subtotal = formattedItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
       const gst = 0;
-      const discount = Math.min(subtotal, Math.max(0, parseNum(body.discount, 0)));
+
+      let verifiedDiscount = 0;
+      let appliedCoupon: any = null;
+      const couponCode = (body.couponCode || body.coupon)?.toString()?.trim()?.toUpperCase();
+
+      if (couponCode) {
+        const dbCoupon = await db.coupon.findFirst({
+          where: {
+            code: couponCode,
+            isActive: true,
+            deletedAt: null,
+          },
+        }).catch(() => null);
+
+        if (dbCoupon) {
+          const isExpired = dbCoupon.expiresAt && new Date(dbCoupon.expiresAt) < new Date();
+          const isMaxedOut = dbCoupon.maxUses > 0 && dbCoupon.usedCount >= dbCoupon.maxUses;
+          const meetsMinAmount = subtotal >= Number(dbCoupon.minOrderAmount || 0);
+
+          if (!isExpired && !isMaxedOut && meetsMinAmount) {
+            appliedCoupon = dbCoupon;
+            if (dbCoupon.discountType === 'PERCENTAGE') {
+              verifiedDiscount = Math.round((subtotal * Number(dbCoupon.discount)) / 100);
+            } else {
+              verifiedDiscount = Number(dbCoupon.discount);
+            }
+          }
+        }
+      }
+
+      const discount = Math.min(subtotal, Math.max(0, verifiedDiscount));
       const totalAmount = Math.max(0, subtotal + gst - discount);
 
       const rawMethod = String(body.paymentMethod || 'COD').toUpperCase();
@@ -823,6 +914,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
             shippingProvince,
             shippingNotes,
             paymentMethod: validPaymentMethod,
+            couponCode: appliedCoupon?.code || null,
             subtotal,
             gst,
             discount,
@@ -835,6 +927,14 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           },
           include: { items: true },
         });
+
+        // Track coupon usage atomically if applied
+        if (appliedCoupon?.id) {
+          await tx.coupon.update({
+            where: { id: appliedCoupon.id },
+            data: { usedCount: { increment: 1 } },
+          }).catch(() => null);
+        }
 
         // Record audit trail within the transaction
         await tx.auditLog.create({
@@ -2256,18 +2356,61 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 11. PUT & PATCH /admin/orders
-    if ((method === 'PUT' || method === 'PATCH') && (segment === 'admin/orders' || segment === 'v1/admin/orders')) {
-      const body = await req.json();
+    if ((method === 'PUT' || method === 'PATCH') && (segment === 'admin/orders' || segment === 'v1/admin/orders' || segment.includes('admin/orders'))) {
+      const body = await req.json().catch(() => ({}));
+      if (!body?.id) {
+        return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+      }
+
       const updateData: any = {};
-      if (body.status) updateData.status = body.status;
-      if (body.paymentStatus) updateData.paymentStatus = body.paymentStatus;
+      if (body.status) {
+        const rawStatus = String(body.status).trim().toUpperCase();
+        const validStatuses: Record<string, string> = {
+          PENDING: 'PENDING',
+          PROCESSING: 'PROCESSING',
+          SHIPPED: 'SHIPPED',
+          DELIVERED: 'DELIVERED',
+          CANCELLED: 'CANCELLED',
+          CANCELED: 'CANCELLED',
+        };
+        if (validStatuses[rawStatus]) {
+          updateData.status = validStatuses[rawStatus];
+        }
+      }
+
+      if (body.paymentStatus) {
+        const rawPayment = String(body.paymentStatus).trim().toUpperCase();
+        const validPaymentStatuses: Record<string, string> = {
+          PENDING: 'PENDING',
+          PAID: 'PAID',
+          FAILED: 'FAILED',
+          AWAITING_VERIFICATION: 'AWAITING_VERIFICATION',
+          VERIFICATION: 'AWAITING_VERIFICATION',
+          REFUNDED: 'REFUNDED',
+        };
+        if (validPaymentStatuses[rawPayment]) {
+          updateData.paymentStatus = validPaymentStatuses[rawPayment];
+        }
+      }
+
       if (body.trackingNumber !== undefined) updateData.trackingNumber = body.trackingNumber;
 
-      const updated = await db.order.update({
-        where: { id: body.id },
-        data: updateData,
-      });
-      return NextResponse.json(updated);
+      try {
+        const updated = await db.order.update({
+          where: { id: body.id },
+          data: updateData,
+        });
+        return NextResponse.json({
+          success: true,
+          ...updated,
+          totalAmount: Number(updated.totalAmount),
+          subtotal: Number(updated.subtotal),
+          discount: Number(updated.discount),
+          gst: Number(updated.gst),
+        });
+      } catch (err: any) {
+        return NextResponse.json({ error: err.message || 'Failed to update order' }, { status: 400 });
+      }
     }
 
     // 11.0 GET /public/settings, /v1/public/settings, /settings, /admin/settings
@@ -2343,13 +2486,34 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 12. PUT & DELETE /admin/reviews
-    if (method === 'PUT' && (segment === 'admin/reviews' || segment === 'v1/admin/reviews')) {
-      const body = await req.json();
-      const updated = await db.review.update({
-        where: { id: body.id },
-        data: { status: body.status },
-      });
-      return NextResponse.json(updated);
+    if (method === 'PUT' && (segment === 'admin/reviews' || segment === 'v1/admin/reviews' || segment.includes('admin/reviews'))) {
+      const body = await req.json().catch(() => ({}));
+      if (!body?.id) {
+        return NextResponse.json({ error: 'Review ID is required' }, { status: 400 });
+      }
+
+      const updateData: any = {};
+      if (body.status) {
+        const raw = String(body.status).trim().toUpperCase();
+        const validStatuses: Record<string, string> = {
+          PENDING: 'PENDING',
+          APPROVED: 'APPROVED',
+          REJECTED: 'REJECTED',
+        };
+        if (validStatuses[raw]) {
+          updateData.status = validStatuses[raw];
+        }
+      }
+
+      try {
+        const updated = await db.review.update({
+          where: { id: body.id },
+          data: updateData,
+        });
+        return NextResponse.json({ success: true, ...updated });
+      } catch (err: any) {
+        return NextResponse.json({ error: err.message || 'Failed to update review' }, { status: 400 });
+      }
     }
 
     if (method === 'DELETE' && (segment === 'admin/reviews' || segment === 'v1/admin/reviews')) {

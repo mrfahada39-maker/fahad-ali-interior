@@ -1,11 +1,21 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/email';
 import { getSiteUrl } from '@/lib/utils';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = await rateLimit(`resend_verify:${ip}`, 'register');
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many verification requests. Please wait a minute and try again.' },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const email = (body.email || '').trim().toLowerCase();
 
@@ -17,17 +27,10 @@ export async function POST(req: NextRequest) {
       where: { email },
     });
 
-    if (!user) {
+    if (!user || user.emailVerified) {
       return NextResponse.json({
         success: true,
-        message: 'If an account exists with this email, a verification link has been sent.',
-      });
-    }
-
-    if (user.emailVerified) {
-      return NextResponse.json({
-        success: true,
-        message: 'This email is already verified! You can log in.',
+        message: 'If an unverified account exists with this email, a verification link has been sent.',
       });
     }
 

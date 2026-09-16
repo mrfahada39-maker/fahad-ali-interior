@@ -85,8 +85,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hash new password securely
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash new password securely (12 rounds)
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Update user password and clear reset tokens
     await db.user.update({

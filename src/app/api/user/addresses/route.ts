@@ -55,12 +55,16 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const userId = await getUserId(req);
-    const id = req.nextUrl.searchParams.get('id');
-    if (id) {
-      await db.address.deleteMany({ where: { id, ...(userId ? { userId } : {}) } });
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const id = req.nextUrl.searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'Address ID is required' }, { status: 400 });
+    }
+    await db.address.deleteMany({ where: { id, userId } });
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ error: 'Failed to delete address' }, { status: 500 });
   }
 }

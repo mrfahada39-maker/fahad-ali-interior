@@ -4,11 +4,21 @@ import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { sendVerificationEmail } from '@/lib/email';
 import { getSiteUrl, shouldSkipEmailVerification } from '@/lib/utils';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = await rateLimit(`register:${ip}`, 'register');
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many registration attempts. Please wait a minute and try again.' },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const { name, email, password } = body;
 
