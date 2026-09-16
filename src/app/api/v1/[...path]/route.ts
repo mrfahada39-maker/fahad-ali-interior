@@ -2168,22 +2168,40 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       return NextResponse.json({ data: rows });
     }
 
-    // 9. POST /admin/products
     // 9. POST & PUT /admin/products
     if (method === 'POST' && (segment === 'admin/products' || segment === 'v1/admin/products')) {
       const body = await req.json();
+      if (!body?.name?.trim()) {
+        return NextResponse.json({ error: 'Product name is required' }, { status: 400 });
+      }
+
+      const parseSafePrice = (val: any): number => {
+        if (typeof val === 'number') {
+          if (isNaN(val) || !isFinite(val)) return 0;
+          return Math.min(Math.max(Math.round(val * 100) / 100, 0), 9999999999999.99);
+        }
+        const cleanStr = String(val || '0').replace(/[^0-9.]/g, '');
+        const parsed = parseFloat(cleanStr);
+        if (isNaN(parsed) || !isFinite(parsed)) return 0;
+        return Math.min(Math.max(Math.round(parsed * 100) / 100, 0), 9999999999999.99);
+      };
+
+      const safePrice = parseSafePrice(body.price);
+      const specsStr = typeof body.specs === 'object' && body.specs !== null ? JSON.stringify(body.specs) : (body.specs || null);
+
       const product = await db.product.create({
         data: {
-          name: body.name,
-          description: body.description,
-          price: Number(body.price),
-          category: body.category,
+          name: body.name.trim(),
+          description: body.description || '',
+          price: safePrice,
+          category: body.category || 'Living Room',
           image: body.image || '/images/placeholder.webp',
-          images: body.images || [],
-          material: body.material,
-          dimensions: body.dimensions,
-          stockCount: Number(body.stockCount || 0),
+          images: Array.isArray(body.images) ? body.images : [],
+          material: body.material || null,
+          dimensions: body.dimensions || null,
+          stockCount: Math.max(0, Number(body.stockCount) || 0),
           isPremium: Boolean(body.isPremium),
+          specs: specsStr,
         },
       });
       return NextResponse.json({
@@ -2197,16 +2215,23 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const { id, ...rest } = body;
       if (!id) return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
       const updateData: any = {};
-      if (rest.name !== undefined) updateData.name = rest.name;
+      if (rest.name !== undefined) updateData.name = rest.name.trim();
       if (rest.description !== undefined) updateData.description = rest.description;
-      if (rest.price !== undefined) updateData.price = Number(rest.price);
+      if (rest.price !== undefined) {
+        const cleanStr = String(rest.price || '0').replace(/[^0-9.]/g, '');
+        const parsed = parseFloat(cleanStr);
+        updateData.price = isNaN(parsed) || !isFinite(parsed) ? 0 : Math.min(Math.max(Math.round(parsed * 100) / 100, 0), 9999999999999.99);
+      }
       if (rest.category !== undefined) updateData.category = rest.category;
       if (rest.image !== undefined) updateData.image = rest.image;
-      if (rest.images !== undefined) updateData.images = rest.images;
+      if (rest.images !== undefined) updateData.images = Array.isArray(rest.images) ? rest.images : [];
       if (rest.material !== undefined) updateData.material = rest.material;
       if (rest.dimensions !== undefined) updateData.dimensions = rest.dimensions;
-      if (rest.stockCount !== undefined) updateData.stockCount = Number(rest.stockCount);
+      if (rest.stockCount !== undefined) updateData.stockCount = Math.max(0, Number(rest.stockCount) || 0);
       if (rest.isPremium !== undefined) updateData.isPremium = Boolean(rest.isPremium);
+      if (rest.specs !== undefined) {
+        updateData.specs = typeof rest.specs === 'object' && rest.specs !== null ? JSON.stringify(rest.specs) : (rest.specs || null);
+      }
 
       const product = await db.product.update({
         where: { id },

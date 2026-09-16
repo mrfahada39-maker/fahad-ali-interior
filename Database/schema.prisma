@@ -161,7 +161,7 @@ model Product {
   id            String         @id @default(cuid())
   name          String
   description   String?
-  price         Decimal        @db.Decimal(10, 2)
+  price         Decimal        @db.Decimal(16, 2)
   category      String
   image         String
   material      String?
@@ -194,9 +194,9 @@ model Product {
 model Order {
   id                String          @id @default(cuid())
   userId            String
-  discount          Decimal         @default(0) @db.Decimal(10, 2)
-  gst               Decimal         @db.Decimal(10, 2)
-  totalAmount       Decimal         @db.Decimal(10, 2)
+  discount          Decimal         @default(0) @db.Decimal(16, 2)
+  gst               Decimal         @db.Decimal(16, 2)
+  totalAmount       Decimal         @db.Decimal(16, 2)
   paymentScreenshot String?
   couponCode        String?
   shippingName      String?
@@ -211,7 +211,7 @@ model Order {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   orderFingerprint  String?         @unique
-  subtotal          Decimal         @db.Decimal(10, 2)
+  subtotal          Decimal         @db.Decimal(16, 2)
   status            OrderStatus     @default(PENDING)
   paymentStatus     PaymentStatus   @default(PENDING)
   paymentMethod     PaymentMethod?
@@ -248,7 +248,7 @@ model OrderItem {
   orderId   String
   productId String
   name      String
-  price     Decimal @db.Decimal(10, 2)
+  price     Decimal @db.Decimal(16, 2)
   quantity  Int     @default(1)
   image     String?
   size      String?
@@ -414,8 +414,8 @@ model Newsletter {
 model Coupon {
   id             String       @id @default(cuid())
   code           String       @unique
-  discount       Decimal      @db.Decimal(10, 2)
-  minOrderAmount Decimal      @default(0) @db.Decimal(10, 2)
+  discount       Decimal      @db.Decimal(16, 2)
+  minOrderAmount Decimal      @default(0) @db.Decimal(16, 2)
   maxUses        Int          @default(0)
   usedCount      Int          @default(0)
   expiresAt      DateTime?
