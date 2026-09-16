@@ -1166,7 +1166,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 3.1 GET /public/home-bundle
     if (method === 'GET' && (segment === 'public/home-bundle' || segment === 'v1/public/home-bundle')) {
-      const [products, categories, settings, approvedReviews, completedOrders, uniqueCustomers, allProductsCount] = await Promise.all([
+      const [products, categories, settings, approvedReviews, completedOrders, uniqueCustomers, allProductsCount, productGroups] = await Promise.all([
         db.product.findMany({ where: { deletedAt: null }, take: 12, orderBy: { createdAt: 'desc' } }),
         db.category.findMany({ where: { deletedAt: null }, orderBy: { createdAt: 'asc' } }).catch(() => []),
         db.settings.findFirst().catch(() => null),
@@ -1174,19 +1174,36 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         db.order.count({ where: { deletedAt: null } }).catch(() => 0),
         db.user.count({ where: { deletedAt: null } }).catch(() => 0),
         db.product.count({ where: { deletedAt: null } }).catch(() => 0),
+        db.product.groupBy({
+          by: ['category'],
+          where: { deletedAt: null },
+          _count: { id: true },
+        }).catch(() => []),
       ]);
+
+      const categoryCountMap = new Map<string, number>();
+      for (const group of productGroups) {
+        if (group.category) {
+          categoryCountMap.set(group.category.trim().toLowerCase(), group._count.id);
+        }
+      }
 
       const formattedProducts = products.map((p: any) => ({
         ...p,
         price: Number(p.price),
       }));
 
-      const formattedCategories = categories.map((c: any) => ({
-        name: c.name,
-        count: Number(c.items || 0) || 12,
-        image: c.image || '/images/placeholder.webp',
-        description: c.description || 'Solid Sheesham Wood',
-      }));
+      const formattedCategories = categories.map((c: any) => {
+        const cleanName = (c.name || '').trim().toLowerCase();
+        const liveCount = categoryCountMap.get(cleanName) ?? 0;
+        return {
+          name: c.name,
+          count: liveCount,
+          image: c.image || '/images/placeholder.webp',
+          description: c.description || 'Solid Sheesham Wood',
+          items: liveCount > 0 ? `${liveCount} ${liveCount === 1 ? 'Item' : 'Items'} Available` : 'Collection Available',
+        };
+      });
 
       return NextResponse.json({
         stats: {

@@ -1,4 +1,4 @@
-﻿import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/StoreShell';
 import HomePageInteractive from './HomePageInteractive';
 import { getHomePageData } from '@/lib/home-page-data';
 
@@ -16,7 +16,6 @@ export default async function HomePage() {
           initialBanners={homeData?.banners || []}
           initialCategories={homeData?.categories || []}
           initialReviews={homeData?.reviews || []}
-          initialBlogs={[]}
         />
       </main>
     </StoreShell>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Menu, X, Search, ShoppingBag, User, Home, Armchair, Sparkles, PhoneCall, Bell, LogOut, Compass, Crown, ChevronRight, Heart, LayoutGrid, Phone, UserPlus, Headphones, Facebook, Instagram, Youtube } from 'lucide-react';
@@ -541,13 +541,13 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
         {/* 5. Account */}
         <Link
-          href={session?.user ? (isAdmin ? '/admin' : '/dashboard') : '#'}
-          onClick={session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}
+          href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '#'}
+          onClick={mounted && session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}
           className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
-            pathname.includes('dashboard') || pathname.includes('admin') ? '-top-3.5' : 'py-1'
+            mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? '-top-3.5' : 'py-1'
           }`}
         >
-          {pathname.includes('dashboard') || pathname.includes('admin') ? (
+          {mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? (
             /* 24K Gold Liquid Bubble Dome (Active) */
             <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] flex items-center justify-center">
               <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
@@ -559,13 +559,13 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             <Crown size={23} strokeWidth={1.8} className="text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200" />
           )}
           <span className={`text-[9.5px] mt-0.5 font-serif uppercase tracking-widest transition-colors ${
-            pathname.includes('dashboard') || pathname.includes('admin')
+            mounted && (pathname.includes('dashboard') || pathname.includes('admin'))
               ? 'font-black bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#FFEAA0] bg-clip-text text-transparent drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]'
               : 'font-medium text-[#D4C3B3] group-hover:text-[#FFEAA0]'
           }`}>
-            {session?.user ? 'Account' : 'Login'}
+            {mounted && session?.user ? 'Account' : 'Login'}
           </span>
-          {(pathname.includes('dashboard') || pathname.includes('admin')) && (
+          {mounted && (pathname.includes('dashboard') || pathname.includes('admin')) && (
             <span className="w-3.5 h-0.5 rounded-full bg-gradient-to-r from-[#FFDF78] via-[#FFEAA0] to-[#FFDF78] shadow-[0_0_8px_#FFEAA0] mt-0.5 animate-pulse" />
           )}
         </Link>

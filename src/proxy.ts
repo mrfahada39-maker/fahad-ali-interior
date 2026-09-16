@@ -51,6 +51,7 @@ function buildContentSecurityPolicy(nonce: string, isProduction: boolean, httpsO
     "img-src 'self' data: https: blob: http:",
     "media-src 'self' data: blob: https: http:",
     "font-src 'self' https://fonts.gstatic.com data:",
+    "manifest-src 'self' https: data: blob:",
     "connect-src 'self' https: http: ws: wss: https://vitals.vercel-insights.com https://va.vercel-scripts.com",
     "object-src 'none'",
     "base-uri 'self'",

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -13,13 +13,13 @@ import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
 import TestimonialsSection from '@/components/TestimonialsSection';
 
 const CATEGORIES = [
-  { name: 'Living Room', items: '25 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
-  { name: 'Bedroom', items: '18 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
-  { name: 'Dining Room', items: '16 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
-  { name: 'Coffee Chairs', items: '12 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg' },
-  { name: 'Luxury Showcase', items: '14 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg' },
-  { name: 'Luxury Wardrobes', items: '12 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
-  { name: 'Center Tables', items: '20 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
+  { name: 'Living Room', count: 0, image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
+  { name: 'Bedroom', count: 0, image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
+  { name: 'Dining Room', count: 0, image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
+  { name: 'Coffee Chairs', count: 0, image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg' },
+  { name: 'Luxury Showcase', count: 0, image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg' },
+  { name: 'Luxury Wardrobes', count: 0, image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
+  { name: 'Center Tables', count: 0, image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
 ];
 
 const REVIEWS = [
@@ -65,7 +65,6 @@ interface HomePageInteractiveProps {
   initialBanners?: any[];
   initialCategories?: any[];
   initialReviews?: any[];
-  initialBlogs?: any[];
 }
 
 export default function HomePageInteractive({
@@ -275,7 +274,7 @@ export default function HomePageInteractive({
                     loading={i < 2 ? 'eager' : 'lazy'}
                     decoding="async"
                     style={{ aspectRatio: '5/4' }}
-                    className="gsap-cat-img w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                    className="gsap-cat-img w-full h-full object-cover aspect-[5/4] transition-transform duration-500 group-hover:scale-105" 
                   />
                 </div>
 
@@ -295,7 +294,9 @@ export default function HomePageInteractive({
                       {cat.name}
                     </h3>
                     <span className="gsap-cat-subtitle text-[10px] uppercase tracking-widest text-[#E6DCCF] font-semibold opacity-90 block">
-                      {cat.items || `${cat.count || 0} Items Available`}
+                      {typeof cat.count === 'number'
+                        ? (cat.count > 0 ? `${cat.count} ${cat.count === 1 ? 'Item' : 'Items'} Available` : 'Collection Available')
+                        : (cat.items || `${cat.count || 0} Items Available`)}
                     </span>
                   </div>
                   <div className="gsap-cat-btn w-9 h-9 rounded-xl border border-amber-300/80 flex items-center justify-center bg-[#FAF5EE] text-[#8C6239] group-hover:bg-gradient-to-br group-hover:from-[#B88E4B] group-hover:to-[#996515] group-hover:text-white transition-all duration-300 shadow-[0_3px_10px_rgba(184,142,75,0.25)]">

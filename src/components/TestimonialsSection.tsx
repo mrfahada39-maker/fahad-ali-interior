@@ -240,7 +240,7 @@ export default function TestimonialsSection() {
                     loading="lazy"
                     decoding="async"
                     style={{ aspectRatio: '4/3' }}
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-cover aspect-[4/3]" 
                   />
 
                   {/* Floating Rating Pill with Shining Amber Glow */}
@@ -281,7 +281,7 @@ export default function TestimonialsSection() {
                       loading="lazy"
                       decoding="async"
                       style={{ aspectRatio: '1/1' }}
-                      className="object-cover w-full h-full" 
+                      className="object-cover w-full h-full aspect-square" 
                       onError={() => setImgErrors(prev => ({ ...prev, [currentItem.id]: true }))}
                     />
                   </div>
@@ -497,7 +497,7 @@ export default function TestimonialsSection() {
                                   loading="lazy"
                                   decoding="async"
                                   style={{ aspectRatio: '1/1' }}
-                                  className="object-cover w-full h-full" 
+                                  className="object-cover w-full h-full aspect-square" 
                                   onError={() => setImgErrors(prev => ({ ...prev, [item.id]: true }))}
                                 />
                               </div>
@@ -533,7 +533,7 @@ export default function TestimonialsSection() {
                         loading="lazy"
                         decoding="async"
                         style={{ aspectRatio: '4/3' }}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108" 
+                        className="w-full h-full object-cover aspect-[4/3] transition-transform duration-700 group-hover:scale-108" 
                       />
 
                       {/* Smooth Left Gradient Blend that seamlessly fades into the left cream side */}

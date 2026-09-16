@@ -116,7 +116,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             loading="lazy"
             decoding="async"
             style={{ aspectRatio: '4/3' }}
-            className="object-cover transition-transform duration-700 group-hover:scale-106"
+            className="object-cover transition-transform duration-700 group-hover:scale-106 aspect-[4/3]"
             sizes="(max-width: 640px) 100vw, 224px"
             onError={() => setImgError(true)}
           />
@@ -209,7 +209,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             loading="lazy"
             decoding="async"
             style={{ aspectRatio: '4/3' }}
-            className="object-cover transition-transform duration-700 group-hover:scale-108"
+            className="object-cover transition-transform duration-700 group-hover:scale-108 aspect-[4/3]"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             onError={() => setImgError(true)}
           />

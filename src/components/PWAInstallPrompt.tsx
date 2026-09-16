@@ -18,11 +18,15 @@ export default function PWAInstallPrompt() {
 
   useEffect(() => {
     // Don't show if already dismissed in last 7 days
-    const dismissed = localStorage.getItem(DISMISSED_KEY);
-    if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
+    try {
+      const dismissed = localStorage.getItem(DISMISSED_KEY);
+      if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
+    } catch {}
 
     // Check if already installed (standalone mode)
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    try {
+      if (window.matchMedia('(display-mode: standalone)').matches) return;
+    } catch {}
 
     // iOS detection — Safari doesn't support beforeinstallprompt
     const ios =
@@ -36,11 +40,11 @@ export default function PWAInstallPrompt() {
       return () => clearTimeout(t);
     }
 
-    // Chrome/Edge/Android — listen for install prompt
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setTimeout(() => setShow(true), 3000);
+      // Wait 4s before showing prompt so user sees the page first
+      setTimeout(() => setShow(true), 4000);
     };
 
     window.addEventListener('beforeinstallprompt', handler);
@@ -49,7 +53,7 @@ export default function PWAInstallPrompt() {
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
+    deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       setShow(false);
@@ -59,7 +63,9 @@ export default function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShow(false);
-    localStorage.setItem(DISMISSED_KEY, Date.now().toString());
+    try {
+      localStorage.setItem(DISMISSED_KEY, Date.now().toString());
+    } catch {}
   };
 
   if (!show) return null;

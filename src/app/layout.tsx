@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter, Great_Vibes } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
@@ -142,11 +142,13 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <JsonLd data={organizationJsonLd} />
+      </head>
       <body
         suppressHydrationWarning
         className={`${playfair.variable} ${inter.variable} ${greatVibes.variable} antialiased bg-theme-bg text-theme-dark`}
       >
-        <JsonLd data={organizationJsonLd} />
         <Providers initialSettings={settings}>{children}</Providers>
         {process.env.NODE_ENV === 'production' && <SpeedInsights />}
       </body>

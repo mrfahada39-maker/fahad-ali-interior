@@ -1,7 +1,7 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, useState, useEffect, useRef } from 'react';
 import { useSiteSettingsStore, useClientCacheStore, type SiteSettings } from '@/store';
 import TelemetryTracker from '@/components/TelemetryTracker';
 
@@ -15,10 +15,15 @@ interface ProvidersProps {
 }
 
 export default function Providers({ children, initialSettings }: ProvidersProps) {
+  const [mounted, setMounted] = useState(false);
   const setSiteSettings = useSiteSettingsStore((s) => s.setSettings);
   const settings = useSiteSettingsStore((s) => s.settings);
   const setCachedProducts = useClientCacheStore((s) => s.setProducts);
   const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (initialSettings && !hasInitialized.current) {
@@ -121,12 +126,14 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
     <SessionProvider>
       <TelemetryTracker />
       <NetworkWatcher />
-      <Toaster
-        position="top-right"
-        closeButton
-        richColors={false}
-        duration={3500}
-      />
+      {mounted && (
+        <Toaster
+          position="top-right"
+          closeButton
+          richColors={false}
+          duration={3500}
+        />
+      )}
       {children}
     </SessionProvider>
   );

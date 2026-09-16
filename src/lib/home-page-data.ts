@@ -1,4 +1,4 @@
-﻿import { unstable_cache } from 'next/cache';
+import { unstable_cache } from 'next/cache';
 import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
 
@@ -89,7 +89,7 @@ const empty: HomePageData = {
 export const getHomePageData = unstable_cache(
   async (): Promise<HomePageData> => {
     try {
-      const [products, categories, settings, banners] = await Promise.all([
+      const [products, categories, settings, banners, productGroups] = await Promise.all([
         db.product.findMany({
           where: { deletedAt: null },
           select: {
@@ -110,6 +110,7 @@ export const getHomePageData = unstable_cache(
         db.category.findMany({
           where: { deletedAt: null },
           select: {
+            id: true,
             name: true,
             description: true,
             image: true,
@@ -145,19 +146,36 @@ export const getHomePageData = unstable_cache(
           },
           orderBy: { order: 'asc' },
         }).catch(() => []),
+        db.product.groupBy({
+          by: ['category'],
+          where: { deletedAt: null },
+          _count: { id: true },
+        }).catch(() => []),
       ]);
+
+      const categoryCountMap = new Map<string, number>();
+      for (const group of productGroups) {
+        if (group.category) {
+          categoryCountMap.set(group.category.trim().toLowerCase(), group._count.id);
+        }
+      }
 
       const formattedProducts = products.map((p: any) => ({
         ...p,
         price: Number(p.price),
       })) as unknown as StorefrontProduct[];
 
-      const formattedCategories = categories.map((c: any) => ({
-        name: c.name,
-        count: Number(c.items || 0) || 12,
-        image: c.image || '/images/placeholder.webp',
-        description: c.description || 'Solid Sheesham Wood',
-      }));
+      const formattedCategories = categories.map((c: any) => {
+        const cleanName = (c.name || '').trim().toLowerCase();
+        const liveCount = categoryCountMap.get(cleanName) ?? 0;
+        return {
+          name: c.name,
+          count: liveCount,
+          image: c.image || '/images/placeholder.webp',
+          description: c.description || 'Solid Sheesham Wood',
+          items: liveCount > 0 ? `${liveCount} ${liveCount === 1 ? 'Item' : 'Items'} Available` : 'Collection Available',
+        };
+      });
 
       return {
         stats: {

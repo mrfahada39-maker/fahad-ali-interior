@@ -399,11 +399,6 @@ model Settings {
   themeDarkColor   String?  @default("#1A1A1A")
   themeMutedColor  String?  @default("#8A8682")
   themeAccentColor String?  @default("#2C251F")
-  visualizerHeading String? @default("Visualize in your space with 3D")
-  visualizerSubheading String? @default("Try our 3D live room feature and see how our furniture looks in your space before you buy.")
-  visualizerModelUrl  String? @default("https://modelviewer.dev/shared-assets/models/Astronaut.glb")
-  visualizerPrice     String? @default("$1,499")
-  visualizerTitle     String? @default("Premium Sofa")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

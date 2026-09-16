@@ -1,4 +1,4 @@
-﻿export class SiteKnowledgeEngine {
+export class SiteKnowledgeEngine {
   static getFullSiteKnowledge(): string {
     return `
 ==================================================
@@ -6,7 +6,7 @@ FAHAD ALI INTERIOR — COMPLETE WEBSITE & SYSTEM SITEMAP
 ==================================================
 
 1. WEBSITE PAGES & NAVIGATION ROUTES:
-- Home Page [/]: Luxury Hero Slider, Featured Sheesham Collections, Best Sellers, Room Visualizer preview.
+- Home Page [/]: Luxury Hero Slider, Featured Sheesham Collections, Best Sellers, Artisanal Craftsmanship.
 - Shop & Catalog [/shop]: Filter products by category, wood finish, or design specification. Total live catalog items.
 - Categories [/shop/categories]:
   1. Living Room (Sofas, Sets, Coffee Tables)
