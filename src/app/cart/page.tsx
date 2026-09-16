@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
@@ -136,6 +136,8 @@ export default function CartPage() {
                   ) : (
                     <div className="flex relative z-10">
                       <input
+                        id="cart-coupon-input"
+                        name="couponCode"
                         type="text"
                         placeholder="Enter coupon code"
                         value={coupon}

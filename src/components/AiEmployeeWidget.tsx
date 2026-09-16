@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '@/store';
 import { VoiceAiModal } from './VoiceAiModal';
+import { resolveImageUrl } from '@/lib/images';
 
 interface Message {
   id: string;
@@ -391,8 +392,10 @@ export function AiEmployeeWidget() {
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="text-[10px] text-stone-600 font-bold block mb-1">Length (in)</label>
+                  <label htmlFor="ai-custom-length" className="text-[10px] text-stone-600 font-bold block mb-1">Length (in)</label>
                   <input
+                    id="ai-custom-length"
+                    name="customLength"
                     type="number"
                     value={customLength}
                     onChange={(e) => setCustomLength(e.target.value)}
@@ -400,8 +403,10 @@ export function AiEmployeeWidget() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-stone-600 font-bold block mb-1">Width (in)</label>
+                  <label htmlFor="ai-custom-width" className="text-[10px] text-stone-600 font-bold block mb-1">Width (in)</label>
                   <input
+                    id="ai-custom-width"
+                    name="customWidth"
                     type="number"
                     value={customWidth}
                     onChange={(e) => setCustomWidth(e.target.value)}
@@ -409,8 +414,10 @@ export function AiEmployeeWidget() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-stone-600 font-bold block mb-1">Wood Finish</label>
+                  <label htmlFor="ai-custom-stain" className="text-[10px] text-stone-600 font-bold block mb-1">Wood Finish</label>
                   <select
+                    id="ai-custom-stain"
+                    name="customStain"
                     value={customStain}
                     onChange={(e) => setCustomStain(e.target.value)}
                     className="w-full px-1.5 py-1 bg-white border border-[#E5DDD0] rounded-lg text-[10px] font-bold text-[#2C1810]"
@@ -516,7 +523,7 @@ export function AiEmployeeWidget() {
                       {m.products.map((p: any) => (
                         <div key={p.id} className="p-2.5 rounded-xl bg-white border border-[#E5DDD0] hover:border-[#8A5A2B] flex items-center justify-between gap-3 shadow-sm transition-all">
                           <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-[#FAF7F2] border border-[#EAE2D5]">
-                            <Image src={p.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80'} alt={p.name} fill className="object-cover" />
+                            <Image src={resolveImageUrl(p.image, p.category, 400)} alt={p.name} fill className="object-cover" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <h5 className="font-serif font-bold text-[#2C1810] truncate text-xs">{p.name}</h5>
@@ -598,6 +605,8 @@ export function AiEmployeeWidget() {
             <div className="flex items-center gap-2">
               {/* Hidden File Input for Camera */}
               <input
+                id="ai-camera-upload"
+                name="cameraPhoto"
                 ref={cameraInputRef}
                 type="file"
                 accept="image/*"
@@ -626,6 +635,8 @@ export function AiEmployeeWidget() {
               </button>
 
               <input
+                id="ai-chat-input"
+                name="chatMessage"
                 type="text"
                 placeholder={isListeningMic ? "Listening..." : "Ask Executive AI Employee..."}
                 value={inputMessage}

@@ -1967,6 +1967,8 @@ export default function UserDashboard() {
 
                 <div className="flex items-center gap-2 flex-wrap">
                   <select
+                    id="wishlist-category-filter"
+                    name="categoryFilter"
                     value={wishlistCategoryFilter}
                     onChange={(e) => setWishlistCategoryFilter(e.target.value)}
                     className="h-9 px-3 rounded-xl border border-[#E7DDD0] bg-white text-xs font-bold text-[#1F1612] cursor-pointer shadow-2xs focus:ring-1 focus:ring-[#B88E4B]"
@@ -2341,8 +2343,10 @@ export default function UserDashboard() {
                   <h3 className="font-serif font-black text-sm text-[#1F1612]">Craft a New Review</h3>
                   
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#7A6354]">Select Furniture Piece</label>
+                    <label htmlFor="review-product-select" className="text-xs font-bold text-[#7A6354]">Select Furniture Piece</label>
                     <select
+                      id="review-product-select"
+                      name="productId"
                       value={reviewForm.productId}
                       onChange={(e) => setReviewForm({ ...reviewForm, productId: e.target.value })}
                       className="w-full h-9 px-3 rounded-xl border border-[#E7DDD0] bg-[#FAF5EE] text-xs font-medium"
@@ -2518,10 +2522,12 @@ export default function UserDashboard() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+                      <label htmlFor="user-address-city" className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                         <MapPin size={12} className="text-[#B88E4B]" /> City
                       </label>
                       <select
+                        id="user-address-city"
+                        name="city"
                         value={addrForm.city}
                         onChange={(e) => setAddrForm({ ...addrForm, city: e.target.value })}
                         className="w-full h-9.5 px-3 rounded-xl border border-[#E7DDD0] bg-[#FAF5EE]/40 text-xs font-bold text-[#1F1612] focus:ring-1 focus:ring-[#B88E4B]"
@@ -2542,10 +2548,12 @@ export default function UserDashboard() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+                      <label htmlFor="user-address-province" className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                         <ShieldCheck size={12} className="text-[#B88E4B]" /> Province / State
                       </label>
                       <select
+                        id="user-address-province"
+                        name="province"
                         value={addrForm.province}
                         onChange={(e) => setAddrForm({ ...addrForm, province: e.target.value })}
                         className="w-full h-9.5 px-3 rounded-xl border border-[#E7DDD0] bg-[#FAF5EE]/40 text-xs font-bold text-[#1F1612] focus:ring-1 focus:ring-[#B88E4B]"

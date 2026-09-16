@@ -183,6 +183,8 @@ export default function OrdersPageClient() {
           <div className="relative w-full md:w-72">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8C6239]" />
             <input
+              id="orders-search-input"
+              name="orderSearch"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

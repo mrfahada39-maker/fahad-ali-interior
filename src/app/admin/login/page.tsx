@@ -81,12 +81,15 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1.5">
+              <label htmlFor="admin-email" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1.5">
                 Admin Email
               </label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
                 <input
+                  id="admin-email"
+                  name="email"
+                  autoComplete="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -98,12 +101,15 @@ export default function AdminLoginPage() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1.5">
+              <label htmlFor="admin-password" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1.5">
                 Master Passphrase
               </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
                 <input
+                  id="admin-password"
+                  name="password"
+                  autoComplete="current-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

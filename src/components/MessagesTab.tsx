@@ -326,6 +326,8 @@ export default function MessagesTab({
               <div className="relative mt-2.5 mb-2 shrink-0">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                 <input
+                  id="admin-messages-search"
+                  name="messageSearch"
                   placeholder="Search client or message..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -578,6 +580,8 @@ export default function MessagesTab({
               <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-[#E7DDD0] focus-within:border-[#B88E4B] focus-within:ring-2 focus-within:ring-[#B88E4B]/20 transition-all shadow-xs">
                 <VoiceNoteRecorder onSendVoiceNote={(audioUrl, dur) => onSendAdminVoiceNote?.(activeThread?.id, audioUrl, dur)} />
                 <input
+                  id="admin-reply-input"
+                  name="replyMessage"
                   value={replyDrafts[activeThread?.id] || ''}
                   onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [activeThread?.id]: e.target.value }))}
                   onKeyDown={(e) => {

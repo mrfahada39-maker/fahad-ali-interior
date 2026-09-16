@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo } from 'react';
@@ -152,6 +152,8 @@ export default function FAQPage() {
           <div className="relative flex items-center">
             <Search className="absolute left-4.5 text-[#8C6239] pointer-events-none" size={20} />
             <input
+              id="faq-search-input"
+              name="faqSearch"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

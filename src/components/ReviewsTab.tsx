@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -248,6 +248,8 @@ export default function ReviewsTab({
         <div className="relative min-w-[240px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
+            id="admin-reviews-search"
+            name="reviewSearch"
             placeholder="Search by client or keyword..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

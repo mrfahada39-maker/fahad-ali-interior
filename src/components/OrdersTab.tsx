@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -301,6 +301,8 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
         <div className="w-full lg:w-80 relative shrink-0">
           <Search size={15} className="text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
+            id="admin-orders-search"
+            name="orderSearch"
             placeholder="Search Order ID, Client, Email, Phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

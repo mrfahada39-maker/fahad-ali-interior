@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -1749,6 +1749,8 @@ export default function Checkout() {
                       </div>
                       <div className="flex gap-2">
                         <input
+                          id="checkout-coupon-code"
+                          name="couponCode"
                           type="text"
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
@@ -2713,10 +2715,12 @@ export default function Checkout() {
                                 {/* Search Bar */}
                                 <div className="p-1.5 sticky top-0 bg-white z-10 border-b border-stone-100">
                                   <input
+                                    id="checkout-bank-search"
+                                    name="bankSearch"
                                     type="text"
                                     value={bankSearchQuery}
                                     onChange={(e) => setBankSearchQuery(e.target.value)}
-                                    placeholder="🔍 Search bank (Meezan, HBL, UBL, ABL...)"
+                                    placeholder="🔍  Search bank (Meezan, HBL, UBL, ABL...)"
                                     className="w-full bg-[#FAF5EE] border border-[#E2D9CD] focus:border-[#B88E4B] rounded-lg px-2.5 py-1 text-xs font-medium text-[#1F1612] outline-none"
                                     onClick={(e) => e.stopPropagation()}
                                   />
@@ -2786,10 +2790,13 @@ export default function Checkout() {
 
                           {/* 3. Card Number Input */}
                           <div>
-                            <label className="block text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
+                            <label htmlFor="checkout-card-number" className="block text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
                               Card Number <span className="text-amber-700">*</span>
                             </label>
                             <input
+                              id="checkout-card-number"
+                              name="cardNumber"
+                              autoComplete="cc-number"
                               type="text"
                               value={cardDetails.number}
                               onChange={handleCardNumberChange}
@@ -2802,10 +2809,13 @@ export default function Checkout() {
                           {/* 4. Expiry & CVV */}
                           <div className="grid grid-cols-2 gap-2.5">
                             <div>
-                              <label className="block text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
+                              <label htmlFor="checkout-card-expiry" className="block text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
                                 Expiry Date <span className="text-amber-700">*</span>
                               </label>
                               <input
+                                id="checkout-card-expiry"
+                                name="cardExpiry"
+                                autoComplete="cc-exp"
                                 type="text"
                                 value={cardDetails.expiry}
                                 onChange={handleExpiryChange}
@@ -2815,10 +2825,13 @@ export default function Checkout() {
                               />
                             </div>
                             <div>
-                              <label className="block text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
+                              <label htmlFor="checkout-card-cvv" className="block text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
                                 CVV Code <span className="text-amber-700">*</span>
                               </label>
                               <input
+                                id="checkout-card-cvv"
+                                name="cardCvv"
+                                autoComplete="cc-csc"
                                 type="password"
                                 value={cardDetails.cvv}
                                 onFocus={() => setIsCardFlipped(true)}
@@ -2932,10 +2945,12 @@ export default function Checkout() {
                         </div>
 
                         <div className="bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] rounded-2xl p-4 space-y-2 shadow-2xs">
-                          <label className="block text-[11px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
+                          <label htmlFor="checkout-transaction-id" className="block text-[11px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
                             Transaction Reference ID (TID) / Sender Account
                           </label>
                           <input
+                            id="checkout-transaction-id"
+                            name="transactionId"
                             type="text"
                             value={digitalPaymentDetails.transactionId}
                             onChange={(e) => setDigitalPaymentDetails((p) => ({ ...p, transactionId: e.target.value }))}

@@ -119,10 +119,13 @@ export default function ContactPageClient() {
                 {/* Full Name & Phone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
+                    <label htmlFor="contact-name" className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
                       Your Name *
                     </label>
                     <input
+                      id="contact-name"
+                      name="name"
+                      autoComplete="name"
                       required
                       type="text"
                       value={formData.name}
@@ -133,10 +136,13 @@ export default function ContactPageClient() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
+                    <label htmlFor="contact-phone" className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
                       WhatsApp / Phone *
                     </label>
                     <input
+                      id="contact-phone"
+                      name="phone"
+                      autoComplete="tel"
                       required
                       type="tel"
                       value={formData.phone}
@@ -150,10 +156,13 @@ export default function ContactPageClient() {
                 {/* Email & Inquiry Type */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
+                    <label htmlFor="contact-email" className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
                       Email Address (Optional)
                     </label>
                     <input
+                      id="contact-email"
+                      name="email"
+                      autoComplete="email"
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -163,10 +172,12 @@ export default function ContactPageClient() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
+                    <label htmlFor="contact-project-type" className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
                       Inquiry Subject
                     </label>
                     <select
+                      id="contact-project-type"
+                      name="projectType"
                       value={formData.projectType}
                       onChange={(e) => setFormData({ ...formData, projectType: e.target.value })}
                       className="w-full h-11 px-3.5 rounded-xl bg-white border border-amber-300/60 focus:border-[#B88E4B] text-[#221814] font-medium text-xs sm:text-sm outline-none transition-colors cursor-pointer shadow-2xs"
@@ -183,10 +194,12 @@ export default function ContactPageClient() {
 
                 {/* Message Box */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
+                  <label htmlFor="contact-message" className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wider">
                     Your Message / Custom Details
                   </label>
                   <textarea
+                    id="contact-message"
+                    name="message"
                     rows={3}
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}

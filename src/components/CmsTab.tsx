@@ -422,6 +422,8 @@ export default function CmsTab() {
           <div className="relative min-w-[260px]">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
+              id="admin-cms-category-search"
+              name="categorySearch"
               placeholder="Search showroom collections..."
               value={categorySearchQuery}
               onChange={(e) => setCategorySearchQuery(e.target.value)}

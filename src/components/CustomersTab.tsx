@@ -387,6 +387,8 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
         <div className="w-full lg:w-80 relative shrink-0">
           <Search size={15} className="text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
+            id="admin-customers-search"
+            name="customerSearch"
             placeholder="Search by Name, Email, Phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}

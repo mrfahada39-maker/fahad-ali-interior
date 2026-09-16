@@ -137,6 +137,8 @@ export default function CloudinaryImageUpload({
             </>
           )}
           <input
+            id="cloudinary-upload-input"
+            name="cloudinaryUpload"
             ref={inputRef}
             type="file"
             accept={accept}
@@ -244,6 +246,8 @@ export default function CloudinaryImageUpload({
 
         {/* Hidden Native Input */}
         <input
+          id="cloudinary-native-upload-input"
+          name="cloudinaryNativeUpload"
           ref={inputRef}
           type="file"
           accept={accept}

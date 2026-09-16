@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -249,6 +249,8 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
         <div className="relative min-w-[260px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
+            id="admin-inquiries-search"
+            name="inquirySearch"
             placeholder="Search by Room, Client, or Budget..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

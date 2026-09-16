@@ -151,6 +151,9 @@ export default function VoiceNotePlayer({ src, duration: initialDuration, isMe =
 
         {/* Scrubber Input */}
         <input
+          id="voice-note-scrubber"
+          name="voiceNoteScrubber"
+          aria-label="Voice note playback progress"
           type="range"
           min="0"
           max={totalDuration || 1}
