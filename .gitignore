@@ -1,24 +1,5 @@
+# Dependencies
 node_modules/
-.env
-.env.local
-.env.*.local
-.next/
-dist/
-build/
-coverage/
-tsconfig.tsbuildinfo
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.DS_Store
-.idea/
-.vscode/
-*.log
-coverage/
-public/test-results/# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -27,27 +8,16 @@ node_modules
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
-/.next/
+# Next.js Build Outputs & Caches
+.next/
 /out/
+dist/
+build/
 
-# production
-/build
+# Vercel
+.vercel/
 
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files
+# Environment Files
 .env
 .env.local
 .env.*.local
@@ -59,36 +29,48 @@ yarn-error.log*
 .env.rotated
 .env.temp
 .env.protected
+/skills/.env
 
-# vercel
-.vercel
-
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-local-*
-.claude
-.z-ai-config
+# Logs & Debugging
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 *.log
 dev.log
 dev.out.log
-test
-prompt
-
 server.log
-.lighthouseci/
-playwright-report/
-test-results/
+
+# Test Reports, Artifacts & Temporary Files
 coverage/
+test-results/
+playwright-report/
+public/test-results/
+.lighthouseci/
 NEXTJS_ECOMMERCE_TEST_REPORT.html
-# Skills directory
-/skills/.env
-
-# Cursor workspace configurations
-.cursor/
-
-
-.vercel
 *.pdf
 scripts/generate-pdf-report.mjs
+
+# Temporary Markdown Reports & Dumps
+*.md.bak
+*.tmp.md
+walkthrough.md
+implementation_plan.md
+
+# TypeScript & Build Cache
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+*.pem
+.idea/
+.vscode/
+.cursor/
+.claude/
+.z-ai-config
+local-*
+test/
+prompt/
