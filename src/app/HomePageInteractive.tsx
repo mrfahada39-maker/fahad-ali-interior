@@ -253,7 +253,7 @@ export default function HomePageInteractive({
         </div>
 
         {/* Compact Grid Gap */}
-        <div className="gsap-cat-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="gsap-cat-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3.5 sm:gap-4">
           {categoriesList.map((cat, i) => (
             <div
               key={cat.name || i}
