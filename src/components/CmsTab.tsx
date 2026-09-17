@@ -162,27 +162,30 @@ export default function CmsTab() {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= categories.length) return;
 
-    const currentCat = categories[index];
-    const targetCat = categories[targetIdx];
+    // Create reordered clone
+    const reordered = [...categories];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(targetIdx, 0, moved);
 
-    const currentOrder = currentCat.order || index;
-    const targetOrder = targetCat.order || targetIdx;
+    // Optimistically update UI
+    setCategories(reordered);
 
     try {
-      await apiFetch('/api/admin/categories', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...currentCat, order: targetOrder }),
-      });
-      await apiFetch('/api/admin/categories', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...targetCat, order: currentOrder }),
-      });
+      // Save updated sequential orders (1-based index) for all items
+      await Promise.all(
+        reordered.map((cat, idx) =>
+          apiFetch('/api/admin/categories', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: cat.id, order: idx + 1 }),
+          })
+        )
+      );
       toast.success('Collection sequence updated ✓');
       loadCategories();
     } catch {
       toast.error('Failed to reorder collections');
+      loadCategories();
     }
   };
 

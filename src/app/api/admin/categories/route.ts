@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import crypto from 'crypto';
@@ -11,14 +12,24 @@ interface SessionUser {
   role?: string;
 }
 
+function invalidateStorefrontCache() {
+  try {
+    revalidatePath('/', 'layout');
+    revalidatePath('/shop', 'layout');
+  } catch {
+    // ignore in environments without revalidation context
+  }
+}
+
 const fallbackCategories = [
   { id: 'cat_living', name: 'Living Room', description: 'Solid Sheesham luxury sofas, chairs and cabinets', order: 1 },
   { id: 'cat_bedroom', name: 'Bedroom', description: 'Artisanal beds, wardrobes and side tables', order: 2 },
   { id: 'cat_dining', name: 'Dining Room', description: 'Handcrafted dining sets and buffets', order: 3 },
   { id: 'cat_coffee', name: 'Coffee Chairs', description: 'Premium accent and coffee chairs', order: 4 },
-  { id: 'cat_showcase', name: 'Luxury Showcase', description: 'Exquisite consoles and display units', order: 5 },
-  { id: 'cat_wardrobe', name: 'Luxury Wardrobes', description: 'Custom solid wood wardrobes', order: 6 },
-  { id: 'cat_center', name: 'Center Tables', description: 'Luxury center and nesting tables', order: 7 },
+  { id: 'cat_fahad_ali', name: 'FAHAD ALI', description: 'ASSLAAM ALIKUM', order: 5 },
+  { id: 'cat_center', name: 'Center tables', description: 'Luxury center and nesting tables', order: 6 },
+  { id: 'cat_showcase', name: 'Luxury Showcase', description: 'Exquisite consoles and display units', order: 7 },
+  { id: 'cat_wardrobe', name: 'Luxury Wardrobes', description: 'Custom solid wood wardrobes', order: 8 },
 ];
 
 async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser | null> {
@@ -153,6 +164,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    invalidateStorefrontCache();
     return NextResponse.json({ success: true, data: category, category });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to create category' }, { status: 500 });
@@ -196,6 +208,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Category ID or name is required' }, { status: 400 });
     }
 
+    invalidateStorefrontCache();
     return NextResponse.json({ success: true, data: updated, category: updated });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to update category' }, { status: 500 });
@@ -227,6 +240,7 @@ export async function DELETE(req: NextRequest) {
       await db.category.delete({ where: { id } });
     });
 
+    invalidateStorefrontCache();
     return NextResponse.json({ success: true, deletedId: id });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to delete category' }, { status: 500 });

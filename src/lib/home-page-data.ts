@@ -118,7 +118,7 @@ export const getHomePageData = unstable_cache(
             icon: true,
             isPromo: true,
           },
-          orderBy: { order: 'asc' },
+          orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
         }).catch(() => []),
         db.settings.findFirst({
           select: {
@@ -168,12 +168,15 @@ export const getHomePageData = unstable_cache(
       const formattedCategories = categories.map((c: any) => {
         const cleanName = (c.name || '').trim().toLowerCase();
         const liveCount = categoryCountMap.get(cleanName) ?? 0;
+        const customItems = (c.items || '').trim();
         return {
-          name: c.name,
+          name: (c.name || '').trim(),
           count: liveCount,
           image: c.image || '/images/placeholder.webp',
           description: c.description || 'Solid Sheesham Wood',
-          items: liveCount > 0 ? `${liveCount} ${liveCount === 1 ? 'Item' : 'Items'} Available` : 'Collection Available',
+          items: liveCount > 0 
+            ? `${liveCount} ${liveCount === 1 ? 'Item' : 'Items'} Available` 
+            : (customItems || 'Collection Available'),
         };
       });
 
@@ -186,9 +189,14 @@ export const getHomePageData = unstable_cache(
         },
         products: formattedProducts,
         categories: formattedCategories.length > 0 ? formattedCategories : [
-          { name: 'Living Room', count: 25, image: 'https://images.unsplash.com/photo-1583847268964-b28ce8f31586?auto=format&fit=crop&w=800&q=80', description: 'Solid Sheesham' },
-          { name: 'Bedroom', count: 18, image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80', description: 'Solid Sheesham' },
-          { name: 'Dining Room', count: 16, image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80', description: 'Solid Sheesham' },
+          { name: 'Living Room', count: 25, items: '25 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg', description: 'Solid Sheesham' },
+          { name: 'Bedroom', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg', description: 'Solid Sheesham' },
+          { name: 'Dining Room', count: 15, items: '15 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg', description: 'Solid Sheesham' },
+          { name: 'Coffee Chairs', count: 20, items: '20 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg', description: 'Solid Sheesham' },
+          { name: 'FAHAD ALI', count: 0, items: 'Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1789601781/fahad-ali-categories/thpviq9ejmsr0jt9rqyf.webp', description: 'ASSLAAM ALIKUM' },
+          { name: 'Center tables', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg', description: 'Solid Sheesham' },
+          { name: 'Luxury Showcase', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg', description: 'Solid Sheesham' },
+          { name: 'Luxury Wardrobes', count: 20, items: '20 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg', description: 'Solid Sheesham' },
         ],
         reviews: [],
         settings: settings ? {
@@ -221,7 +229,7 @@ export const getHomePageData = unstable_cache(
     }
   },
   ['home-bundle-cache'],
-  { revalidate: 3600, tags: ['homepage', 'products', 'banners'] }
+  { revalidate: 60, tags: ['homepage', 'products', 'banners', 'categories', 'home-bundle-cache'] }
 );
 
 

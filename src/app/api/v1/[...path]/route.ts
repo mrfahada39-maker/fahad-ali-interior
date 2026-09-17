@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
@@ -1424,6 +1425,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           },
         });
 
+        try {
+          revalidatePath('/', 'layout');
+          revalidatePath('/shop', 'layout');
+        } catch {}
+
         return NextResponse.json({ success: true, data: category, category });
       }
 
@@ -1458,6 +1464,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           return NextResponse.json({ error: 'Category ID or name is required' }, { status: 400 });
         }
 
+        try {
+          revalidatePath('/', 'layout');
+          revalidatePath('/shop', 'layout');
+        } catch {}
+
         return NextResponse.json({ success: true, data: updated, category: updated });
       }
 
@@ -1477,6 +1488,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         }).catch(async () => {
           await db.category.delete({ where: { id } });
         });
+
+        try {
+          revalidatePath('/', 'layout');
+          revalidatePath('/shop', 'layout');
+        } catch {}
 
         return NextResponse.json({ success: true, deletedId: id });
       }
