@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { clearCatalogMemoryCache } from '@/lib/catalog-api';
 import { sendOrderConfirmationEmail, sendPasswordResetEmail, sendVerificationEmail } from '@/lib/email';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
@@ -87,6 +88,20 @@ function requireAdmin(user: SessionUser | null): boolean {
   if (!user?.role) return false;
   const r = user.role.toUpperCase();
   return r === 'ADMIN' || r === 'SUPER_ADMIN';
+}
+
+function revalidateProductCaches(productId?: string) {
+  try {
+    clearCatalogMemoryCache();
+  } catch {}
+  try {
+    revalidatePath('/', 'layout');
+    revalidatePath('/shop', 'layout');
+    revalidatePath('/admin', 'layout');
+    if (productId) {
+      revalidatePath(`/product/${productId}`, 'page');
+    }
+  } catch {}
 }
 
 type RouteContext = { params: Promise<{ path: string[] }> };
@@ -266,7 +281,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }));
       return NextResponse.json(
         { products: formatted },
-        { headers: { 'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=60' } }
+        { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
       );
     }
 
@@ -2328,6 +2343,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           specs: specsStr,
         },
       });
+      revalidateProductCaches(product.id);
       return NextResponse.json({
         ...product,
         price: Number(product.price),
@@ -2361,22 +2377,45 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         where: { id },
         data: updateData,
       });
+      revalidateProductCaches(product.id);
       return NextResponse.json({
         ...product,
         price: Number(product.price),
       });
     }
 
-    // 10. DELETE /admin/products
-    if (method === 'DELETE' && (segment === 'admin/products' || segment === 'v1/admin/products')) {
-      const id = req.nextUrl.searchParams.get('id');
-      if (id) {
-        await db.product.update({
-          where: { id },
-          data: { deletedAt: new Date() },
-        });
-        return NextResponse.json({ success: true });
+    // 10. DELETE /admin/products - 100% PERMANENT POSTGRESQL HARD DELETE
+    if (method === 'DELETE' && (segment === 'admin/products' || segment === 'v1/admin/products' || segment.includes('admin/products'))) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
       }
+
+      const searchId = req.nextUrl.searchParams.get('id');
+      const body = await req.json().catch(() => ({}));
+      const parts = segment.split('/');
+      const lastPart = parts[parts.length - 1];
+      const id = searchId || body?.id || (lastPart !== 'products' ? lastPart : undefined);
+
+      if (!id) {
+        return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
+      }
+
+      try {
+        await db.$transaction([
+          db.orderItem.deleteMany({ where: { productId: id } }),
+          db.review.deleteMany({ where: { productId: id } }),
+          db.wishlistItem.deleteMany({ where: { productId: id } }),
+          db.product.deleteMany({ where: { id } }),
+        ]);
+      } catch (err: any) {
+        try {
+          await db.product.deleteMany({ where: { id } });
+        } catch {}
+      }
+
+      revalidateProductCaches(id);
+      return NextResponse.json({ success: true, deletedId: id });
     }
 
     // 11. PUT & PATCH /admin/orders

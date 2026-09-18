@@ -1,13 +1,16 @@
-﻿/**
+/**
  * Storefront Product Data Layer (Direct PostgreSQL with in-memory caching)
  */
 
 import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
-import { CURATED_FALLBACK_PRODUCTS } from '@/lib/curated-products';
 
 // High-speed In-Memory RAM Cache (Instant Sub-1ms responses)
 const memoryCache = new Map<string, { data: any; expiry: number }>();
+
+export function clearCatalogMemoryCache(): void {
+  memoryCache.clear();
+}
 
 function getCached<T>(key: string): T | null {
   const item = memoryCache.get(key);
@@ -19,7 +22,7 @@ function getCached<T>(key: string): T | null {
   return item.data as T;
 }
 
-function setCached<T>(key: string, data: T, ttlSeconds = 3600): void {
+function setCached<T>(key: string, data: T, ttlSeconds = 60): void {
   memoryCache.set(key, { data, expiry: Date.now() + ttlSeconds * 1000 });
 }
 
@@ -27,7 +30,7 @@ function setCached<T>(key: string, data: T, ttlSeconds = 3600): void {
 export async function getStorefrontProducts(limit = 50): Promise<StorefrontProduct[]> {
   const cacheKey = `storefront_products_${limit}`;
   const cached = getCached<StorefrontProduct[]>(cacheKey);
-  if (cached && cached.length > 0) {
+  if (cached !== null) {
     return cached;
   }
 
@@ -53,19 +56,16 @@ export async function getStorefrontProducts(limit = 50): Promise<StorefrontProdu
       take: limit,
       orderBy: { createdAt: 'desc' },
     });
-    if (products && products.length > 0) {
-      const result = products.map((p: any) => ({
-        ...p,
-        price: Number(p.price),
-      })) as unknown as StorefrontProduct[];
-      setCached(cacheKey, result, 300);
-      return result;
-    }
+    const result = (products || []).map((p: any) => ({
+      ...p,
+      price: Number(p.price),
+    })) as unknown as StorefrontProduct[];
+    setCached(cacheKey, result, 60);
+    return result;
   } catch (err) {
     console.error('Direct DB product fetch error:', err);
+    return [];
   }
-
-  return CURATED_FALLBACK_PRODUCTS;
 }
 
 export async function getProductById(id: string): Promise<StorefrontProduct | null> {
@@ -100,14 +100,12 @@ export async function getProductById(id: string): Promise<StorefrontProduct | nu
         ...p,
         price: Number(p.price),
       } as unknown as StorefrontProduct;
-      setCached(cacheKey, result, 300);
+      setCached(cacheKey, result, 60);
       return result;
     }
   } catch (err) {
     console.error('Direct DB product detail error:', err);
   }
 
-  // 2. Fallback to curated catalog
-  const fallback = CURATED_FALLBACK_PRODUCTS.find(p => p.id === id);
-  return fallback || null;
+  return null;
 }

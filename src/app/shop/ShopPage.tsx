@@ -13,7 +13,6 @@ import { apiFetchJson as fetchJson } from '@/lib/api-client';
 import type { StorefrontProduct } from '@/lib/types';
 import { resolveImageUrl } from '@/lib/images';
 import { useCartStore, useClientCacheStore, type CachedProduct } from '@/store';
-import { CURATED_FALLBACK_PRODUCTS } from '@/lib/curated-products';
 import { toast } from 'sonner';
 
 const DEFAULT_CATEGORIES = ['All', 'Beds', 'Sofas', 'Dining', 'Wardrobes', 'Coffee', 'TV', 'Office', 'Storage', 'Outdoor', 'Kids', 'Accessories', 'Custom Furniture Solutions'];
@@ -46,7 +45,7 @@ interface ShopPageProps {
 }
 
 export default function ShopPage({ initialProducts = [], initialCategory }: ShopPageProps) {
-  const defaultPool = initialProducts && initialProducts.length > 0 ? initialProducts : CURATED_FALLBACK_PRODUCTS;
+  const defaultPool = initialProducts;
   const safeInitial = initialCategory === 'Custom Furniture Solutions' ? [] : defaultPool;
   const [products, setProducts] = useState<StorefrontProduct[]>(safeInitial);
   const [loading, setLoading] = useState(false);
@@ -216,13 +215,9 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
 
   // Initialize and seed products from initial props and cache
   useEffect(() => {
+    setProducts(safeInitial);
     if (safeInitial.length > 0) {
       setCachedProducts(safeInitial as unknown as CachedProduct[]);
-      setProducts((prev) => {
-        const mergedMap = new Map<string, StorefrontProduct>();
-        [...prev, ...safeInitial].forEach((p) => mergedMap.set(p.id, p));
-        return Array.from(mergedMap.values());
-      });
     }
   }, [safeInitial, setCachedProducts]);
 
@@ -248,12 +243,8 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
         else if (Array.isArray(obj.data)) arr = obj.data as StorefrontProduct[];
         else if (Array.isArray(obj.items)) arr = obj.items as StorefrontProduct[];
       }
+      setProducts(arr);
       if (arr.length > 0) {
-        setProducts((prev) => {
-          const mergedMap = new Map<string, StorefrontProduct>();
-          [...prev, ...arr].forEach((p) => mergedMap.set(p.id, p));
-          return Array.from(mergedMap.values());
-        });
         setCachedProducts(arr as unknown as CachedProduct[]);
       }
     } catch {

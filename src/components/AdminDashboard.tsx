@@ -37,7 +37,6 @@ import { tabs, AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-ta
 
 import { useSiteSettingsStore } from '@/store';
 import { DEFAULT_ADMIN_STATS, DEFAULT_ADMIN_ORDERS } from '@/lib/utils';
-import { CURATED_FALLBACK_PRODUCTS } from '@/lib/curated-products';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
@@ -809,14 +808,16 @@ export default function AdminDashboard() {
   };
 
   const deleteProduct = async (id: string) => {
+    setProducts((prev) => (Array.isArray(prev) ? prev.filter((p) => p.id !== id) : []));
     const res = await apiFetch(`/api/admin/products?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
     if (res.ok) {
-      toast.success('Product deleted');
+      toast.success('Product permanently deleted');
       loadAll();
       return;
     }
     const data = await res.json().catch(() => null);
     toast.error(data?.error || 'Failed to delete product');
+    loadAll();
   };
 
   const saveBlog = async () => {
