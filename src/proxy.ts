@@ -38,9 +38,7 @@ function isLocalHost(request: NextRequest): boolean {
 }
 
 function buildContentSecurityPolicy(nonce: string, isProduction: boolean, httpsOnly: boolean): string {
-  const scriptSrc = isProduction
-    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`
-    : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
+  const scriptSrc = `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
   const styleDirectives = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "style-src-attr 'unsafe-inline'",
