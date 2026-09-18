@@ -39,12 +39,22 @@ function sendSmtpTls({
     console.error('[SMTP ERROR] Cannot send email: SMTP_USER or SMTP_PASS environment variable is missing.');
     return Promise.resolve(false);
   }
+  const tlsPort = (port === 587 && host.includes('gmail.com')) ? 465 : port;
+
   return new Promise((resolve) => {
+    let settled = false;
+    const finish = (result: boolean) => {
+      if (!settled) {
+        settled = true;
+        resolve(result);
+      }
+    };
+
     try {
       const socket = tls.connect(
         {
           host,
-          port,
+          port: tlsPort,
           rejectUnauthorized: true,
         },
         () => {
@@ -95,24 +105,24 @@ function sendSmtpTls({
               step++;
               send('QUIT');
               socket.end();
-              resolve(true);
+              finish(true);
             }
-          });
-
-          socket.on('error', (err) => {
-            console.error('[SMTP TLS ERROR]', err.message);
-            resolve(false);
           });
         }
       );
 
+      socket.on('error', (err) => {
+        console.error('[SMTP TLS ERROR]', err.message);
+        finish(false);
+      });
+
       socket.setTimeout(10000, () => {
         socket.destroy();
-        resolve(false);
+        finish(false);
       });
     } catch (e: any) {
       console.error('[SMTP CONNECT ERROR]', e.message);
-      resolve(false);
+      finish(false);
     }
   });
 }

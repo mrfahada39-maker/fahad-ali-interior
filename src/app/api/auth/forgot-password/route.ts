@@ -46,6 +46,12 @@ export async function POST(req: NextRequest) {
       where: { userId: user.id },
     }).catch(() => {});
 
+    // Clear any previous lockout so user has 5 fresh attempts with the new code
+    await db.user.update({
+      where: { id: user.id },
+      data: { loginAttempts: 0, lockedUntil: null },
+    }).catch(() => {});
+
     await db.passwordResetToken.create({
       data: {
         userId: user.id,
@@ -54,7 +60,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const siteUrl = getSiteUrl();
+    const hostHeader = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    const protoHeader = req.headers.get('x-forwarded-proto') || (req.url.startsWith('https') ? 'https' : 'http');
+    const requestOrigin = hostHeader ? `${protoHeader}://${hostHeader}` : req.nextUrl.origin;
+    const siteUrl = requestOrigin || getSiteUrl();
     const resetUrl = `${siteUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
     await sendPasswordResetEmail({

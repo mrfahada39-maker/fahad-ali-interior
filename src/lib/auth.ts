@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
+import { verifySync } from 'otplib';
 import { db } from '@/lib/db';
 import { sessionRole } from '@/lib/enums';
 import { shouldSkipEmailVerification } from '@/lib/utils';
@@ -29,7 +30,7 @@ function getAdminEmails(): string[] {
     return envEmails.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
   }
   // Fallback defaults (set ADMIN_EMAILS in .env to override)
-  return ['mrfahada39@gmail.com', 'admin@fahadali.com'];
+  return ['mrfahada39@gmail.com'];
 }
 
 function isAdminEmail(email: string): boolean {
@@ -43,6 +44,7 @@ const providers: NextAuthOptions['providers'] = [
     credentials: {
       email: { label: 'Email', type: 'email' },
       password: { label: 'Password', type: 'password' },
+      totpCode: { label: '2FA Code', type: 'text' },
     },
     async authorize(credentials) {
       if (!credentials?.email || !credentials?.password) {
@@ -57,9 +59,37 @@ const providers: NextAuthOptions['providers'] = [
         return null; // OAuth user trying credentials
       }
 
+      // 1. Enforce deactivation check (banned / deleted users cannot log in)
+      if (user.deletedAt) {
+        return null;
+      }
+
+      // 2. Enforce account lockout cooldown (anti-brute force defense)
+      if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+        const remainingMinutes = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
+        throw new Error(`Account temporarily locked due to excessive failed attempts. Please try again in ${remainingMinutes} minute(s).`);
+      }
+
       const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
       if (!isPasswordValid) {
+        const attempts = (user.loginAttempts || 0) + 1;
+        const shouldLock = attempts >= 5;
+        await db.user.update({
+          where: { id: user.id },
+          data: {
+            loginAttempts: attempts,
+            lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+          },
+        }).catch(() => {});
         return null;
+      }
+
+      // 3. Reset failed login attempts on successful password verification
+      if (user.loginAttempts > 0 || user.lockedUntil) {
+        await db.user.update({
+          where: { id: user.id },
+          data: { loginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
+        }).catch(() => {});
       }
 
       if (!user.emailVerified) {
@@ -72,6 +102,38 @@ const providers: NextAuthOptions['providers'] = [
           where: { id: user.id },
           data: { emailVerified: new Date() },
         });
+      }
+
+      // Enforce 2FA TOTP if user has it enabled
+      if (user.totpEnabled) {
+        const totpCode = (credentials as Record<string, any>)?.totpCode?.toString().trim();
+        if (!totpCode) {
+          throw new Error('2FA_REQUIRED');
+        }
+
+        const isBackupCode = user.backupCodes?.includes(totpCode.toUpperCase());
+        if (isBackupCode) {
+          await db.user.update({
+            where: { id: user.id },
+            data: {
+              backupCodes: user.backupCodes.filter((c: string) => c !== totpCode.toUpperCase()),
+            },
+          });
+        } else if (user.totpSecret) {
+          try {
+            const check = verifySync({ token: totpCode, secret: user.totpSecret });
+            if (!check || !check.valid) {
+              throw new Error('INVALID_2FA_CODE');
+            }
+          } catch {
+            throw new Error('INVALID_2FA_CODE');
+          }
+        } else {
+          const isValidOtpFormat = /^\d{6}$/.test(totpCode);
+          if (!isValidOtpFormat) {
+            throw new Error('INVALID_2FA_CODE');
+          }
+        }
       }
 
       return {

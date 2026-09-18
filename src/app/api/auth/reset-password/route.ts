@@ -19,16 +19,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 8 characters long.' }, { status: 400 });
     }
 
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    if (!hasLetter || !hasNumber) {
+      return NextResponse.json({ error: 'Password must contain both letters and numbers for high security.' }, { status: 400 });
+    }
+
+    const commonPasswords = ['password', '12345678', 'admin123', 'qwerty123', 'password123'];
+    if (commonPasswords.includes(password.toLowerCase())) {
+      return NextResponse.json({ error: 'This password is too common and easily guessed. Please choose a stronger password.' }, { status: 400 });
+    }
+
     let user = null;
 
     // Method 1: Token verification from email link
     if (token) {
-      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      const cleanToken = String(token).trim();
+      const tokenHash = crypto.createHash('sha256').update(cleanToken).digest('hex');
       const resetRecord = await db.passwordResetToken.findFirst({
         where: {
           tokenHash: { startsWith: tokenHash },
           expiresAt: { gt: new Date() },
         },
+        orderBy: { createdAt: 'desc' },
         include: { user: true },
       });
 
@@ -40,7 +53,7 @@ export async function POST(req: NextRequest) {
     // Method 2: 6-digit code verification
     if (!user && email && code) {
       const cleanEmail = email.trim().toLowerCase();
-      const cleanCode = String(code).trim();
+      const cleanCode = String(code).trim().replace(/\D/g, '');
 
       const existingUser = await db.user.findUnique({
         where: { email: cleanEmail },
@@ -57,6 +70,7 @@ export async function POST(req: NextRequest) {
             tokenHash: { endsWith: cleanCode },
             expiresAt: { gt: new Date() },
           },
+          orderBy: { createdAt: 'desc' },
         });
 
         if (resetRecord) {
@@ -98,9 +112,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    await db.passwordResetToken.deleteMany({
-      where: { userId: user.id },
-    }).catch(() => {});
+    // Invalidate all active user sessions and refresh tokens to prevent session hijacking
+    await Promise.all([
+      db.session.deleteMany({ where: { userId: user.id } }).catch(() => {}),
+      db.refreshToken.deleteMany({ where: { userId: user.id } }).catch(() => {}),
+      db.passwordResetToken.deleteMany({ where: { userId: user.id } }).catch(() => {}),
+    ]);
 
     return NextResponse.json({
       success: true,

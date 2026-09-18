@@ -326,36 +326,94 @@ TOTAL STORE PRODUCTS: 64 luxury Sheesham items across Living, Bedroom, Dining, O
       if (dynamicResult.suggestedPrompts) customPrompts = dynamicResult.suggestedPrompts;
     }
 
-    // Auto-attach matching live database products if user asked about items or categories
-    if (!retrievedProducts && allProducts.length > 0) {
-      const qLower = sanitizedUserQuery.toLowerCase();
-      const qWords = qLower.split(/\s+/).filter((w) => w.length > 2);
-
-      const matched = allProducts.filter((p) => {
-        const n = (p.name || '').toLowerCase();
-        const c = (p.category || '').toLowerCase();
-        const d = (p.description || '').toLowerCase();
-        
-        // Exact substring match
-        if (qLower.includes(n) || n.includes(qLower) || qLower.includes(c) || (c.length > 2 && c.includes(qLower))) {
-          return true;
-        }
-        // Word level match (e.g. 'dining', 'table', 'sofa', 'bed', 'wardrobe', 'mirror', 'chair')
-        return qWords.some((w) => n.includes(w) || c.includes(w) || d.includes(w));
-      });
-
-      if (matched.length > 0) {
-        retrievedProducts = matched.slice(0, 4).map((p) => ({
-          id: p.id,
-          name: p.name,
-          price: Number(p.price),
-          category: p.category || 'Furniture',
-          image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=380&q=55',
-          description: p.description || '100% Solid Seasoned Sheesham Wood furniture',
-          dimensions: p.dimensions || 'Standard',
-          material: p.material || '100% Solid Sheesham Wood',
-        }));
+    // 7.1 Seed VectorIndexer for Hybrid RAG Search if store is empty
+    if (VectorIndexer.getStore().length === 0 && allProducts.length > 0) {
+      for (const p of allProducts) {
+        await VectorIndexer.indexDocument(
+          String(p.id),
+          'product',
+          `${p.name} ${p.category || ''} ${p.material || ''} ${p.description || ''}`,
+          { id: p.id, name: p.name, category: p.category, price: Number(p.price), image: p.image || p.images?.[0] }
+        );
       }
+    }
+
+    // Auto-attach matching live database products via HybridSearchEngine (Semantic + Keyword)
+    if (!retrievedProducts && allProducts.length > 0) {
+      try {
+        const hybridResults = await HybridSearchEngine.search(sanitizedUserQuery, undefined, 4);
+        if (hybridResults.length > 0 && hybridResults[0].score > 0.1) {
+          retrievedProducts = hybridResults.map((r) => {
+            const doc = r.document;
+            const liveProd = allProducts.find((p) => `prod_${p.id}` === doc.id) || {};
+            return {
+              id: liveProd.id || doc.metadata.id,
+              name: liveProd.name || doc.metadata.name,
+              price: Number(liveProd.price || doc.metadata.price || 150000),
+              category: liveProd.category || doc.metadata.category || 'Furniture',
+              image: liveProd.image || liveProd.images?.[0] || doc.metadata.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+              description: liveProd.description || '100% Solid Seasoned Sheesham Wood',
+              dimensions: liveProd.dimensions || 'Standard',
+              material: liveProd.material || '100% Solid Sheesham Wood',
+              matchScore: r.score,
+            };
+          });
+        }
+      } catch (e) {
+        console.warn('Hybrid search fallback notice:', e);
+      }
+
+      // Fallback keyword search if hybrid search yielded no strong matches
+      if (!retrievedProducts || retrievedProducts.length === 0) {
+        const qLower = sanitizedUserQuery.toLowerCase();
+        const qWords = qLower.split(/\s+/).filter((w) => w.length > 2);
+
+        const matched = allProducts.filter((p) => {
+          const n = (p.name || '').toLowerCase();
+          const c = (p.category || '').toLowerCase();
+          const d = (p.description || '').toLowerCase();
+          if (qLower.includes(n) || n.includes(qLower) || qLower.includes(c) || (c.length > 2 && c.includes(qLower))) {
+            return true;
+          }
+          return qWords.some((w) => n.includes(w) || c.includes(w) || d.includes(w));
+        });
+
+        if (matched.length > 0) {
+          retrievedProducts = matched.slice(0, 4).map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: Number(p.price),
+            category: p.category || 'Furniture',
+            image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+            description: p.description || '100% Solid Seasoned Sheesham Wood',
+            dimensions: p.dimensions || 'Standard',
+            material: p.material || '100% Solid Sheesham Wood',
+          }));
+        }
+      }
+
+      // Background persist embeddings to ProductEmbedding table in database
+      (async () => {
+        try {
+          const store = VectorIndexer.getStore();
+          for (const doc of store.slice(0, 10)) {
+            if (doc.documentType === 'product' && doc.metadata.id) {
+              await db.productEmbedding.upsert({
+                where: { productId: doc.metadata.id },
+                create: {
+                  productId: doc.metadata.id,
+                  vector: doc.embedding,
+                  modelName: 'text-embedding-3-small',
+                },
+                update: {
+                  vector: doc.embedding,
+                  updatedAt: new Date(),
+                },
+              }).catch(() => {});
+            }
+          }
+        } catch (_) {}
+      })();
     }
 
     const whatsAppNum = (process.env.WHATSAPP_NUM || '+923207006110').replace('+', '');

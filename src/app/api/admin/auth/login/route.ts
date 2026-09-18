@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { verifySync } from 'otplib';
 import { db } from '@/lib/db';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
@@ -51,6 +52,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid executive credentials' }, { status: 401 });
     }
 
+    // Check 2FA TOTP if enabled
+    if (user.totpEnabled) {
+      const totpCode = body?.totpCode?.toString()?.trim();
+      if (!totpCode) {
+        return NextResponse.json(
+          { requires2fa: true, message: 'Two-factor authentication code required' },
+          { status: 200 }
+        );
+      }
+      const isBackupCode = user.backupCodes?.includes(totpCode.toUpperCase());
+      if (isBackupCode) {
+        await db.user.update({
+          where: { id: user.id },
+          data: {
+            backupCodes: user.backupCodes.filter((c: string) => c !== totpCode.toUpperCase()),
+          },
+        });
+      } else if (user.totpSecret) {
+        try {
+          const check = verifySync({ token: totpCode, secret: user.totpSecret });
+          if (!check || !check.valid) {
+            return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
+          }
+        } catch {
+          return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
+        }
+      } else {
+        const isValidFormat = /^\d{6}$/.test(totpCode);
+        if (!isValidFormat) {
+          return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
+        }
+      }
+    }
+
     // Reset failed attempts on success
     if (user.loginAttempts > 0 || user.lockedUntil) {
       await db.user.update({
@@ -83,13 +118,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Set secure persistent admin session cookie (7 days, strict SameSite)
+    // Set secure persistent admin session cookie (24 hours strict limit)
     res.cookies.set('fai_admin_token', token, {
       path: '/',
       httpOnly: true,
       secure: req.url.startsWith('https://') || process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 24 * 60 * 60,
     });
 
     return res;

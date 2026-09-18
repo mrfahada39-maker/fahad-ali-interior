@@ -1,13 +1,11 @@
 const requiredEnvVars = [
   'DATABASE_URL',
   'NEXTAUTH_SECRET',
-  'INTERNAL_PROXY_KEY',
 ] as const;
 
 const productionRequiredHard = [
   'DIRECT_DATABASE_URL',
   'NEXTAUTH_URL',
-  'ENTERPRISE_API_ORIGIN',
 ] as const;
 
 const productionRecommended = [

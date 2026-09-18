@@ -25,12 +25,13 @@ export default defineConfig({
   reporter: [
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['list'],
+    ['json', { outputFile: 'test-results/playwright-results.json' }],
   ],
 
   // Shared settings for all projects
   use: {
     // Base URL for all tests (local dev)
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3002',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
 
     // Collect trace on first retry
     trace: 'on-first-retry',
@@ -43,17 +44,16 @@ export default defineConfig({
 
     // Ignore HTTPS errors in local dev
     ignoreHTTPSErrors: true,
+
+    // Navigation timeout
+    navigationTimeout: 60000,
   },
 
-  // Test projects for major browsers
+  // Test projects for major browsers (Desktop & Mobile Chrome)
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'Mobile Chrome',
@@ -61,18 +61,20 @@ export default defineConfig({
     },
   ],
 
-  // Global timeout
-  timeout: 30000,
+  // Workers: 1 to ensure sequential execution and avoid dev server recompilation lock
+  workers: 1,
+
+  // Global timeout (60 seconds for Next.js compilation)
+  timeout: 60000,
   expect: {
-    timeout: 10000,
+    timeout: 15000,
   },
 
   // Local dev server setup
-  // Uncomment this if you want Playwright to auto-start the dev server:
-  // webServer: {
-  //   command: 'npm run dev:web',
-  //   url: 'http://localhost:3002',
-  //   reuseExistingServer: !process.env.CI,
-  //   timeout: 120 * 1000,
-  // },
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
 });

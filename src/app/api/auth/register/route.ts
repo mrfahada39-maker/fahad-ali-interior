@@ -52,6 +52,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    if (!hasLetter || !hasNumber) {
+      return NextResponse.json(
+        { error: 'Password must contain both letters and numbers for high security.' },
+        { status: 400 }
+      );
+    }
+
+    const commonPasswords = ['password', '12345678', 'admin123', 'qwerty123', 'password123'];
+    if (commonPasswords.includes(password.toLowerCase())) {
+      return NextResponse.json(
+        { error: 'This password is too common and easily guessed. Please choose a stronger password.' },
+        { status: 400 }
+      );
+    }
+
     const existingUser = await db.user.findFirst({
       where: { email: normalizedEmail, deletedAt: null },
     });

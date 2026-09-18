@@ -19,8 +19,31 @@ interface CallSession {
   updatedAt: number;
 }
 
-// In-memory fallback
+import { Redis } from '@upstash/redis';
+
+// Serverless-safe Redis session store with in-memory fallback
 const fallbackCallStore = new Map<string, CallSession>();
+
+let redisClient: Redis | null = null;
+function getRedis(): Redis | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL ?? '';
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? '';
+  if (url.startsWith('https://') && token.length > 10 && !url.includes('example')) {
+    if (!redisClient) redisClient = new Redis({ url, token });
+    return redisClient;
+  }
+  return null;
+}
+
+async function persistCallSession(key: string, session: CallSession) {
+  fallbackCallStore.set(key, session);
+  const redis = getRedis();
+  if (redis) {
+    try {
+      await redis.set(`call_session:${key}`, JSON.stringify(session), { ex: 300 });
+    } catch (_) {}
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -89,7 +112,7 @@ export async function POST(req: NextRequest) {
         updatedAt: now,
       };
 
-      fallbackCallStore.set(sessionKey, session);
+      await persistCallSession(sessionKey, session);
 
       try {
         if ((db as any)?.auditLog) {
@@ -170,7 +193,7 @@ export async function POST(req: NextRequest) {
         session.connectedAt = session.connectedAt || now;
         if (answerSdp) session.answerSdp = answerSdp;
         session.updatedAt = now;
-        fallbackCallStore.set(session.id || sessionKey, session);
+        await persistCallSession(session.id || sessionKey, session);
         return NextResponse.json({ success: true, session });
       }
 

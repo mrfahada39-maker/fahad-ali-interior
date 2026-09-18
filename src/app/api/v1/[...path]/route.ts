@@ -29,7 +29,7 @@ async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser 
     if (match) {
       const [, userId, timestampStr, signature] = match;
       const timestamp = parseInt(timestampStr, 10);
-      const maxAgeMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+      const maxAgeMs = 24 * 60 * 60 * 1000; // 24 hours (Hardened)
       if (!isNaN(timestamp) && (Date.now() - timestamp) < maxAgeMs) {
         const secret = process.env.NEXTAUTH_SECRET;
         if (!secret || secret.length < 32) return null;
@@ -38,9 +38,9 @@ async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser 
           if (crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSig, 'hex'))) {
             const dbUser = await db.user.findUnique({
               where: { id: userId },
-              select: { id: true, email: true, role: true },
+              select: { id: true, email: true, role: true, deletedAt: true },
             });
-            if (dbUser) {
+            if (dbUser && !dbUser.deletedAt) {
               return {
                 id: dbUser.id,
                 email: dbUser.email,
@@ -544,10 +544,14 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       await db.passwordResetToken.deleteMany({ where: { userId: user.id } }).catch(() => {});
+      await db.user.update({ where: { id: user.id }, data: { loginAttempts: 0, lockedUntil: null } }).catch(() => {});
       await db.passwordResetToken.create({
         data: { userId: user.id, tokenHash: `${tokenHash}:${code}`, expiresAt },
       });
-      const siteUrl = getSiteUrl();
+      const hostHeader = req.headers.get('x-forwarded-host') || req.headers.get('host');
+      const protoHeader = req.headers.get('x-forwarded-proto') || (req.url.startsWith('https') ? 'https' : 'http');
+      const requestOrigin = hostHeader ? `${protoHeader}://${hostHeader}` : req.nextUrl.origin;
+      const siteUrl = requestOrigin || getSiteUrl();
       const resetUrl = `${siteUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
       await sendPasswordResetEmail({ to: user.email, name: user.name || 'Valued Client', resetUrl, code });
       return NextResponse.json({ success: true, message: 'Password reset instructions have been sent to your email.' });
@@ -567,15 +571,18 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }
       let user = null;
       if (token) {
-        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const cleanToken = String(token).trim();
+        const tokenHash = crypto.createHash('sha256').update(cleanToken).digest('hex');
         const record = await db.passwordResetToken.findFirst({
           where: { tokenHash: { startsWith: tokenHash }, expiresAt: { gt: new Date() } },
+          orderBy: { createdAt: 'desc' },
           include: { user: true },
         });
         if (record?.user) user = record.user;
       }
       if (!user && email && code) {
         const cleanEmail = email.trim().toLowerCase();
+        const cleanCode = String(code).trim().replace(/\D/g, '');
         const existing = await db.user.findUnique({ where: { email: cleanEmail } });
         if (existing) {
           if (existing.lockedUntil && new Date(existing.lockedUntil) > new Date()) {
@@ -583,7 +590,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           }
 
           const record = await db.passwordResetToken.findFirst({
-            where: { userId: existing.id, tokenHash: { endsWith: String(code).trim() }, expiresAt: { gt: new Date() } },
+            where: { userId: existing.id, tokenHash: { endsWith: cleanCode }, expiresAt: { gt: new Date() } },
+            orderBy: { createdAt: 'desc' },
           });
           if (record) {
             user = existing;

@@ -38,7 +38,9 @@ function isLocalHost(request: NextRequest): boolean {
 }
 
 function buildContentSecurityPolicy(nonce: string, isProduction: boolean, httpsOnly: boolean): string {
-  const scriptSrc = `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
+  const scriptSrc = isProduction
+    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`
+    : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
   const styleDirectives = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "style-src-attr 'unsafe-inline'",
@@ -81,6 +83,8 @@ function applyPageSecurityHeaders(
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(), payment=()');
   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  response.headers.set('X-Permitted-Cross-Domain-Policies', 'none');
+  response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
   if (httpsOnly) {
     response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   }
@@ -140,9 +144,7 @@ export async function proxy(request: NextRequest) {
 
     if (
       !pathname.startsWith('/api/v1') &&
-      !pathname.startsWith('/api/admin/telemetry') &&
-      !pathname.startsWith('/api/admin/categories') &&
-      !pathname.startsWith('/api/admin/orders')
+      !pathname.startsWith('/api/admin')
     ) {
       const mapped = toNestApiPath(`${pathname}${request.nextUrl.search}`);
       const q = mapped.indexOf('?');
