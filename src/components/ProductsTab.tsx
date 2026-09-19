@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
@@ -128,24 +128,26 @@ export default function ProductsTab({
   const outOfStockCount = products.filter((p) => (p.stockCount ?? 0) <= 0).length;
   const lowStockCount = products.filter((p) => (p.stockCount ?? 0) > 0 && (p.stockCount ?? 0) < 5).length;
 
-  // Filter & Sort Products
-  const filteredProducts = products
-    .filter((p) => {
-      const q = searchQuery.trim().toLowerCase();
-      const matchesSearch =
-        !q ||
-        Boolean(p.name && p.name.toLowerCase().includes(q)) ||
-        Boolean(p.material && p.material.toLowerCase().includes(q)) ||
-        Boolean(p.category && p.category.toLowerCase().includes(q));
-      const matchesCategory = selectedCategoryFilter ? p.category === selectedCategoryFilter : true;
-      return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
-      if (sortBy === 'price-desc') return (b.price || 0) - (a.price || 0);
-      if (sortBy === 'stock') return (a.stockCount || 0) - (b.stockCount || 0);
-      return 0; // Default newest
-    });
+  // Filter & Sort Products (Memoized for 0ms instant UI response)
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter((p) => {
+        const q = searchQuery.trim().toLowerCase();
+        const matchesSearch =
+          !q ||
+          Boolean(p.name && p.name.toLowerCase().includes(q)) ||
+          Boolean(p.material && p.material.toLowerCase().includes(q)) ||
+          Boolean(p.category && p.category.toLowerCase().includes(q));
+        const matchesCategory = selectedCategoryFilter ? p.category === selectedCategoryFilter : true;
+        return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
+        if (sortBy === 'price-desc') return (b.price || 0) - (a.price || 0);
+        if (sortBy === 'stock') return (a.stockCount || 0) - (b.stockCount || 0);
+        return 0; // Default newest
+      });
+  }, [products, searchQuery, selectedCategoryFilter, sortBy]);
 
   const extraImagesList = typeof productForm.images === 'string'
     ? productForm.images.split(',').map((url: string) => url.trim()).filter(Boolean)

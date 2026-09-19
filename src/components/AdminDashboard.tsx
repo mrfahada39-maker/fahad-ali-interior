@@ -140,7 +140,7 @@ export default function AdminDashboard() {
         .catch(() => {});
     };
     fetchTelemetry();
-    const interval = setInterval(fetchTelemetry, 15000);
+    const interval = setInterval(fetchTelemetry, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -413,6 +413,7 @@ export default function AdminDashboard() {
   // Background listener for incoming customer calls to Admin
   useEffect(() => {
     const checkIncomingCalls = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       try {
         const res = await apiFetch('/api/calls/signal', {
           method: 'POST',
@@ -461,7 +462,7 @@ export default function AdminDashboard() {
       } catch {}
     };
 
-    const interval = setInterval(checkIncomingCalls, 1500);
+    const interval = setInterval(checkIncomingCalls, isCallOpen ? 1500 : 10000);
     return () => clearInterval(interval);
   }, [isCallOpen, callStatus, currentCaller]);
 
@@ -621,7 +622,7 @@ export default function AdminDashboard() {
       } catch {}
     };
 
-    const intervalId = setInterval(silentSync, 10000);
+    const intervalId = setInterval(silentSync, 45000);
     return () => clearInterval(intervalId);
   }, []);
 
@@ -652,7 +653,7 @@ export default function AdminDashboard() {
       }
     };
 
-    const intervalId = setInterval(pollMessages, activeTab === 'messages' ? 2500 : 15000);
+    const intervalId = setInterval(pollMessages, activeTab === 'messages' ? 5000 : 30000);
     return () => clearInterval(intervalId);
   }, [activeTab]);
 
@@ -663,18 +664,33 @@ export default function AdminDashboard() {
   }, [activeTab, unreadMessageCount]);
 
   const updateOrderStatus = async (id: string, status: string) => {
+    setOrders((prev: any[]) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
+    toast.success(`Order marked as ${status}`);
     const res = await apiFetch('/api/admin/orders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
-    if (res.ok) { toast.success('Order updated'); loadAll(); }
+    if (!res.ok) {
+      toast.error('Failed to update order');
+      loadAll();
+    }
   };
 
   const updateReviewStatus = async (id: string, status: string) => {
+    setReviews((prev: any[]) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    toast.success(`Review ${status}`);
     const res = await apiFetch('/api/admin/reviews', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
-    if (res.ok) { toast.success(`Review ${status}`); loadAll(); }
+    if (!res.ok) {
+      toast.error('Failed to update review');
+      loadAll();
+    }
   };
 
   const updateInquiryStatus = async (id: string, status: string) => {
+    setInquiries((prev: any[]) => prev.map((inq) => (inq.id === id ? { ...inq, status } : inq)));
+    toast.success('Inquiry updated');
     const res = await apiFetch('/api/admin/inquiries', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
-    if (res.ok) { toast.success('Inquiry updated'); loadAll(); }
+    if (!res.ok) {
+      toast.error('Failed to update inquiry');
+      loadAll();
+    }
   };
 
   const sendAdminReply = async (userId: string) => {
@@ -773,51 +789,74 @@ export default function AdminDashboard() {
     };
     const method = editingProductId ? 'PUT' : 'POST';
     const body = editingProductId ? { ...payload, id: editingProductId } : payload;
-    const res = await apiFetch('/api/admin/products', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+    const editingId = editingProductId;
+
+    // 0ms instant UI close and form clear
+    setShowAddProduct(false);
+    setEditingProductId(null);
+    setProductForm({
+      name: '',
+      description: '',
+      price: 0,
+      category: '',
+      image: '',
+      images: '',
+      material: '',
+      dimensions: '',
+      stockCount: 0,
+      isPremium: false,
+      compareAtPrice: '',
+      woodType: '',
+      upholstery: '',
+      finish: '',
+      leadTime: '',
+      warranty: '',
     });
-    if (res.ok) {
-      toast.success(editingProductId ? 'Product updated!' : 'Product added!');
-      setShowAddProduct(false);
-      setEditingProductId(null);
-      setProductForm({
-        name: '',
-        description: '',
-        price: 0,
-        category: '',
-        image: '',
-        images: '',
-        material: '',
-        dimensions: '',
-        stockCount: 0,
-        isPremium: false,
-        compareAtPrice: '',
-        woodType: '',
-        upholstery: '',
-        finish: '',
-        leadTime: '',
-        warranty: '',
+
+    try {
+      const res = await apiFetch('/api/admin/products', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
+      if (res.ok) {
+        const saved = await res.json().catch(() => null);
+        if (saved && saved.id) {
+          setProducts((prev) => {
+            const arr = Array.isArray(prev) ? prev : [];
+            if (editingId) {
+              return arr.map((p) => (p.id === editingId ? { ...p, ...saved } : p));
+            }
+            return [saved, ...arr];
+          });
+          if (!editingId) {
+            setStats((prev: any) => ({ ...prev, totalProducts: (prev?.totalProducts || 0) + 1 }));
+          }
+        }
+        toast.success(editingId ? 'Product updated!' : 'Product published!');
+      } else {
+        const errorText = await res.text();
+        toast.error(`Error: ${errorText || 'Failed to save product'}`);
+        loadAll();
+      }
+    } catch {
+      toast.error('Network error saving product');
       loadAll();
-    } else {
-      const errorText = await res.text();
-      toast.error(`Error: ${errorText || 'Failed to save product'}`);
     }
   };
 
   const deleteProduct = async (id: string) => {
+    // 0ms instant optimistic removal from UI
     setProducts((prev) => (Array.isArray(prev) ? prev.filter((p) => p.id !== id) : []));
+    setStats((prev: any) => ({ ...prev, totalProducts: Math.max(0, (prev?.totalProducts || 1) - 1) }));
+    toast.success('Product permanently deleted');
+
     const res = await apiFetch(`/api/admin/products?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-    if (res.ok) {
-      toast.success('Product permanently deleted');
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      toast.error(data?.error || 'Failed to delete product');
       loadAll();
-      return;
     }
-    const data = await res.json().catch(() => null);
-    toast.error(data?.error || 'Failed to delete product');
-    loadAll();
   };
 
   const saveBlog = async () => {
@@ -831,31 +870,40 @@ export default function AdminDashboard() {
       isActive: blogForm.isActive,
       tags: blogForm.tags ? blogForm.tags.split(',').map(t => t.trim()) : [],
     };
+    const blogId = blogForm.id;
+    setShowAddBlog(false);
+    setBlogForm({ id: '', title: '', slug: '', content: '', excerpt: '', image: '', author: 'Admin', isActive: true, tags: '' });
     
     let res;
-    if (blogForm.id) {
-      res = await apiFetch(`/api/v1/blog/${blogForm.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (blogId) {
+      res = await apiFetch(`/api/v1/blog/${blogId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     } else {
       res = await apiFetch('/api/v1/blog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     }
     
     if (res.ok) {
-      toast.success(`Blog post ${blogForm.id ? 'updated' : 'created'}!`);
-      setShowAddBlog(false);
-      setBlogForm({ id: '', title: '', slug: '', content: '', excerpt: '', image: '', author: 'Admin', isActive: true, tags: '' });
-      loadAll();
+      const saved = await res.json().catch(() => null);
+      if (saved && saved.id) {
+        setBlogs((prev) => {
+          const arr = Array.isArray(prev) ? prev : [];
+          if (blogId) return arr.map((b) => (b.id === blogId ? { ...b, ...saved } : b));
+          return [saved, ...arr];
+        });
+      }
+      toast.success(`Blog post ${blogId ? 'updated' : 'created'}!`);
     } else {
       toast.error('Failed to save blog post');
+      loadAll();
     }
   };
 
   const deleteBlog = async (id: string) => {
+    setBlogs((prev: any[]) => prev.filter((b) => b.id !== id));
+    toast.success('Blog post deleted');
     const res = await apiFetch(`/api/v1/blog/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      toast.success('Blog post deleted');
-      loadAll();
-    } else {
+    if (!res.ok) {
       toast.error('Failed to delete blog post');
+      loadAll();
     }
   };
 
