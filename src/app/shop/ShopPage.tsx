@@ -66,10 +66,10 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
   }, [searchQuery]);
 
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState([0, 500000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
+  const [userAdjustedPrice, setUserAdjustedPrice] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState('');
   const [categoriesList, setCategoriesList] = useState<string[]>(DEFAULT_CATEGORIES);
-  const skipFirstFetch = useRef(safeInitial.length > 0);
 
   // Custom Studio States
   const [selectedWood, setSelectedWood] = useState('sheesham');
@@ -254,19 +254,35 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
     }
   }, [debouncedSearchQuery, sortBy, products.length, setCachedProducts]);
 
+  // Dynamic maximum catalog price (at least 5,000,000 PKR or higher if luxury products exist)
+  const maxCatalogPrice = useMemo(() => {
+    const highest = products.reduce((max, p) => Math.max(max, Number(p.price) || 0), 0);
+    return Math.max(5000000, Math.ceil((highest || 500000) / 100000) * 100000);
+  }, [products]);
+
+  // Initial and cross-tab synchronized product hydration
   useEffect(() => {
-    if (skipFirstFetch.current) {
-      skipFirstFetch.current = false;
-      return;
-    }
     fetchProducts();
+
+    const handleSync = () => {
+      fetchProducts();
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('fahad_catalog_updated', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('fahad_catalog_updated', handleSync);
+    };
   }, [fetchProducts]);
 
   const clearFilters = () => {
     setActiveCategory('All');
     setSearchQuery('');
     setSortBy('');
-    setPriceRange([0, 500000]);
+    setUserAdjustedPrice(false);
+    setPriceRange([0, 10000000]);
     setSelectedMaterial('');
     window.history.pushState({}, '', '/shop');
   };
@@ -313,8 +329,8 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
         if (!nameMatch && !catMatch && !descMatch && !woodMatch) return false;
       }
 
-      // 3. Price range filter
-      const priceOk = p.price >= priceRange[0] && p.price <= priceRange[1];
+      // 3. Price range filter (Only filters when user explicitly adjusts price)
+      const priceOk = !userAdjustedPrice || (p.price >= priceRange[0] && p.price <= priceRange[1]);
       if (!priceOk) return false;
 
       // 4. Material filter
@@ -325,15 +341,15 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
     });
 
     // 5. Client-Side Sorting for instant response
-    if (sortBy === 'price_asc') {
+    if (sortBy === 'price_asc' || sortBy === 'price-asc') {
       return [...list].sort((a, b) => a.price - b.price);
-    } else if (sortBy === 'price_desc') {
+    } else if (sortBy === 'price_desc' || sortBy === 'price-desc') {
       return [...list].sort((a, b) => b.price - a.price);
     } else if (sortBy === 'newest') {
       return [...list].reverse();
     }
     return list;
-  }, [products, activeCategory, debouncedSearchQuery, priceRange, selectedMaterial, sortBy]);
+  }, [products, activeCategory, debouncedSearchQuery, priceRange, userAdjustedPrice, selectedMaterial, sortBy]);
 
   return (
     <div className="min-h-screen bg-[#FCFAF7] text-[#221814] pt-24 sm:pt-28">
@@ -404,7 +420,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
             >
               <SlidersHorizontal size={14} />
               <span>Filters</span>
-              {(selectedMaterial || priceRange[1] < 500000) && (
+              {(selectedMaterial || userAdjustedPrice) && (
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               )}
             </button>
@@ -435,7 +451,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
             </div>
 
             {/* Clear All Filters */}
-            {(activeCategory !== 'All' || searchQuery || sortBy || selectedMaterial || priceRange[1] < 500000) && (
+            {(activeCategory !== 'All' || searchQuery || sortBy || selectedMaterial || userAdjustedPrice) && (
               <button onClick={clearFilters} className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-black text-rose-600 border border-rose-500/30 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 transition-all cursor-pointer">
                 <RotateCcw size={13} />
                 <span>Reset</span>
@@ -490,22 +506,27 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
                   <div>
                     <div className="flex justify-between items-center text-xs font-bold text-theme-dark mb-2">
                       <span>Max Price</span>
-                      <span className="text-theme-accent font-mono">Rs. {formatPrice(priceRange[1])}</span>
+                      <span className="text-theme-accent font-mono">
+                        Rs. {formatPrice(userAdjustedPrice ? priceRange[1] : maxCatalogPrice)}
+                      </span>
                     </div>
                     <input
                       type="range"
                       id="price-range-slider"
                       name="maxPrice"
                       min={0}
-                      max={500000}
-                      step={5000}
-                      value={priceRange[1]}
-                      onChange={e => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                      max={maxCatalogPrice}
+                      step={10000}
+                      value={userAdjustedPrice ? priceRange[1] : maxCatalogPrice}
+                      onChange={e => {
+                        setUserAdjustedPrice(true);
+                        setPriceRange([priceRange[0], parseInt(e.target.value, 10)]);
+                      }}
                       className="w-full accent-theme-accent cursor-pointer"
                     />
                     <div className="flex justify-between text-[10px] text-theme-muted font-mono mt-1">
                       <span>Rs. 0</span>
-                      <span>Rs. 500,000</span>
+                      <span>Rs. {formatPrice(maxCatalogPrice)}</span>
                     </div>
                   </div>
 

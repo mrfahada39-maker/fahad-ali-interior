@@ -833,6 +833,12 @@ export default function AdminDashboard() {
             setStats((prev: any) => ({ ...prev, totalProducts: (prev?.totalProducts || 0) + 1 }));
           }
         }
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('fahad_catalog_updated', String(Date.now()));
+            window.dispatchEvent(new Event('fahad_catalog_updated'));
+          } catch {}
+        }
         toast.success(editingId ? 'Product updated!' : 'Product published!');
       } else {
         const errorText = await res.text();
@@ -849,6 +855,12 @@ export default function AdminDashboard() {
     // 0ms instant optimistic removal from UI
     setProducts((prev) => (Array.isArray(prev) ? prev.filter((p) => p.id !== id) : []));
     setStats((prev: any) => ({ ...prev, totalProducts: Math.max(0, (prev?.totalProducts || 1) - 1) }));
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('fahad_catalog_updated', String(Date.now()));
+        window.dispatchEvent(new Event('fahad_catalog_updated'));
+      } catch {}
+    }
     toast.success('Product permanently deleted');
 
     const res = await apiFetch(`/api/admin/products?id=${encodeURIComponent(id)}`, { method: 'DELETE' });

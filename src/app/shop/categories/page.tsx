@@ -1,10 +1,11 @@
-﻿import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/StoreShell';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getHomePageData } from '@/lib/home-page-data';
 import { resolveImageUrl, LOCAL_IMAGES } from '@/lib/images';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export const metadata = {
   title: 'Categories | Fahad Ali Interior',
 };

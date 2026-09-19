@@ -1,4 +1,4 @@
-﻿import { Metadata } from 'next';
+import { Metadata } from 'next';
 import { getProductById } from '@/lib/catalog-api';
 import { resolveImageUrl } from '@/lib/images';
 import { getSiteUrl } from '@/lib/utils';
@@ -7,7 +7,8 @@ import ProductPageClient from './ProductPageClient';
 import JsonLd from '@/components/JsonLd';
 import { headers } from 'next/headers';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface Props {
   params: Promise<{ id: string }>;
