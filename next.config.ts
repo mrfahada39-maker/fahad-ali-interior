@@ -172,7 +172,6 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-separator',
       '@radix-ui/react-tabs',
       '@radix-ui/react-slot',
-      '@radix-ui/react-slider',
       'class-variance-authority',
       'date-fns',
     ],
