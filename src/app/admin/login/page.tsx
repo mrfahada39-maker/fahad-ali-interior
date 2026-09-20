@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
         toast.error(res.error || 'Invalid credentials');
       } else {
         toast.success('Authenticated to Executive Suite');
-        window.location.href = '/admin';
+        router.push('/admin');
       }
     } catch {
       toast.error('Authentication failed');

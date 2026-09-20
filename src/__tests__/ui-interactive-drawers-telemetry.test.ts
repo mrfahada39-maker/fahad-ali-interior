@@ -85,7 +85,7 @@ describe('Master Suite 2: Interactive UI Drawers, Search Modal, Telemetry & 2FA'
       let wishlist: DrawerItem[] = [
         { id: 'item_1', name: 'Royal Sheesham King Bed', pricePKR: 385000, quantity: 1 },
       ];
-      let cart: DrawerItem[] = [];
+      const cart: DrawerItem[] = [];
 
       const moveWishlistToCart = (itemId: string) => {
         const itemIndex = wishlist.findIndex(i => i.id === itemId);

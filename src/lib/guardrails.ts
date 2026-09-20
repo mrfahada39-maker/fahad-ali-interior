@@ -64,6 +64,7 @@ export class SecurityGuardrails {
   static sanitizeString(input: string): string {
     if (!input) return '';
     return input
+      // eslint-disable-next-line no-control-regex
       .replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F]/g, '') // Strip control characters
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
