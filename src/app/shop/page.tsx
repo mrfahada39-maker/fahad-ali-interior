@@ -3,8 +3,8 @@ import StoreShell from '@/components/StoreShell';
 import { getStorefrontProducts } from '@/lib/catalog-api';
 import ShopPage from './ShopPage';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// Next.js ISR (Incremental Static Regeneration) — Edge cached on Vercel for instant sub-50ms TTFB
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Shop | Fahad Ali Interior — Luxury Furniture Collection',
