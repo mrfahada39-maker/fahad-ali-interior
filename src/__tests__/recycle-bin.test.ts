@@ -136,7 +136,7 @@ describe('Recycle Bin & Active Database Clean Isolation Suite', () => {
 
       expect(result.entityType).toBe('PRODUCT');
       expect(result.name).toBe('Royal Velvet Chesterfield');
-      expect(result.payload.price).toBe(285000);
+      expect((result.payload as any)?.price).toBe(285000);
     });
   });
 
