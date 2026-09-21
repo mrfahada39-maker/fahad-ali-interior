@@ -13,54 +13,16 @@ import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
 import TestimonialsSection from '@/components/TestimonialsSection';
 
 const CATEGORIES = [
-  { name: 'Living Room', count: 25, items: '25 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
-  { name: 'Bedroom', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
-  { name: 'Dining Room', count: 15, items: '15 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
-  { name: 'Coffee Chairs', count: 20, items: '20 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg' },
-  { name: 'FAHAD ALI', count: 0, items: 'Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1789601781/fahad-ali-categories/thpviq9ejmsr0jt9rqyf.webp' },
-  { name: 'Center tables', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
-  { name: 'Luxury Showcase', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg' },
-  { name: 'Luxury Wardrobes', count: 20, items: '20 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
+  { name: 'Living Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
+  { name: 'Bedroom', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
+  { name: 'Dining Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
+  { name: 'Coffee Chairs', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg' },
+  { name: 'Center tables', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
+  { name: 'Luxury Showcase', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg' },
+  { name: 'Luxury Wardrobes', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
 ];
 
-const REVIEWS = [
-  { 
-    id: 'rev-1',
-    name: 'Ayesha Khan', 
-    location: 'Lahore, Pakistan', 
-    text: '"The solid Sheesham wood quality is exceptional and the design completely transformed my living room. Highly recommended!"', 
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?fm=webp&q=65&w=90', 
-    rating: 5,
-    productName: 'Royal Sovereign Sheesham Sofa',
-    productCategory: 'Living Room Couture',
-    productPrice: 'PKR 185,000',
-    productImage: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?fm=webp&q=65&w=360'
-  },
-  { 
-    id: 'rev-2',
-    name: 'Bilal Ahmed', 
-    location: 'Karachi, Pakistan', 
-    text: '"Fast nationwide delivery, immaculate gold inlay finishes and amazing customer service. Will definitely order again!"', 
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fm=webp&q=65&w=90', 
-    rating: 5,
-    productName: 'Imperial Solid Sheesham King Bed',
-    productCategory: 'Master Bedroom Suite',
-    productPrice: 'PKR 240,000',
-    productImage: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?fm=webp&q=65&w=360'
-  },
-  { 
-    id: 'rev-3',
-    name: 'Sara Malik', 
-    location: 'Islamabad, Pakistan', 
-    text: '"Finally found handcrafted furniture that is both comfortable and modern. The marble center table is a true centerpiece!"', 
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?fm=webp&q=65&w=90', 
-    rating: 5,
-    productName: 'Royal Carved Marble Center Table',
-    productCategory: 'Luxury Dining & Living',
-    productPrice: 'PKR 95,000',
-    productImage: 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?fm=webp&q=65&w=360'
-  },
-];
+const REVIEWS: any[] = [];
 
 interface HomePageInteractiveProps {
   initialBanners?: any[];
@@ -295,9 +257,7 @@ export default function HomePageInteractive({
                       {cat.name}
                     </h3>
                     <span className="gsap-cat-subtitle text-[10px] uppercase tracking-widest text-[#E6DCCF] font-semibold opacity-90 block">
-                      {cat.items || (typeof cat.count === 'number' && cat.count > 0
-                        ? `${cat.count} ${cat.count === 1 ? 'Item' : 'Items'} Available`
-                        : 'Collection Available')}
+                      {cat.items || 'View Collection'}
                     </span>
                   </div>
                   <div className="gsap-cat-btn w-9 h-9 rounded-xl border border-amber-300/80 flex items-center justify-center bg-[#FAF5EE] text-[#8C6239] group-hover:bg-gradient-to-br group-hover:from-[#B88E4B] group-hover:to-[#996515] group-hover:text-white transition-all duration-300 shadow-[0_3px_10px_rgba(184,142,75,0.25)]">
@@ -310,8 +270,8 @@ export default function HomePageInteractive({
         </div>
       </section>
 
-      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION ── */}
-      <TestimonialsSection />
+      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION (Renders only when verified real customer reviews exist) ── */}
+      {initialReviews && initialReviews.length > 0 && <TestimonialsSection />}
 
     </div>
   );
