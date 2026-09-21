@@ -17,11 +17,13 @@ import {
   Sparkles,
   Calendar,
   User,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
 import { Badge } from '@/components/badge';
 import { toast } from 'sonner';
+import AnimatedCounter from '@/components/AnimatedCounter';
 
 type RecycleSection = 'ALL' | 'PRODUCT' | 'CATEGORY' | 'ORDER' | 'REVIEW';
 
@@ -232,6 +234,66 @@ export default function RecycleBinTab() {
     });
   }, [items, activeSection, searchQuery]);
 
+  // ── 4 KPI METRIC CARDS (EXACT MATCHING OVERVIEW TAB & IMAGE 2) ──
+  const kpis = [
+    {
+      label: 'TOTAL ARCHIVED ITEMS',
+      numValue: counts.ALL,
+      prefix: '',
+      sub: counts.ALL === 0 ? '0 Items in Period' : `${counts.ALL} Items in Archive`,
+      icon: Trash2,
+      color: 'text-[#B88E4B]',
+      iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
+      ambientGlow: 'bg-[#B88E4B]/10',
+      cardGlow: 'border-amber-300/80 hover:border-[#B88E4B] shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_12px_30px_rgba(184,142,75,0.18)]',
+      badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
+      dotColor: 'bg-emerald-500',
+      targetSection: 'ALL' as RecycleSection,
+    },
+    {
+      label: 'DELETED PRODUCTS',
+      numValue: counts.PRODUCT,
+      prefix: '',
+      sub: counts.PRODUCT === 0 ? '0 Delivered / Completed' : `${counts.PRODUCT} Restorable Products`,
+      icon: Armchair,
+      color: 'text-blue-600',
+      iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
+      ambientGlow: 'bg-blue-500/10',
+      cardGlow: 'border-blue-300/80 hover:border-blue-500 shadow-[0_4px_20px_rgba(59,130,246,0.08)] hover:shadow-[0_12px_30px_rgba(59,130,246,0.18)]',
+      badgeBg: 'bg-blue-50 text-blue-800 border-blue-500/30',
+      dotColor: 'bg-blue-500',
+      targetSection: 'PRODUCT' as RecycleSection,
+    },
+    {
+      label: 'DELETED CATEGORIES',
+      numValue: counts.CATEGORY,
+      prefix: '',
+      sub: counts.CATEGORY === 0 ? 'Live Registered Accounts' : `${counts.CATEGORY} Restorable Categories`,
+      icon: FolderOpen,
+      color: 'text-purple-600',
+      iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
+      ambientGlow: 'bg-purple-500/10',
+      cardGlow: 'border-purple-300/80 hover:border-purple-500 shadow-[0_4px_20px_rgba(168,85,247,0.08)] hover:shadow-[0_12px_30px_rgba(168,85,247,0.18)]',
+      badgeBg: 'bg-purple-50 text-purple-800 border-purple-500/30',
+      dotColor: 'bg-purple-500',
+      targetSection: 'CATEGORY' as RecycleSection,
+    },
+    {
+      label: 'DELETED ORDERS & REVIEWS',
+      numValue: counts.ORDER + counts.REVIEW,
+      prefix: '',
+      sub: (counts.ORDER + counts.REVIEW) === 0 ? '100% In-Stock Database' : `${counts.ORDER + counts.REVIEW} Archived Records`,
+      icon: ShieldCheck,
+      color: 'text-emerald-600',
+      iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
+      ambientGlow: 'bg-emerald-500/10',
+      cardGlow: 'border-emerald-300/80 hover:border-emerald-500 shadow-[0_4px_20px_rgba(16,185,129,0.08)] hover:shadow-[0_12px_30px_rgba(16,185,129,0.18)]',
+      badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
+      dotColor: 'bg-emerald-500',
+      targetSection: 'ORDER' as RecycleSection,
+    },
+  ];
+
   return (
     <div className="space-y-4 font-sans text-[#18110D]">
       {/* ── LUXURY HEADER (MATCHES PRODUCTS & OVERVIEW TABS EXACTLY) ── */}
@@ -296,6 +358,51 @@ export default function RecycleBinTab() {
           )}
         </div>
       </motion.div>
+
+      {/* ── 4 KPI METRIC CARDS (EXACT MATCHING OVERVIEW TAB & IMAGE 2) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
+        {kpis.map((kpi, idx) => (
+          <motion.div
+            key={kpi.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -4, scale: 1.015 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ delay: idx * 0.05, duration: 0.25, type: 'spring', stiffness: 350, damping: 25 }}
+            onClick={() => setActiveSection(kpi.targetSection)}
+            className={`bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border rounded-2xl sm:rounded-[22px] p-4.5 flex flex-col justify-between min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${kpi.cardGlow}`}
+          >
+            {/* Ambient Colored Radial Glow in Top Corner */}
+            <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 ${kpi.ambientGlow}`} />
+
+            <div className="flex justify-between items-start relative z-10">
+              <span className="text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase">
+                {kpi.label}
+              </span>
+              <div className={`w-9 h-9 rounded-2xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-108 ${kpi.iconBg}`}>
+                <kpi.icon size={17} className="stroke-[2.2]" />
+              </div>
+            </div>
+
+            <div className="mt-2 relative z-10">
+              <h3 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#221814] tracking-tight leading-none flex items-baseline font-sans">
+                {kpi.prefix && <span className="text-lg sm:text-xl font-bold mr-1 text-[#8C6239]">{kpi.prefix}</span>}
+                <AnimatedCounter value={kpi.numValue} duration={1.2} />
+              </h3>
+
+              <div className="mt-2.5 flex items-center">
+                <span className={`inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${kpi.badgeBg}`}>
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${kpi.dotColor} opacity-75`} />
+                    <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${kpi.dotColor}`} />
+                  </span>
+                  {kpi.sub}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
       {/* ── SECTION TABS (LUXURY CREAM PILLS, ZERO MIXING) ── */}
       <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#E7DDD0] shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
