@@ -14,10 +14,9 @@ import {
   Layers,
   AlertTriangle,
   CheckCircle2,
-  Info,
+  Sparkles,
   Calendar,
   User,
-  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
@@ -46,13 +45,38 @@ interface Counts {
 
 const SECTION_CONFIG: Record<
   RecycleSection,
-  { label: string; icon: React.ComponentType<{ className?: string }>; color: string }
+  { label: string; icon: React.ComponentType<{ className?: string }>; color: string; badgeColor: string }
 > = {
-  ALL: { label: 'All Items', icon: Layers, color: 'text-amber-400' },
-  PRODUCT: { label: 'Products', icon: Armchair, color: 'text-emerald-400' },
-  CATEGORY: { label: 'Categories', icon: FolderOpen, color: 'text-blue-400' },
-  ORDER: { label: 'Orders', icon: ShoppingBag, color: 'text-purple-400' },
-  REVIEW: { label: 'Reviews', icon: Star, color: 'text-amber-300' },
+  ALL: {
+    label: 'All Items',
+    icon: Layers,
+    color: 'text-[#8C6239]',
+    badgeColor: 'bg-[#FAF0E2] text-[#8C6239] border-[#B88E4B]/40',
+  },
+  PRODUCT: {
+    label: 'Products',
+    icon: Armchair,
+    color: 'text-emerald-700',
+    badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+  },
+  CATEGORY: {
+    label: 'Categories',
+    icon: FolderOpen,
+    color: 'text-blue-700',
+    badgeColor: 'bg-blue-50 text-blue-800 border-blue-200',
+  },
+  ORDER: {
+    label: 'Orders',
+    icon: ShoppingBag,
+    color: 'text-purple-700',
+    badgeColor: 'bg-purple-50 text-purple-800 border-purple-200',
+  },
+  REVIEW: {
+    label: 'Reviews',
+    icon: Star,
+    color: 'text-amber-600',
+    badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+  },
 };
 
 export default function RecycleBinTab() {
@@ -122,9 +146,8 @@ export default function RecycleBinTab() {
 
       if (res.ok && data.success) {
         toast.success(`Restored "${item.name}" back to active database!`, {
-          icon: <CheckCircle2 className="w-5 h-5 text-emerald-400" />,
+          icon: <CheckCircle2 className="w-5 h-5 text-emerald-600" />,
         });
-        // Optimistic UI update
         setItems((prev) => prev.filter((i) => i.id !== item.id));
         setCounts((prev) => {
           const type = item.entityType;
@@ -153,7 +176,7 @@ export default function RecycleBinTab() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success('Item permanently deleted from database');
+        toast.success('Item permanently erased from database');
         setItems((prev) => prev.filter((i) => i.id !== id));
         fetchItems();
       } else {
@@ -210,60 +233,72 @@ export default function RecycleBinTab() {
   }, [items, activeSection, searchQuery]);
 
   return (
-    <div className="space-y-6">
-      {/* Header & Status Card */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-900 via-neutral-900/90 to-amber-950/30 p-6 md:p-8 border border-amber-500/20 shadow-2xl backdrop-blur-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400">
-                <Trash2 className="w-5 h-5" />
+    <div className="space-y-4 font-sans text-[#18110D]">
+      {/* ── LUXURY HEADER (MATCHES PRODUCTS & OVERVIEW TABS EXACTLY) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E7DDD0] p-4 sm:p-5 lg:p-6 rounded-2xl lg:rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.02)] shrink-0 relative overflow-hidden group hover:border-[#B88E4B]/40 transition-all"
+      >
+        <div className="relative z-10 w-full lg:w-auto">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/35 flex items-center gap-1 shadow-2xs font-serif">
+              <Sparkles size={9} className="text-[#B88E4B]" />
+              DATABASE SEPARATION ARCHIVE
+            </span>
+
+            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black font-mono uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-500/35 flex items-center gap-1.5 shadow-2xs">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
               </span>
-              <h2 className="text-2xl font-serif tracking-wide text-amber-100">
-                Recycle Bin Archive
-              </h2>
-            </div>
-            <p className="text-sm text-neutral-400 max-w-xl">
-              Deleted items are safely stored in separate sections away from your active database.
-              Your live tables stay 100% clean and match the website 1-to-1.
-            </p>
+              ACTIVE TABLES 100% CLEAN
+            </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchItems()}
-              disabled={loading}
-              className="border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200"
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-
-            {counts.ALL > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() =>
-                  setConfirmModal({
-                    open: true,
-                    type: activeSection === 'ALL' ? 'ALL' : 'SECTION',
-                    section: activeSection,
-                  })
-                }
-                className="bg-red-950/80 hover:bg-red-900 border border-red-500/30 text-red-200"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                {activeSection === 'ALL' ? 'Empty All Bin' : `Empty ${SECTION_CONFIG[activeSection].label}`}
-              </Button>
-            )}
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#221814] tracking-tight font-serif">
+            Recycle Bin <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">& Archive Manager</span>
+          </h1>
+          <p className="text-stone-500 text-xs font-medium mt-0.5 max-w-xl">
+            Deleted items are safely stored in separate sections away from your active database. Your live tables stay 100% clean and match the website 1-to-1.
+          </p>
         </div>
-      </div>
 
-      {/* SECTION TABS: Separate & Distinct (Zero Mixing) */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-neutral-900/80 border border-neutral-800 backdrop-blur-md">
+        {/* Action Controls */}
+        <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#E7DDD0]/60">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchItems()}
+            disabled={loading}
+            className="bg-white hover:bg-[#FAF5EE] border-[#D9C4AC] text-[#1F1612] text-xs font-bold shadow-2xs rounded-full px-3.5 h-[36px]"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+
+          {counts.ALL > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() =>
+                setConfirmModal({
+                  open: true,
+                  type: activeSection === 'ALL' ? 'ALL' : 'SECTION',
+                  section: activeSection,
+                })
+              }
+              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-full px-3.5 h-[36px] shadow-2xs"
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              {activeSection === 'ALL' ? 'Empty All Bin' : `Empty ${SECTION_CONFIG[activeSection].label}`}
+            </Button>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── SECTION TABS (LUXURY CREAM PILLS, ZERO MIXING) ── */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#E7DDD0] shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
         {(Object.keys(SECTION_CONFIG) as RecycleSection[]).map((sectionKey) => {
           const cfg = SECTION_CONFIG[sectionKey];
           const Icon = cfg.icon;
@@ -274,21 +309,21 @@ export default function RecycleBinTab() {
             <button
               key={sectionKey}
               onClick={() => setActiveSection(sectionKey)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-sm'
-                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/60'
+                  ? 'bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/40 shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-[#FAF5EE] border border-transparent'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? cfg.color : 'text-neutral-500'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-[#8C6239]' : 'text-stone-500'}`} />
               <span>{cfg.label}</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                   isActive
-                    ? 'bg-amber-500/30 text-amber-200'
+                    ? 'bg-[#B88E4B] text-white'
                     : count > 0
-                    ? 'bg-neutral-800 text-neutral-300'
-                    : 'bg-neutral-800/40 text-neutral-500'
+                    ? 'bg-stone-200 text-stone-700'
+                    : 'bg-stone-100 text-stone-400'
                 }`}
               >
                 {count}
@@ -298,38 +333,37 @@ export default function RecycleBinTab() {
         })}
       </div>
 
-      {/* Search & Filter Bar */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
-          <Input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={`Search within ${SECTION_CONFIG[activeSection].label.toLowerCase()}...`}
-            className="pl-9 bg-neutral-900/90 border-neutral-800 text-neutral-100 placeholder:text-neutral-500 focus:border-amber-500/50"
-          />
-        </div>
+      {/* ── SEARCH BAR (LUXURY STYLING) ── */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+        <Input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={`Search within ${SECTION_CONFIG[activeSection].label.toLowerCase()}...`}
+          className="h-[40px] w-full bg-white border border-[#D9C4AC] rounded-full pl-10 pr-4 text-xs font-semibold text-[#18110D] focus:outline-none focus:border-[#B88E4B] focus:ring-2 focus:ring-[#B88E4B]/20 placeholder:text-stone-400 shadow-xs"
+        />
       </div>
 
-      {/* Items Section Container */}
+      {/* ── ITEMS CONTAINER ── */}
       <div className="space-y-3">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-neutral-400 space-y-3">
-            <RefreshCw className="w-8 h-8 animate-spin text-amber-500/60" />
-            <p className="text-sm font-medium">Scanning Recycle Bin sections...</p>
+          <div className="flex flex-col items-center justify-center py-20 bg-white border border-[#E7DDD0] rounded-[22px] shadow-[0_4px_20px_rgba(44,30,24,0.015)] space-y-3">
+            <RefreshCw className="w-8 h-8 animate-spin text-[#B88E4B]" />
+            <p className="text-xs font-bold text-stone-600">Scanning Recycle Bin sections...</p>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-4 rounded-2xl border border-dashed border-neutral-800 bg-neutral-900/30 text-center">
-            <div className="p-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mb-3">
+          /* ── LUXURY PRISTINE EMPTY STATE (WARM CREAM/WHITE) ── */
+          <div className="flex flex-col items-center justify-center py-16 px-6 bg-white border border-[#E7DDD0] rounded-[22px] shadow-[0_4px_20px_rgba(44,30,24,0.015)] text-center">
+            <div className="p-3.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 mb-3 shadow-2xs">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-serif text-neutral-200 mb-1">
+            <h3 className="text-lg font-serif font-bold text-[#1F1612] mb-1">
               {searchQuery
                 ? 'No items matched your search query'
                 : `No Deleted Items in ${SECTION_CONFIG[activeSection].label}`}
             </h3>
-            <p className="text-sm text-neutral-500 max-w-md">
+            <p className="text-xs text-stone-500 max-w-md">
               {searchQuery
                 ? 'Try a different search keyword or switch to another section.'
                 : 'Your database in this section is 100% clean and pristine. Any items you delete will appear safely here.'}
@@ -353,11 +387,11 @@ export default function RecycleBinTab() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="group relative flex flex-col md:flex-row md:items-center justify-between p-4 md:p-5 rounded-xl bg-neutral-900/70 border border-neutral-800 hover:border-amber-500/30 transition-all gap-4"
+                    className="group flex flex-col md:flex-row md:items-center justify-between p-4 sm:p-5 rounded-2xl bg-white border border-[#E7DDD0] hover:border-[#B88E4B]/50 hover:shadow-[0_8px_25px_rgba(184,142,75,0.08)] transition-all gap-4"
                   >
                     <div className="flex items-start gap-4">
                       {/* Thumbnail / Entity Icon */}
-                      <div className="relative w-14 h-14 rounded-lg bg-neutral-800/80 border border-neutral-700/50 flex items-center justify-center overflow-hidden shrink-0">
+                      <div className="relative w-14 h-14 rounded-xl bg-[#FAF7F2] border border-[#E7DDD0] flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
                         {payload.image ? (
                           <img
                             src={payload.image}
@@ -372,37 +406,36 @@ export default function RecycleBinTab() {
                       {/* Details */}
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h4 className="text-base font-medium text-neutral-100 group-hover:text-amber-200 transition-colors">
+                          <h4 className="text-base font-bold text-[#1F1612] font-serif group-hover:text-[#8C6239] transition-colors">
                             {item.name}
                           </h4>
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] tracking-wider uppercase bg-neutral-800/60 border-neutral-700 text-neutral-300"
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider border shadow-2xs ${cfg.badgeColor}`}
                           >
                             {item.entityType}
-                          </Badge>
+                          </span>
                           {payload.price && (
-                            <span className="text-xs font-semibold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">
+                            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                               ₨ {new Intl.NumberFormat('en-PK').format(Number(payload.price))}
                             </span>
                           )}
                           {payload.totalAmount && (
-                            <span className="text-xs font-semibold text-purple-400 bg-purple-950/40 px-2 py-0.5 rounded border border-purple-500/20">
+                            <span className="text-xs font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
                               ₨ {new Intl.NumberFormat('en-PK').format(Number(payload.totalAmount))}
                             </span>
                           )}
                         </div>
 
-                        <p className="text-xs text-neutral-400 line-clamp-1 max-w-xl">
+                        <p className="text-xs text-stone-500 line-clamp-1 max-w-xl">
                           {payload.description ||
                             (payload.category && `Category: ${payload.category}`) ||
                             (payload.shippingAddress && `Ship to: ${payload.shippingCity || 'Pakistan'}`) ||
                             'Archived snapshot available'}
                         </p>
 
-                        <div className="flex flex-wrap items-center gap-4 text-[11px] text-neutral-500 pt-1">
+                        <div className="flex flex-wrap items-center gap-4 text-[11px] text-stone-400 pt-1">
                           <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
+                            <Calendar className="w-3 h-3 text-stone-400" />
                             {new Date(item.deletedAt).toLocaleString('en-PK', {
                               dateStyle: 'medium',
                               timeStyle: 'short',
@@ -410,11 +443,11 @@ export default function RecycleBinTab() {
                           </span>
                           {item.deletedBy && (
                             <span className="flex items-center gap-1">
-                              <User className="w-3 h-3" />
+                              <User className="w-3 h-3 text-stone-400" />
                               Deleted by: {item.deletedBy}
                             </span>
                           )}
-                          <span className="font-mono text-neutral-600">ID: {item.entityId}</span>
+                          <span className="font-mono text-stone-400">ID: {item.entityId}</span>
                         </div>
                       </div>
                     </div>
@@ -425,7 +458,7 @@ export default function RecycleBinTab() {
                         size="sm"
                         onClick={() => handleRestore(item)}
                         disabled={isRestoring || isPurging}
-                        className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs"
+                        className="bg-[#FAF5EE] hover:bg-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/40 hover:border-[#B88E4B] text-xs font-bold rounded-full px-3.5 h-[34px] shadow-2xs"
                       >
                         <RotateCcw className={`w-3.5 h-3.5 mr-1.5 ${isRestoring ? 'animate-spin' : ''}`} />
                         {isRestoring ? 'Restoring...' : 'Restore'}
@@ -443,7 +476,7 @@ export default function RecycleBinTab() {
                           })
                         }
                         disabled={isRestoring || isPurging}
-                        className="text-neutral-400 hover:text-red-400 hover:bg-red-950/20 text-xs"
+                        className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-full px-3 h-[34px]"
                       >
                         <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                         Delete Forever
@@ -457,39 +490,39 @@ export default function RecycleBinTab() {
         )}
       </div>
 
-      {/* Confirmation Modal */}
+      {/* ── CONFIRMATION MODAL (MATCHES LUXURY LIGHT MODAL DESIGN) ── */}
       <AnimatePresence>
         {confirmModal.open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md p-6 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-2xl space-y-4"
+              className="w-full max-w-md p-6 rounded-[22px] bg-white border border-[#E7DDD0] shadow-[0_20px_60px_rgba(44,30,24,0.2)] space-y-4"
             >
               <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+                <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 shrink-0">
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-serif text-neutral-100">
+                  <h3 className="text-lg font-serif font-bold text-[#1F1612]">
                     {confirmModal.type === 'SINGLE'
                       ? 'Permanently Delete Item?'
                       : confirmModal.type === 'SECTION'
                       ? `Empty ${SECTION_CONFIG[confirmModal.section || 'ALL'].label}?`
                       : 'Empty Entire Recycle Bin?'}
                   </h3>
-                  <p className="text-xs text-neutral-400 mt-1">
+                  <p className="text-xs text-stone-600 mt-1 leading-relaxed">
                     {confirmModal.type === 'SINGLE' ? (
                       <>
                         Are you sure you want to permanently delete{' '}
-                        <strong className="text-neutral-200">"{confirmModal.itemName}"</strong>? This
+                        <strong className="text-[#1F1612]">"{confirmModal.itemName}"</strong>? This
                         action cannot be undone and the record will be erased forever from the database.
                       </>
                     ) : confirmModal.type === 'SECTION' ? (
                       <>
                         Are you sure you want to permanently purge all items in the{' '}
-                        <strong className="text-neutral-200">
+                        <strong className="text-[#1F1612]">
                           {SECTION_CONFIG[confirmModal.section || 'ALL'].label}
                         </strong>{' '}
                         section? This cannot be undone.
@@ -504,12 +537,12 @@ export default function RecycleBinTab() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-2.5 pt-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setConfirmModal({ open: false, type: 'SINGLE' })}
-                  className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+                  className="border-[#D9C4AC] text-stone-700 hover:bg-[#FAF5EE] rounded-full text-xs font-semibold px-4 h-[36px]"
                 >
                   Cancel
                 </Button>
@@ -525,7 +558,7 @@ export default function RecycleBinTab() {
                       handleEmpty();
                     }
                   }}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="bg-rose-600 hover:bg-rose-700 text-white rounded-full text-xs font-bold px-4 h-[36px] shadow-xs"
                 >
                   Confirm & Delete Forever
                 </Button>
