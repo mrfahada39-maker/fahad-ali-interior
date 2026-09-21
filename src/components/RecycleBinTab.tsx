@@ -17,11 +17,13 @@ import {
   Sparkles,
   Calendar,
   User,
+  ShieldCheck,
+  Package,
 } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
-import { Badge } from '@/components/badge';
 import { toast } from 'sonner';
+import AnimatedCounter from '@/components/AnimatedCounter';
 
 type RecycleSection = 'ALL' | 'PRODUCT' | 'CATEGORY' | 'ORDER' | 'REVIEW';
 
@@ -45,38 +47,13 @@ interface Counts {
 
 const SECTION_CONFIG: Record<
   RecycleSection,
-  { label: string; icon: React.ComponentType<{ className?: string }>; color: string; badgeColor: string }
+  { label: string; icon: React.ComponentType<{ className?: string; size?: number }>; color: string }
 > = {
-  ALL: {
-    label: 'All Items',
-    icon: Layers,
-    color: 'text-[#8C6239]',
-    badgeColor: 'bg-[#FAF0E2] text-[#8C6239] border-[#B88E4B]/40',
-  },
-  PRODUCT: {
-    label: 'Products',
-    icon: Armchair,
-    color: 'text-emerald-700',
-    badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-  },
-  CATEGORY: {
-    label: 'Categories',
-    icon: FolderOpen,
-    color: 'text-blue-700',
-    badgeColor: 'bg-blue-50 text-blue-800 border-blue-200',
-  },
-  ORDER: {
-    label: 'Orders',
-    icon: ShoppingBag,
-    color: 'text-purple-700',
-    badgeColor: 'bg-purple-50 text-purple-800 border-purple-200',
-  },
-  REVIEW: {
-    label: 'Reviews',
-    icon: Star,
-    color: 'text-amber-600',
-    badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
-  },
+  ALL: { label: 'All Items', icon: Layers, color: 'text-[#8C6239]' },
+  PRODUCT: { label: 'Products', icon: Armchair, color: 'text-blue-600' },
+  CATEGORY: { label: 'Categories', icon: FolderOpen, color: 'text-purple-600' },
+  ORDER: { label: 'Orders', icon: ShoppingBag, color: 'text-emerald-600' },
+  REVIEW: { label: 'Reviews', icon: Star, color: 'text-amber-500' },
 };
 
 export default function RecycleBinTab() {
@@ -232,265 +209,397 @@ export default function RecycleBinTab() {
     });
   }, [items, activeSection, searchQuery]);
 
+  // 4 KPI Metric Cards matching Image 2 exactly
+  const kpis = [
+    {
+      label: 'TOTAL ARCHIVED ITEMS',
+      numValue: counts.ALL,
+      sub: counts.ALL === 0 ? '0 Items in Period' : `${counts.ALL} Items In Archive`,
+      icon: Trash2,
+      color: 'text-[#B88E4B]',
+      iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
+      ambientGlow: 'bg-[#B88E4B]/10',
+      cardGlow: 'border-amber-300/80 hover:border-[#B88E4B] shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_12px_30px_rgba(184,142,75,0.18)]',
+      badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
+      dotColor: 'bg-emerald-500',
+      targetSection: 'ALL' as RecycleSection,
+    },
+    {
+      label: 'DELETED PRODUCTS',
+      numValue: counts.PRODUCT,
+      sub: counts.PRODUCT === 0 ? '0 Products Archived' : `${counts.PRODUCT} Restorable Products`,
+      icon: Armchair,
+      color: 'text-blue-600',
+      iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
+      ambientGlow: 'bg-blue-500/10',
+      cardGlow: 'border-blue-300/80 hover:border-blue-500 shadow-[0_4px_20px_rgba(59,130,246,0.08)] hover:shadow-[0_12px_30px_rgba(59,130,246,0.18)]',
+      badgeBg: 'bg-blue-50 text-blue-800 border-blue-500/30',
+      dotColor: 'bg-blue-500',
+      targetSection: 'PRODUCT' as RecycleSection,
+    },
+    {
+      label: 'DELETED CATEGORIES',
+      numValue: counts.CATEGORY,
+      sub: counts.CATEGORY === 0 ? '0 Categories Archived' : `${counts.CATEGORY} Restorable Categories`,
+      icon: FolderOpen,
+      color: 'text-purple-600',
+      iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
+      ambientGlow: 'bg-purple-500/10',
+      cardGlow: 'border-purple-300/80 hover:border-purple-500 shadow-[0_4px_20px_rgba(168,85,247,0.08)] hover:shadow-[0_12px_30px_rgba(168,85,247,0.18)]',
+      badgeBg: 'bg-purple-50 text-purple-800 border-purple-500/30',
+      dotColor: 'bg-purple-500',
+      targetSection: 'CATEGORY' as RecycleSection,
+    },
+    {
+      label: 'DELETED ORDERS & REVIEWS',
+      numValue: counts.ORDER + counts.REVIEW,
+      sub: (counts.ORDER + counts.REVIEW) === 0 ? '100% In-Stock Database' : `${counts.ORDER + counts.REVIEW} Archived Records`,
+      icon: ShieldCheck,
+      color: 'text-emerald-600',
+      iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
+      ambientGlow: 'bg-emerald-500/10',
+      cardGlow: 'border-emerald-300/80 hover:border-emerald-500 shadow-[0_4px_20px_rgba(16,185,129,0.08)] hover:shadow-[0_12px_30px_rgba(16,185,129,0.18)]',
+      badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
+      dotColor: 'bg-emerald-500',
+      targetSection: 'ORDER' as RecycleSection,
+    },
+  ];
+
   return (
-    <div className="space-y-4 font-sans text-[#18110D]">
-      {/* ── LUXURY HEADER (MATCHES PRODUCTS & OVERVIEW TABS EXACTLY) ── */}
+    <div className="space-y-3 sm:space-y-4 font-sans text-[#18110D]">
+      {/* ── 1. HEADER (100% IDENTICAL TO IMAGE 2 EXECUTIVE DASHBOARD HEADER) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E7DDD0] p-4 sm:p-5 lg:p-6 rounded-2xl lg:rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.02)] shrink-0 relative overflow-hidden group hover:border-[#B88E4B]/40 transition-all"
+        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2.5 bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E7DDD0] p-3 sm:py-2.5 sm:px-5 lg:py-3 lg:px-6 rounded-2xl lg:rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.02)] shrink-0 relative overflow-hidden group hover:border-[#B88E4B]/40 transition-all"
       >
         <div className="relative z-10 w-full lg:w-auto">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/35 flex items-center gap-1 shadow-2xs font-serif">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+            <span className="px-2 sm:px-2.5 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/35 flex items-center gap-1 shadow-2xs font-serif">
               <Sparkles size={9} className="text-[#B88E4B]" />
-              DATABASE SEPARATION ARCHIVE
+              <span className="lg:hidden">V2.4</span>
+              <span className="hidden lg:inline">ENTERPRISE SUITE V2.4</span>
             </span>
 
-            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black font-mono uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-500/35 flex items-center gap-1.5 shadow-2xs">
-              <span className="relative flex h-1.5 w-1.5">
+            <span className="px-2 sm:px-2.5 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black font-mono uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-500/35 flex items-center gap-1.5 shadow-2xs">
+              <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500" />
               </span>
-              ACTIVE TABLES 100% CLEAN
+              <span className="lg:hidden tracking-wide">LIVE SYNCED</span>
+              <span className="hidden lg:inline tracking-wide">100% REAL LIVE DATA SYNCED</span>
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black text-[#221814] tracking-tight font-serif">
-            Recycle Bin <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">& Archive Manager</span>
+          <h1 className="text-[21px] sm:text-2xl lg:text-3xl xl:text-4xl font-black text-[#221814] tracking-tight leading-snug lg:leading-tight font-serif">
+            Fahad Ali Interior <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">— Recycle Bin & Archive</span>
           </h1>
-          <p className="text-stone-500 text-xs font-medium mt-0.5 max-w-xl">
-            Deleted items are safely stored in separate sections away from your active database. Your live tables stay 100% clean and match the website 1-to-1.
+          <p className="hidden sm:block text-stone-500 text-[11px] sm:text-xs font-medium mt-0.5">
+            Real-time live visitor telemetry radar, revenue forecasts, order fulfillment stream, and inventory health.
           </p>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#E7DDD0]/60">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchItems()}
-            disabled={loading}
-            className="bg-white hover:bg-[#FAF5EE] border-[#D9C4AC] text-[#1F1612] text-xs font-bold shadow-2xs rounded-full px-3.5 h-[36px]"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-
-          {counts.ALL > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() =>
+        {/* Gold Luxury Statement Action Button (Matching Image 2 Financial Statement button) */}
+        <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full lg:w-auto shrink-0 relative z-10 pt-1 sm:pt-0 border-t sm:border-t-0 border-[#E7DDD0]/60">
+          <button
+            type="button"
+            onClick={() => {
+              if (counts.ALL > 0) {
                 setConfirmModal({
                   open: true,
                   type: activeSection === 'ALL' ? 'ALL' : 'SECTION',
                   section: activeSection,
-                })
+                });
+              } else {
+                fetchItems();
               }
-              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-full px-3.5 h-[36px] shadow-2xs"
-            >
-              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              {activeSection === 'ALL' ? 'Empty All Bin' : `Empty ${SECTION_CONFIG[activeSection].label}`}
-            </Button>
-          )}
+            }}
+            className="w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] hover:brightness-110 text-white font-serif font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+          >
+            {counts.ALL > 0 ? <Trash2 size={15} /> : <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />}
+            <span>{counts.ALL > 0 ? (activeSection === 'ALL' ? 'Empty All Bin' : `Empty ${SECTION_CONFIG[activeSection].label}`) : 'Refresh Archive'}</span>
+          </button>
         </div>
       </motion.div>
 
-      {/* ── SECTION TABS (LUXURY CREAM PILLS, ZERO MIXING) ── */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#E7DDD0] shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
-        {(Object.keys(SECTION_CONFIG) as RecycleSection[]).map((sectionKey) => {
-          const cfg = SECTION_CONFIG[sectionKey];
-          const Icon = cfg.icon;
-          const count = counts[sectionKey] || 0;
-          const isActive = activeSection === sectionKey;
-
+      {/* ── 2. KPI METRIC CARDS (EXACT MATCH WITH IMAGE 2: 4 LUXURY JEWEL ORB CARDS) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
+        {kpis.map((kpi, idx) => {
+          const isSelected = activeSection === kpi.targetSection;
           return (
-            <button
-              key={sectionKey}
-              onClick={() => setActiveSection(sectionKey)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/40 shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-[#FAF5EE] border border-transparent'
+            <motion.div
+              key={kpi.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -4, scale: 1.015 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ delay: idx * 0.05, duration: 0.25, type: 'spring', stiffness: 350, damping: 25 }}
+              onClick={() => setActiveSection(kpi.targetSection)}
+              className={`bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border rounded-2xl sm:rounded-[22px] p-4.5 flex flex-col justify-between min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${
+                isSelected
+                  ? 'ring-2 ring-[#B88E4B] border-[#B88E4B] shadow-[0_8px_30px_rgba(184,142,75,0.2)]'
+                  : kpi.cardGlow
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-[#8C6239]' : 'text-stone-500'}`} />
-              <span>{cfg.label}</span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  isActive
-                    ? 'bg-[#B88E4B] text-white'
-                    : count > 0
-                    ? 'bg-stone-200 text-stone-700'
-                    : 'bg-stone-100 text-stone-400'
-                }`}
-              >
-                {count}
-              </span>
-            </button>
+              {/* Ambient Radial Glow */}
+              <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 ${kpi.ambientGlow}`} />
+
+              <div className="flex justify-between items-start relative z-10">
+                <span className="text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase font-sans">
+                  {kpi.label}
+                </span>
+                {/* 3D Glass Jewel Orb */}
+                <div className={`w-9 h-9 rounded-2xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 ${kpi.iconBg}`}>
+                  <kpi.icon size={17} className="stroke-[2.2]" />
+                </div>
+              </div>
+
+              <div className="mt-2 relative z-10">
+                <h3 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none flex items-baseline font-sans">
+                  <AnimatedCounter value={kpi.numValue} duration={1.2} />
+                </h3>
+
+                <div className="mt-2.5 flex items-center">
+                  <span className={`inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${kpi.badgeBg}`}>
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${kpi.dotColor} opacity-75`} />
+                      <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${kpi.dotColor}`} />
+                    </span>
+                    {kpi.sub}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
           );
         })}
       </div>
 
-      {/* ── SEARCH BAR (LUXURY STYLING) ── */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-        <Input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={`Search within ${SECTION_CONFIG[activeSection].label.toLowerCase()}...`}
-          className="h-[40px] w-full bg-white border border-[#D9C4AC] rounded-full pl-10 pr-4 text-xs font-semibold text-[#18110D] focus:outline-none focus:border-[#B88E4B] focus:ring-2 focus:ring-[#B88E4B]/20 placeholder:text-stone-400 shadow-xs"
-        />
-      </div>
-
-      {/* ── ITEMS CONTAINER ── */}
-      <div className="space-y-3">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white border border-[#E7DDD0] rounded-[22px] shadow-[0_4px_20px_rgba(44,30,24,0.015)] space-y-3">
-            <RefreshCw className="w-8 h-8 animate-spin text-[#B88E4B]" />
-            <p className="text-xs font-bold text-stone-600">Scanning Recycle Bin sections...</p>
-          </div>
-        ) : filteredItems.length === 0 ? (
-          /* ── LUXURY PRISTINE EMPTY STATE (WARM CREAM/WHITE) ── */
-          <div className="flex flex-col items-center justify-center py-16 px-6 bg-white border border-[#E7DDD0] rounded-[22px] shadow-[0_4px_20px_rgba(44,30,24,0.015)] text-center">
-            <div className="p-3.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 mb-3 shadow-2xs">
-              <CheckCircle2 className="w-8 h-8" />
+      {/* ── 3. MAIN SECTION CONTAINER (MATCHING IMAGE 2 "Revenue & Acquisition Registry" CARD) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white border border-[#E7DDD0] rounded-[20px] p-4 sm:p-5 shadow-[0_4px_20px_rgba(44,30,24,0.015)] hover:border-[#B88E4B]/40 transition-all space-y-4"
+      >
+        {/* Header with Title + Section Switcher Pills matching Image 2 */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 border-b border-neutral-100 pb-3 shrink-0">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xs sm:text-sm lg:text-base font-black text-[#221814] flex items-center gap-1.5 font-serif">
+                <span className="text-[#B88E4B]">✦</span> Recycle Bin & Item Registry
+              </h2>
+              <span className="text-[9px] font-black text-[#B08552] bg-gradient-to-r from-[#FAF5EE] to-[#F3E7D3] border border-[#B88E4B]/35 px-2.5 py-0.5 rounded-full shadow-2xs font-serif">
+                {SECTION_CONFIG[activeSection].label.toUpperCase()} REGISTRY
+              </span>
             </div>
-            <h3 className="text-lg font-serif font-bold text-[#1F1612] mb-1">
-              {searchQuery
-                ? 'No items matched your search query'
-                : `No Deleted Items in ${SECTION_CONFIG[activeSection].label}`}
-            </h3>
-            <p className="text-xs text-stone-500 max-w-md">
-              {searchQuery
-                ? 'Try a different search keyword or switch to another section.'
-                : 'Your database in this section is 100% clean and pristine. Any items you delete will appear safely here.'}
+            <p className="text-stone-400 text-[10.5px] font-medium mt-0.5">
+              Zero-mixing isolated storage — items can be safely restored back to the live database or permanently purged.
             </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3">
-            <AnimatePresence mode="popLayout">
-              {filteredItems.map((item) => {
-                const cfg = SECTION_CONFIG[item.entityType] || SECTION_CONFIG.ALL;
-                const Icon = cfg.icon;
-                const payload = item.payload || {};
-                const isRestoring = restoringId === item.id;
-                const isPurging = purgingId === item.id;
+
+          {/* Section Pills Switcher (Matching Image 2 black/dark pill toggle) */}
+          <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap">
+            <div className="flex bg-[#FAF7F2] p-1 rounded-xl border border-[#E7DDD0] gap-1">
+              {(Object.keys(SECTION_CONFIG) as RecycleSection[]).map((sectionKey) => {
+                const cfg = SECTION_CONFIG[sectionKey];
+                const count = counts[sectionKey] || 0;
+                const isActive = activeSection === sectionKey;
 
                 return (
-                  <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="group flex flex-col md:flex-row md:items-center justify-between p-4 sm:p-5 rounded-2xl bg-white border border-[#E7DDD0] hover:border-[#B88E4B]/50 hover:shadow-[0_8px_25px_rgba(184,142,75,0.08)] transition-all gap-4"
+                  <button
+                    key={sectionKey}
+                    type="button"
+                    onClick={() => setActiveSection(sectionKey)}
+                    className={`px-3 py-1 text-[11px] font-black rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                      isActive
+                        ? 'bg-[#221814] text-[#F3E5AB] shadow-xs'
+                        : 'text-stone-500 hover:text-stone-800'
+                    }`}
                   >
-                    <div className="flex items-start gap-4">
-                      {/* Thumbnail / Entity Icon */}
-                      <div className="relative w-14 h-14 rounded-xl bg-[#FAF7F2] border border-[#E7DDD0] flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
-                        {payload.image ? (
-                          <img
-                            src={payload.image}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Icon className={`w-6 h-6 ${cfg.color}`} />
-                        )}
-                      </div>
-
-                      {/* Details */}
-                      <div className="space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h4 className="text-base font-bold text-[#1F1612] font-serif group-hover:text-[#8C6239] transition-colors">
-                            {item.name}
-                          </h4>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider border shadow-2xs ${cfg.badgeColor}`}
-                          >
-                            {item.entityType}
-                          </span>
-                          {payload.price && (
-                            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                              ₨ {new Intl.NumberFormat('en-PK').format(Number(payload.price))}
-                            </span>
-                          )}
-                          {payload.totalAmount && (
-                            <span className="text-xs font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                              ₨ {new Intl.NumberFormat('en-PK').format(Number(payload.totalAmount))}
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-stone-500 line-clamp-1 max-w-xl">
-                          {payload.description ||
-                            (payload.category && `Category: ${payload.category}`) ||
-                            (payload.shippingAddress && `Ship to: ${payload.shippingCity || 'Pakistan'}`) ||
-                            'Archived snapshot available'}
-                        </p>
-
-                        <div className="flex flex-wrap items-center gap-4 text-[11px] text-stone-400 pt-1">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-stone-400" />
-                            {new Date(item.deletedAt).toLocaleString('en-PK', {
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                            })}
-                          </span>
-                          {item.deletedBy && (
-                            <span className="flex items-center gap-1">
-                              <User className="w-3 h-3 text-stone-400" />
-                              Deleted by: {item.deletedBy}
-                            </span>
-                          )}
-                          <span className="font-mono text-stone-400">ID: {item.entityId}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-                      <Button
-                        size="sm"
-                        onClick={() => handleRestore(item)}
-                        disabled={isRestoring || isPurging}
-                        className="bg-[#FAF5EE] hover:bg-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/40 hover:border-[#B88E4B] text-xs font-bold rounded-full px-3.5 h-[34px] shadow-2xs"
-                      >
-                        <RotateCcw className={`w-3.5 h-3.5 mr-1.5 ${isRestoring ? 'animate-spin' : ''}`} />
-                        {isRestoring ? 'Restoring...' : 'Restore'}
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          setConfirmModal({
-                            open: true,
-                            type: 'SINGLE',
-                            itemId: item.id,
-                            itemName: item.name,
-                          })
-                        }
-                        disabled={isRestoring || isPurging}
-                        className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-full px-3 h-[34px]"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                        Delete Forever
-                      </Button>
-                    </div>
-                  </motion.div>
+                    <span>{cfg.label}</span>
+                    <span
+                      className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${
+                        isActive
+                          ? 'bg-[#B88E4B] text-white'
+                          : 'bg-stone-200 text-stone-600'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
                 );
               })}
-            </AnimatePresence>
-          </div>
-        )}
-      </div>
+            </div>
 
-      {/* ── CONFIRMATION MODAL (MATCHES LUXURY LIGHT MODAL DESIGN) ── */}
+            {/* Quick Refresh Pill */}
+            <button
+              type="button"
+              onClick={() => fetchItems()}
+              disabled={loading}
+              className="bg-[#FAF7F2] hover:bg-[#FAF5EE] text-stone-600 hover:text-stone-900 border border-[#E7DDD0] rounded-xl px-2.5 py-1 text-xs font-bold transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+            >
+              <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin text-[#B88E4B]' : ''}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar matching Image 2 input design */}
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={`Search within ${SECTION_CONFIG[activeSection].label.toLowerCase()} by name or ID...`}
+            className="h-[38px] w-full bg-white border border-[#D9C4AC] rounded-full pl-10 pr-4 text-xs font-semibold text-[#18110D] focus:outline-none focus:border-[#B88E4B] focus:ring-2 focus:ring-[#B88E4B]/20 placeholder:text-stone-400 shadow-xs"
+          />
+        </div>
+
+        {/* ── 4. ITEMS LIST / CLEAN PRISTINE EMPTY STATE (MATCHING IMAGE 2) ── */}
+        <div className="space-y-3">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-[#FAF7F2]/40 rounded-[20px] border border-dashed border-[#E7DDD0] space-y-2">
+              <RefreshCw className="w-8 h-8 animate-spin text-[#B88E4B]" />
+              <p className="text-xs font-bold text-stone-600">Scanning {SECTION_CONFIG[activeSection].label} section...</p>
+            </div>
+          ) : filteredItems.length === 0 ? (
+            /* Pristine Clean Empty State (Matching Image 2 Luxury Look) */
+            <div className="flex flex-col items-center justify-center py-16 px-6 bg-gradient-to-b from-[#FAF7F2]/40 via-white to-[#FAF7F2]/40 border border-dashed border-[#E7DDD0] rounded-[20px] text-center">
+              <div className="p-3 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 mb-3 shadow-2xs">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-serif font-black text-[#1F1612] mb-1">
+                {searchQuery
+                  ? 'No items matched your search query'
+                  : `No Deleted Items in ${SECTION_CONFIG[activeSection].label}`}
+              </h3>
+              <p className="text-xs text-stone-500 max-w-md font-sans">
+                {searchQuery
+                  ? 'Try a different search keyword or switch to another section above.'
+                  : 'Your database in this section is 100% clean and pristine. Any items you delete will appear safely here.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              <AnimatePresence mode="popLayout">
+                {filteredItems.map((item) => {
+                  const cfg = SECTION_CONFIG[item.entityType] || SECTION_CONFIG.ALL;
+                  const Icon = cfg.icon;
+                  const payload = item.payload || {};
+                  const isRestoring = restoringId === item.id;
+                  const isPurging = purgingId === item.id;
+
+                  return (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="group flex flex-col md:flex-row md:items-center justify-between p-4 sm:p-5 rounded-2xl bg-white border border-[#E7DDD0] hover:border-[#B88E4B]/60 hover:shadow-[0_8px_25px_rgba(184,142,75,0.08)] transition-all gap-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Thumbnail / Entity Icon */}
+                        <div className="relative w-14 h-14 rounded-xl bg-[#FAF7F2] border border-[#E7DDD0] flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                          {payload.image ? (
+                            <img
+                              src={payload.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Icon size={22} className={cfg.color} />
+                          )}
+                        </div>
+
+                        {/* Details */}
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="text-base font-bold text-[#1F1612] font-serif group-hover:text-[#8C6239] transition-colors">
+                              {item.name}
+                            </h4>
+                            <span className="px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider border shadow-2xs bg-[#FAF5EE] text-[#8C6239] border-[#D9C4AC]">
+                              {item.entityType}
+                            </span>
+                            {payload.price && (
+                              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                ₨ {new Intl.NumberFormat('en-PK').format(Number(payload.price))}
+                              </span>
+                            )}
+                            {payload.totalAmount && (
+                              <span className="text-xs font-bold text-purple-800 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+                                ₨ {new Intl.NumberFormat('en-PK').format(Number(payload.totalAmount))}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-stone-500 line-clamp-1 max-w-xl">
+                            {payload.description ||
+                              (payload.category && `Category: ${payload.category}`) ||
+                              (payload.shippingAddress && `Ship to: ${payload.shippingCity || 'Pakistan'}`) ||
+                              'Archived snapshot available'}
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-4 text-[11px] text-stone-400 pt-1">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3 text-stone-400" />
+                              {new Date(item.deletedAt).toLocaleString('en-PK', {
+                                dateStyle: 'medium',
+                                timeStyle: 'short',
+                              })}
+                            </span>
+                            {item.deletedBy && (
+                              <span className="flex items-center gap-1">
+                                <User className="w-3 h-3 text-stone-400" />
+                                Deleted by: {item.deletedBy}
+                              </span>
+                            )}
+                            <span className="font-mono text-stone-400">ID: {item.entityId}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                        <Button
+                          size="sm"
+                          onClick={() => handleRestore(item)}
+                          disabled={isRestoring || isPurging}
+                          className="bg-[#FAF5EE] hover:bg-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/40 hover:border-[#B88E4B] text-xs font-bold rounded-xl px-3.5 h-[34px] shadow-2xs cursor-pointer"
+                        >
+                          <RotateCcw className={`w-3.5 h-3.5 mr-1.5 ${isRestoring ? 'animate-spin' : ''}`} />
+                          {isRestoring ? 'Restoring...' : 'Restore'}
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            setConfirmModal({
+                              open: true,
+                              type: 'SINGLE',
+                              itemId: item.id,
+                              itemName: item.name,
+                            })
+                          }
+                          disabled={isRestoring || isPurging}
+                          className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-xl px-3 h-[34px] cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                          Delete Forever
+                        </Button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── CONFIRMATION MODAL (LUXURY LIGHT MODAL DESIGN) ── */}
       <AnimatePresence>
         {confirmModal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
@@ -542,7 +651,7 @@ export default function RecycleBinTab() {
                   variant="outline"
                   size="sm"
                   onClick={() => setConfirmModal({ open: false, type: 'SINGLE' })}
-                  className="border-[#D9C4AC] text-stone-700 hover:bg-[#FAF5EE] rounded-full text-xs font-semibold px-4 h-[36px]"
+                  className="border-[#D9C4AC] text-stone-700 hover:bg-[#FAF5EE] rounded-xl text-xs font-semibold px-4 h-[36px]"
                 >
                   Cancel
                 </Button>
@@ -558,7 +667,7 @@ export default function RecycleBinTab() {
                       handleEmpty();
                     }
                   }}
-                  className="bg-rose-600 hover:bg-rose-700 text-white rounded-full text-xs font-bold px-4 h-[36px] shadow-xs"
+                  className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold px-4 h-[36px] shadow-xs"
                 >
                   Confirm & Delete Forever
                 </Button>
