@@ -18,7 +18,10 @@ import {
   Calendar,
   User,
   ShieldCheck,
-  Package,
+  Lock,
+  ArrowUpRight,
+  Database,
+  History,
 } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
@@ -47,13 +50,13 @@ interface Counts {
 
 const SECTION_CONFIG: Record<
   RecycleSection,
-  { label: string; icon: React.ComponentType<{ className?: string; size?: number }>; color: string }
+  { label: string; icon: React.ComponentType<{ className?: string; size?: number }>; color: string; badge: string }
 > = {
-  ALL: { label: 'All Items', icon: Layers, color: 'text-[#8C6239]' },
-  PRODUCT: { label: 'Products', icon: Armchair, color: 'text-blue-600' },
-  CATEGORY: { label: 'Categories', icon: FolderOpen, color: 'text-purple-600' },
-  ORDER: { label: 'Orders', icon: ShoppingBag, color: 'text-emerald-600' },
-  REVIEW: { label: 'Reviews', icon: Star, color: 'text-amber-500' },
+  ALL: { label: 'All Items', icon: Layers, color: 'text-[#8C6239]', badge: 'All Entities' },
+  PRODUCT: { label: 'Products', icon: Armchair, color: 'text-blue-600', badge: 'Artisanal Furniture' },
+  CATEGORY: { label: 'Categories', icon: FolderOpen, color: 'text-purple-600', badge: 'Design Collections' },
+  ORDER: { label: 'Orders', icon: ShoppingBag, color: 'text-emerald-600', badge: 'Client Invoices' },
+  REVIEW: { label: 'Reviews', icon: Star, color: 'text-amber-500', badge: 'Client Testimonials' },
 };
 
 export default function RecycleBinTab() {
@@ -209,7 +212,7 @@ export default function RecycleBinTab() {
     });
   }, [items, activeSection, searchQuery]);
 
-  // 4 KPI Metric Cards matching Image 2 exactly
+  // 4 KPI Metric Jewel Cards matching Executive Dashboard
   const kpis = [
     {
       label: 'TOTAL ARCHIVED ITEMS',
@@ -267,7 +270,7 @@ export default function RecycleBinTab() {
 
   return (
     <div className="space-y-3 sm:space-y-4 font-sans text-[#18110D]">
-      {/* ── 1. HEADER (100% IDENTICAL TO IMAGE 2 EXECUTIVE DASHBOARD HEADER) ── */}
+      {/* ── 1. HEADER (100% MATCH WITH EXECUTIVE DASHBOARD HEADER) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -322,7 +325,7 @@ export default function RecycleBinTab() {
         </div>
       </motion.div>
 
-      {/* ── 2. KPI METRIC CARDS (EXACT MATCH WITH IMAGE 2: 4 LUXURY JEWEL ORB CARDS) ── */}
+      {/* ── 2. KPI METRIC CARDS (4 LUXURY JEWEL ORB CARDS) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => {
           const isSelected = activeSection === kpi.targetSection;
@@ -341,14 +344,12 @@ export default function RecycleBinTab() {
                   : kpi.cardGlow
               }`}
             >
-              {/* Ambient Radial Glow */}
               <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 ${kpi.ambientGlow}`} />
 
               <div className="flex justify-between items-start relative z-10">
                 <span className="text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase font-sans">
                   {kpi.label}
                 </span>
-                {/* 3D Glass Jewel Orb */}
                 <div className={`w-9 h-9 rounded-2xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 ${kpi.iconBg}`}>
                   <kpi.icon size={17} className="stroke-[2.2]" />
                 </div>
@@ -374,14 +375,14 @@ export default function RecycleBinTab() {
         })}
       </div>
 
-      {/* ── 3. MAIN SECTION CONTAINER (MATCHING IMAGE 2 "Revenue & Acquisition Registry" CARD) ── */}
+      {/* ── 3. MAIN REGISTRY CARD (ELEVATED & REFINED) ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
         className="bg-white border border-[#E7DDD0] rounded-[20px] p-4 sm:p-5 shadow-[0_4px_20px_rgba(44,30,24,0.015)] hover:border-[#B88E4B]/40 transition-all space-y-4"
       >
-        {/* Header with Title + Section Switcher Pills matching Image 2 */}
+        {/* Header with Title + Interactive Luxury Section Switcher */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 border-b border-neutral-100 pb-3 shrink-0">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -397,11 +398,12 @@ export default function RecycleBinTab() {
             </p>
           </div>
 
-          {/* Section Pills Switcher (Matching Image 2 black/dark pill toggle) */}
+          {/* Section Pills Switcher with Luxury Icons & Badges */}
           <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap">
-            <div className="flex bg-[#FAF7F2] p-1 rounded-xl border border-[#E7DDD0] gap-1">
+            <div className="flex bg-[#FAF7F2] p-1 rounded-xl border border-[#E7DDD0] gap-1 shadow-2xs">
               {(Object.keys(SECTION_CONFIG) as RecycleSection[]).map((sectionKey) => {
                 const cfg = SECTION_CONFIG[sectionKey];
+                const Icon = cfg.icon;
                 const count = counts[sectionKey] || 0;
                 const isActive = activeSection === sectionKey;
 
@@ -410,18 +412,19 @@ export default function RecycleBinTab() {
                     key={sectionKey}
                     type="button"
                     onClick={() => setActiveSection(sectionKey)}
-                    className={`px-3 py-1 text-[11px] font-black rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                       isActive
-                        ? 'bg-[#221814] text-[#F3E5AB] shadow-xs'
-                        : 'text-stone-500 hover:text-stone-800'
+                        ? 'bg-gradient-to-r from-[#221814] to-[#332219] text-[#F3E5AB] shadow-sm'
+                        : 'text-stone-600 hover:text-stone-950 hover:bg-[#FAF5EE]'
                     }`}
                   >
+                    <Icon size={12} className={isActive ? 'text-[#B88E4B]' : 'text-stone-400'} />
                     <span>{cfg.label}</span>
                     <span
-                      className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${
+                      className={`px-1.5 py-0.2 rounded-full text-[9.5px] font-mono font-bold ${
                         isActive
                           ? 'bg-[#B88E4B] text-white'
-                          : 'bg-stone-200 text-stone-600'
+                          : 'bg-stone-200/80 text-stone-600'
                       }`}
                     >
                       {count}
@@ -431,19 +434,20 @@ export default function RecycleBinTab() {
               })}
             </div>
 
-            {/* Quick Refresh Pill */}
+            {/* Quick Refresh Button */}
             <button
               type="button"
               onClick={() => fetchItems()}
               disabled={loading}
-              className="bg-[#FAF7F2] hover:bg-[#FAF5EE] text-stone-600 hover:text-stone-900 border border-[#E7DDD0] rounded-xl px-2.5 py-1 text-xs font-bold transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+              title="Refresh Registry"
+              className="bg-[#FAF7F2] hover:bg-[#FAF5EE] text-stone-600 hover:text-stone-900 border border-[#E7DDD0] rounded-xl px-2.5 py-1.5 text-xs font-bold transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
             >
-              <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin text-[#B88E4B]' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#B88E4B]' : ''}`} />
             </button>
           </div>
         </div>
 
-        {/* Search Bar matching Image 2 input design */}
+        {/* Search Bar with Shortcut / Filter Cue */}
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <Input
@@ -451,11 +455,19 @@ export default function RecycleBinTab() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={`Search within ${SECTION_CONFIG[activeSection].label.toLowerCase()} by name or ID...`}
-            className="h-[38px] w-full bg-white border border-[#D9C4AC] rounded-full pl-10 pr-4 text-xs font-semibold text-[#18110D] focus:outline-none focus:border-[#B88E4B] focus:ring-2 focus:ring-[#B88E4B]/20 placeholder:text-stone-400 shadow-xs"
+            className="h-[38px] w-full bg-white border border-[#D9C4AC] rounded-full pl-10 pr-24 text-xs font-semibold text-[#18110D] focus:outline-none focus:border-[#B88E4B] focus:ring-2 focus:ring-[#B88E4B]/20 placeholder:text-stone-400 shadow-xs"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+            >
+              Clear
+            </button>
+          )}
         </div>
 
-        {/* ── 4. ITEMS LIST / CLEAN PRISTINE EMPTY STATE (MATCHING IMAGE 2) ── */}
+        {/* ── 4. ITEMS LIST / ULTRA-LUXURY ARCHITECTURAL PRISTINE DISPLAY ── */}
         <div className="space-y-3">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 bg-[#FAF7F2]/40 rounded-[20px] border border-dashed border-[#E7DDD0] space-y-2">
@@ -463,21 +475,71 @@ export default function RecycleBinTab() {
               <p className="text-xs font-bold text-stone-600">Scanning {SECTION_CONFIG[activeSection].label} section...</p>
             </div>
           ) : filteredItems.length === 0 ? (
-            /* Pristine Clean Empty State (Matching Image 2 Luxury Look) */
-            <div className="flex flex-col items-center justify-center py-16 px-6 bg-gradient-to-b from-[#FAF7F2]/40 via-white to-[#FAF7F2]/40 border border-dashed border-[#E7DDD0] rounded-[20px] text-center">
-              <div className="p-3 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 mb-3 shadow-2xs">
-                <CheckCircle2 className="w-8 h-8" />
+            /* ── ULTRA-LUXURY ELEVATED PRISTINE VAULT DISPLAY ── */
+            <div className="relative overflow-hidden bg-gradient-to-b from-[#FAF7F2]/50 via-white to-[#FAF7F2]/60 border border-dashed border-[#E7DDD0] rounded-[24px] p-8 sm:p-12 text-center">
+              {/* Subtle Ambient Radial Aura */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Glowing Concentric Emblem Icon */}
+              <div className="relative inline-flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-50 to-teal-50/80 border border-emerald-200/80 flex items-center justify-center shadow-sm relative z-10">
+                  <ShieldCheck className="w-8 h-8 text-emerald-600" />
+                </div>
+                <div className="absolute inset-0 rounded-full border-2 border-emerald-400/20 animate-ping duration-3000" />
               </div>
-              <h3 className="text-lg font-serif font-black text-[#1F1612] mb-1">
+
+              {/* High-End Didone Serif Title */}
+              <h3 className="text-xl sm:text-2xl font-serif font-black text-[#1F1612] tracking-tight mb-1.5">
                 {searchQuery
-                  ? 'No items matched your search query'
-                  : `No Deleted Items in ${SECTION_CONFIG[activeSection].label}`}
+                  ? 'No Items Matched Your Search'
+                  : `Pristine Database Vault — No Deleted ${SECTION_CONFIG[activeSection].label}`}
               </h3>
-              <p className="text-xs text-stone-500 max-w-md font-sans">
+              <p className="text-xs sm:text-sm text-stone-500 max-w-lg mx-auto font-sans leading-relaxed">
                 {searchQuery
-                  ? 'Try a different search keyword or switch to another section above.'
-                  : 'Your database in this section is 100% clean and pristine. Any items you delete will appear safely here.'}
+                  ? 'Try clearing your search query or switching to another category section above.'
+                  : 'Your active database tables are 100% clean and 1-to-1 synchronized with the live website. Any future items deleted from Categories, Products, or Orders will be safely archived here.'}
               </p>
+
+              {/* 3 Luxury Safeguard Architecture Micro-Cards */}
+              {!searchQuery && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto mt-7 pt-6 border-t border-[#E7DDD0]/80 relative z-10">
+                  <div className="bg-white/90 backdrop-blur-xs p-3.5 rounded-2xl border border-[#E7DDD0] text-left shadow-2xs hover:border-[#B88E4B]/40 transition-all">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="p-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <CheckCircle2 size={13} />
+                      </span>
+                      <span className="text-[11px] font-black font-serif text-[#1F1612]">Zero Ghost Records</span>
+                    </div>
+                    <p className="text-[10px] text-stone-500 leading-relaxed font-sans">
+                      Active PostgreSQL tables contain 0 ghost rows. 7 categories in DB = exactly 7 live homepage cards.
+                    </p>
+                  </div>
+
+                  <div className="bg-white/90 backdrop-blur-xs p-3.5 rounded-2xl border border-[#E7DDD0] text-left shadow-2xs hover:border-[#B88E4B]/40 transition-all">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="p-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
+                        <Layers size={13} />
+                      </span>
+                      <span className="text-[11px] font-black font-serif text-[#1F1612]">Full JSON Snapshots</span>
+                    </div>
+                    <p className="text-[10px] text-stone-500 leading-relaxed font-sans">
+                      All images, specs, dimensions, and prices are fully preserved in the dedicated table before deletion.
+                    </p>
+                  </div>
+
+                  <div className="bg-white/90 backdrop-blur-xs p-3.5 rounded-2xl border border-[#E7DDD0] text-left shadow-2xs hover:border-[#B88E4B]/40 transition-all">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="p-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
+                        <RotateCcw size={13} />
+                      </span>
+                      <span className="text-[11px] font-black font-serif text-[#1F1612]">Instant Restoration</span>
+                    </div>
+                    <p className="text-[10px] text-stone-500 leading-relaxed font-sans">
+                      Accidentally deleted items can be restored live to the storefront at any time with a single click.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3">
@@ -599,7 +661,7 @@ export default function RecycleBinTab() {
         </div>
       </motion.div>
 
-      {/* ── CONFIRMATION MODAL (LUXURY LIGHT MODAL DESIGN) ── */}
+      {/* ── CONFIRMATION MODAL ── */}
       <AnimatePresence>
         {confirmModal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
