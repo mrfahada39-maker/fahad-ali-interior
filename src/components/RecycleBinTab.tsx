@@ -285,11 +285,11 @@ export default function RecycleBinTab() {
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E7DDD0] p-4 sm:py-3.5 sm:px-6 rounded-2xl lg:rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.02)] shrink-0 relative overflow-hidden group hover:border-[#B88E4B]/40 transition-all"
+        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 bg-white border border-[#E7DDD0] p-4 sm:py-3.5 sm:px-6 rounded-2xl lg:rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] shrink-0 relative overflow-hidden group hover:border-[#B88E4B]/40 transition-all"
       >
         <div className="relative z-10 w-full lg:w-auto">
           <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/35 flex items-center gap-1 shadow-2xs font-serif">
+            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-amber-50/90 text-amber-900 border border-amber-300/80 flex items-center gap-1 shadow-2xs font-serif">
               <Sparkles size={10} className="text-[#B88E4B]" />
               <span>ENTERPRISE SUITE V2.4</span>
             </span>
@@ -304,7 +304,7 @@ export default function RecycleBinTab() {
           </div>
 
           <h1 className="text-[21px] sm:text-2xl lg:text-3xl font-black text-neutral-900 tracking-tight font-serif">
-            Fahad Ali Interior <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">— Recycle Bin & Data Vault</span>
+            Fahad Ali Interior <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#C59B5F] bg-clip-text text-transparent font-serif">— Recycle Bin & Data Vault</span>
           </h1>
           <p className="hidden sm:block text-neutral-500 text-[11.5px] font-medium mt-0.5">
             Zero-ghost database vault, isolated soft-delete archives, lossless JSON snapshots, and instant storefront restoration.
@@ -317,9 +317,9 @@ export default function RecycleBinTab() {
             type="button"
             onClick={() => fetchItems()}
             disabled={loading}
-            className="bg-white hover:bg-neutral-50 text-neutral-700 hover:text-[#B88E4B] border border-[#D9C4AC] rounded-xl px-3.5 py-2 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            className="bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 border border-[#E7DDD0] hover:border-[#B88E4B]/50 rounded-xl px-3.5 py-2 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#B88E4B]' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#B88E4B]' : 'text-neutral-400'}`} />
             <span>Refresh</span>
           </button>
 
@@ -355,14 +355,14 @@ export default function RecycleBinTab() {
               whileTap={{ scale: 0.98 }}
               transition={{ delay: idx * 0.05, duration: 0.25 }}
               onClick={() => setActiveSection(kpi.targetSection)}
-              className={`bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border rounded-2xl p-4.5 flex flex-col justify-between min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${
+              className={`bg-white border rounded-2xl p-4.5 flex flex-col justify-between min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${
                 isSelected
-                  ? 'ring-2 ring-[#B88E4B] border-[#B88E4B] shadow-[0_6px_25px_rgba(184,142,75,0.2)]'
-                  : kpi.cardGlow
+                  ? 'border-[#B88E4B] shadow-[0_8px_30px_rgba(184,142,75,0.18)] ring-1 ring-[#B88E4B]/40'
+                  : 'border-[#E7DDD0] hover:border-[#B88E4B]/40 shadow-[0_4px_20px_rgba(0,0,0,0.015)] hover:shadow-[0_8px_25px_rgba(184,142,75,0.08)]'
               }`}
             >
-              {/* Ambient Colored Radial Glow in Top Corner */}
-              <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 ${kpi.ambientGlow}`} />
+              {/* Soft Ambient Colored Radial Glow in Top Corner */}
+              <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-60 group-hover:opacity-90 ${kpi.ambientGlow}`} />
 
               <div className="flex justify-between items-start relative z-10">
                 <span className="text-[10.5px] font-bold tracking-wider text-neutral-500 uppercase font-sans">
@@ -408,24 +408,24 @@ export default function RecycleBinTab() {
                 key={sectionKey}
                 type="button"
                 onClick={() => setActiveSection(sectionKey)}
-                className={`relative px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
-                  isActive ? 'text-[#8C6239]' : 'text-neutral-600 hover:text-neutral-900'
+                className={`relative px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
+                  isActive ? 'text-white' : 'text-neutral-600 hover:text-neutral-900'
                 }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="activeRecycleSectionGlider"
-                    className="absolute inset-0 bg-gradient-to-r from-[#FAF0E2] via-[#F8E8D2] to-[#FAF0E2] border border-[#B88E4B]/50 rounded-xl shadow-xs"
-                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                    className="absolute inset-0 bg-gradient-to-r from-[#B88E4B] via-[#C99E58] to-[#B88E4B] rounded-xl shadow-[0_4px_14px_rgba(184,142,75,0.35)]"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                   />
                 )}
                 <span className="relative z-10 flex items-center gap-1.5">
-                  <Icon size={14} className={isActive ? 'text-[#B88E4B]' : 'text-neutral-400'} />
-                  <span>{cfg.label}</span>
+                  <Icon size={14} className={isActive ? 'text-white' : 'text-neutral-400'} />
+                  <span className={isActive ? 'font-black' : 'font-semibold'}>{cfg.label}</span>
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold transition-colors ${
                       isActive
-                        ? 'bg-[#B88E4B] text-white shadow-2xs'
+                        ? 'bg-white/25 text-white backdrop-blur-xs'
                         : 'bg-neutral-100 text-neutral-600'
                     }`}
                   >
@@ -491,7 +491,7 @@ export default function RecycleBinTab() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={`Search within ${SECTION_CONFIG[activeSection].label.toLowerCase()} by name, ID or description...`}
-          className="h-[42px] w-full bg-white border border-[#D9C4AC] rounded-2xl pl-11 pr-24 text-xs font-medium text-neutral-900 focus:outline-none focus:border-[#B88E4B] focus:ring-2 focus:ring-[#B88E4B]/20 placeholder:text-neutral-400 shadow-xs"
+          className="h-[42px] w-full bg-white border border-[#E7DDD0] rounded-2xl pl-11 pr-24 text-xs font-medium text-neutral-900 focus:outline-none focus:border-[#B88E4B] focus:ring-2 focus:ring-[#B88E4B]/20 placeholder:text-neutral-400 shadow-2xs"
         />
         {searchQuery && (
           <button
