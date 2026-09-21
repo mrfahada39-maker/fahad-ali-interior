@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
+import { moveToRecycleBin } from '@/lib/recycle-bin';
 
 interface SessionUser {
   id?: string;
@@ -211,14 +212,29 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    await db.order.update({
+    const existing = await db.order.findUnique({
       where: { id },
-      data: { deletedAt: new Date() },
-    }).catch(async () => {
-      await db.order.delete({ where: { id } });
+      include: { items: true },
     });
 
-    return NextResponse.json({ success: true, deletedId: id });
+    if (existing) {
+      await moveToRecycleBin({
+        entityType: 'ORDER',
+        entityId: existing.id,
+        name: `Order #${existing.id.slice(-6).toUpperCase()} (${existing.shippingName || 'Customer'})`,
+        payload: existing,
+        deletedBy: user?.email || user?.id || null,
+      });
+
+      await db.order.delete({ where: { id } }).catch(async () => {
+        await db.order.update({
+          where: { id },
+          data: { deletedAt: new Date() },
+        });
+      });
+    }
+
+    return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to delete order' }, { status: 500 });
   }

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingBag, Users, MessageSquare, Star, BarChart3, FileText, FolderSync, Settings, Sparkles, Radio } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, MessageSquare, Star, BarChart3, FileText, FolderSync, Settings, Sparkles, Radio, Trash2 } from 'lucide-react';
 
 export const tabs = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -13,6 +13,7 @@ export const tabs = [
   { id: 'inquiries', label: 'Inquiries', icon: MessageSquare },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'cms', label: 'CMS / Banner', icon: FolderSync },
+  { id: 'recycle-bin', label: 'Recycle Bin', icon: Trash2 },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

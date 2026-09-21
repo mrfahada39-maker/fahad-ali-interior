@@ -399,6 +399,11 @@ model Settings {
   themeDarkColor   String?  @default("#1A1A1A")
   themeMutedColor  String?  @default("#8A8682")
   themeAccentColor String?  @default("#2C251F")
+  visualizerHeading    String?
+  visualizerModelUrl   String?
+  visualizerPrice      String?
+  visualizerSubheading String?
+  visualizerTitle      String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -752,4 +757,16 @@ model ChatAnalyticsEvent {
   @@index([createdAt])
 }
 
+model RecycleBin {
+  id         String   @id @default(cuid())
+  entityType String   // CATEGORY, PRODUCT, ORDER, REVIEW
+  entityId   String
+  name       String
+  payload    Json
+  deletedBy  String?
+  deletedAt  DateTime @default(now())
 
+  @@index([entityType])
+  @@index([deletedAt])
+  @@index([entityId])
+}

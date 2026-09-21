@@ -5,6 +5,7 @@ import { getToken } from 'next-auth/jwt';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
+import { moveToRecycleBin } from '@/lib/recycle-bin';
 
 interface SessionUser {
   id?: string;
@@ -233,15 +234,26 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
     }
 
-    await db.category.update({
-      where: { id },
-      data: { deletedAt: new Date(), isActive: false },
-    }).catch(async () => {
-      await db.category.delete({ where: { id } });
-    });
+    const existing = await db.category.findUnique({ where: { id } });
+    if (existing) {
+      await moveToRecycleBin({
+        entityType: 'CATEGORY',
+        entityId: existing.id,
+        name: existing.name,
+        payload: existing,
+        deletedBy: user?.email || user?.id || null,
+      });
+
+      await db.category.delete({ where: { id } }).catch(async () => {
+        await db.category.update({
+          where: { id },
+          data: { deletedAt: new Date(), isActive: false },
+        });
+      });
+    }
 
     invalidateStorefrontCache();
-    return NextResponse.json({ success: true, deletedId: id });
+    return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to delete category' }, { status: 500 });
   }

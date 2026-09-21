@@ -31,6 +31,7 @@ import InquiriesTab from './InquiriesTab';
 import AnalyticsTab from './AnalyticsTab';
 import AiChatbotTab from './AiChatbotTab';
 import AiRadarTab from './AiRadarTab';
+import RecycleBinTab from './RecycleBinTab';
 const LuxuryCallModal = dynamic(() => import('@/components/LuxuryCallModal'), { ssr: false });
 import { toneGenerator, WebRtcCallClient } from '@/lib/webrtc-call-manager';
 import { tabs, AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
@@ -1393,6 +1394,11 @@ export default function AdminDashboard() {
             {/* CMS Tab */}
             {activeTab === 'cms' && (
               <CmsTab />
+            )}
+
+            {/* RECYCLE BIN */}
+            {activeTab === 'recycle-bin' && (
+              <RecycleBinTab />
             )}
 
             {/* SETTINGS */}

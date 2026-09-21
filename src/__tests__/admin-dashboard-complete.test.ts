@@ -253,8 +253,8 @@ describe('AdminDashboard High-Level Comprehensive Testing Suite', () => {
 
   // ── Tab Registry Verification ──
   describe('Admin Tab Configuration & Status Styles Registry', () => {
-    it('contains all 13 required dashboard tabs with valid icons and unique IDs', () => {
-      expect(tabs.length).toBe(13);
+    it('contains all 14 required dashboard tabs with valid icons and unique IDs', () => {
+      expect(tabs.length).toBe(14);
       const ids = tabs.map(t => t.id);
       expect(ids).toEqual([
         'overview',
@@ -269,10 +269,11 @@ describe('AdminDashboard High-Level Comprehensive Testing Suite', () => {
         'inquiries',
         'analytics',
         'cms',
+        'recycle-bin',
         'settings',
       ]);
       const uniqueIds = new Set(ids);
-      expect(uniqueIds.size).toBe(13);
+      expect(uniqueIds.size).toBe(14);
     });
 
     it('verifies statusStyles map covers all order and moderation statuses', () => {

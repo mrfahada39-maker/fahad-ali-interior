@@ -10,6 +10,14 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { getSiteUrl } from '@/lib/utils';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import {
+  moveToRecycleBin,
+  listRecycleBinItems,
+  restoreFromRecycleBin,
+  permanentlyDeleteFromRecycleBin,
+  emptyRecycleBin,
+  RecycleBinEntityType,
+} from '@/lib/recycle-bin';
 
 interface SessionUser {
   id?: string;
@@ -1517,7 +1525,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         return NextResponse.json({ success: true, data: updated, category: updated });
       }
 
-      // DELETE /admin/categories - Soft delete category
+      // DELETE /admin/categories - Move to separate RecycleBin table and delete from Category table
       if (method === 'DELETE') {
         const searchId = req.nextUrl.searchParams.get('id');
         const body = await req.json().catch(() => ({}));
@@ -1527,19 +1535,30 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });
         }
 
-        await db.category.update({
-          where: { id },
-          data: { deletedAt: new Date(), isActive: false },
-        }).catch(async () => {
-          await db.category.delete({ where: { id } });
-        });
+        const existing = await db.category.findUnique({ where: { id } });
+        if (existing) {
+          await moveToRecycleBin({
+            entityType: 'CATEGORY',
+            entityId: existing.id,
+            name: existing.name,
+            payload: existing,
+            deletedBy: user?.email || user?.id || null,
+          });
+
+          await db.category.delete({ where: { id } }).catch(async () => {
+            await db.category.update({
+              where: { id },
+              data: { deletedAt: new Date(), isActive: false },
+            });
+          });
+        }
 
         try {
           revalidatePath('/', 'layout');
           revalidatePath('/shop', 'layout');
         } catch {}
 
-        return NextResponse.json({ success: true, deletedId: id });
+        return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
       }
     }
 
@@ -2423,6 +2442,17 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
       }
 
+      const existingProduct = await db.product.findUnique({ where: { id } });
+      if (existingProduct) {
+        await moveToRecycleBin({
+          entityType: 'PRODUCT',
+          entityId: existingProduct.id,
+          name: existingProduct.name,
+          payload: existingProduct,
+          deletedBy: user?.email || user?.id || null,
+        });
+      }
+
       try {
         await db.$transaction([
           db.orderItem.deleteMany({ where: { productId: id } }),
@@ -2437,7 +2467,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }
 
       revalidateProductCaches(id);
-      return NextResponse.json({ success: true, deletedId: id });
+      return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
     }
 
     // 11. PUT & PATCH /admin/orders
@@ -2885,6 +2915,71 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       });
 
       return NextResponse.json({ success: true, deletedId: id });
+    }
+
+    // 23. Admin Recycle Bin (GET, POST, DELETE /admin/recycle-bin)
+    if (segment.includes('admin/recycle-bin') || segment.includes('recycle-bin')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
+
+      if (method === 'GET') {
+        const { searchParams } = new URL(req.url);
+        const entityType = (searchParams.get('entityType') as (RecycleBinEntityType | 'ALL')) || 'ALL';
+        const search = searchParams.get('search') || undefined;
+        const skip = parseInt(searchParams.get('skip') || '0', 10);
+        const take = parseInt(searchParams.get('take') || '50', 10);
+
+        const result = await listRecycleBinItems({
+          entityType,
+          search,
+          skip,
+          take,
+        });
+
+        return NextResponse.json({ success: true, ...result });
+      }
+
+      if (method === 'POST') {
+        const body = await req.json().catch(() => ({}));
+        const { action, id } = body;
+
+        if (action === 'restore' || (!action && id)) {
+          if (!id) {
+            return NextResponse.json({ error: 'Recycle bin item ID is required' }, { status: 400 });
+          }
+          const result = await restoreFromRecycleBin(id, user?.id);
+          try {
+            revalidatePath('/', 'layout');
+            revalidatePath('/shop', 'layout');
+          } catch {}
+          return NextResponse.json(result);
+        }
+
+        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+      }
+
+      if (method === 'DELETE') {
+        const { searchParams } = new URL(req.url);
+        const body = await req.json().catch(() => ({}));
+        const id = searchParams.get('id') || body?.id;
+        const action = searchParams.get('action') || body?.action;
+        const entityType = (searchParams.get('entityType') || body?.entityType) as RecycleBinEntityType | undefined;
+        const all = searchParams.get('all') === 'true' || body?.all === true;
+
+        if (id && action !== 'empty') {
+          const result = await permanentlyDeleteFromRecycleBin(id, user?.id);
+          return NextResponse.json(result);
+        }
+
+        if (all || action === 'empty' || entityType) {
+          const result = await emptyRecycleBin(entityType, user?.id);
+          return NextResponse.json(result);
+        }
+
+        return NextResponse.json({ error: 'Provide item id or specify empty/all action' }, { status: 400 });
+      }
     }
 
     return NextResponse.json({ error: 'Fallback handler matching segment not found' }, { status: 501 });
