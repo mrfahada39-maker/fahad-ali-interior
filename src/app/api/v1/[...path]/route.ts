@@ -2854,8 +2854,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       return NextResponse.json(newMsg);
     }
 
-    // 20. User Reviews Submission (POST /user/reviews)
-    if (method === 'POST' && (segment.includes('user/reviews') || segment.includes('v1/user/reviews'))) {
+    // 20. User Reviews Submission (POST /user/reviews, /reviews, /v1/reviews)
+    if (method === 'POST' && (segment.includes('user/reviews') || segment.includes('v1/user/reviews') || segment === 'reviews' || segment === 'v1/reviews')) {
       const user = await getUserFromSessionOrToken(req);
       if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       const body = await req.json().catch(() => ({}));

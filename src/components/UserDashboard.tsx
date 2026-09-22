@@ -11,7 +11,7 @@ import {
   Clock, ArrowRight, ExternalLink, Download, FileText, CheckCircle2, ChevronRight, Phone,
   Mail, Award, Truck, AlertCircle, RefreshCw, Layers, Sliders, Lock, Search, Filter,
   DollarSign, TrendingUp, Box, Eye, MessageSquare, ShieldCheck, ClipboardList, Coins, Users,
-  Check, X, Video, PhoneCall
+  Check, X, Video, PhoneCall, Printer
 } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
@@ -610,11 +610,11 @@ export default function UserDashboard() {
 
   // Order stage fulfillment counts for Bar chart
   const fulfillmentData = useMemo(() => {
-    const pendingCount = (orders || []).filter((o) => o?.status === 'PENDING' || !o?.status).length;
-    const processingCount = (orders || []).filter((o) => o?.status === 'PROCESSING').length;
-    const shippedCount = (orders || []).filter((o) => o?.status === 'SHIPPED').length;
-    const deliveredCount = (orders || []).filter((o) => o?.status === 'DELIVERED').length;
-    const cancelledCount = (orders || []).filter((o) => o?.status === 'CANCELLED').length;
+    const pendingCount = (orders || []).filter((o) => !o?.status || String(o.status).toUpperCase() === 'PENDING').length;
+    const processingCount = (orders || []).filter((o) => String(o?.status || '').toUpperCase() === 'PROCESSING').length;
+    const shippedCount = (orders || []).filter((o) => String(o?.status || '').toUpperCase() === 'SHIPPED').length;
+    const deliveredCount = (orders || []).filter((o) => String(o?.status || '').toUpperCase() === 'DELIVERED').length;
+    const cancelledCount = (orders || []).filter((o) => String(o?.status || '').toUpperCase() === 'CANCELLED').length;
 
     return [
       { stage: 'PENDING', count: pendingCount, fill: '#B88E4B' },
@@ -758,7 +758,7 @@ export default function UserDashboard() {
     stats?.totalSpent ?? (orders || []).reduce((sum, o) => sum + Number(o?.totalAmount || 0), 0)
   );
   const totalOrdersCount = (orders || []).length || Number(stats?.totalOrders ?? 0);
-  const deliveredCount = (orders || []).filter((o) => o.status === 'DELIVERED').length;
+  const deliveredCount = (orders || []).filter((o) => String(o?.status || '').toUpperCase() === 'DELIVERED').length;
 
   const overviewKpis = [
     {
@@ -831,7 +831,10 @@ export default function UserDashboard() {
     },
     {
       label: 'ACTIVE COMMISSIONS',
-      numValue: (orders || []).filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED').length,
+      numValue: (orders || []).filter(o => {
+        const s = String(o?.status || '').toUpperCase();
+        return s !== 'DELIVERED' && s !== 'CANCELLED';
+      }).length,
       prefix: '',
       sub: 'In Artisan Production',
       icon: ClipboardList,
@@ -1835,8 +1838,8 @@ export default function UserDashboard() {
                         </tr>
                       ) : (
                         filteredOrders.map((order, idx) => {
-                          const isDelivered = order.status === 'DELIVERED';
-                          const isShipped = order.status === 'SHIPPED';
+                          const isDelivered = String(order.status || '').toUpperCase() === 'DELIVERED';
+                          const isShipped = String(order.status || '').toUpperCase() === 'SHIPPED';
                           const orderRef = `#${(order.id || 'ORDER').slice(-8).toUpperCase()}`;
                           const clientName = order.customerName || session?.user?.name || profile?.name || 'VIP Client';
                           const clientEmail = order.customerEmail || session?.user?.email || profile?.email || '';
@@ -1943,7 +1946,7 @@ export default function UserDashboard() {
                               <td className="py-4 px-5 text-right">
                                 <div className="flex items-center justify-end gap-1.5">
                                   <a
-                                    href={`https://wa.me/923000000000?text=Hello%20Fahad%20Ali%20Interior%20Team,%20inquiring%20about%20Bespoke%20Order%20${orderRef}`}
+                                    href={`https://wa.me/923207006110?text=Hello%20Fahad%20Ali%20Interior%20Team,%20inquiring%20about%20Bespoke%20Order%20${orderRef}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-600 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
@@ -2215,7 +2218,7 @@ export default function UserDashboard() {
 
                   {/* WhatsApp Direct */}
                   <a
-                    href="https://wa.me/923000000000?text=Hello%20Fahad%20Ali%20Interior%20Team,%20connecting%20via%20VIP%20Concierge."
+                    href="https://wa.me/923207006110?text=Hello%20Fahad%20Ali%20Interior%20Team,%20connecting%20via%20VIP%20Concierge."
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#25D366] text-white font-bold text-xs hover:brightness-110 transition-all shadow-md shrink-0"
@@ -3086,15 +3089,28 @@ export default function UserDashboard() {
               </span>
             </div>
 
-            <Button
-              onClick={() => {
-                toast.success('Official Tax Invoice downloaded successfully');
-                setSelectedOrderDetails(null);
-              }}
-              className="w-full rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#8C6239] hover:brightness-110 text-white text-xs font-bold h-9 shadow-sm active:scale-95 transition-all cursor-pointer"
-            >
-              <Download size={13} className="mr-1.5" /> Download Tax Invoice & Guarantee (PDF)
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  window.print();
+                }}
+                variant="outline"
+                className="flex-1 rounded-xl border-[#E7DDD0] hover:bg-[#FAF5EE] text-[#1F1612] text-xs font-bold h-9 shadow-2xs active:scale-95 transition-all cursor-pointer"
+              >
+                <Printer size={13} className="mr-1.5 text-[#B88E4B]" /> Print Slip
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  toast.success('Official Tax Invoice downloaded successfully');
+                  setSelectedOrderDetails(null);
+                }}
+                className="flex-1 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#8C6239] hover:brightness-110 text-white text-xs font-bold h-9 shadow-sm active:scale-95 transition-all cursor-pointer"
+              >
+                <Download size={13} className="mr-1.5" /> Download PDF
+              </Button>
+            </div>
           </motion.div>
         </div>
       )}
@@ -3131,76 +3147,81 @@ export default function UserDashboard() {
             </div>
 
             {/* Visual Step Tracker */}
-            <div className="space-y-3 py-1">
-              {[
-                {
-                  step: 1,
-                  title: 'Bespoke Commission Accepted',
-                  desc: 'Order registered in master registry and queued for seasoning.',
-                  done: true,
-                  active: false,
-                  icon: CheckCircle2,
-                },
-                {
-                  step: 2,
-                  title: 'Timber Moisture Seasoning & Grading',
-                  desc: 'Solid Sheesham wood tested for &lt; 10% kiln moisture equilibrium.',
-                  done: true,
-                  active: false,
-                  icon: CheckCircle2,
-                },
-                {
-                  step: 3,
-                  title: 'Artisan Joinery & Hand-Carving',
-                  desc: 'Senior craftsmen shaping mortise-and-tenon structural joints.',
-                  done: trackingOrder.status === 'SHIPPED' || trackingOrder.status === 'DELIVERED',
-                  active: trackingOrder.status === 'PENDING' || !trackingOrder.status,
-                  icon: Sparkles,
-                },
-                {
-                  step: 4,
-                  title: 'Royal Walnut Multi-Coat Polish & QC',
-                  desc: 'Hand-buffed natural lacquer applied and velvet upholstery fitted.',
-                  done: trackingOrder.status === 'DELIVERED',
-                  active: trackingOrder.status === 'SHIPPED',
-                  icon: Layers,
-                },
-                {
-                  step: 5,
-                  title: 'White-Glove Fleet Transit & Setup',
-                  desc: 'Insured transit to client estate with on-site white-glove placement.',
-                  done: trackingOrder.status === 'DELIVERED',
-                  active: false,
-                  icon: Truck,
-                },
-              ].map((st, i) => {
-                const Icon = st.icon;
-                return (
-                  <div key={i} className="flex items-start gap-3 relative">
-                    {i < 4 && (
-                      <div className={`absolute left-4 top-8 w-0.5 h-7 ${
-                        st.done ? 'bg-[#B88E4B]' : 'bg-stone-200'
-                      }`} />
-                    )}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 ${
-                      st.done
-                        ? 'bg-[#B88E4B] text-white shadow-xs'
-                        : st.active
-                        ? 'bg-amber-100 text-[#8C6239] ring-2 ring-[#B88E4B] animate-pulse'
-                        : 'bg-stone-100 text-stone-400'
-                    }`}>
-                      <Icon size={14} />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className={`text-xs font-bold ${st.done || st.active ? 'text-[#1F1612]' : 'text-stone-400'}`}>
-                        {st.title} {st.active && <span className="text-[10px] text-[#B88E4B] font-mono font-black ml-1">[CURRENT WORKSHOP PHASE]</span>}
-                      </h4>
-                      <p className="text-[11px] text-stone-500 mt-0.5 leading-snug">{st.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {(() => {
+              const trackStatus = String(trackingOrder.status || '').toUpperCase();
+              return (
+                <div className="space-y-3 py-1">
+                  {[
+                    {
+                      step: 1,
+                      title: 'Bespoke Commission Accepted',
+                      desc: 'Order registered in master registry and queued for seasoning.',
+                      done: true,
+                      active: false,
+                      icon: CheckCircle2,
+                    },
+                    {
+                      step: 2,
+                      title: 'Timber Moisture Seasoning & Grading',
+                      desc: 'Solid Sheesham wood tested for < 10% kiln moisture equilibrium.',
+                      done: true,
+                      active: false,
+                      icon: CheckCircle2,
+                    },
+                    {
+                      step: 3,
+                      title: 'Artisan Joinery & Hand-Carving',
+                      desc: 'Senior craftsmen shaping mortise-and-tenon structural joints.',
+                      done: trackStatus === 'SHIPPED' || trackStatus === 'DELIVERED',
+                      active: trackStatus === 'PENDING' || !trackStatus,
+                      icon: Sparkles,
+                    },
+                    {
+                      step: 4,
+                      title: 'Royal Walnut Multi-Coat Polish & QC',
+                      desc: 'Hand-buffed natural lacquer applied and velvet upholstery fitted.',
+                      done: trackStatus === 'DELIVERED',
+                      active: trackStatus === 'SHIPPED',
+                      icon: Layers,
+                    },
+                    {
+                      step: 5,
+                      title: 'White-Glove Fleet Transit & Setup',
+                      desc: 'Insured transit to client estate with on-site white-glove placement.',
+                      done: trackStatus === 'DELIVERED',
+                      active: false,
+                      icon: Truck,
+                    },
+                  ].map((st, i) => {
+                    const Icon = st.icon;
+                    return (
+                      <div key={i} className="flex items-start gap-3 relative">
+                        {i < 4 && (
+                          <div className={`absolute left-4 top-8 w-0.5 h-7 ${
+                            st.done ? 'bg-[#B88E4B]' : 'bg-stone-200'
+                          }`} />
+                        )}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 ${
+                          st.done
+                            ? 'bg-[#B88E4B] text-white shadow-xs'
+                            : st.active
+                            ? 'bg-amber-100 text-[#8C6239] ring-2 ring-[#B88E4B] animate-pulse'
+                            : 'bg-stone-100 text-stone-400'
+                        }`}>
+                          <Icon size={14} />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className={`text-xs font-bold ${st.done || st.active ? 'text-[#1F1612]' : 'text-stone-400'}`}>
+                            {st.title} {st.active && <span className="text-[10px] text-[#B88E4B] font-mono font-black ml-1">[CURRENT WORKSHOP PHASE]</span>}
+                          </h4>
+                          <p className="text-[11px] text-stone-500 mt-0.5 leading-snug">{st.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             <div className="p-3 rounded-xl bg-[#FAF5EE] border border-[#E7DDD0] flex items-center justify-between">
               <div>
@@ -3208,7 +3229,7 @@ export default function UserDashboard() {
                 <span className="text-xs font-bold text-[#1F1612]">Master Artisan Fahad Ali</span>
               </div>
               <a
-                href={`https://wa.me/923000000000?text=Hello%20Fahad%20Ali,%20tracking%20Bespoke%20Commission%20%23${(trackingOrder.id || '').slice(-8).toUpperCase()}`}
+                href={`https://wa.me/923207006110?text=Hello%20Fahad%20Ali,%20tracking%20Bespoke%20Commission%20%23${(trackingOrder.id || '').slice(-8).toUpperCase()}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-2xs"
