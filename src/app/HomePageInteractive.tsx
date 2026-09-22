@@ -39,6 +39,9 @@ export default function HomePageInteractive({
   const [categoriesList, setCategoriesList] = useState<any[]>(
     initialCategories && initialCategories.length > 0 ? initialCategories : CATEGORIES
   );
+  const [reviewsList, setReviewsList] = useState<any[]>(
+    initialReviews && initialReviews.length > 0 ? initialReviews : []
+  );
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [mountVideo, setMountVideo] = useState(false);
 
@@ -80,15 +83,18 @@ export default function HomePageInteractive({
 
   useEffect(() => {
     const loadHomeBundle = async () => {
-      const data = await apiFetchJson<any>('/api/public/home-bundle');
-      if (data) {
-        if (data.categories && data.categories.length > 0) setCategoriesList(data.categories);
+      try {
+        const data = await apiFetchJson<any>('/api/public/home-bundle');
+        if (data) {
+          if (data.categories && data.categories.length > 0) setCategoriesList(data.categories);
+          if (data.reviews && Array.isArray(data.reviews)) setReviewsList(data.reviews);
+        }
+      } catch (err) {
+        console.error('Failed to load home bundle:', err);
       }
     };
-    if (!initialCategories || initialCategories.length === 0) {
-      loadHomeBundle();
-    }
-  }, [initialCategories]);
+    loadHomeBundle();
+  }, []);
 
   return (
     <div className="contents">
@@ -270,8 +276,8 @@ export default function HomePageInteractive({
         </div>
       </section>
 
-      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION (Renders only when verified real customer reviews exist) ── */}
-      {initialReviews && initialReviews.length > 0 && <TestimonialsSection />}
+      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION ── */}
+      <TestimonialsSection reviews={reviewsList.length > 0 ? reviewsList : initialReviews} />
 
     </div>
   );

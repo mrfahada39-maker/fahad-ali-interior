@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -115,21 +115,123 @@ const TESTIMONIALS_DATA = [
   }
 ];
 
-export default function TestimonialsSection() {
+export interface TestimonialReviewItem {
+  id: string;
+  customerName?: string | null;
+  rating?: number;
+  comment?: string | null;
+  createdAt?: string;
+  product?: { name: string; image?: string | null };
+  user?: { name?: string | null; image?: string | null };
+}
+
+interface TestimonialsSectionProps {
+  reviews?: TestimonialReviewItem[];
+}
+
+const THEME_PRESETS = [
+  {
+    theme: 'amber',
+    cardBorder: 'border-amber-300/90 shadow-[0_8px_35px_rgba(245,158,11,0.22)]',
+    ambientGlow: 'bg-amber-500/20',
+    badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
+    dotColor: 'bg-emerald-500',
+    numberGradient: 'from-[#B88E4B] via-[#D4AF37] to-[#996515]',
+    iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.25)]',
+  },
+  {
+    theme: 'blue',
+    cardBorder: 'border-blue-300/90 shadow-[0_8px_35px_rgba(59,130,246,0.22)]',
+    ambientGlow: 'bg-blue-500/20',
+    badgeStyle: 'bg-blue-50 text-blue-800 border-blue-500/30',
+    dotColor: 'bg-blue-500',
+    numberGradient: 'from-blue-500 via-sky-500 to-indigo-600',
+    iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.25)]',
+  },
+  {
+    theme: 'purple',
+    cardBorder: 'border-purple-300/90 shadow-[0_8px_35px_rgba(168,85,247,0.22)]',
+    ambientGlow: 'bg-purple-500/20',
+    badgeStyle: 'bg-purple-50 text-purple-800 border-purple-500/30',
+    dotColor: 'bg-purple-500',
+    numberGradient: 'from-purple-500 via-fuchsia-500 to-pink-600',
+    iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.25)]',
+  },
+  {
+    theme: 'emerald',
+    cardBorder: 'border-emerald-300/90 shadow-[0_8px_35px_rgba(16,185,129,0.22)]',
+    ambientGlow: 'bg-emerald-500/20',
+    badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
+    dotColor: 'bg-emerald-500',
+    numberGradient: 'from-emerald-500 via-teal-500 to-cyan-600',
+    iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.25)]',
+  },
+  {
+    theme: 'rose',
+    cardBorder: 'border-rose-300/90 shadow-[0_8px_35px_rgba(244,63,94,0.22)]',
+    ambientGlow: 'bg-rose-500/20',
+    badgeStyle: 'bg-rose-50 text-rose-800 border-rose-500/30',
+    dotColor: 'bg-rose-500',
+    numberGradient: 'from-rose-500 via-pink-500 to-amber-600',
+    iconBg: 'bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100/80 border-rose-300/70 text-rose-600 shadow-[0_3px_12px_rgba(244,63,94,0.25)]',
+  },
+];
+
+export default function TestimonialsSection({ reviews = [] }: TestimonialsSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
+  // Dynamically map real approved reviews from DB and blend seamlessly
+  const testimonials = useMemo(() => {
+    if (!reviews || reviews.length === 0) {
+      return TESTIMONIALS_DATA;
+    }
+
+    const realItems = reviews.map((r, idx) => {
+      const theme = THEME_PRESETS[idx % THEME_PRESETS.length];
+      const ratingNum = Math.min(5, Math.max(1, Math.round(Number(r.rating) || 5)));
+      const clientName = r.customerName || r.user?.name || 'Verified Patron';
+      const fallback = TESTIMONIALS_DATA[idx % TESTIMONIALS_DATA.length];
+
+      return {
+        id: r.id || `real-rev-${idx}`,
+        name: clientName,
+        location: 'Verified Client, Pakistan',
+        projectType: r.product?.name ? `${r.product.name} Order` : 'Handcrafted Bespoke Furniture',
+        text: r.comment && r.comment.trim() ? r.comment.trim() : 'Masterpiece solid sheesham wood craftsmanship. Outstanding luxury comfort and detailing.',
+        rating: ratingNum,
+        score: `${Number(r.rating || 5).toFixed(1)}`,
+        avatar: r.user?.image || fallback.avatar,
+        fallbackAvatar: fallback.fallbackAvatar,
+        roomImage: r.product?.image || fallback.roomImage,
+        tag: '✓ Verified Purchase',
+        ...theme,
+      };
+    });
+
+    if (realItems.length < 3) {
+      return [...realItems, ...TESTIMONIALS_DATA.slice(0, 5 - realItems.length)];
+    }
+    return realItems;
+  }, [reviews]);
+
+  useEffect(() => {
+    if (activeIndex >= testimonials.length) {
+      setActiveIndex(0);
+    }
+  }, [testimonials.length, activeIndex]);
+
   const handlePrev = () => {
     setDirection(-1);
-    setActiveIndex((prev) => (prev === 0 ? TESTIMONIALS_DATA.length - 1 : prev - 1));
+    setActiveIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
     setDirection(1);
-    setActiveIndex((prev) => (prev === TESTIMONIALS_DATA.length - 1 ? 0 : prev + 1));
+    setActiveIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1));
   };
 
   // Touch Swipe Handlers for mobile
@@ -162,9 +264,9 @@ export default function TestimonialsSection() {
       handleNext();
     }, 7000);
     return () => clearInterval(timer);
-  }, []);
+  }, [testimonials.length]);
 
-  const currentItem = TESTIMONIALS_DATA[activeIndex];
+  const currentItem = testimonials[activeIndex] || testimonials[0];
 
   return (
     <section 
@@ -314,7 +416,7 @@ export default function TestimonialsSection() {
               <div className="text-xs font-mono font-bold tracking-wider">
                 <span className="text-[#8C6239] font-black text-sm">{String(activeIndex + 1).padStart(2, '0')}</span>
                 <span className="text-[#7A6354] mx-1">/</span>
-                <span className="text-[#7A6354] font-bold">{String(TESTIMONIALS_DATA.length).padStart(2, '0')}</span>
+                <span className="text-[#7A6354] font-bold">{String(testimonials.length).padStart(2, '0')}</span>
               </div>
 
               <button 
@@ -386,10 +488,10 @@ export default function TestimonialsSection() {
               className="relative w-full h-[310px] flex items-center justify-center overflow-visible" 
               style={{ perspective: '1400px' }}
             >
-              {TESTIMONIALS_DATA.map((item, index) => {
+              {testimonials.map((item, index) => {
                 let offset = index - activeIndex;
-                if (offset < -1) offset += TESTIMONIALS_DATA.length;
-                if (offset > 1) offset -= TESTIMONIALS_DATA.length;
+                if (offset < -1) offset += testimonials.length;
+                if (offset > 1) offset -= testimonials.length;
 
                 const isCenter = offset === 0;
                 const isLeft = offset === -1;
@@ -562,10 +664,10 @@ export default function TestimonialsSection() {
               <div className="text-xs font-mono font-bold tracking-wider">
                 <span className="text-[#8C6239] font-black text-sm">{String(activeIndex + 1).padStart(2, '0')}</span>
                 <span className="text-[#7A6354] mx-1">/</span>
-                <span className="text-[#7A6354] font-bold">{String(TESTIMONIALS_DATA.length).padStart(2, '0')}</span>
+                <span className="text-[#7A6354] font-bold">{String(testimonials.length).padStart(2, '0')}</span>
               </div>
               <div className="flex items-center gap-1 ml-2">
-                {TESTIMONIALS_DATA.map((_, i) => (
+                {testimonials.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveIndex(i)}

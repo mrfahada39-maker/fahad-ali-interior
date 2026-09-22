@@ -444,6 +444,17 @@ export default function UserDashboard() {
     return () => clearInterval(interval);
   }, [activeTab]);
 
+  // Silent real-time review sync when patron opens My Reviews tab
+  useEffect(() => {
+    if (activeTab !== 'reviews') return;
+    apiFetch('/api/reviews/my-reviews')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        setMyReviews(Array.isArray(data) ? data : (data.reviews || data.data || []));
+      })
+      .catch(() => {});
+  }, [activeTab]);
+
   const loadAllData = async () => {
     setLoading(true);
     try {

@@ -24,7 +24,9 @@ export type HomeReview = {
   customerName: string | null;
   rating: number;
   comment: string | null;
-  product: { name: string };
+  createdAt?: string;
+  product: { name: string; image?: string };
+  user?: { name?: string | null; image?: string | null };
 };
 
 export type HomeBanner = {
@@ -89,7 +91,7 @@ const empty: HomePageData = {
 export const getHomePageData = unstable_cache(
   async (): Promise<HomePageData> => {
     try {
-      const [products, categories, settings, banners, productGroups] = await Promise.all([
+      const [products, categories, settings, banners, productGroups, approvedReviewsList] = await Promise.all([
         db.product.findMany({
           where: { deletedAt: null },
           select: {
@@ -151,6 +153,15 @@ export const getHomePageData = unstable_cache(
           where: { deletedAt: null },
           _count: { id: true },
         }).catch(() => []),
+        db.review.findMany({
+          where: { deletedAt: null, status: 'APPROVED' },
+          include: {
+            product: { select: { id: true, name: true, image: true, category: true } },
+            user: { select: { id: true, name: true, image: true, email: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 12,
+        }).catch(() => []),
       ]);
 
       const categoryCountMap = new Map<string, number>();
@@ -180,10 +191,26 @@ export const getHomePageData = unstable_cache(
         };
       });
 
+      const formattedReviews: HomeReview[] = (approvedReviewsList || []).map((r: any) => ({
+        id: r.id,
+        customerName: r.customerName || r.user?.name || (r.user?.email ? r.user.email.split('@')[0] : 'Verified Patron'),
+        rating: Number(r.rating) || 5,
+        comment: r.comment || '',
+        createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+        product: {
+          name: r.product?.name || 'Handcrafted Solid Sheesham',
+          image: r.product?.image || undefined,
+        },
+        user: {
+          name: r.user?.name || r.customerName || 'Verified Patron',
+          image: r.user?.image || undefined,
+        },
+      }));
+
       return {
         stats: {
           products: products.length,
-          approvedReviews: 0,
+          approvedReviews: formattedReviews.length,
           completedOrders: 0,
           uniqueCustomers: 0,
         },
@@ -198,7 +225,7 @@ export const getHomePageData = unstable_cache(
           { name: 'Luxury Showcase', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg', description: 'Solid Sheesham' },
           { name: 'Luxury Wardrobes', count: 20, items: '20 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg', description: 'Solid Sheesham' },
         ],
-        reviews: [],
+        reviews: formattedReviews,
         settings: settings ? {
           siteName: settings.siteName || 'Fahad Ali Interior',
           contactPhone: settings.contactPhone || '',
@@ -229,7 +256,7 @@ export const getHomePageData = unstable_cache(
     }
   },
   ['home-bundle-cache'],
-  { revalidate: 60, tags: ['homepage', 'products', 'banners', 'categories', 'home-bundle-cache'] }
+  { revalidate: 60, tags: ['homepage', 'products', 'banners', 'categories', 'reviews', 'home-bundle-cache'] }
 );
 
 

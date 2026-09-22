@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
@@ -104,11 +104,18 @@ function revalidateProductCaches(productId?: string) {
   } catch {}
   try {
     revalidatePath('/', 'layout');
+    revalidatePath('/', 'page');
     revalidatePath('/shop', 'layout');
     revalidatePath('/admin', 'layout');
     if (productId) {
       revalidatePath(`/product/${productId}`, 'page');
     }
+  } catch {}
+  try {
+    revalidateTag('homepage', { expire: 0 });
+    revalidateTag('products', { expire: 0 });
+    revalidateTag('reviews', { expire: 0 });
+    revalidateTag('home-bundle-cache', { expire: 0 });
   } catch {}
 }
 
@@ -1381,11 +1388,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 3.1 GET /public/home-bundle
     if (method === 'GET' && (segment === 'public/home-bundle' || segment === 'v1/public/home-bundle')) {
-      const [products, categories, settings, approvedReviews, completedOrders, uniqueCustomers, allProductsCount, productGroups] = await Promise.all([
+      const [products, categories, settings, approvedReviewsCount, completedOrders, uniqueCustomers, allProductsCount, productGroups, approvedReviewsList] = await Promise.all([
         db.product.findMany({ where: { deletedAt: null }, take: 12, orderBy: { createdAt: 'desc' } }),
         db.category.findMany({ where: { deletedAt: null }, orderBy: { createdAt: 'asc' } }).catch(() => []),
         db.settings.findFirst().catch(() => null),
-        db.review.count({ where: { deletedAt: null } }).catch(() => 0),
+        db.review.count({ where: { deletedAt: null, status: 'APPROVED' } }).catch(() => 0),
         db.order.count({ where: { deletedAt: null } }).catch(() => 0),
         db.user.count({ where: { deletedAt: null } }).catch(() => 0),
         db.product.count({ where: { deletedAt: null } }).catch(() => 0),
@@ -1393,6 +1400,15 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           by: ['category'],
           where: { deletedAt: null },
           _count: { id: true },
+        }).catch(() => []),
+        db.review.findMany({
+          where: { deletedAt: null, status: 'APPROVED' },
+          include: {
+            product: { select: { id: true, name: true, image: true, category: true } },
+            user: { select: { id: true, name: true, image: true, email: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 12,
         }).catch(() => []),
       ]);
 
@@ -1420,10 +1436,27 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         };
       });
 
+      const formattedReviews = (approvedReviewsList || []).map((r: any) => ({
+        id: r.id,
+        customerName: r.customerName || r.user?.name || (r.user?.email ? r.user.email.split('@')[0] : 'Verified Patron'),
+        rating: Number(r.rating) || 5,
+        comment: r.comment || '',
+        createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+        product: {
+          id: r.product?.id,
+          name: r.product?.name || 'Handcrafted Solid Sheesham',
+          image: r.product?.image || null,
+        },
+        user: {
+          name: r.user?.name || r.customerName || 'Verified Patron',
+          image: r.user?.image || null,
+        },
+      }));
+
       return NextResponse.json({
         stats: {
           products: allProductsCount || products.length,
-          approvedReviews,
+          approvedReviews: approvedReviewsCount,
           completedOrders,
           uniqueCustomers,
         },
@@ -1434,7 +1467,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           image: '/images/placeholder.webp',
           description: c.description
         })),
-        reviews: [],
+        reviews: formattedReviews,
         settings: settings ? {
           siteName: settings.siteName || 'Fahad Ali Interior',
           contactPhone: settings.contactPhone || '',
@@ -1458,6 +1491,38 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         },
         banners: [],
       });
+    }
+
+    // 3.1.1 Public GET /reviews (approved reviews for storefront)
+    if (method === 'GET' && (segment === 'public/reviews' || segment === 'v1/public/reviews' || segment === 'reviews' || segment === 'v1/reviews')) {
+      const approvedReviewsList = await db.review.findMany({
+        where: { deletedAt: null, status: 'APPROVED' },
+        include: {
+          product: { select: { id: true, name: true, image: true, category: true } },
+          user: { select: { id: true, name: true, image: true, email: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }).catch(() => []);
+
+      const formattedReviews = (approvedReviewsList || []).map((r: any) => ({
+        id: r.id,
+        customerName: r.customerName || r.user?.name || (r.user?.email ? r.user.email.split('@')[0] : 'Verified Patron'),
+        rating: Number(r.rating) || 5,
+        comment: r.comment || '',
+        createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+        product: {
+          id: r.product?.id,
+          name: r.product?.name || 'Handcrafted Solid Sheesham',
+          image: r.product?.image || null,
+        },
+        user: {
+          name: r.user?.name || r.customerName || 'Verified Patron',
+          image: r.user?.image || null,
+        },
+      }));
+
+      return NextResponse.json({ success: true, reviews: formattedReviews });
     }
 
     // 3.2 GET /public/stats
