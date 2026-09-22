@@ -363,7 +363,7 @@ export default function AdminDashboard() {
         }, 1000);
       }
 
-      await apiFetch('/api/calls/signal', {
+      const acceptRes = await apiFetch('/api/calls/signal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -373,6 +373,12 @@ export default function AdminDashboard() {
           answerSdp,
         }),
       });
+      if (acceptRes.ok) {
+        const acceptData = await acceptRes.json().catch(() => ({}));
+        if (acceptData.session?.connectedAt) {
+          setCallConnectedAt(acceptData.session.connectedAt);
+        }
+      }
       toast.success(`Connected to VIP Client: ${currentCaller?.name || 'Customer'}`);
     } catch {
       toast.error('Could not connect call');
@@ -446,29 +452,38 @@ export default function AdminDashboard() {
               setIsCallOpen(true);
               toneGenerator.playIncomingRing();
             }
-            // Outgoing call answered by Client
-            else if (data.session.status === 'connected' && isCallOpen && callStatus === 'outgoing') {
+            // Call connected (either Admin answered Client or Client answered Admin)
+            else if (data.session.status === 'connected' && isCallOpen) {
               if (adminAutoAnswerTimerRef.current) {
                 clearTimeout(adminAutoAnswerTimerRef.current);
                 adminAutoAnswerTimerRef.current = null;
               }
-              setCallStatus('connected');
               if (data.session.connectedAt) {
                 setCallConnectedAt(data.session.connectedAt);
               }
               toneGenerator.stop();
-              if (data.session.answerSdp && adminRtcClientRef.current) {
-                await adminRtcClientRef.current.handleAnswer(data.session.answerSdp);
-              }
-              if (data.session.candidates && adminRtcClientRef.current) {
-                for (const c of data.session.candidates) {
-                  await adminRtcClientRef.current.addIceCandidate(c);
+
+              // If Admin made an outgoing call that was just answered
+              if (callStatus === 'outgoing') {
+                setCallStatus('connected');
+                if (data.session.answerSdp && adminRtcClientRef.current) {
+                  await adminRtcClientRef.current.handleAnswer(data.session.answerSdp);
+                }
+                if (!callDurationIntervalRef.current) {
+                  callDurationIntervalRef.current = setInterval(() => {
+                    setCallDuration((d) => d + 1);
+                  }, 1000);
                 }
               }
-              if (!callDurationIntervalRef.current) {
-                callDurationIntervalRef.current = setInterval(() => {
-                  setCallDuration((d) => d + 1);
-                }, 1000);
+
+              // Ingest ICE candidates from Client continuously
+              if (data.session.candidates && adminRtcClientRef.current) {
+                for (const c of data.session.candidates) {
+                  const sender = c.fromUserId || (typeof c === 'object' && c.fromUserId);
+                  if (!sender || sender !== 'admin') {
+                    await adminRtcClientRef.current.addIceCandidate(c);
+                  }
+                }
               }
             }
             // Call ended or declined

@@ -1800,7 +1800,14 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
               (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
             ) {
               s.candidates = s.candidates || [];
-              s.candidates.push(candidate);
+              const rawCand = candidate.candidate !== undefined ? candidate.candidate : candidate;
+              const candPayload = {
+                candidate: typeof rawCand === 'string' ? rawCand : (rawCand?.candidate || ''),
+                sdpMid: candidate.sdpMid !== undefined ? candidate.sdpMid : rawCand?.sdpMid,
+                sdpMLineIndex: candidate.sdpMLineIndex !== undefined ? candidate.sdpMLineIndex : rawCand?.sdpMLineIndex,
+                fromUserId: fromUserId || 'client',
+              };
+              s.candidates.push(candPayload);
               s.updatedAt = now;
               break;
             }

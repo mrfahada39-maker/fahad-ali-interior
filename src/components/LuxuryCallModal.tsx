@@ -62,15 +62,15 @@ export default function LuxuryCallModal({
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isOpen && callStatus === 'connected') {
-      if (!fallbackStartRef.current) {
-        fallbackStartRef.current = connectedAt || Date.now();
-      }
       const tick = () => {
         const start = connectedAt || fallbackStartRef.current || Date.now();
         setInternalDuration(Math.max(0, Math.floor((Date.now() - start) / 1000)));
       };
+      if (!fallbackStartRef.current) {
+        fallbackStartRef.current = connectedAt || Date.now();
+      }
       tick();
-      interval = setInterval(tick, 500);
+      interval = setInterval(tick, 250);
     } else {
       fallbackStartRef.current = null;
       setInternalDuration(0);
@@ -80,7 +80,7 @@ export default function LuxuryCallModal({
     };
   }, [isOpen, callStatus, connectedAt]);
 
-  const activeDuration = internalDuration || callDuration || 0;
+  const activeDuration = connectedAt ? internalDuration : (internalDuration || callDuration || 0);
 
   // Attach local stream
   useEffect(() => {
@@ -97,11 +97,26 @@ export default function LuxuryCallModal({
     }
   }, [remoteStream, isOpen, callStatus]);
 
-  // Attach remote stream to audio
+  // Attach remote stream to audio with resilient autoplay handling
   useEffect(() => {
     if (remoteAudioRef.current && remoteStream) {
       remoteAudioRef.current.srcObject = remoteStream;
-      remoteAudioRef.current.play().catch(() => {});
+      remoteAudioRef.current.volume = 1.0;
+      remoteAudioRef.current.muted = false;
+      const playPromise = remoteAudioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          const resumeAudio = () => {
+            if (remoteAudioRef.current) {
+              remoteAudioRef.current.play().catch(() => {});
+            }
+            window.removeEventListener('click', resumeAudio);
+            window.removeEventListener('touchstart', resumeAudio);
+          };
+          window.addEventListener('click', resumeAudio, { once: true });
+          window.addEventListener('touchstart', resumeAudio, { once: true });
+        });
+      }
     }
   }, [remoteStream, isOpen, callStatus]);
 
@@ -122,7 +137,7 @@ export default function LuxuryCallModal({
           ref={remoteAudioRef}
           autoPlay
           playsInline
-          style={{ position: 'fixed', top: -9999, left: -9999, opacity: 0, pointerEvents: 'none' }}
+          style={{ position: 'fixed', top: 0, left: 0, width: 1, height: 1, opacity: 0.01, pointerEvents: 'none' }}
         />
         {/* Main Luxury Modal Card */}
         <motion.div

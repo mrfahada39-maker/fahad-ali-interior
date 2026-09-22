@@ -161,30 +161,19 @@ export default function UserDashboard() {
         }),
       });
 
-      // ── ATELIER AUTO-ANSWER (Connects to Atelier Concierge if Admin is offline) ──
+      // ── CALL TIMEOUT (45s ring timeout if Admin is busy) ──
       if (autoAnswerTimerRef.current) clearTimeout(autoAnswerTimerRef.current);
       autoAnswerTimerRef.current = setTimeout(() => {
         setCallStatus((prev) => {
           if (prev === 'outgoing') {
             toneGenerator.stop();
-            const now = Date.now();
-            setCallConnectedAt(now);
-            speakLuxuryGreeting(
-              type === 'video'
-                ? 'Welcome to Fahad Ali Atelier. Connecting to VIP Video Consultation desk.'
-                : 'Welcome to Fahad Ali Atelier. Master Artisan Fahad Ali Concierge line is now active.'
-            );
-            toast.success('Connected to Fahad Ali Atelier VIP Concierge');
-            if (!callDurationIntervalRef.current) {
-              callDurationIntervalRef.current = setInterval(() => {
-                setCallDuration((d) => d + 1);
-              }, 1000);
-            }
-            return 'connected';
+            toast.info('Admin is currently attending another patron. Please leave a message or try again.');
+            endCall();
+            return 'ended';
           }
           return prev;
         });
-      }, 5000);
+      }, 45000);
     } catch {
       toast.error('Could not connect consultation channel');
       endCall();
@@ -237,7 +226,7 @@ export default function UserDashboard() {
         }, 1000);
       }
 
-      await apiFetch('/api/calls/signal', {
+      const acceptRes = await apiFetch('/api/calls/signal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -249,6 +238,12 @@ export default function UserDashboard() {
           userAliases,
         }),
       });
+      if (acceptRes.ok) {
+        const acceptData = await acceptRes.json().catch(() => ({}));
+        if (acceptData.session?.connectedAt) {
+          setCallConnectedAt(acceptData.session.connectedAt);
+        }
+      }
     } catch {
       toast.error('Could not access microphone/camera');
       endCall();
@@ -336,29 +331,37 @@ export default function UserDashboard() {
         if (res.ok) {
           const data = await res.json();
           if (data.session) {
-            // Outgoing call answered by Admin
-            if (data.session.status === 'connected' && isCallOpen && callStatus === 'outgoing') {
+            // Outgoing call answered by Admin or Call Connected
+            if (data.session.status === 'connected' && isCallOpen) {
               if (autoAnswerTimerRef.current) {
                 clearTimeout(autoAnswerTimerRef.current);
                 autoAnswerTimerRef.current = null;
               }
-              setCallStatus('connected');
               if (data.session.connectedAt) {
                 setCallConnectedAt(data.session.connectedAt);
               }
               toneGenerator.stop();
-              if (data.session.answerSdp && rtcClientRef.current) {
-                await rtcClientRef.current.handleAnswer(data.session.answerSdp);
-              }
-              if (data.session.candidates && rtcClientRef.current) {
-                for (const c of data.session.candidates) {
-                  await rtcClientRef.current.addIceCandidate(c);
+
+              if (callStatus === 'outgoing') {
+                setCallStatus('connected');
+                if (data.session.answerSdp && rtcClientRef.current) {
+                  await rtcClientRef.current.handleAnswer(data.session.answerSdp);
+                }
+                if (!callDurationIntervalRef.current) {
+                  callDurationIntervalRef.current = setInterval(() => {
+                    setCallDuration((d) => d + 1);
+                  }, 1000);
                 }
               }
-              if (!callDurationIntervalRef.current) {
-                callDurationIntervalRef.current = setInterval(() => {
-                  setCallDuration((d) => d + 1);
-                }, 1000);
+
+              // Ingest ICE candidates from Admin continuously
+              if (data.session.candidates && rtcClientRef.current) {
+                for (const c of data.session.candidates) {
+                  const sender = c.fromUserId || (typeof c === 'object' && c.fromUserId);
+                  if (!sender || sender === 'admin') {
+                    await rtcClientRef.current.addIceCandidate(c);
+                  }
+                }
               }
             }
             // Incoming call from Admin to User

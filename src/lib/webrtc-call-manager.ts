@@ -46,18 +46,16 @@ export class WebRtcCallClient {
 
     // Receive remote tracks
     pc.ontrack = (event) => {
-      if (event.streams && event.streams[0]) {
-        this.remoteStream = event.streams[0];
-        if (this.onRemoteStreamCallback) {
-          this.onRemoteStreamCallback(event.streams[0]);
-        }
-      } else if (event.track) {
-        if (this.remoteStream) {
-          this.remoteStream.addTrack(event.track);
-          if (this.onRemoteStreamCallback) {
-            this.onRemoteStreamCallback(this.remoteStream);
-          }
-        }
+      let stream = event.streams && event.streams[0] ? event.streams[0] : null;
+      if (!stream) {
+        if (!this.remoteStream) this.remoteStream = new MediaStream();
+        this.remoteStream.addTrack(event.track);
+        stream = this.remoteStream;
+      } else {
+        this.remoteStream = stream;
+      }
+      if (this.onRemoteStreamCallback && stream) {
+        this.onRemoteStreamCallback(new MediaStream(stream.getTracks()));
       }
     };
 
@@ -93,7 +91,10 @@ export class WebRtcCallClient {
     if (!this.pc) return null;
     try {
       await this.pc.setRemoteDescription(new RTCSessionDescription(offerSdp));
-      const answer = await this.pc.createAnswer();
+      const answer = await this.pc.createAnswer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      });
       await this.pc.setLocalDescription(answer);
       this.flushQueuedCandidates();
       return answer;
@@ -116,20 +117,28 @@ export class WebRtcCallClient {
   private seenCandidates = new Set<string>();
 
   // Add remote ICE candidate with queueing & deduplication
-  async addIceCandidate(candidate: RTCIceCandidateInit) {
+  async addIceCandidate(candidate: any) {
     if (!this.pc || !candidate) return;
-    const key = `${candidate.candidate || ''}_${candidate.sdpMid || ''}_${candidate.sdpMLineIndex ?? ''}`;
+    const candStr = typeof candidate.candidate === 'string' ? candidate.candidate : (typeof candidate === 'string' ? candidate : '');
+    if (!candStr) return;
+    const key = `${candStr}_${candidate.sdpMid ?? ''}_${candidate.sdpMLineIndex ?? ''}`;
     if (this.seenCandidates.has(key)) return;
     this.seenCandidates.add(key);
 
+    const init: RTCIceCandidateInit = {
+      candidate: candStr,
+      sdpMid: candidate.sdpMid,
+      sdpMLineIndex: candidate.sdpMLineIndex,
+    };
+
     try {
       if (this.pc.remoteDescription && this.pc.remoteDescription.type) {
-        await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+        await this.pc.addIceCandidate(new RTCIceCandidate(init));
       } else {
-        this.queuedCandidates.push(candidate);
+        this.queuedCandidates.push(init);
       }
     } catch {
-      this.queuedCandidates.push(candidate);
+      this.queuedCandidates.push(init);
     }
   }
 
@@ -329,22 +338,30 @@ export async function acquireUserMediaWithFallback(
   if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
     return {
       stream: createSyntheticMediaStream(type === 'video'),
-      fallbackNote: 'Microphone/Camera unavailable in this browser. Connected via VIP Concierge Channel.',
+      fallbackNote: 'Microphone/Camera unavailable in this browser.',
     };
   }
+
+  const audioConstraints: MediaTrackConstraints = {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+  };
 
   // 1. Try requested stream
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
+      audio: audioConstraints,
       video: type === 'video',
     });
+    stream.getAudioTracks().forEach((t) => { t.enabled = true; });
     return { stream };
   } catch {
     // 2. If video was requested and failed, try audio only
     if (type === 'video') {
       try {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+        audioStream.getAudioTracks().forEach((t) => { t.enabled = true; });
         return {
           stream: audioStream,
           fallbackNote: 'Camera not detected. Connected via High-Definition Voice Call.',
@@ -355,7 +372,7 @@ export async function acquireUserMediaWithFallback(
     // 3. Synthetic stream fallback so call always connects smoothly
     return {
       stream: createSyntheticMediaStream(type === 'video'),
-      fallbackNote: 'Microphone permission not granted. Connected via VIP Concierge Channel.',
+      fallbackNote: 'Microphone permission not granted in this browser window.',
     };
   }
 }
