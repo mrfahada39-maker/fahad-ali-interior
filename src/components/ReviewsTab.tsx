@@ -315,7 +315,14 @@ export default function ReviewsTab({
                   {/* Product Tag & Rating Stars */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[10.5px] font-bold text-[#8C6239] bg-[#FAF5EE] px-2.5 py-0.5 rounded-lg border border-[#E2D1BC] inline-flex items-center gap-1 shadow-2xs">
+                      {r.product?.image && (
+                        <img
+                          src={r.product.image}
+                          alt={r.product.name || 'Product'}
+                          className="w-7 h-7 rounded-lg object-cover border border-[#E2D1BC] shadow-2xs"
+                        />
+                      )}
+                      <span className="text-[10.5px] font-bold text-[#8C6239] bg-[#FAF5EE] px-2.5 py-1 rounded-lg border border-[#E2D1BC] inline-flex items-center gap-1 shadow-2xs">
                         <ShoppingBag size={11} />
                         {r.product?.name || 'Sheesham Handcrafted Masterpiece'}
                       </span>
@@ -347,7 +354,7 @@ export default function ReviewsTab({
 
                 {/* Bottom Action Controls */}
                 <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
-                  {r.status !== 'approved' && (
+                  {(r.status || '').toLowerCase() !== 'approved' && (
                     <button
                       onClick={() => updateReviewStatus(r.id, 'approved')}
                       className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:brightness-110 text-white font-black text-xs shadow-2xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
@@ -356,7 +363,7 @@ export default function ReviewsTab({
                       <span>Approve & Publish</span>
                     </button>
                   )}
-                  {r.status !== 'rejected' && (
+                  {(r.status || '').toLowerCase() !== 'rejected' && (
                     <button
                       onClick={() => updateReviewStatus(r.id, 'rejected')}
                       className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:brightness-110 text-white font-black text-xs shadow-2xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"

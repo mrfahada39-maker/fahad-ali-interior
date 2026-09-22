@@ -93,12 +93,36 @@ export async function getProductById(id: string): Promise<StorefrontProduct | nu
         description: true,
         specs: true,
         createdAt: true,
+        reviews: {
+          where: { deletedAt: null, status: 'APPROVED' },
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            customerName: true,
+            createdAt: true,
+            status: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
     if (p) {
+      const approvedReviews = (p as any).reviews || [];
+      const reviewCount = approvedReviews.length;
+      const avgRating = reviewCount > 0
+        ? Number((approvedReviews.reduce((sum: number, r: any) => sum + (Number(r.rating) || 5), 0) / reviewCount).toFixed(1))
+        : 5.0;
+
       const result = {
         ...p,
         price: Number(p.price),
+        reviewCount,
+        avgRating,
+        reviews: approvedReviews.map((r: any) => ({
+          ...r,
+          createdAt: typeof r.createdAt === 'object' && r.createdAt?.toISOString ? r.createdAt.toISOString() : String(r.createdAt || ''),
+        })),
       } as unknown as StorefrontProduct;
       setCached(cacheKey, result, 60);
       return result;

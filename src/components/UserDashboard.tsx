@@ -482,7 +482,7 @@ export default function UserDashboard() {
       }
       if (revRes.status === 'fulfilled' && revRes.value.ok) {
         const data = await revRes.value.json();
-        setMyReviews(Array.isArray(data) ? data : []);
+        setMyReviews(Array.isArray(data) ? data : (data.reviews || data.data || []));
       }
       if (msgRes.status === 'fulfilled' && msgRes.value.ok) {
         const data = await msgRes.value.json();
@@ -794,6 +794,17 @@ export default function UserDashboard() {
     }
   };
 
+  const handleDeleteReview = async (id: string) => {
+    try {
+      setMyReviews((prev) => prev.filter((r) => r.id !== id));
+      toast.success('Review removed');
+      await apiFetch(`/api/v1/user/reviews?id=${id}`, { method: 'DELETE' });
+    } catch {
+      toast.error('Failed to remove review');
+      loadAllData();
+    }
+  };
+
   const totalSpentCalculated = Number(
     stats?.totalSpent ?? (orders || []).reduce((sum, o) => sum + Number(o?.totalAmount || 0), 0)
   );
@@ -1023,12 +1034,18 @@ export default function UserDashboard() {
     },
   ];
 
+  const approvedReviewsCount = myReviews.filter((r) => (r.status || '').toLowerCase() === 'approved').length;
+  const pendingReviewsCount = myReviews.filter((r) => (r.status || 'pending').toLowerCase() === 'pending').length;
+  const userAvgRating = myReviews.length > 0
+    ? (myReviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / myReviews.length).toFixed(1)
+    : '5.0';
+
   const reviewsKpis = [
     {
       label: 'VERIFIED PATRON REVIEWS',
       numValue: myReviews.length,
       prefix: '',
-      sub: 'Authentic Feedback',
+      sub: myReviews.length === 0 ? 'No reviews submitted' : `${myReviews.length} Testimonials Shared`,
       icon: Star,
       color: 'text-[#B88E4B]',
       iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
@@ -1039,9 +1056,9 @@ export default function UserDashboard() {
     },
     {
       label: 'AVERAGE SATISFACTION',
-      numValue: myReviews.length === 0 ? '5.0 ★★★★★' : '5.0 ★★★★★',
+      numValue: `${userAvgRating} ★`,
       prefix: '',
-      sub: 'Highest Excellence Grade',
+      sub: 'Excellence Experience Grade',
       icon: Crown,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
@@ -1051,10 +1068,10 @@ export default function UserDashboard() {
       dotColor: 'bg-blue-500',
     },
     {
-      label: 'LOYALTY POINTS EARNED',
+      label: 'LOYALTY REWARDS',
       numValue: myReviews.length * 300,
       prefix: '+ ',
-      sub: 'Added to Royal Account',
+      sub: 'Atelier Privilege Points',
       icon: Coins,
       color: 'text-purple-600',
       iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
@@ -1064,10 +1081,10 @@ export default function UserDashboard() {
       dotColor: 'bg-purple-500',
     },
     {
-      label: 'BUYER VERIFICATION',
-      numValue: 'Royal Verified',
+      label: 'ATELIER STATUS',
+      numValue: approvedReviewsCount > 0 ? `${approvedReviewsCount} Live` : (pendingReviewsCount > 0 ? `${pendingReviewsCount} Pending` : 'Verified Patron'),
       prefix: '',
-      sub: 'Inspected by Fahad Ali',
+      sub: pendingReviewsCount > 0 ? `${pendingReviewsCount} Under Verification` : 'All Reviews Verified',
       icon: CheckCircle2,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -2511,26 +2528,73 @@ export default function UserDashboard() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  {myReviews.map((rev) => (
-                    <div key={rev.id} className="bg-white/95 backdrop-blur-md rounded-2xl border border-[#E7DDD0] p-4 shadow-2xs space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-0.5">
-                          {[...Array(rev.rating || 5)].map((_, i) => (
-                            <Star key={i} size={13} className="fill-[#B88E4B] text-[#B88E4B]" />
-                          ))}
+                  {myReviews.map((rev) => {
+                    const isApproved = (rev.status || '').toLowerCase() === 'approved';
+                    const isRejected = (rev.status || '').toLowerCase() === 'rejected';
+
+                    return (
+                      <div key={rev.id} className="bg-white/95 backdrop-blur-md rounded-2xl border border-[#E7DDD0] hover:border-[#B88E4B]/40 p-4 shadow-2xs space-y-2.5 transition-all">
+                        {/* Header: Stars & Status Badge */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1">
+                            {[...Array(rev.rating || 5)].map((_, i) => (
+                              <Star key={i} size={13} className="fill-[#B88E4B] text-[#B88E4B]" />
+                            ))}
+                            <span className="text-[11px] font-black text-[#1F1612] ml-1">{rev.rating || 5}.0</span>
+                          </div>
+
+                          <span className={`px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                            isApproved
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                              : isRejected
+                              ? 'bg-rose-50 text-rose-800 border border-rose-300'
+                              : 'bg-amber-50 text-amber-800 border border-amber-300'
+                          }`}>
+                            {isApproved ? '✓ Published Live' : isRejected ? '✕ Revision Requested' : '⏳ Under Verification'}
+                          </span>
                         </div>
-                        <span className="text-[9.5px] font-mono text-stone-400">
-                          {new Date(rev.createdAt || Date.now()).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-xs text-[#1F1612] font-medium italic">"{rev.comment}"</p>
-                      {rev.product && (
-                        <p className="text-[10px] font-bold text-[#8C6239] pt-1.5 border-t border-[#E7DDD0]">
-                          Piece: {rev.product.name}
+
+                        {/* Product reference info */}
+                        {rev.product && (
+                          <div className="flex items-center gap-2.5 bg-[#FAF5EE] p-2 rounded-xl border border-[#E7DDD0]">
+                            {rev.product.image && (
+                              <img
+                                src={rev.product.image}
+                                alt={rev.product.name}
+                                className="w-9 h-9 rounded-lg object-cover border border-[#E2D1BC] shrink-0"
+                              />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-bold text-[#1F1612] truncate">{rev.product.name}</p>
+                              {rev.product.price && (
+                                <p className="text-[10px] font-mono text-[#8C6239]">PKR {formatPrice(rev.product.price)}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Comment */}
+                        <p className="text-xs text-[#1F1612] font-medium italic bg-[#FCFAF7] p-2.5 rounded-xl border border-[#E7DDD0]/70 leading-relaxed">
+                          &ldquo;{rev.comment}&rdquo;
                         </p>
-                      )}
-                    </div>
-                  ))}
+
+                        {/* Footer: Date & Delete Action */}
+                        <div className="flex items-center justify-between pt-1 border-t border-[#E7DDD0]/60 text-[10px] text-stone-400">
+                          <span>
+                            {new Date(rev.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReview(rev.id)}
+                            className="p-1 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer rounded-lg hover:bg-rose-50"
+                            title="Delete Review"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </motion.div>

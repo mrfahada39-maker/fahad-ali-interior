@@ -1,4 +1,13 @@
-﻿/** Shared storefront product shape from `/api/v1/products`. */
+export type ProductReview = {
+  id: string;
+  rating: number;
+  comment?: string | null;
+  customerName?: string | null;
+  createdAt: string | Date;
+  status?: string;
+};
+
+/** Shared storefront product shape from `/api/v1/products`. */
 export type StorefrontProduct = {
   id: string;
   name: string;
@@ -14,4 +23,6 @@ export type StorefrontProduct = {
   avgRating?: number;
   reviewCount?: number;
   specs?: string | null;
+  reviews?: ProductReview[];
 };
+

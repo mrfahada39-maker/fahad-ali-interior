@@ -315,6 +315,26 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       );
     }
 
+    // 1.9 GET /products/:id/reviews
+    if (method === 'GET' && (segment.includes('products/') && segment.endsWith('/reviews'))) {
+      const parts = segment.split('/');
+      const prodIdx = parts.indexOf('products');
+      const prodId = parts[prodIdx + 1];
+      const reviews = await db.review.findMany({
+        where: { productId: prodId, deletedAt: null, status: 'APPROVED' },
+        select: {
+          id: true,
+          rating: true,
+          comment: true,
+          customerName: true,
+          createdAt: true,
+          status: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => []);
+      return NextResponse.json({ success: true, reviews });
+    }
+
     // 2. GET /products/:id
     if (method === 'GET' && segment.startsWith('products/')) {
       const id = segment.split('/').pop();
@@ -334,16 +354,37 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           description: true,
           specs: true,
           createdAt: true,
+          reviews: {
+            where: { deletedAt: null, status: 'APPROVED' },
+            select: {
+              id: true,
+              rating: true,
+              comment: true,
+              customerName: true,
+              createdAt: true,
+              status: true,
+            },
+            orderBy: { createdAt: 'desc' },
+          },
         },
       });
       if (!product) {
         return NextResponse.json({ error: 'Product not found' }, { status: 404 });
       }
+      const approvedReviews = (product as any).reviews || [];
+      const reviewCount = approvedReviews.length;
+      const avgRating = reviewCount > 0
+        ? Number((approvedReviews.reduce((sum: number, r: any) => sum + (Number(r.rating) || 5), 0) / reviewCount).toFixed(1))
+        : 5.0;
+
       return NextResponse.json(
         {
           product: {
             ...product,
             price: Number(product.price),
+            reviewCount,
+            avgRating,
+            reviews: approvedReviews,
           },
         },
         { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120' } }
@@ -1223,7 +1264,14 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         }),
         db.user.findMany({ where: { deletedAt: null } }),
         db.settings.findFirst().catch(() => null),
-        db.review.findMany({ where: { deletedAt: null } }).catch(() => []),
+        db.review.findMany({
+          where: { deletedAt: null },
+          include: {
+            product: { select: { id: true, name: true, image: true, price: true } },
+            user: { select: { id: true, name: true, email: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        }).catch(() => []),
         db.inquiry.findMany({ where: { deletedAt: null } }).catch(() => []),
         db.user.findMany({
           where: { messages: { some: {} } },
@@ -1577,7 +1625,14 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 5. GET /admin/reviews
     if (method === 'GET' && (segment === 'admin/reviews' || segment === 'v1/admin/reviews')) {
-      const reviews = await db.review.findMany({ where: { deletedAt: null }, orderBy: { createdAt: 'desc' } }).catch(() => []);
+      const reviews = await db.review.findMany({
+        where: { deletedAt: null },
+        include: {
+          product: { select: { id: true, name: true, image: true, price: true } },
+          user: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => []);
       return NextResponse.json(reviews);
     }
 
@@ -2638,6 +2693,9 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           where: { id: body.id },
           data: updateData,
         });
+        if (updated.productId) {
+          revalidateProductCaches(updated.productId);
+        }
         return NextResponse.json({ success: true, ...updated });
       } catch (err: any) {
         return NextResponse.json({ error: err.message || 'Failed to update review' }, { status: 400 });
@@ -2651,12 +2709,17 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
       if (!id) return NextResponse.json({ error: 'Review ID is required' }, { status: 400 });
 
+      const revToDelete = await db.review.findUnique({ where: { id }, select: { productId: true } }).catch(() => null);
       await db.review.update({
         where: { id },
         data: { deletedAt: new Date() },
       }).catch(async () => {
         await db.review.delete({ where: { id } });
       });
+
+      if (revToDelete?.productId) {
+        revalidateProductCaches(revToDelete.productId);
+      }
 
       return NextResponse.json({ success: true, deletedId: id });
     }
@@ -2801,8 +2864,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       });
     }
 
-    // 18. User Reviews Delete (DELETE /user/reviews)
-    if (method === 'DELETE' && (segment.includes('user/reviews') || segment.includes('v1/user/reviews'))) {
+    // 18. User Reviews Delete (DELETE /user/reviews, /reviews)
+    if (method === 'DELETE' && (segment.includes('user/reviews') || segment.includes('v1/user/reviews') || segment === 'reviews' || segment === 'v1/reviews')) {
       const user = await getUserFromSessionOrToken(req);
       if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       const searchId = req.nextUrl.searchParams.get('id');
@@ -2813,12 +2876,17 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
       if (!reviewId) return NextResponse.json({ error: 'Review ID required' }, { status: 400 });
 
+      const revToDelete = await db.review.findUnique({ where: { id: reviewId }, select: { productId: true } }).catch(() => null);
       await db.review.updateMany({
         where: { id: reviewId, userId: user.id },
         data: { deletedAt: new Date() },
       }).catch(async () => {
         await db.review.deleteMany({ where: { id: reviewId, userId: user.id } });
       });
+
+      if (revToDelete?.productId) {
+        revalidateProductCaches(revToDelete.productId);
+      }
 
       return NextResponse.json({ success: true, deletedId: reviewId });
     }
@@ -2854,27 +2922,39 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       return NextResponse.json(newMsg);
     }
 
-    // 20. User Reviews Submission (POST /user/reviews, /reviews, /v1/reviews)
-    if (method === 'POST' && (segment.includes('user/reviews') || segment.includes('v1/user/reviews') || segment === 'reviews' || segment === 'v1/reviews')) {
+    // 20. User Reviews Submission (POST /user/reviews, /reviews, /v1/reviews, /products/:id/reviews)
+    if (method === 'POST' && (segment.includes('user/reviews') || segment.includes('v1/user/reviews') || segment === 'reviews' || segment === 'v1/reviews' || (segment.includes('products/') && segment.endsWith('/reviews')))) {
       const user = await getUserFromSessionOrToken(req);
       if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       const body = await req.json().catch(() => ({}));
 
-      if (!body.productId || !body.rating) {
+      const parts = segment.split('/');
+      const prodIdx = parts.indexOf('products');
+      const routeProdId = prodIdx !== -1 ? parts[prodIdx + 1] : undefined;
+      const targetProductId = body.productId || routeProdId;
+
+      if (!targetProductId || !body.rating) {
         return NextResponse.json({ error: 'Product ID and rating are required' }, { status: 400 });
+      }
+
+      let customerName = body.customerName;
+      if (!customerName) {
+        const dbUser = await db.user.findUnique({ where: { id: user.id }, select: { name: true, email: true } }).catch(() => null);
+        customerName = dbUser?.name || user.email || 'Valued Client';
       }
 
       const newReview = await db.review.create({
         data: {
           userId: user.id as string,
-          productId: body.productId,
+          productId: targetProductId,
           rating: Number(body.rating),
           comment: body.comment || '',
           status: 'PENDING',
-          customerName: user.email || 'Customer',
+          customerName,
         },
       });
 
+      revalidateProductCaches(targetProductId);
       return NextResponse.json(newReview);
     }
 

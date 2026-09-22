@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   Star, Minus, Plus, Truck, ShieldCheck, Heart,
   Sparkles, CheckCircle2, ShoppingBag,
-  MessageSquare, ArrowRight, Share2, Compass
+  MessageSquare, ArrowRight, Share2, Compass, PenTool, X
 } from 'lucide-react';
 import type { StorefrontProduct } from '@/lib/types';
 import { resolveImageUrl, LOCAL_IMAGES } from '@/lib/images';
@@ -41,6 +41,10 @@ export default function ProductPageClient({
   const [isZooming, setIsZooming] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const [addedToCart, setAddedToCart] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -126,6 +130,49 @@ export default function ProductPageClient({
       toast.success('Link copied to clipboard! 📋');
     }
   };
+
+  const handleSubmitProductReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!session?.user) {
+      toast.error('Please sign in to submit a patron review');
+      return;
+    }
+    if (!reviewComment.trim()) {
+      toast.error('Please write your critique or craftsmanship notes');
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const res = await apiFetch('/api/v1/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          rating: reviewRating,
+          comment: reviewComment.trim(),
+        }),
+      });
+      if (res.ok) {
+        toast.success('Critique submitted for royal atelier verification');
+        setShowReviewModal(false);
+        setReviewComment('');
+        setReviewRating(5);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || 'Failed to submit review');
+      }
+    } catch {
+      toast.error('Network error submitting review');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const reviewsList = product.reviews || [];
+  const reviewCount = reviewsList.length || (product.reviewCount ?? 0);
+  const avgRating = reviewsList.length > 0
+    ? Number((reviewsList.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / reviewsList.length).toFixed(1))
+    : (product.avgRating ?? 5.0);
 
   let parsedSpecs: any = {};
   try {
@@ -282,11 +329,15 @@ export default function ProductPageClient({
               <div className="flex items-center gap-3 pt-1">
                 <div className="flex items-center gap-1 text-[#B88E4B]">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-[#B88E4B] text-[#B88E4B]" />
+                    <Star
+                      key={i}
+                      size={14}
+                      className={i < Math.round(avgRating) ? 'fill-[#B88E4B] text-[#B88E4B]' : 'text-stone-300'}
+                    />
                   ))}
                 </div>
                 <span className="text-xs font-bold text-[#7A6048]">
-                  5.0 (24 Verified Masterwork Reviews)
+                  {avgRating.toFixed(1)} ({reviewCount > 0 ? `${reviewCount} Verified Masterwork ${reviewCount === 1 ? 'Review' : 'Reviews'}` : 'Atelier Masterpiece Rating'})
                 </span>
               </div>
             </div>
@@ -385,6 +436,224 @@ export default function ProductPageClient({
 
           </div>
         </div>
+
+        {/* ── CLIENT REVIEWS & TIMBER TESTIMONIALS SECTION ── */}
+        <div className="mt-16 sm:mt-24 pt-12 border-t border-[#E7DDD0]">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#FAF0E2] text-[#8C6239] border border-[#B88E4B]/35 flex items-center gap-1 shadow-2xs">
+                  <Sparkles size={10} className="text-[#B88E4B]" />
+                  <span>Artisan Reputation</span>
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-500/35 flex items-center gap-1 shadow-2xs">
+                  <CheckCircle2 size={10} className="text-emerald-600" />
+                  <span>Verified Purchases</span>
+                </span>
+              </div>
+              <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#221814] tracking-tight">
+                Patron Reviews & <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent">Critiques</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-[#7A6048] mt-1 font-medium">
+                Authentic testimonials from collectors commissioning handcrafted Sheesham furniture.
+              </p>
+            </div>
+
+            {/* Score pill & Write review button */}
+            <div className="flex items-center gap-4">
+              <div className="bg-[#FAF5EE] border border-[#E7DDD0] rounded-2xl px-4 py-2.5 flex items-center gap-3">
+                <div className="text-right">
+                  <div className="flex items-center gap-1 text-[#B88E4B]">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={13} className={i < Math.round(avgRating) ? 'fill-[#B88E4B] text-[#B88E4B]' : 'text-stone-300'} />
+                    ))}
+                  </div>
+                  <p className="text-[10px] font-bold text-stone-500 mt-0.5">
+                    {reviewCount} {reviewCount === 1 ? 'Review' : 'Reviews'}
+                  </p>
+                </div>
+                <div className="border-l border-[#E7DDD0] pl-3">
+                  <span className="text-2xl font-black text-[#221814] font-serif leading-none">
+                    {avgRating.toFixed(1)}
+                  </span>
+                  <span className="text-[10px] text-stone-400 font-bold block">/ 5.0</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (!session?.user) {
+                    toast.info('Please sign in to write an artisan critique');
+                  }
+                  setShowReviewModal(true);
+                }}
+                className="px-4 py-3 rounded-xl bg-gradient-to-r from-[#221814] to-[#3E2E25] hover:from-[#B88E4B] hover:to-[#996515] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer flex items-center gap-1.5"
+              >
+                <PenTool size={13} />
+                <span>Write a Review</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Review List or Empty State */}
+          {reviewsList.length === 0 ? (
+            <div className="bg-white/80 border-2 border-dashed border-[#E7DDD0] rounded-3xl p-10 sm:p-14 text-center space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-[#FAF5EE] border border-[#E7DDD0] flex items-center justify-center mx-auto text-[#B88E4B]">
+                <Star size={24} className="fill-[#B88E4B]/20 text-[#B88E4B]" />
+              </div>
+              <h3 className="font-serif font-black text-lg text-[#221814]">
+                Be the First Royal Patron to Review this Piece
+              </h3>
+              <p className="text-xs text-[#7A6048] max-w-md mx-auto leading-relaxed">
+                Commission this bespoke piece and share your critique on timber seasoning, brass fittings, and finishing grade.
+              </p>
+              <button
+                onClick={() => setShowReviewModal(true)}
+                className="mt-2 px-5 py-2.5 rounded-xl bg-[#FAF5EE] hover:bg-[#FAF0E2] border border-[#B88E4B]/40 text-[#8C6239] text-xs font-bold transition-all cursor-pointer shadow-2xs"
+              >
+                ✦ Share Your Experience
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {reviewsList.map((rev) => {
+                const initial = (rev.customerName || 'P').trim().charAt(0).toUpperCase();
+                const stars = Number(rev.rating) || 5;
+
+                return (
+                  <div
+                    key={rev.id}
+                    className="bg-white border border-[#E7DDD0] rounded-2xl p-5 shadow-[0_2px_12px_rgba(44,30,24,0.02)] space-y-3 hover:border-[#B88E4B]/40 transition-all"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#B88E4B] to-[#996515] text-white flex items-center justify-center font-serif font-black text-xs shadow-2xs">
+                          {initial}
+                        </div>
+                        <div>
+                          <h4 className="font-serif font-black text-xs text-[#221814] leading-tight">
+                            {rev.customerName || 'Valued Client'}
+                          </h4>
+                          <span className="text-[10px] font-semibold text-emerald-700 flex items-center gap-1">
+                            <CheckCircle2 size={10} /> Verified Commission
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] font-mono text-stone-400">
+                        {new Date(rev.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-amber-500">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={12} className={i < stars ? 'fill-amber-400 text-amber-500' : 'text-stone-200'} />
+                      ))}
+                      <span className="text-xs font-bold text-[#221814] ml-1">{stars}.0</span>
+                    </div>
+
+                    {rev.comment && (
+                      <p className="text-xs text-[#3E2E25] font-serif italic bg-[#FCFAF7] p-3 rounded-xl border border-[#E7DDD0]/70 leading-relaxed">
+                        &ldquo;{rev.comment}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Review Submission Modal */}
+        {showReviewModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+            <div className="bg-white rounded-3xl border border-[#E7DDD0] max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              <div>
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-[#8C6239] bg-[#FAF5EE] px-2.5 py-0.5 rounded-md border border-[#E2D1BC]">
+                  Royal Patron Critique
+                </span>
+                <h3 className="font-serif text-xl font-black text-[#221814] mt-1.5">
+                  Review: {product.name}
+                </h3>
+                <p className="text-xs text-[#7A6048]">
+                  Share your experience with the craftsmanship, wood seasoning, and finishing.
+                </p>
+              </div>
+
+              {!session?.user ? (
+                <div className="bg-[#FAF5EE] p-5 rounded-2xl border border-[#E7DDD0] text-center space-y-3">
+                  <p className="text-xs font-medium text-[#7A6048]">
+                    Please sign in to your patron account to verify your commission and submit a critique.
+                  </p>
+                  <Link
+                    href={`/signin?callbackUrl=/product/${product.id}`}
+                    className="inline-block px-5 py-2.5 rounded-xl bg-[#221814] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#B88E4B] transition-all"
+                  >
+                    Sign In to Continue
+                  </Link>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitProductReview} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#7A6048]">Artisanship Rating</label>
+                    <div className="flex items-center gap-1.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewRating(star)}
+                          className="cursor-pointer p-0.5 hover:scale-110 transition-transform"
+                        >
+                          <Star
+                            size={22}
+                            className={star <= reviewRating ? 'fill-amber-400 text-amber-500' : 'text-stone-200'}
+                          />
+                        </button>
+                      ))}
+                      <span className="text-xs font-bold text-[#221814] ml-2">{reviewRating}.0 / 5.0</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#7A6048]">Your Critique & Finishing Notes</label>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Comment on the rosewood timber grain, joints, cushioning, or delivery presentation..."
+                      rows={4}
+                      required
+                      className="w-full rounded-2xl border border-[#E7DDD0] p-3 text-xs text-[#221814] bg-[#FAF5EE]/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#B88E4B]"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowReviewModal(false)}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-stone-500 hover:bg-stone-100 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingReview}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white text-xs font-black uppercase tracking-wider hover:brightness-110 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {submittingReview ? 'Submitting...' : '✦ Submit Critique'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

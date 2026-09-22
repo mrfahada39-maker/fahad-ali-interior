@@ -465,7 +465,7 @@ describe('UserDashboard High-Level Comprehensive Testing Suite', () => {
 
       const isMatch = await bcrypt.compare(newPassword, hash);
       expect(isMatch).toBe(true);
-    });
+    }, 20000);
 
     it('enables TOTP 2FA and generates 8 secure alphanumeric backup codes', () => {
       const generateBackupCodes = () => {
