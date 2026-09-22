@@ -1079,10 +1079,18 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         return NextResponse.json({ error: 'Unauthorized. Please sign in to view this order.' }, { status: 401 });
       }
 
-      const orderId = segment.split('/').pop();
+      const rawOrderId = segment.split('/').pop() || '';
+      const orderId = decodeURIComponent(rawOrderId).replace(/^[#\s]+/, '').trim();
       const order = await db.order.findFirst({
-        where: { id: orderId, deletedAt: null },
-        include: { items: true },
+        where: {
+          OR: [
+            { id: orderId },
+            { id: { endsWith: orderId, mode: 'insensitive' } },
+            { id: { equals: orderId, mode: 'insensitive' } },
+          ],
+          deletedAt: null,
+        },
+        include: { items: true, user: { select: { id: true, name: true, email: true, phone: true } } },
       });
 
       if (!order) {
@@ -1094,19 +1102,24 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         return NextResponse.json({ error: 'Forbidden. Access denied to this order.' }, { status: 403 });
       }
 
+      const formattedOrder = {
+        ...order,
+        discount: Number(order.discount),
+        gst: Number(order.gst),
+        subtotal: Number(order.subtotal),
+        totalAmount: Number(order.totalAmount),
+        total: Number(order.totalAmount),
+        items: (order.items || []).map((item: any) => ({
+          ...item,
+          price: Number(item.price),
+        })),
+      };
+
       return NextResponse.json({
-        order: {
-          ...order,
-          discount: Number(order.discount),
-          gst: Number(order.gst),
-          subtotal: Number(order.subtotal),
-          totalAmount: Number(order.totalAmount),
-          total: Number(order.totalAmount),
-          items: (order.items || []).map((item: any) => ({
-            ...item,
-            price: Number(item.price),
-          })),
-        },
+        success: true,
+        order: formattedOrder,
+        data: formattedOrder,
+        ...formattedOrder,
       });
     }
 

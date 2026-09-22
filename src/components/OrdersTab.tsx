@@ -5,29 +5,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag,
   Search,
-  Filter,
   Phone,
   MapPin,
-  CreditCard,
   MessageSquare,
-  ExternalLink,
-  CheckCircle,
   Clock,
   Truck,
-  Package,
-  XCircle,
-  ChevronRight,
   Eye,
   X,
   Sparkles,
   Coins,
   ShieldCheck,
-  Calendar,
-  User,
-  ArrowRight,
   Printer
 } from 'lucide-react';
-import Link from 'next/link';
 import AnimatedCounter from '@/components/AnimatedCounter';
 import LuxurySelect from '@/components/LuxurySelect';
 
@@ -80,7 +69,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
         return {
           bg: 'bg-stone-50 text-stone-700 border-stone-300',
           dot: 'bg-stone-500',
-          label: s.toUpperCase(),
+          label: (s || 'UNKNOWN').toUpperCase(),
         };
     }
   };
@@ -98,15 +87,71 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
 
   const filteredOrders = orders.filter((o) => {
     const matchesStatus = selectedStatusFilter === 'all' || (o.status || '').toLowerCase() === selectedStatusFilter;
-    const q = searchQuery.trim().toLowerCase();
+    const rawQ = searchQuery.trim();
+    if (!rawQ) return matchesStatus;
+
+    const q = rawQ.toLowerCase();
+    const cleanQ = q.replace(/^[#\s]+/, ''); // remove leading # or spaces
+    const digitsQ = q.replace(/\D/g, ''); // phone numbers, price digits
+
+    // Match Order ID (full or short 8 chars)
+    const orderId = String(o.id || '').toLowerCase();
+    const shortId = orderId.slice(-8);
+    const matchesId =
+      orderId.includes(q) ||
+      (cleanQ.length > 0 && (orderId.includes(cleanQ) || shortId.includes(cleanQ)));
+
+    // Match Customer Name
+    const customerName = String(
+      o.user?.name || o.shippingName || o.shippingInfo?.name || o.name || ''
+    ).toLowerCase();
+    const matchesName = customerName.includes(q) || (cleanQ.length > 0 && customerName.includes(cleanQ));
+
+    // Match Customer Email
+    const customerEmail = String(
+      o.user?.email || o.shippingEmail || o.shippingInfo?.email || o.email || ''
+    ).toLowerCase();
+    const matchesEmail = customerEmail.includes(q) || (cleanQ.length > 0 && customerEmail.includes(cleanQ));
+
+    // Match Phone (exact substring or digits match)
+    const rawPhone = String(
+      o.user?.phone || o.shippingPhone || o.shippingInfo?.phone || o.phone || ''
+    );
+    const phoneDigits = rawPhone.replace(/\D/g, '');
+    const matchesPhone =
+      (rawPhone.length > 0 && rawPhone.toLowerCase().includes(q)) ||
+      (digitsQ.length >= 3 && phoneDigits.includes(digitsQ));
+
+    // Match Destination (address, city, province)
+    const destination = `${o.shippingAddress || o.shippingInfo?.address || ''} ${o.shippingCity || o.shippingInfo?.city || ''} ${o.shippingProvince || o.shippingInfo?.province || ''}`.toLowerCase();
+    const matchesDestination = destination.includes(q) || (cleanQ.length > 0 && destination.includes(cleanQ));
+
+    // Match Ordered Items
+    const matchesItems = Boolean(
+      Array.isArray(o.items) &&
+      o.items.some((it: any) => {
+        const title = String(it.productName || it.name || it.title || it.product?.name || '').toLowerCase();
+        return title.includes(q) || (cleanQ.length > 0 && title.includes(cleanQ));
+      })
+    );
+
+    // Match Status Text
+    const statusText = String(o.status || '').toLowerCase();
+    const matchesStatusText = statusText.includes(q);
+
+    // Match Amount
+    const amountStr = String(o.totalAmount || '');
+    const matchesAmount = digitsQ.length >= 3 && amountStr.includes(digitsQ);
+
     const matchesSearch =
-      !q ||
-      Boolean(o.id && o.id.toLowerCase().includes(q)) ||
-      Boolean(o.user?.name && o.user.name.toLowerCase().includes(q)) ||
-      Boolean(o.user?.email && o.user.email.toLowerCase().includes(q)) ||
-      Boolean(o.shippingInfo?.name && o.shippingInfo.name.toLowerCase().includes(q)) ||
-      Boolean(o.shippingInfo?.phone && o.shippingInfo.phone.toLowerCase().includes(q)) ||
-      Boolean(o.shippingName && o.shippingName.toLowerCase().includes(q));
+      matchesId ||
+      matchesName ||
+      matchesEmail ||
+      matchesPhone ||
+      matchesDestination ||
+      matchesItems ||
+      matchesStatusText ||
+      matchesAmount;
 
     return matchesStatus && matchesSearch;
   });
@@ -215,7 +260,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
         </div>
       </motion.div>
 
-      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
@@ -297,17 +342,26 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
           })}
         </div>
 
-        {/* Search Bar */}
+        {/* Multi-Field Robust Search Bar */}
         <div className="w-full lg:w-80 relative shrink-0">
-          <Search size={15} className="text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search size={15} className="text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             id="admin-orders-search"
             name="orderSearch"
             placeholder="Search Order ID, Client, Email, Phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#221814] font-bold rounded-xl h-9.5 pl-9.5 pr-3 text-xs focus:border-[#B88E4B] outline-none"
+            className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#221814] font-bold rounded-xl h-9.5 pl-9.5 pr-8 text-xs focus:border-[#B88E4B] outline-none"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer"
+              title="Clear search"
+            >
+              <X size={13} />
+            </button>
+          )}
         </div>
 
       </div>
@@ -317,7 +371,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
         <div className="text-center py-16 bg-white border border-[#E7DDD0] rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.015)]">
           <ShoppingBag size={48} className="mx-auto text-stone-300 mb-3 opacity-60" />
           <h4 className="text-base font-black text-[#221814] font-serif">No Orders Found</h4>
-          <p className="text-stone-500 text-xs mt-1">There are no orders matching the selected filter.</p>
+          <p className="text-stone-500 text-xs mt-1">There are no orders matching the search or status filter.</p>
         </div>
       ) : (
         <div className="bg-white border border-[#E7DDD0] rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.015)] overflow-hidden">
@@ -335,10 +389,12 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
               </thead>
               <tbody className="divide-y divide-neutral-100 text-xs">
                 {filteredOrders.map((o) => {
-                  const customerName = o.user?.name || o.shippingInfo?.name || o.shippingName || 'Verified Client';
-                  const customerEmail = o.user?.email || o.shippingEmail || 'client@fahadali.com';
-                  const customerPhone = o.user?.phone || o.shippingInfo?.phone || o.shippingPhone || '';
-                  const whatsappUrl = customerPhone ? `https://wa.me/${customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${customerName}, regarding your Order #${o.id.slice(-8).toUpperCase()} from Fahad Ali Interior:`)}` : null;
+                  const customerName = o.user?.name || o.shippingName || o.shippingInfo?.name || 'Verified Client';
+                  const customerEmail = o.user?.email || o.shippingEmail || o.shippingInfo?.email || 'client@fahadali.com';
+                  const customerPhone = o.user?.phone || o.shippingPhone || o.shippingInfo?.phone || '';
+                  const cleanPhone = customerPhone ? customerPhone.replace(/\D/g, '') : '';
+                  const shortId = o.id ? o.id.slice(-8).toUpperCase() : 'ORDER';
+                  const whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hi ${customerName}, regarding your Order #${shortId} from Fahad Ali Interior:`)}` : null;
                   const badge = getStatusBadge(o.status);
 
                   return (
@@ -351,7 +407,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                       {/* Order Ref */}
                       <td className="py-3.5 px-5">
                         <span className="font-mono font-black text-xs text-[#1F1612] bg-[#FAF7F2] border border-[#E7DDD0] px-2.5 py-1 rounded-lg">
-                          #{o.id.slice(-8).toUpperCase()}
+                          #{shortId}
                         </span>
                         <span className="block text-[10px] font-semibold text-stone-400 mt-1">
                           {o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Live'}
@@ -372,7 +428,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                       {/* Total Amount */}
                       <td className="py-3.5 px-4">
                         <span className="font-black text-[#1F1612] text-sm sm:text-base">
-                          Rs. {formatPrice(o.totalAmount || 0)}
+                          Rs. {formatPrice(Number(o.totalAmount) || 0)}
                         </span>
                         <span className="block text-[10px] font-semibold text-stone-400">
                           {o.items?.length || 1} Item(s)
@@ -387,7 +443,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                         </span>
                       </td>
 
-                      {/* Fulfillment Status Selector (Custom Luxury Select) */}
+                      {/* Fulfillment Status Selector (Custom Luxury Select Opening UPWARD) */}
                       <td className="py-3.5 px-4">
                         <LuxurySelect
                           value={(o.status || '').toLowerCase()}
@@ -400,10 +456,11 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                             { value: 'cancelled', label: 'Cancelled' },
                           ]}
                           menuClassName="min-w-[150px]"
+                          direction="up"
                         />
                       </td>
 
-                      {/* Quick Actions */}
+                      {/* Quick Actions (In-Admin Slip & WhatsApp Only - No Redirect!) */}
                       <td className="py-3.5 px-5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {whatsappUrl && (
@@ -417,14 +474,14 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                               <MessageSquare size={14} />
                             </a>
                           )}
-                          <Link
-                            href={`/orders/${o.id}`}
-                            target="_blank"
-                            className="p-2 rounded-xl bg-[#FCFAF7] text-stone-600 hover:text-[#B88E4B] border border-[#E7DDD0] hover:border-[#B88E4B]/50 transition-colors shadow-2xs"
-                            title="Open Customer Invoice Page"
+                          <button
+                            onClick={() => setSelectedOrderDetails(o)}
+                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FAF0E2] via-[#F8EBD8] to-[#F3E2CB] text-[#7A4B1A] hover:text-[#4A2D0D] hover:border-[#B88E4B] border border-[#B88E4B]/40 transition-all shadow-2xs flex items-center gap-1.5 font-bold text-xs cursor-pointer group"
+                            title="View & Print Official Order Slip"
                           >
-                            <ExternalLink size={14} />
-                          </Link>
+                            <Printer size={13} className="text-[#B88E4B] group-hover:scale-110 transition-transform" />
+                            <span>Order Slip</span>
+                          </button>
                           <button
                             onClick={() => setSelectedOrderDetails(o)}
                             className="p-2 rounded-xl bg-[#FAF5EE] text-[#8C6239] hover:bg-[#F3E7D3] border border-[#E2D1BC] transition-colors shadow-2xs cursor-pointer font-bold"
@@ -443,7 +500,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
         </div>
       )}
 
-      {/* ── QUICK ORDER DETAILS LUXURY MODAL ── */}
+      {/* ── EXECUTIVE IN-ADMIN ORDER SLIP MODAL (NO REDIRECT TO APP!) ── */}
       <AnimatePresence>
         {selectedOrderDetails && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -458,74 +515,162 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
               <button
                 onClick={() => setSelectedOrderDetails(null)}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center transition-colors cursor-pointer"
+                title="Close"
               >
                 <X size={16} />
               </button>
 
-              <div className="mb-5">
-                <div className="flex items-center gap-2">
+              {/* Order Slip Header */}
+              <div className="mb-5 pb-4 border-b border-[#EFE8DD]">
+                <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#8C6239] bg-[#FAF5EE] border border-[#E2D1BC] px-2.5 py-0.5 rounded-full">
+                    Official Executive Order Slip
+                  </span>
                   <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase border ${getStatusBadge(selectedOrderDetails.status).bg}`}>
                     {selectedOrderDetails.status}
                   </span>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-black text-[#221814] mt-2 font-serif">
-                  Order #{selectedOrderDetails.id?.slice(-8).toUpperCase()}
+                <h3 className="text-xl sm:text-2xl font-black text-[#221814] font-serif flex items-center gap-2">
+                  <span>Order</span>
+                  <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent">
+                    #{selectedOrderDetails.id?.slice(-8).toUpperCase()}
+                  </span>
                 </h3>
                 <p className="text-stone-500 text-xs mt-0.5">
-                  Placed on {selectedOrderDetails.createdAt ? new Date(selectedOrderDetails.createdAt).toLocaleString() : '—'}
+                  Placed on {selectedOrderDetails.createdAt ? new Date(selectedOrderDetails.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Live Database'}
+                </p>
+              </div>
+
+              {/* Client Destination & Contact */}
+              <div className="mb-5 bg-[#FCFAF7] p-4 rounded-2xl border border-[#E7DDD0] text-xs space-y-1.5">
+                <p className="font-black text-[#221814] uppercase tracking-wider mb-2 flex items-center gap-1.5 font-serif border-b border-stone-200/70 pb-2">
+                  <MapPin size={14} className="text-[#B88E4B]" /> Client Delivery Destination
+                </p>
+                <p className="font-black text-[#1F1612] text-sm">
+                  {selectedOrderDetails.shippingName || selectedOrderDetails.shippingInfo?.name || selectedOrderDetails.user?.name || 'Valued Client'}
+                </p>
+                {(selectedOrderDetails.shippingPhone || selectedOrderDetails.shippingInfo?.phone || selectedOrderDetails.user?.phone) && (
+                  <p className="text-[#8C6239] font-bold flex items-center gap-1.5">
+                    <Phone size={12} /> {selectedOrderDetails.shippingPhone || selectedOrderDetails.shippingInfo?.phone || selectedOrderDetails.user?.phone}
+                  </p>
+                )}
+                {(selectedOrderDetails.shippingEmail || selectedOrderDetails.shippingInfo?.email || selectedOrderDetails.user?.email) && (
+                  <p className="text-stone-500 font-medium">
+                    {selectedOrderDetails.shippingEmail || selectedOrderDetails.shippingInfo?.email || selectedOrderDetails.user?.email}
+                  </p>
+                )}
+                <p className="text-stone-700 pt-0.5">
+                  {selectedOrderDetails.shippingAddress || selectedOrderDetails.shippingInfo?.address || 'Standard Delivery Address'}
+                </p>
+                <p className="text-stone-900 font-bold">
+                  {[selectedOrderDetails.shippingCity || selectedOrderDetails.shippingInfo?.city, selectedOrderDetails.shippingProvince || selectedOrderDetails.shippingInfo?.province].filter(Boolean).join(', ') || 'Pakistan'}
                 </p>
               </div>
 
               {/* Ordered Items Table */}
               <div className="space-y-2 mb-5 bg-[#FCFAF7] p-4 rounded-2xl border border-[#E7DDD0]">
-                <p className="text-xs font-black text-[#221814] uppercase tracking-wider font-serif border-b border-stone-200/70 pb-2 flex items-center gap-1.5">
-                  <span className="text-[#B88E4B]">✦</span> Ordered Furniture Masterpieces
+                <p className="text-xs font-black text-[#221814] uppercase tracking-wider font-serif border-b border-stone-200/70 pb-2 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-[#B88E4B]">✦</span> Ordered Furniture Masterpieces
+                  </span>
+                  <span className="text-stone-400 font-sans font-bold">
+                    ({(selectedOrderDetails.items || []).length} items)
+                  </span>
                 </p>
                 {(selectedOrderDetails.items || []).length === 0 ? (
-                  <p className="text-xs text-stone-500 py-2">Standard Custom Furniture Order</p>
-                ) : (
-                  (selectedOrderDetails.items || []).map((item: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center text-xs py-2 border-b border-stone-200/50 last:border-0">
-                      <div>
-                        <p className="font-bold text-[#1F1612]">{item.productName || item.name || 'Furniture Item'}</p>
-                        <p className="text-stone-500 text-[10.5px]">Qty: {item.quantity || 1}</p>
-                      </div>
-                      <p className="font-black text-[#1F1612]">
-                        Rs. {formatPrice((item.unitPrice || item.price || 0) * (item.quantity || 1))}
-                      </p>
+                  <div className="py-2.5 text-xs text-stone-600 flex justify-between items-center">
+                    <div>
+                      <p className="font-bold text-[#1F1612]">Custom Bespoke Furniture Commission</p>
+                      <p className="text-stone-500 text-[10.5px]">Qty: 1</p>
                     </div>
-                  ))
+                    <p className="font-black text-[#1F1612]">
+                      Rs. {formatPrice(Number(selectedOrderDetails.totalAmount) || 0)}
+                    </p>
+                  </div>
+                ) : (
+                  (selectedOrderDetails.items || []).map((item: any, idx: number) => {
+                    const price = Number(item.unitPrice || item.price || 0);
+                    const qty = Number(item.quantity || 1);
+                    return (
+                      <div key={idx} className="flex justify-between items-center text-xs py-2 border-b border-stone-200/50 last:border-0">
+                        <div>
+                          <p className="font-bold text-[#1F1612]">{item.productName || item.name || item.title || item.product?.name || 'Furniture Item'}</p>
+                          <p className="text-stone-500 text-[10.5px]">Qty: {qty} • Rs. {formatPrice(price)} each</p>
+                        </div>
+                        <p className="font-black text-[#1F1612]">
+                          Rs. {formatPrice(price * qty)}
+                        </p>
+                      </div>
+                    );
+                  })
                 )}
               </div>
 
-              {/* Shipping Address */}
-              <div className="mb-5 bg-[#FCFAF7] p-4 rounded-2xl border border-[#E7DDD0] text-xs space-y-1">
-                <p className="font-black text-[#221814] uppercase tracking-wider mb-2 flex items-center gap-1.5 font-serif border-b border-stone-200/70 pb-2">
-                  <MapPin size={14} className="text-[#B88E4B]" /> Client Delivery Destination
-                </p>
-                <p className="font-black text-[#1F1612] text-sm">{selectedOrderDetails.shippingInfo?.name || selectedOrderDetails.user?.name || 'Customer'}</p>
-                <p className="text-stone-600">{selectedOrderDetails.shippingInfo?.phone || selectedOrderDetails.user?.phone || 'No phone provided'}</p>
-                <p className="text-stone-600">{selectedOrderDetails.shippingInfo?.address || 'Standard Delivery Address'}</p>
-                <p className="text-stone-600 font-bold">{selectedOrderDetails.shippingInfo?.city || 'Pakistan'}</p>
+              {/* Settlement Summary */}
+              <div className="mb-5 bg-[#FAF7F2] p-4 rounded-2xl border border-[#E8DFC8] space-y-2 text-xs">
+                <div className="flex justify-between text-stone-600 font-medium">
+                  <span>Catalogue Subtotal</span>
+                  <span className="font-bold text-[#1F1612]">
+                    Rs. {formatPrice(Number(selectedOrderDetails.subtotal || selectedOrderDetails.totalAmount || 0))}
+                  </span>
+                </div>
+                {Number(selectedOrderDetails.discount || 0) > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-medium">
+                    <span>Royal Discount Applied</span>
+                    <span className="font-bold">- Rs. {formatPrice(Number(selectedOrderDetails.discount))}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-stone-600 font-medium">
+                  <span>White-Glove Nationwide Delivery</span>
+                  <span className="font-bold text-emerald-700">COMPLIMENTARY (FREE)</span>
+                </div>
+                <div className="flex justify-between items-center pt-2.5 border-t border-[#E8DFC8]">
+                  <span className="text-xs uppercase tracking-wider font-bold text-stone-600">Total Settlement</span>
+                  <span className="text-xl sm:text-2xl font-black text-[#8C6239] font-serif">
+                    Rs. {formatPrice(Number(selectedOrderDetails.totalAmount || 0))}
+                  </span>
+                </div>
+                <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between text-[11px] text-stone-500">
+                  <span>Payment: <strong className="text-stone-800 uppercase">{selectedOrderDetails.paymentMethod?.replace('_', ' ') || 'COD'}</strong></span>
+                  <span>Payment Status: <strong className="text-stone-800 uppercase">{selectedOrderDetails.paymentStatus || 'Pending'}</strong></span>
+                </div>
               </div>
 
-              {/* Payment Summary */}
-              <div className="flex justify-between items-center pt-4 border-t border-stone-200">
-                <div>
-                  <span className="text-xs uppercase tracking-wider font-bold text-stone-500 block">Total Amount</span>
-                  <span className="text-2xl font-black text-[#1F1612]">Rs. {formatPrice(selectedOrderDetails.totalAmount || 0)}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/orders/${selectedOrderDetails.id}`}
-                    target="_blank"
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white font-black text-xs shadow-sm flex items-center gap-1.5"
-                  >
-                    <span>View Live Receipt</span>
-                    <ExternalLink size={12} />
-                  </Link>
-                </div>
+              {/* In-Admin Actions (NO APP REDIRECT!) */}
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-200">
+                <button
+                  onClick={() => setSelectedOrderDetails(null)}
+                  className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+                {(() => {
+                  const phone = selectedOrderDetails.shippingPhone || selectedOrderDetails.shippingInfo?.phone || selectedOrderDetails.user?.phone;
+                  const name = selectedOrderDetails.shippingName || selectedOrderDetails.shippingInfo?.name || selectedOrderDetails.user?.name || 'Customer';
+                  if (!phone) return null;
+                  const cleanPhone = phone.replace(/\D/g, '');
+                  const message = encodeURIComponent(`Hi ${name}! Here is your official order slip summary for Order #${selectedOrderDetails.id?.slice(-8).toUpperCase()} from Fahad Ali Interior:\nTotal: Rs. ${formatPrice(selectedOrderDetails.totalAmount || 0)}\nStatus: ${selectedOrderDetails.status}`);
+                  return (
+                    <a
+                      href={`https://wa.me/${cleanPhone}?text=${message}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-300 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                      title="Send Slip to Customer on WhatsApp"
+                    >
+                      <MessageSquare size={13} />
+                      <span>WhatsApp Slip</span>
+                    </a>
+                  );
+                })()}
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] hover:brightness-110 text-white font-black text-xs shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  title="Print Official Order Slip"
+                >
+                  <Printer size={14} />
+                  <span>Print Slip</span>
+                </button>
               </div>
             </motion.div>
           </div>

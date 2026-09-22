@@ -103,14 +103,32 @@ export default function OrdersPageClient() {
     return orders.filter((order) => {
       const s = (order.status || '').toLowerCase();
       if (filterTab !== 'all' && s !== filterTab) return false;
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const idMatch = String(order.id || '').toLowerCase().includes(q);
-        const nameMatch = String(order.shippingName || '').toLowerCase().includes(q);
-        const itemMatch = Array.isArray(order.items) && order.items.some((i: any) => String(i.name || '').toLowerCase().includes(q));
-        return idMatch || nameMatch || itemMatch;
-      }
-      return true;
+      const rawQ = searchQuery.trim();
+      if (!rawQ) return true;
+
+      const q = rawQ.toLowerCase();
+      const cleanQ = q.replace(/^[#\s]+/, '');
+      const digitsQ = q.replace(/\D/g, '');
+
+      const orderId = String(order.id || '').toLowerCase();
+      const shortId = orderId.slice(-8);
+      const idMatch =
+        orderId.includes(q) ||
+        (cleanQ.length > 0 && (orderId.includes(cleanQ) || shortId.includes(cleanQ)));
+
+      const nameMatch = String(order.shippingName || order.shippingInfo?.name || order.user?.name || '').toLowerCase().includes(cleanQ || q);
+      const emailMatch = String(order.shippingEmail || order.shippingInfo?.email || order.user?.email || '').toLowerCase().includes(cleanQ || q);
+      
+      const rawPhone = String(order.shippingPhone || order.shippingInfo?.phone || order.user?.phone || '');
+      const phoneDigits = rawPhone.replace(/\D/g, '');
+      const phoneMatch = (rawPhone && rawPhone.includes(q)) || (digitsQ.length >= 3 && phoneDigits.includes(digitsQ));
+
+      const itemMatch = Array.isArray(order.items) && order.items.some((i: any) => {
+        const title = String(i.productName || i.name || i.title || '').toLowerCase();
+        return title.includes(q) || (cleanQ.length > 0 && title.includes(cleanQ));
+      });
+
+      return idMatch || nameMatch || emailMatch || phoneMatch || itemMatch;
     });
   }, [orders, filterTab, searchQuery]);
 

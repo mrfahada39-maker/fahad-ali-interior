@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -77,19 +77,29 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
       try {
         await ensureEnterpriseTokens();
 
+        const cleanOrderId = decodeURIComponent(orderId).replace(/^[#\s]+/, '').trim();
+
         // Tier 1: Try single order endpoint
-        const res1 = await apiFetchJsonWithStatus<any>(`/api/v1/orders/${orderId}`);
+        const res1 = await apiFetchJsonWithStatus<any>(`/api/v1/orders/${encodeURIComponent(cleanOrderId)}`);
         if (res1.ok && res1.data && !res1.data.error) {
-          if (isMounted) setOrder(res1.data);
-          return;
+          const rawOrder = res1.data?.order || res1.data?.data || (res1.data?.id ? res1.data : null);
+          if (rawOrder && isMounted) {
+            setOrder(rawOrder);
+            return;
+          }
         }
 
         // Tier 2: Fallback to user orders list
-        const res2 = await apiFetchJsonWithStatus<any[]>(`/api/v1/orders`);
-        if (res2.ok && Array.isArray(res2.data)) {
-          const found = res2.data.find((o: any) => o.id === orderId || o.id?.endsWith(orderId));
-          if (found) {
-            if (isMounted) setOrder(found);
+        const res2 = await apiFetchJsonWithStatus<any>(`/api/v1/orders`);
+        if (res2.ok && res2.data) {
+          const list = Array.isArray(res2.data) ? res2.data : (res2.data.orders || res2.data.data || []);
+          const cleanLower = cleanOrderId.toLowerCase();
+          const found = list.find((o: any) => {
+            const oid = String(o.id || '').toLowerCase();
+            return oid === cleanLower || oid.endsWith(cleanLower) || (o.orderFingerprint && o.orderFingerprint.toLowerCase().includes(cleanLower));
+          });
+          if (found && isMounted) {
+            setOrder(found);
             return;
           }
         }
@@ -97,9 +107,13 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
         // Tier 3: Fallback to dashboard bundle
         const res3 = await apiFetchJsonWithStatus<any>(`/api/user/dashboard-bundle`);
         if (res3.ok && res3.data?.orders && Array.isArray(res3.data.orders)) {
-          const found = res3.data.orders.find((o: any) => o.id === orderId || o.id?.endsWith(orderId));
-          if (found) {
-            if (isMounted) setOrder(found);
+          const cleanLower = cleanOrderId.toLowerCase();
+          const found = res3.data.orders.find((o: any) => {
+            const oid = String(o.id || '').toLowerCase();
+            return oid === cleanLower || oid.endsWith(cleanLower);
+          });
+          if (found && isMounted) {
+            setOrder(found);
             return;
           }
         }
@@ -305,67 +319,91 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
           {/* Ordered Items List */}
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white/90 backdrop-blur-md border-[1.5px] border-[#E8DFC8] rounded-3xl p-6 sm:p-8 mb-6 shadow-xs">
             <h2 className="font-serif font-black text-base sm:text-lg text-[#221814] mb-6 pb-3 border-b border-[#EFE8DD]">
-              Ordered Furniture Sets ({order.items?.length || 0})
+              Ordered Furniture Sets ({order.items?.length || 1})
             </h2>
 
             <div className="divide-y divide-[#EFE8DD]">
-              {(order.items || []).map((item: any, idx: number) => {
-                const imgUrl = resolveImageUrl(item.image || item.product?.image);
-                const itemPrice = item.unitPrice || item.price || 0;
-                const itemQty = item.quantity || 1;
-                const productId = item.productId || item.product?.id || item.id;
-                const productName = item.productName || item.name || item.product?.name || 'Interior Masterpiece';
-
-                return (
-                  <div key={idx} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-stone-200 border border-[#E8DFC8] shrink-0">
-                        <Image src={imgUrl} alt={productName} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="80px" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-serif font-bold text-sm sm:text-base text-[#221814] truncate">{productName}</h3>
-                        <p className="text-xs text-[#7A6354] mt-0.5 font-medium">
-                          Quantity: <span className="font-bold text-[#221814]">{itemQty}</span> • 100% Solid Sheesham (10-Yr Warranty)
-                        </p>
-                        <p className="font-serif text-xs font-bold text-[#8C6239] mt-0.5">PKR {formatPrice(itemPrice)} / unit</p>
-                      </div>
+              {(!order.items || order.items.length === 0) ? (
+                <div className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-[#FAF5EE] border border-[#E8DFC8] flex items-center justify-center shrink-0 text-[#8C6239]">
+                      <Package size={28} />
                     </div>
-
-                    <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2 shrink-0">
-                      <p className="font-serif font-black text-base sm:text-lg text-[#221814]">
-                        PKR {formatPrice(itemPrice * itemQty)}
+                    <div className="min-w-0">
+                      <h3 className="font-serif font-bold text-sm sm:text-base text-[#221814] truncate">Custom Haute Furniture Commission</h3>
+                      <p className="text-xs text-[#7A6354] mt-0.5 font-medium">
+                        Quantity: <span className="font-bold text-[#221814]">1</span> • 100% Solid Seasoned Woodwork (10-Yr Guarantee)
                       </p>
-                      {productId && (
-                        <div className="flex items-center gap-2">
-                          <Link
-                            href={`/product/${productId}`}
-                            className="inline-flex items-center gap-1 text-[11px] font-serif font-bold uppercase tracking-wider text-[#8C6239] hover:text-[#221814] transition-colors"
-                          >
-                            <span>View Product</span>
-                            <ExternalLink size={12} />
-                          </Link>
-                          <button
-                            onClick={() => {
-                              addItemToCart({
-                                id: productId,
-                                name: productName,
-                                price: itemPrice,
-                                image: imgUrl || '/images/sofa_beige.webp',
-                                category: item.product?.category || 'Furniture',
-                              });
-                              toast.success('Added to Cart', { description: productName });
-                              openCart();
-                            }}
-                            className="inline-flex items-center gap-1 text-[11px] font-serif font-bold uppercase tracking-wider text-[#1A0E07] bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#C9A96E] px-2.5 py-1 rounded-lg transition-all shadow-2xs hover:brightness-105 cursor-pointer"
-                          >
-                            <RefreshCw size={11} /> Re-Order
-                          </button>
-                        </div>
-                      )}
+                      <p className="font-serif text-xs font-bold text-[#8C6239] mt-0.5">
+                        PKR {formatPrice(Number(order.totalAmount) || 0)} / bespoke suite
+                      </p>
                     </div>
                   </div>
-                );
-              })}
+                  <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2 shrink-0">
+                    <p className="font-serif font-black text-base sm:text-lg text-[#221814]">
+                      PKR {formatPrice(Number(order.totalAmount) || 0)}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                (order.items || []).map((item: any, idx: number) => {
+                  const imgUrl = resolveImageUrl(item.image || item.product?.image);
+                  const itemPrice = Number(item.unitPrice || item.price || 0);
+                  const itemQty = Number(item.quantity || 1);
+                  const productId = item.productId || item.product?.id || item.id;
+                  const productName = item.productName || item.name || item.product?.name || 'Interior Masterpiece';
+
+                  return (
+                    <div key={idx} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-stone-200 border border-[#E8DFC8] shrink-0">
+                          <Image src={imgUrl} alt={productName} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="80px" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-serif font-bold text-sm sm:text-base text-[#221814] truncate">{productName}</h3>
+                          <p className="text-xs text-[#7A6354] mt-0.5 font-medium">
+                            Quantity: <span className="font-bold text-[#221814]">{itemQty}</span> • 100% Solid Sheesham (10-Yr Warranty)
+                          </p>
+                          <p className="font-serif text-xs font-bold text-[#8C6239] mt-0.5">PKR {formatPrice(itemPrice)} / unit</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2 shrink-0">
+                        <p className="font-serif font-black text-base sm:text-lg text-[#221814]">
+                          PKR {formatPrice(itemPrice * itemQty)}
+                        </p>
+                        {productId && (
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/product/${productId}`}
+                              className="inline-flex items-center gap-1 text-[11px] font-serif font-bold uppercase tracking-wider text-[#8C6239] hover:text-[#221814] transition-colors"
+                            >
+                              <span>View Product</span>
+                              <ExternalLink size={12} />
+                            </Link>
+                            <button
+                              onClick={() => {
+                                addItemToCart({
+                                  id: productId,
+                                  name: productName,
+                                  price: itemPrice,
+                                  image: imgUrl || '/images/sofa_beige.webp',
+                                  category: item.product?.category || 'Furniture',
+                                });
+                                toast.success('Added to Cart', { description: productName });
+                                openCart();
+                              }}
+                              className="inline-flex items-center gap-1 text-[11px] font-serif font-bold uppercase tracking-wider text-[#1A0E07] bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#C9A96E] px-2.5 py-1 rounded-lg transition-all shadow-2xs hover:brightness-105 cursor-pointer"
+                            >
+                              <RefreshCw size={11} /> Re-Order
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             {/* Price Summary Breakdown */}
