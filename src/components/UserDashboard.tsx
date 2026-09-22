@@ -503,24 +503,86 @@ export default function UserDashboard() {
     return Array.from(map.values());
   }, [dbWishlist, localWishlistItems]);
 
-  // Filtered orders list
+  // Filtered orders list (Supports multi-field: Order ID with/without #, Client Name, Email, Phone, Destination, Items, Status, Amount)
   const filteredOrders = useMemo(() => {
     return (orders || []).filter((o) => {
       if (!o) return false;
-      const orderId = String(o.id || '');
-      const matchSearch =
-        !searchQuery ||
-        orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (o.items || []).some((i: any) => (i?.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
 
-      if (!matchSearch) return false;
-      if (orderFilter === 'ALL') return true;
-      if (orderFilter === 'PENDING') return o.status === 'PENDING' || !o.status;
-      if (orderFilter === 'SHIPPED') return o.status === 'SHIPPED' || o.status === 'PROCESSING';
-      if (orderFilter === 'DELIVERED') return o.status === 'DELIVERED';
-      return true;
+      // 1. Status Filter
+      const statusUpper = String(o.status || 'PENDING').toUpperCase();
+      if (orderFilter === 'PENDING' && statusUpper !== 'PENDING') return false;
+      if (orderFilter === 'SHIPPED' && !['SHIPPED', 'PROCESSING'].includes(statusUpper)) return false;
+      if (orderFilter === 'DELIVERED' && statusUpper !== 'DELIVERED') return false;
+
+      // 2. Search Query Filter
+      const rawQ = searchQuery.trim();
+      if (!rawQ) return true;
+
+      const q = rawQ.toLowerCase();
+      const cleanQ = q.replace(/^[#\s]+/, ''); // Strip leading '#' and whitespace (e.g. "#THOXS35E" -> "thoxs35e")
+      const digitsQ = q.replace(/\D/g, ''); // Digits for phone numbers, amounts
+
+      // A. Match Order ID / Reference (Full ID, Short ID, with/without #)
+      const orderId = String(o.id || '').toLowerCase();
+      const shortId = orderId.slice(-8);
+      const matchId =
+        orderId.includes(q) ||
+        (cleanQ.length > 0 && (orderId.includes(cleanQ) || shortId.includes(cleanQ)));
+
+      // B. Match Client Name
+      const clientName = String(
+        o.customerName || o.shippingName || o.shippingInfo?.name || o.user?.name || session?.user?.name || profile?.name || ''
+      ).toLowerCase();
+      const matchName = clientName.includes(q) || (cleanQ.length > 0 && clientName.includes(cleanQ));
+
+      // C. Match Client Email
+      const clientEmail = String(
+        o.customerEmail || o.shippingEmail || o.shippingInfo?.email || o.user?.email || session?.user?.email || profile?.email || ''
+      ).toLowerCase();
+      const matchEmail = clientEmail.includes(q) || (cleanQ.length > 0 && clientEmail.includes(cleanQ));
+
+      // D. Match Phone (raw string and digits-only match)
+      const rawPhone = String(
+        o.customerPhone || o.shippingPhone || o.shippingInfo?.phone || o.user?.phone || profileForm.phone || ''
+      );
+      const phoneDigits = rawPhone.replace(/\D/g, '');
+      const matchPhone =
+        (rawPhone.length > 0 && rawPhone.toLowerCase().includes(q)) ||
+        (digitsQ.length >= 3 && phoneDigits.includes(digitsQ));
+
+      // E. Match Destination Address / City
+      const destination = `${o.shippingAddress || o.shippingInfo?.address || ''} ${o.shippingCity || o.shippingInfo?.city || ''}`.toLowerCase();
+      const matchDestination = destination.includes(q) || (cleanQ.length > 0 && destination.includes(cleanQ));
+
+      // F. Match Items (name, productName, title)
+      const matchItems = Boolean(
+        Array.isArray(o.items) &&
+        o.items.some((i: any) => {
+          const title = String(i?.name || i?.productName || i?.title || i?.product?.name || '').toLowerCase();
+          return title.includes(q) || (cleanQ.length > 0 && title.includes(cleanQ));
+        })
+      );
+
+      // G. Match Status (Pending, Shipped, Processing, Delivered, Cancelled)
+      const statusText = String(o.status || '').toLowerCase();
+      const matchStatus = statusText.includes(q) || (cleanQ.length > 0 && statusText.includes(cleanQ));
+
+      // H. Match Total Amount
+      const amountStr = String(o.totalAmount || '');
+      const matchAmount = digitsQ.length >= 3 && amountStr.includes(digitsQ);
+
+      return (
+        matchId ||
+        matchName ||
+        matchEmail ||
+        matchPhone ||
+        matchDestination ||
+        matchItems ||
+        matchStatus ||
+        matchAmount
+      );
     });
-  }, [orders, orderFilter, searchQuery]);
+  }, [orders, orderFilter, searchQuery, session?.user?.name, session?.user?.email, profile?.name, profile?.email, profileForm.phone]);
 
   // Filtered wishlist
   const filteredWishlist = useMemo(() => {
@@ -1706,9 +1768,9 @@ export default function UserDashboard() {
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
                   {[
                     { id: 'ALL', label: 'All Orders', count: orders.length },
-                    { id: 'PENDING', label: 'Pending', count: orders.filter(o => !o.status || o.status === 'PENDING').length },
-                    { id: 'SHIPPED', label: 'In-Transit', count: orders.filter(o => o.status === 'SHIPPED').length },
-                    { id: 'DELIVERED', label: 'Delivered', count: orders.filter(o => o.status === 'DELIVERED').length },
+                    { id: 'PENDING', label: 'Pending', count: orders.filter(o => !o.status || String(o.status).toUpperCase() === 'PENDING').length },
+                    { id: 'SHIPPED', label: 'In-Transit', count: orders.filter(o => ['SHIPPED', 'PROCESSING'].includes(String(o.status || '').toUpperCase())).length },
+                    { id: 'DELIVERED', label: 'Delivered', count: orders.filter(o => String(o.status || '').toUpperCase() === 'DELIVERED').length },
                   ].map((f) => (
                     <button
                       key={f.id}
