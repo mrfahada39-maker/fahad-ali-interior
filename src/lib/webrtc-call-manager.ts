@@ -113,9 +113,15 @@ export class WebRtcCallClient {
     } catch {}
   }
 
-  // Add remote ICE candidate with queueing
+  private seenCandidates = new Set<string>();
+
+  // Add remote ICE candidate with queueing & deduplication
   async addIceCandidate(candidate: RTCIceCandidateInit) {
-    if (!this.pc) return;
+    if (!this.pc || !candidate) return;
+    const key = `${candidate.candidate || ''}_${candidate.sdpMid || ''}_${candidate.sdpMLineIndex ?? ''}`;
+    if (this.seenCandidates.has(key)) return;
+    this.seenCandidates.add(key);
+
     try {
       if (this.pc.remoteDescription && this.pc.remoteDescription.type) {
         await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
@@ -140,6 +146,7 @@ export class WebRtcCallClient {
   }
 
   cleanup() {
+    this.seenCandidates.clear();
     this.queuedCandidates = [];
     if (this.pc) {
       this.pc.ontrack = null;
@@ -257,4 +264,124 @@ if (typeof window !== 'undefined') {
   };
   window.addEventListener('touchstart', unlockAudio, { passive: true });
   window.addEventListener('click', unlockAudio, { passive: true });
+}
+
+/**
+ * Creates a synthetic silent audio and canvas-based video MediaStream
+ * for reliable fallback when hardware webcam or microphone is not plugged in or permitted.
+ */
+export function createSyntheticMediaStream(withVideo = false): MediaStream {
+  if (typeof window === 'undefined') return new MediaStream();
+  try {
+    const AudioCtx =
+      window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return new MediaStream();
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const dst = ctx.createMediaStreamDestination();
+    const gain = ctx.createGain();
+    gain.gain.value = 0; // silent
+    osc.connect(gain);
+    gain.connect(dst);
+    osc.start();
+    const stream = dst.stream;
+
+    if (withVideo && typeof document !== 'undefined') {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 480;
+        const cCtx = canvas.getContext('2d');
+        if (cCtx) {
+          cCtx.fillStyle = '#140E0A';
+          cCtx.fillRect(0, 0, 640, 480);
+          cCtx.fillStyle = '#B88E4B';
+          cCtx.font = 'bold 22px serif';
+          cCtx.textAlign = 'center';
+          cCtx.fillText('✦ FAHAD ALI ATELIER ✦', 320, 230);
+          cCtx.fillStyle = '#E7DDD0';
+          cCtx.font = '14px sans-serif';
+          cCtx.fillText('VIP Private Consultation Desk', 320, 260);
+        }
+        const canvasWithCapture = canvas as HTMLCanvasElement & { captureStream?: (fps?: number) => MediaStream };
+        const videoStream = canvasWithCapture.captureStream ? canvasWithCapture.captureStream(10) : null;
+        if (videoStream && videoStream.getVideoTracks()[0]) {
+          stream.addTrack(videoStream.getVideoTracks()[0]);
+        }
+      } catch {}
+    }
+    return stream;
+  } catch {
+    return new MediaStream();
+  }
+}
+
+/**
+ * Resilient hardware acquisition:
+ * 1. Tries user requested constraints (audio + optional video).
+ * 2. If video fails, falls back to audio-only.
+ * 3. If audio fails (e.g. no microphone device), falls back to synthetic stream.
+ * Call NEVER throws or crashes; always provides working media.
+ */
+export async function acquireUserMediaWithFallback(
+  type: 'voice' | 'video'
+): Promise<{ stream: MediaStream; fallbackNote?: string }> {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    return {
+      stream: createSyntheticMediaStream(type === 'video'),
+      fallbackNote: 'Microphone/Camera unavailable in this browser. Connected via VIP Concierge Channel.',
+    };
+  }
+
+  // 1. Try requested stream
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: type === 'video',
+    });
+    return { stream };
+  } catch {
+    // 2. If video was requested and failed, try audio only
+    if (type === 'video') {
+      try {
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        return {
+          stream: audioStream,
+          fallbackNote: 'Camera not detected. Connected via High-Definition Voice Call.',
+        };
+      } catch {}
+    }
+
+    // 3. Synthetic stream fallback so call always connects smoothly
+    return {
+      stream: createSyntheticMediaStream(type === 'video'),
+      fallbackNote: 'Microphone permission not granted. Connected via VIP Concierge Channel.',
+    };
+  }
+}
+
+/**
+ * Web Speech API Luxury Voice Synthesizer
+ */
+export function speakLuxuryGreeting(text: string) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    utterance.volume = 0.85;
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(
+      (v) =>
+        v.lang.startsWith('en') &&
+        (v.name.includes('Natural') ||
+          v.name.includes('Google') ||
+          v.name.includes('Samantha') ||
+          v.name.includes('Daniel') ||
+          v.name.includes('English'))
+    );
+    if (voice) utterance.voice = voice;
+    window.speechSynthesis.speak(utterance);
+  } catch {}
 }

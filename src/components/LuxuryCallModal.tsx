@@ -148,12 +148,22 @@ export default function LuxuryCallModal({
               </div>
             </div>
 
-            {callStatus === 'connected' && (
-              <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-black flex items-center gap-1.5 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                {formatDuration(activeDuration)}
-              </span>
-            )}
+            <div className="flex items-center gap-2.5">
+              {callStatus === 'connected' && (
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-black flex items-center gap-1.5 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  {formatDuration(activeDuration)}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={onEndCall}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer text-xs"
+                title="Close Consultation Window"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* ── CALL BODY VIEWPORTS ── */}
@@ -165,7 +175,7 @@ export default function LuxuryCallModal({
                 {callStatus === 'connected' ? (
                   <>
                     {/* Remote Stream Video */}
-                    {remoteStream ? (
+                    {remoteStream && remoteStream.getVideoTracks().length > 0 ? (
                       <video
                         ref={remoteVideoRef}
                         autoPlay
@@ -173,11 +183,18 @@ export default function LuxuryCallModal({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="flex flex-col items-center justify-center text-stone-400 gap-2">
-                        <div className="w-20 h-20 rounded-2xl bg-[#2C1E18] border border-[#B88E4B]/40 flex items-center justify-center text-2xl font-serif text-[#D4AF37]">
-                          {initialLetter}
+                      <div className="flex flex-col items-center justify-center text-center p-6 space-y-3">
+                        <div className="relative flex items-center justify-center">
+                          <span className="animate-ping absolute inline-flex h-28 w-28 rounded-full bg-[#B88E4B]/20 duration-1000" />
+                          <span className="animate-pulse absolute inline-flex h-24 w-24 rounded-full bg-[#B88E4B]/30 duration-700" />
+                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#B88E4B] via-[#996515] to-[#5A3A1A] border border-[#D4AF37] flex items-center justify-center text-2xl font-serif text-[#D4AF37] shadow-xl relative z-10">
+                            {initialLetter}
+                          </div>
                         </div>
-                        <span className="text-xs font-medium">Connecting video feed...</span>
+                        <div>
+                          <p className="text-sm font-serif font-black text-white">{remoteUserName || 'Fahad Ali Atelier'}</p>
+                          <p className="text-[11px] text-[#D4AF37] font-mono mt-0.5">VIP Studio Channel Active • High-Definition Audio</p>
+                        </div>
                       </div>
                     )}
 

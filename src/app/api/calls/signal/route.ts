@@ -71,8 +71,10 @@ export async function POST(req: NextRequest) {
       const role = String(token?.role ?? '').toUpperCase();
       const adminCookie = req.cookies.get('fai_admin_token')?.value;
       const isAdminToken = Boolean(adminCookie && adminCookie.includes('fai_token_'));
-      if (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && !isAdminToken) {
-        return NextResponse.json({ error: 'Unauthorized: Admin authentication required to act as admin in call.' }, { status: 403 });
+      const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN' || isAdminToken;
+      // Allow status checks to proceed without hard 403 failures that disrupt client polling loops
+      if (!isAdmin && action !== 'status') {
+        return NextResponse.json({ error: 'Unauthorized: Admin authentication required.' }, { status: 403 });
       }
     }
 
@@ -310,8 +312,15 @@ export async function POST(req: NextRequest) {
         return (b.updatedAt || 0) - (a.updatedAt || 0);
       };
 
+      const isLiveOrRecent = (s: CallSession) => {
+        if (s.status === 'outgoing' || s.status === 'connected') return true;
+        return (now - (s.updatedAt || 0)) < 15000;
+      };
+
       // 1. Check memory store sorted by active status then latest updatedAt
-      const memSessions = Array.from(fallbackCallStore.values()).sort(prioritySort);
+      const memSessions = Array.from(fallbackCallStore.values())
+        .filter(isLiveOrRecent)
+        .sort(prioritySort);
 
       for (const s of memSessions) {
         if (fromUserId === 'admin' || allAliases.includes('admin')) {
@@ -341,12 +350,13 @@ export async function POST(req: NextRequest) {
             const records = await (db as any).auditLog.findMany({
               where: { entity: 'call_signal' },
               orderBy: { createdAt: 'desc' },
-              take: 10,
+              take: 15,
             });
 
             const parsedSessions = records
               .map((r: any) => r.metadata as CallSession)
               .filter(Boolean)
+              .filter(isLiveOrRecent)
               .sort(prioritySort);
 
             for (const s of parsedSessions) {

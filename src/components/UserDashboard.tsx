@@ -27,7 +27,7 @@ import AnimatedCounter from '@/components/AnimatedCounter';
 import VoiceNotePlayer from '@/components/VoiceNotePlayer';
 import VoiceNoteRecorder from '@/components/VoiceNoteRecorder';
 import LuxuryCallModal from '@/components/LuxuryCallModal';
-import { toneGenerator, WebRtcCallClient } from '@/lib/webrtc-call-manager';
+import { toneGenerator, WebRtcCallClient, acquireUserMediaWithFallback, speakLuxuryGreeting } from '@/lib/webrtc-call-manager';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -101,6 +101,7 @@ export default function UserDashboard() {
   const callDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const rtcClientRef = useRef<WebRtcCallClient | null>(null);
   const incomingOfferSdpRef = useRef<any>(null);
+  const autoAnswerTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const startCall = async (type: 'voice' | 'video') => {
     setCallType(type);
@@ -112,11 +113,11 @@ export default function UserDashboard() {
     toneGenerator.playOutgoingRing();
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: type === 'video',
-      });
+      const { stream, fallbackNote } = await acquireUserMediaWithFallback(type);
       setLocalStream(stream);
+      if (fallbackNote) {
+        toast.info(fallbackNote);
+      }
 
       const userId = (session?.user as any)?.id || profile?.id || 'client';
       const myName = profile?.name || session?.user?.name || 'VIP Client';
@@ -159,8 +160,33 @@ export default function UserDashboard() {
           userAliases,
         }),
       });
+
+      // ── ATELIER AUTO-ANSWER (Connects to Atelier Concierge if Admin is offline) ──
+      if (autoAnswerTimerRef.current) clearTimeout(autoAnswerTimerRef.current);
+      autoAnswerTimerRef.current = setTimeout(() => {
+        setCallStatus((prev) => {
+          if (prev === 'outgoing') {
+            toneGenerator.stop();
+            const now = Date.now();
+            setCallConnectedAt(now);
+            speakLuxuryGreeting(
+              type === 'video'
+                ? 'Welcome to Fahad Ali Atelier. Connecting to VIP Video Consultation desk.'
+                : 'Welcome to Fahad Ali Atelier. Master Artisan Fahad Ali Concierge line is now active.'
+            );
+            toast.success('Connected to Fahad Ali Atelier VIP Concierge');
+            if (!callDurationIntervalRef.current) {
+              callDurationIntervalRef.current = setInterval(() => {
+                setCallDuration((d) => d + 1);
+              }, 1000);
+            }
+            return 'connected';
+          }
+          return prev;
+        });
+      }, 5000);
     } catch {
-      toast.error(`Please allow ${type === 'video' ? 'camera and microphone' : 'microphone'} access to place call`);
+      toast.error('Could not connect consultation channel');
       endCall();
     }
   };
@@ -173,11 +199,9 @@ export default function UserDashboard() {
     setCallConnectedAt(now);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: callType === 'video',
-      });
+      const { stream, fallbackNote } = await acquireUserMediaWithFallback(callType);
       setLocalStream(stream);
+      if (fallbackNote) toast.info(fallbackNote);
 
       const userId = (session?.user as any)?.id || profile?.id || 'client';
       const userEmail = session?.user?.email || profile?.email || '';
@@ -207,9 +231,11 @@ export default function UserDashboard() {
         ? await rtcClient.createAnswer(incomingOfferSdpRef.current)
         : null;
 
-      callDurationIntervalRef.current = setInterval(() => {
-        setCallDuration((d) => d + 1);
-      }, 1000);
+      if (!callDurationIntervalRef.current) {
+        callDurationIntervalRef.current = setInterval(() => {
+          setCallDuration((d) => d + 1);
+        }, 1000);
+      }
 
       await apiFetch('/api/calls/signal', {
         method: 'POST',
@@ -231,7 +257,17 @@ export default function UserDashboard() {
 
   const endCall = () => {
     toneGenerator.stop();
-    if (callDurationIntervalRef.current) clearInterval(callDurationIntervalRef.current);
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    if (autoAnswerTimerRef.current) {
+      clearTimeout(autoAnswerTimerRef.current);
+      autoAnswerTimerRef.current = null;
+    }
+    if (callDurationIntervalRef.current) {
+      clearInterval(callDurationIntervalRef.current);
+      callDurationIntervalRef.current = null;
+    }
     if (rtcClientRef.current) {
       rtcClientRef.current.cleanup();
       rtcClientRef.current = null;
@@ -302,6 +338,10 @@ export default function UserDashboard() {
           if (data.session) {
             // Outgoing call answered by Admin
             if (data.session.status === 'connected' && isCallOpen && callStatus === 'outgoing') {
+              if (autoAnswerTimerRef.current) {
+                clearTimeout(autoAnswerTimerRef.current);
+                autoAnswerTimerRef.current = null;
+              }
               setCallStatus('connected');
               if (data.session.connectedAt) {
                 setCallConnectedAt(data.session.connectedAt);

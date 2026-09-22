@@ -33,7 +33,7 @@ import AiChatbotTab from './AiChatbotTab';
 import AiRadarTab from './AiRadarTab';
 import RecycleBinTab from './RecycleBinTab';
 const LuxuryCallModal = dynamic(() => import('@/components/LuxuryCallModal'), { ssr: false });
-import { toneGenerator, WebRtcCallClient } from '@/lib/webrtc-call-manager';
+import { toneGenerator, WebRtcCallClient, acquireUserMediaWithFallback } from '@/lib/webrtc-call-manager';
 import { tabs, AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
 
 import { useSiteSettingsStore } from '@/store';
@@ -263,6 +263,7 @@ export default function AdminDashboard() {
   const callDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const adminRtcClientRef = useRef<WebRtcCallClient | null>(null);
   const adminIncomingOfferSdpRef = useRef<any>(null);
+  const adminAutoAnswerTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const startAdminCall = async (type: 'voice' | 'video', targetUser: any) => {
     setCurrentCaller(targetUser);
@@ -274,13 +275,11 @@ export default function AdminDashboard() {
     toneGenerator.playOutgoingRing();
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: type === 'video',
-      });
+      const { stream, fallbackNote } = await acquireUserMediaWithFallback(type);
       setLocalStream(stream);
+      if (fallbackNote) toast.info(fallbackNote);
 
-      const targetId = targetUser?.id || 'client';
+      const targetId = targetUser?.id || targetUser?.userId || 'client';
 
       const rtcClient = new WebRtcCallClient(
         (remote) => setRemoteStream(remote),
@@ -311,8 +310,18 @@ export default function AdminDashboard() {
           offerSdp,
         }),
       });
+
+      if (adminAutoAnswerTimerRef.current) clearTimeout(adminAutoAnswerTimerRef.current);
+      adminAutoAnswerTimerRef.current = setTimeout(() => {
+        setCallStatus((prev) => {
+          if (prev === 'outgoing') {
+            toast.info(`Calling client. If client does not pick up, you can also connect via WhatsApp hotline.`);
+          }
+          return prev;
+        });
+      }, 7000);
     } catch {
-      toast.error(`Please allow ${type === 'video' ? 'camera and microphone' : 'microphone'} permissions`);
+      toast.error('Could not initiate audio/video call channel');
       endAdminCall();
     }
   };
@@ -325,11 +334,9 @@ export default function AdminDashboard() {
     setCallConnectedAt(now);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: callType === 'video',
-      });
+      const { stream, fallbackNote } = await acquireUserMediaWithFallback(callType);
       setLocalStream(stream);
+      if (fallbackNote) toast.info(fallbackNote);
 
       const callerId = currentCaller?.id || 'client';
 
@@ -350,9 +357,11 @@ export default function AdminDashboard() {
         ? await rtcClient.createAnswer(adminIncomingOfferSdpRef.current)
         : null;
 
-      callDurationIntervalRef.current = setInterval(() => {
-        setCallDuration((d) => d + 1);
-      }, 1000);
+      if (!callDurationIntervalRef.current) {
+        callDurationIntervalRef.current = setInterval(() => {
+          setCallDuration((d) => d + 1);
+        }, 1000);
+      }
 
       await apiFetch('/api/calls/signal', {
         method: 'POST',
@@ -364,14 +373,19 @@ export default function AdminDashboard() {
           answerSdp,
         }),
       });
+      toast.success(`Connected to VIP Client: ${currentCaller?.name || 'Customer'}`);
     } catch {
-      toast.error('Could not access microphone/camera');
+      toast.error('Could not connect call');
       endAdminCall();
     }
   };
 
   const endAdminCall = () => {
     toneGenerator.stop();
+    if (adminAutoAnswerTimerRef.current) {
+      clearTimeout(adminAutoAnswerTimerRef.current);
+      adminAutoAnswerTimerRef.current = null;
+    }
     if (callDurationIntervalRef.current) clearInterval(callDurationIntervalRef.current);
     if (adminRtcClientRef.current) {
       adminRtcClientRef.current.cleanup();
@@ -414,7 +428,6 @@ export default function AdminDashboard() {
   // Background listener for incoming customer calls to Admin
   useEffect(() => {
     const checkIncomingCalls = async () => {
-      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       try {
         const res = await apiFetch('/api/calls/signal', {
           method: 'POST',
@@ -435,6 +448,10 @@ export default function AdminDashboard() {
             }
             // Outgoing call answered by Client
             else if (data.session.status === 'connected' && isCallOpen && callStatus === 'outgoing') {
+              if (adminAutoAnswerTimerRef.current) {
+                clearTimeout(adminAutoAnswerTimerRef.current);
+                adminAutoAnswerTimerRef.current = null;
+              }
               setCallStatus('connected');
               if (data.session.connectedAt) {
                 setCallConnectedAt(data.session.connectedAt);
@@ -463,7 +480,7 @@ export default function AdminDashboard() {
       } catch {}
     };
 
-    const interval = setInterval(checkIncomingCalls, isCallOpen ? 1500 : 10000);
+    const interval = setInterval(checkIncomingCalls, isCallOpen ? 1200 : 2000);
     return () => clearInterval(interval);
   }, [isCallOpen, callStatus, currentCaller]);
 
