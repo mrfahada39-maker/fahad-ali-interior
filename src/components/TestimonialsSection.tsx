@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -214,25 +214,23 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
     });
   }, [reviews]);
 
-  if (!testimonials || testimonials.length === 0) {
-    return null;
-  }
+  const handlePrev = useCallback(() => {
+    if (testimonials.length === 0) return;
+    setDirection(-1);
+    setActiveIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
+  }, [testimonials.length]);
+
+  const handleNext = useCallback(() => {
+    if (testimonials.length === 0) return;
+    setDirection(1);
+    setActiveIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1));
+  }, [testimonials.length]);
 
   useEffect(() => {
-    if (activeIndex >= testimonials.length) {
+    if (testimonials.length > 0 && activeIndex >= testimonials.length) {
       setActiveIndex(0);
     }
   }, [testimonials.length, activeIndex]);
-
-  const handlePrev = () => {
-    setDirection(-1);
-    setActiveIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
-  };
-
-  const handleNext = () => {
-    setDirection(1);
-    setActiveIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1));
-  };
 
   // Touch Swipe Handlers for mobile
   const onTouchStart = (e: React.TouchEvent) => {
@@ -260,11 +258,16 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
   };
 
   useEffect(() => {
+    if (testimonials.length <= 1) return;
     const timer = setInterval(() => {
       handleNext();
     }, 7000);
     return () => clearInterval(timer);
-  }, [testimonials.length]);
+  }, [testimonials.length, handleNext]);
+
+  if (!testimonials || testimonials.length === 0) {
+    return null;
+  }
 
   const currentItem = testimonials[activeIndex] || testimonials[0];
 
