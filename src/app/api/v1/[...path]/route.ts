@@ -1405,10 +1405,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           where: { deletedAt: null, status: 'APPROVED' },
           include: {
             product: { select: { id: true, name: true, image: true, category: true } },
-            user: { select: { id: true, name: true, image: true, email: true } },
+            user: { select: { id: true, name: true, avatar: true, email: true } },
           },
           orderBy: { createdAt: 'desc' },
-          take: 12,
+          take: 20,
         }).catch(() => []),
       ]);
 
@@ -1499,7 +1499,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         where: { deletedAt: null, status: 'APPROVED' },
         include: {
           product: { select: { id: true, name: true, image: true, category: true } },
-          user: { select: { id: true, name: true, image: true, email: true } },
+          user: { select: { id: true, name: true, avatar: true, email: true } },
         },
         orderBy: { createdAt: 'desc' },
         take: 20,
@@ -1510,15 +1510,16 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         customerName: r.customerName || r.user?.name || (r.user?.email ? r.user.email.split('@')[0] : 'Verified Patron'),
         rating: Number(r.rating) || 5,
         comment: r.comment || '',
+        image: r.image || null,
         createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
         product: {
           id: r.product?.id,
           name: r.product?.name || 'Handcrafted Solid Sheesham',
-          image: r.product?.image || null,
+          image: r.image || r.product?.image || null,
         },
         user: {
           name: r.user?.name || r.customerName || 'Verified Patron',
-          image: r.user?.image || null,
+          image: r.user?.avatar || null,
         },
       }));
 
@@ -3021,6 +3022,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           productId: targetProductId,
           rating: Number(body.rating),
           comment: body.comment || '',
+          image: body.image || null,
           status: 'PENDING',
           customerName,
         },

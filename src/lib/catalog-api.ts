@@ -26,6 +26,43 @@ function setCached<T>(key: string, data: T, ttlSeconds = 60): void {
   memoryCache.set(key, { data, expiry: Date.now() + ttlSeconds * 1000 });
 }
 
+/** Server-side category list for storefront pages */
+export async function getStorefrontCategories(): Promise<string[]> {
+  const cacheKey = 'storefront_categories';
+  const cached = getCached<string[]>(cacheKey);
+  if (cached !== null) {
+    return cached;
+  }
+
+  try {
+    const cats = await db.category.findMany({
+      where: { deletedAt: null },
+      orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+      select: { name: true },
+    });
+    if (cats && cats.length > 0) {
+      const names = ['All', ...cats.map((c: any) => c.name)];
+      setCached(cacheKey, names, 120);
+      return names;
+    }
+  } catch (err) {
+    console.error('Direct DB categories fetch error:', err);
+  }
+
+  const fallback = [
+    'All',
+    'Living Room',
+    'Bedroom',
+    'Dining Room',
+    'Coffee Chairs',
+    'Center Tables',
+    'Luxury Showcase',
+    'Luxury Wardrobes',
+  ];
+  setCached(cacheKey, fallback, 120);
+  return fallback;
+}
+
 /** Server-side product list for pages (Direct PostgreSQL Query). */
 export async function getStorefrontProducts(limit = 50): Promise<StorefrontProduct[]> {
   const cacheKey = `storefront_products_${limit}`;

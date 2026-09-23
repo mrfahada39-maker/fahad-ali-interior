@@ -11,7 +11,7 @@ import {
   Clock, ArrowRight, ExternalLink, Download, FileText, CheckCircle2, ChevronRight, Phone,
   Mail, Award, Truck, AlertCircle, RefreshCw, Layers, Sliders, Lock, Search, Filter,
   DollarSign, TrendingUp, Box, Eye, MessageSquare, ShieldCheck, ClipboardList, Coins, Users,
-  Check, X, Video, PhoneCall, Printer
+  Check, X, Video, PhoneCall, Printer, Camera, UploadCloud
 } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
@@ -73,7 +73,8 @@ export default function UserDashboard() {
   const [showAddrForm, setShowAddrForm] = useState(false);
   const [myReviews, setMyReviews] = useState<any[]>([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewForm, setReviewForm] = useState({ productId: '', rating: 5, comment: '' });
+  const [reviewForm, setReviewForm] = useState({ productId: '', rating: 5, comment: '', image: '' });
+  const [reviewUploading, setReviewUploading] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [orderFilter, setOrderFilter] = useState<'ALL' | 'PENDING' | 'SHIPPED' | 'DELIVERED'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -785,6 +786,50 @@ export default function UserDashboard() {
     }
   };
 
+  const handleReviewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file (JPG, PNG, WebP)');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be less than 10MB');
+      return;
+    }
+
+    setReviewUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await apiFetch('/api/v1/uploads/image?folder=fahad-ali-interior/reviews', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await res.json();
+      const imageUrl = data.url || data.secure_url || data.imageUrl || '';
+      if (imageUrl) {
+        setReviewForm((prev) => ({ ...prev, image: imageUrl }));
+        toast.success('Piece photo attached successfully');
+      } else {
+        toast.error('Failed to get uploaded image URL');
+      }
+    } catch {
+      toast.error('Image upload failed. Please try again.');
+    } finally {
+      setReviewUploading(false);
+      e.target.value = '';
+    }
+  };
+
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewForm.productId) {
@@ -800,7 +845,7 @@ export default function UserDashboard() {
       if (res.ok) {
         toast.success('Review submitted for royal atelier verification');
         setShowReviewForm(false);
-        setReviewForm({ productId: '', rating: 5, comment: '' });
+        setReviewForm({ productId: '', rating: 5, comment: '', image: '' });
         loadAllData();
       }
     } catch {
@@ -2523,12 +2568,56 @@ export default function UserDashboard() {
                     />
                   </div>
 
+                  {/* Photo of piece / room upload */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#7A6354] flex items-center justify-between">
+                      <span>Attach Photo of Your Piece / Room (Optional)</span>
+                      {reviewUploading && (
+                        <span className="text-[11px] text-[#B88E4B] flex items-center gap-1 font-semibold">
+                          <UploadCloud size={12} className="animate-bounce" /> Uploading image...
+                        </span>
+                      )}
+                    </label>
+
+                    {reviewForm.image ? (
+                      <div className="relative inline-block border-2 border-[#B88E4B]/50 rounded-xl overflow-hidden shadow-sm group">
+                        <img
+                          src={reviewForm.image}
+                          alt="Review attachment"
+                          className="w-24 h-24 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setReviewForm((prev) => ({ ...prev, image: '' }))}
+                          className="absolute top-1 right-1 bg-black/70 hover:bg-rose-600 text-white p-1 rounded-full text-xs transition-colors cursor-pointer"
+                          title="Remove photo"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className={`flex items-center justify-center gap-2 border-2 border-dashed border-[#E7DDD0] hover:border-[#B88E4B] bg-[#FAF5EE]/70 hover:bg-[#FAF5EE] rounded-xl p-3 cursor-pointer transition-all ${reviewUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <Camera size={16} className="text-[#B88E4B]" />
+                        <span className="text-xs font-medium text-[#7A6354]">
+                          {reviewUploading ? 'Uploading to royal vault...' : 'Click to select or capture piece photo'}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleReviewImageUpload}
+                          className="hidden"
+                          disabled={reviewUploading}
+                        />
+                      </label>
+                    )}
+                  </div>
+
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setShowReviewForm(false)} className="rounded-xl text-xs h-8">
                       Cancel
                     </Button>
-                    <Button type="submit" className="rounded-xl bg-[#B88E4B] text-white text-xs font-bold h-8">
-                      Publish Review
+                    <Button type="submit" disabled={reviewUploading} className="rounded-xl bg-[#B88E4B] text-white text-xs font-bold h-8">
+                      {reviewUploading ? 'Uploading...' : 'Publish Review'}
                     </Button>
                   </div>
                 </form>
@@ -2584,6 +2673,18 @@ export default function UserDashboard() {
                                 <p className="text-[10px] font-mono text-[#8C6239]">PKR {formatPrice(rev.product.price)}</p>
                               )}
                             </div>
+                          </div>
+                        )}
+
+                        {/* Attached Review Photo */}
+                        {rev.image && (
+                          <div className="rounded-xl overflow-hidden border border-[#E7DDD0] max-h-48 bg-[#FAF5EE]">
+                            <img
+                              src={rev.image}
+                              alt="Client review photo"
+                              className="w-full h-36 object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                              onClick={() => window.open(rev.image, '_blank')}
+                            />
                           </div>
                         )}
 

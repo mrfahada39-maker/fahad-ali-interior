@@ -184,17 +184,18 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
-  // Dynamically map real approved reviews from DB and blend seamlessly
+  // Map ONLY real approved reviews from database (zero fake reviews)
   const testimonials = useMemo(() => {
     if (!reviews || reviews.length === 0) {
-      return TESTIMONIALS_DATA;
+      return [];
     }
 
-    const realItems = reviews.map((r, idx) => {
+    return reviews.map((r, idx) => {
       const theme = THEME_PRESETS[idx % THEME_PRESETS.length];
       const ratingNum = Math.min(5, Math.max(1, Math.round(Number(r.rating) || 5)));
       const clientName = r.customerName || r.user?.name || 'Verified Patron';
-      const fallback = TESTIMONIALS_DATA[idx % TESTIMONIALS_DATA.length];
+      const fallbackRoom = 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg';
+      const fallbackAvatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&q=75&fm=webp';
 
       return {
         id: r.id || `real-rev-${idx}`,
@@ -204,19 +205,18 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
         text: r.comment && r.comment.trim() ? r.comment.trim() : 'Masterpiece solid sheesham wood craftsmanship. Outstanding luxury comfort and detailing.',
         rating: ratingNum,
         score: `${Number(r.rating || 5).toFixed(1)}`,
-        avatar: r.user?.image || fallback.avatar,
-        fallbackAvatar: fallback.fallbackAvatar,
-        roomImage: r.product?.image || fallback.roomImage,
+        avatar: r.user?.image || fallbackAvatar,
+        fallbackAvatar: fallbackAvatar,
+        roomImage: (r as any).image || r.product?.image || fallbackRoom,
         tag: '✓ Verified Purchase',
         ...theme,
       };
     });
-
-    if (realItems.length < 3) {
-      return [...realItems, ...TESTIMONIALS_DATA.slice(0, 5 - realItems.length)];
-    }
-    return realItems;
   }, [reviews]);
+
+  if (!testimonials || testimonials.length === 0) {
+    return null;
+  }
 
   useEffect(() => {
     if (activeIndex >= testimonials.length) {

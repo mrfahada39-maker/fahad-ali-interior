@@ -15,7 +15,16 @@ import { resolveImageUrl } from '@/lib/images';
 import { useCartStore, useClientCacheStore, type CachedProduct } from '@/store';
 import { toast } from 'sonner';
 
-const DEFAULT_CATEGORIES = ['All', 'Beds', 'Sofas', 'Dining', 'Wardrobes', 'Coffee', 'TV', 'Office', 'Storage', 'Outdoor', 'Kids', 'Accessories', 'Custom Furniture Solutions'];
+const DEFAULT_CATEGORIES = [
+  'All',
+  'Living Room',
+  'Bedroom',
+  'Dining Room',
+  'Coffee Chairs',
+  'Center Tables',
+  'Luxury Showcase',
+  'Luxury Wardrobes',
+];
 
 const materials = ['Sheesham Wood', 'Engineered Wood', 'Solid Wood', 'Metal', 'Upholstered', 'Glass', 'Marble', 'Leather', 'Cane'];
 
@@ -42,9 +51,10 @@ const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 interface ShopPageProps {
   initialProducts?: StorefrontProduct[];
   initialCategory?: string;
+  initialCategories?: string[];
 }
 
-export default function ShopPage({ initialProducts = [], initialCategory }: ShopPageProps) {
+export default function ShopPage({ initialProducts = [], initialCategory, initialCategories }: ShopPageProps) {
   const defaultPool = initialProducts;
   const safeInitial = initialCategory === 'Custom Furniture Solutions' ? [] : defaultPool;
   const [products, setProducts] = useState<StorefrontProduct[]>(safeInitial);
@@ -69,7 +79,9 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
   const [userAdjustedPrice, setUserAdjustedPrice] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState('');
-  const [categoriesList, setCategoriesList] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [categoriesList, setCategoriesList] = useState<string[]>(
+    initialCategories && initialCategories.length > 0 ? initialCategories : DEFAULT_CATEGORIES
+  );
 
   // Custom Studio States
   const [selectedWood, setSelectedWood] = useState('sheesham');
@@ -197,6 +209,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
   }, [selectedWood, selectedFabric, customPreset, customDimVal, addonSoftClose, addonLed, addonTufted, estimatedPrice, activeCategory]);
 
   useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) return;
     const loadCategories = async () => {
       try {
         const data = await fetchJson<any[]>('/api/public/categories');
@@ -209,7 +222,7 @@ export default function ShopPage({ initialProducts = [], initialCategory }: Shop
       }
     };
     loadCategories();
-  }, []);
+  }, [initialCategories]);
 
   const setCachedProducts = useClientCacheStore((s) => s.setProducts);
 

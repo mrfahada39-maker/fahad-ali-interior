@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import StoreShell from '@/components/StoreShell';
-import { getStorefrontProducts } from '@/lib/catalog-api';
+import { getStorefrontProducts, getStorefrontCategories } from '@/lib/catalog-api';
 import ShopPage from './ShopPage';
 
 // Next.js ISR (Incremental Static Regeneration) — Edge cached on Vercel for instant sub-50ms TTFB
@@ -20,10 +20,17 @@ export const metadata: Metadata = {
 export default async function Shop(props: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const resolved = await (props.searchParams ?? Promise.resolve({}));
   const searchParams = resolved as Record<string, string | undefined>;
-  const initialProducts = await getStorefrontProducts(100);
+  const [initialProducts, initialCategories] = await Promise.all([
+    getStorefrontProducts(100),
+    getStorefrontCategories(),
+  ]);
   return (
     <StoreShell>
-      <ShopPage initialProducts={initialProducts} initialCategory={searchParams.category} />
+      <ShopPage
+        initialProducts={initialProducts}
+        initialCategory={searchParams.category}
+        initialCategories={initialCategories}
+      />
     </StoreShell>
   );
 }
