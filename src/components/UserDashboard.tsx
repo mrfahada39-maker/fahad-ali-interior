@@ -448,12 +448,18 @@ export default function UserDashboard() {
   // Silent real-time review sync when patron opens My Reviews tab
   useEffect(() => {
     if (activeTab !== 'reviews') return;
-    apiFetch('/api/reviews/my-reviews')
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        setMyReviews(Array.isArray(data) ? data : (data.reviews || data.data || []));
-      })
-      .catch(() => {});
+    const fetchReviews = () => {
+      apiFetch('/api/reviews/my-reviews')
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => {
+          const fresh = Array.isArray(data) ? data : (data.reviews || data.data || []);
+          setMyReviews(fresh);
+        })
+        .catch(() => {});
+    };
+    fetchReviews();
+    const interval = setInterval(fetchReviews, 3000);
+    return () => clearInterval(interval);
   }, [activeTab]);
 
   const loadAllData = async () => {
@@ -518,7 +524,17 @@ export default function UserDashboard() {
     loadAllData();
   }, []);
 
-  // Unified wishlist
+  // Catalog products grouped by category for review selection
+  const groupedProducts = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const p of products) {
+      const cat = p.category || 'Living Room';
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(p);
+    }
+    return Array.from(map.entries());
+  }, [products]);
+
   // Unified wishlist
   const mergedWishlist = useMemo(() => {
     const map = new Map<string, any>();
@@ -2524,18 +2540,26 @@ export default function UserDashboard() {
                   <h3 className="font-serif font-black text-sm text-[#1F1612]">Craft a New Review</h3>
                   
                   <div className="space-y-1">
-                    <label htmlFor="review-product-select" className="text-xs font-bold text-[#7A6354]">Select Furniture Piece</label>
+                    <label htmlFor="review-product-select" className="text-xs font-bold text-[#7A6354]">
+                      Select Furniture Piece / Category
+                    </label>
                     <select
                       id="review-product-select"
                       name="productId"
                       value={reviewForm.productId}
                       onChange={(e) => setReviewForm({ ...reviewForm, productId: e.target.value })}
-                      className="w-full h-9 px-3 rounded-xl border border-[#E7DDD0] bg-[#FAF5EE] text-xs font-medium"
+                      className="w-full h-9 px-3 rounded-xl border border-[#E7DDD0] bg-[#FAF5EE] text-xs font-medium cursor-pointer"
                       required
                     >
-                      <option value="">-- Choose from catalog --</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name} (PKR {formatPrice(p.price)})</option>
+                      <option value="">-- Choose piece by category from catalog --</option>
+                      {groupedProducts.map(([category, items]) => (
+                        <optgroup key={category} label={`✦ ${category.toUpperCase()}`}>
+                          {items.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} (PKR {formatPrice(p.price)})
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>

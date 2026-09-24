@@ -5,6 +5,7 @@ import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { clearCatalogMemoryCache } from '@/lib/catalog-api';
+import { invalidateHomePageDataCache } from '@/lib/home-page-data';
 import { sendOrderConfirmationEmail, sendPasswordResetEmail, sendVerificationEmail } from '@/lib/email';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
@@ -101,12 +102,14 @@ function requireAdmin(user: SessionUser | null): boolean {
 function revalidateProductCaches(productId?: string) {
   try {
     clearCatalogMemoryCache();
+    invalidateHomePageDataCache();
   } catch {}
   try {
     revalidatePath('/', 'layout');
     revalidatePath('/', 'page');
     revalidatePath('/shop', 'layout');
     revalidatePath('/admin', 'layout');
+    revalidatePath('/dashboard', 'layout');
     if (productId) {
       revalidatePath(`/product/${productId}`, 'page');
     }
@@ -1441,6 +1444,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         customerName: r.customerName || r.user?.name || (r.user?.email ? r.user.email.split('@')[0] : 'Verified Patron'),
         rating: Number(r.rating) || 5,
         comment: r.comment || '',
+        image: r.image || null,
         createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
         product: {
           id: r.product?.id,
@@ -1449,48 +1453,55 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         },
         user: {
           name: r.user?.name || r.customerName || 'Verified Patron',
-          image: r.user?.image || null,
+          image: r.user?.avatar || null,
         },
       }));
 
-      return NextResponse.json({
-        stats: {
-          products: allProductsCount || products.length,
-          approvedReviews: approvedReviewsCount,
-          completedOrders,
-          uniqueCustomers,
+      return NextResponse.json(
+        {
+          stats: {
+            products: allProductsCount || products.length,
+            approvedReviews: approvedReviewsCount,
+            completedOrders,
+            uniqueCustomers,
+          },
+          products: formattedProducts,
+          categories: formattedCategories.length > 0 ? formattedCategories : fallbackCategories.map(c => ({
+            name: c.name,
+            count: 12,
+            image: '/images/placeholder.webp',
+            description: c.description
+          })),
+          reviews: formattedReviews,
+          settings: settings ? {
+            siteName: settings.siteName || 'Fahad Ali Interior',
+            contactPhone: settings.contactPhone || '',
+            adminEmail: settings.adminEmail || '',
+            storeAddress: settings.storeAddress || '',
+            socialInstagram: settings.socialInstagram || '',
+            socialFacebook: settings.socialFacebook || '',
+            socialWhatsapp: settings.socialWhatsapp || '',
+            foundedYear: settings.foundedYear || '',
+            currency: settings.currency || 'PKR',
+          } : {
+            siteName: 'Fahad Ali Interior',
+            contactPhone: '',
+            adminEmail: '',
+            storeAddress: '',
+            socialInstagram: '',
+            socialFacebook: '',
+            socialWhatsapp: '',
+            foundedYear: '',
+            currency: 'PKR',
+          },
+          banners: [],
         },
-        products: formattedProducts,
-        categories: formattedCategories.length > 0 ? formattedCategories : fallbackCategories.map(c => ({
-          name: c.name,
-          count: 12,
-          image: '/images/placeholder.webp',
-          description: c.description
-        })),
-        reviews: formattedReviews,
-        settings: settings ? {
-          siteName: settings.siteName || 'Fahad Ali Interior',
-          contactPhone: settings.contactPhone || '',
-          adminEmail: settings.adminEmail || '',
-          storeAddress: settings.storeAddress || '',
-          socialInstagram: settings.socialInstagram || '',
-          socialFacebook: settings.socialFacebook || '',
-          socialWhatsapp: settings.socialWhatsapp || '',
-          foundedYear: settings.foundedYear || '',
-          currency: settings.currency || 'PKR',
-        } : {
-          siteName: 'Fahad Ali Interior',
-          contactPhone: '',
-          adminEmail: '',
-          storeAddress: '',
-          socialInstagram: '',
-          socialFacebook: '',
-          socialWhatsapp: '',
-          foundedYear: '',
-          currency: 'PKR',
-        },
-        banners: [],
-      });
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+        }
+      );
     }
 
     // 3.1.1 Public GET /reviews (approved reviews for storefront)
