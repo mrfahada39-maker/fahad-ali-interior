@@ -401,9 +401,11 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
         </motion.div>
 
         {/* Search + Sort + View Layout Controls Bar with Luminous Border */}
-        <div className="flex flex-col lg:flex-row gap-3 mb-6 bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 p-3 sm:p-3.5 rounded-[24px] shadow-[0_4px_20px_rgba(184,142,75,0.08)] relative overflow-hidden">
-          {/* Ambient Corner Glow */}
-          <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-xl pointer-events-none bg-amber-500/10 opacity-70" />
+        <div className="flex flex-col lg:flex-row gap-3 mb-6 bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 p-3 sm:p-3.5 rounded-[24px] shadow-[0_4px_20px_rgba(184,142,75,0.08)] relative z-20">
+          {/* Ambient Corner Glow contained safely */}
+          <div className="absolute inset-0 rounded-[24px] overflow-hidden pointer-events-none">
+            <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-xl bg-amber-500/10 opacity-70" />
+          </div>
 
           {/* Search Input */}
           <div className="relative flex-1 z-10">
@@ -424,9 +426,9 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
             )}
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0 flex-wrap relative z-10">
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap relative z-30">
             {/* Modern Premium Sort Dropdown */}
-            <div className="relative" ref={sortDropdownRef}>
+            <div className="relative z-50" ref={sortDropdownRef}>
               <button
                 type="button"
                 id="shop-sort-button"
@@ -454,7 +456,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.98 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-52 bg-white/98 backdrop-blur-xl border-[1.5px] border-amber-300/80 rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(34,24,20,0.12)] z-30 space-y-1"
+                    className="absolute right-0 top-full mt-2 w-56 bg-white border-[1.5px] border-amber-300/80 rounded-2xl p-1.5 shadow-[0_16px_40px_rgba(34,24,20,0.18)] z-[100] space-y-1"
                     role="listbox"
                   >
                     <div className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#8C6239] border-b border-amber-200/60 flex items-center justify-between">
