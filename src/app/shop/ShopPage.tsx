@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   Search, PackageSearch, SlidersHorizontal, RotateCcw, Sparkles, Compass,
   CheckCircle2, LayoutGrid, Grid, List, Eye, ShoppingBag, Heart, X, MessageSquare,
-  ArrowRight, Tag, ShieldCheck, Truck, Clock, Star
+  ArrowRight, Tag, ShieldCheck, Truck, Clock, Star, ChevronDown, Check
 } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import { apiFetchJson as fetchJson } from '@/lib/api-client';
@@ -63,6 +63,19 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('');
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target as Node)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const [layoutMode, setLayoutMode] = useState<'grid3' | 'grid4' | 'list'>('grid3');
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
 
@@ -412,17 +425,69 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0 flex-wrap relative z-10">
-            {/* Sort Selector */}
-            <select
-              id="shop-sort-select"
-              name="sortBy"
-              aria-label="Sort products"
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              className="px-4 py-2.5 text-xs font-black border border-amber-300/60 rounded-xl bg-white text-[#221814] focus:outline-none focus:border-[#B88E4B] cursor-pointer hover:bg-[#FAF5EE] transition-all shadow-2xs"
-            >
-              {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+            {/* Modern Premium Sort Dropdown */}
+            <div className="relative" ref={sortDropdownRef}>
+              <button
+                type="button"
+                id="shop-sort-button"
+                aria-haspopup="listbox"
+                aria-expanded={isSortOpen}
+                onClick={() => setIsSortOpen(!isSortOpen)}
+                className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-black rounded-xl border transition-all cursor-pointer shadow-2xs select-none ${
+                  isSortOpen
+                    ? 'border-[#B88E4B] bg-[#FAF5EE] text-[#221814] ring-2 ring-amber-300/40'
+                    : 'border-amber-300/60 bg-white text-[#221814] hover:border-[#B88E4B] hover:bg-[#FAF5EE]'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#B88E4B]" />
+                <span>{sortOptions.find(o => o.value === sortBy)?.label || 'Featured Popularity'}</span>
+                <ChevronDown
+                  size={14}
+                  className={`text-[#B88E4B] transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              <AnimatePresence>
+                {isSortOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-52 bg-white/98 backdrop-blur-xl border-[1.5px] border-amber-300/80 rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(34,24,20,0.12)] z-30 space-y-1"
+                    role="listbox"
+                  >
+                    <div className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-[#8C6239] border-b border-amber-200/60 flex items-center justify-between">
+                      <span>Sort Collection</span>
+                      <Sparkles size={10} className="text-[#B88E4B]" />
+                    </div>
+                    {sortOptions.map((o) => {
+                      const isSelected = sortBy === o.value;
+                      return (
+                        <button
+                          key={o.value}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => {
+                            setSortBy(o.value);
+                            setIsSortOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl transition-all cursor-pointer text-left ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-[#FAF5EE] to-[#F5ECE0] text-[#B88E4B] font-black border border-amber-300/60 shadow-2xs'
+                              : 'text-[#5A4336] hover:text-[#221814] hover:bg-[#FAF5EE] font-bold'
+                          }`}
+                        >
+                          <span>{o.label}</span>
+                          {isSelected && <Check size={13} className="text-[#B88E4B]" />}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Filter Toggle */}
             <button

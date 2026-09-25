@@ -1,3 +1,5 @@
+import { db } from '@/lib/db';
+
 export interface RoomAnalysisResult {
   detectedRoomType: string;
   spatialDimensionsEstimate: string;
@@ -16,6 +18,25 @@ export interface RoomAnalysisResult {
 
 export class RoomAnalyzer {
   static async analyzeRoomImage(imageUrl: string, notes?: string): Promise<RoomAnalysisResult> {
+    let dbProducts: any[] = [];
+    try {
+      dbProducts = await db.product.findMany({
+        where: { deletedAt: null },
+        take: 3,
+        orderBy: { createdAt: 'desc' },
+      });
+    } catch (e) {
+      console.warn('RoomAnalyzer db product fetch error', e);
+    }
+
+    const defaultSuggestions = dbProducts.map((p) => ({
+      name: p.name,
+      category: p.category || 'Living Room',
+      price: Number(p.price),
+      reason: '100% Solid Seasoned Sheesham Wood handcrafted for spatial room balance.',
+      image: p.image || p.images?.[0] || '',
+    }));
+
     const geminiKey = process.env.GEMINI_API_KEY;
 
     if (geminiKey) {
@@ -55,22 +76,7 @@ Notes from client: ${notes || 'None'}`;
               const parsed = JSON.parse(jsonMatch[0]);
               return {
                 ...parsed,
-                suggestedProducts: parsed.suggestedProducts || [
-                  {
-                    name: 'Empress Royal Sheesham Velvet Sofa',
-                    category: 'Sofas',
-                    price: 299000,
-                    reason: 'Perfect warm tone complement for your living room spatial accent wall.',
-                    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
-                  },
-                  {
-                    name: 'Carrara Marble Horizon Sheesham Coffee Table',
-                    category: 'Coffee Tables',
-                    price: 185000,
-                    reason: 'Elevates central room contrast with natural marble and Sheesham wood.',
-                    image: 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=80',
-                  },
-                ],
+                suggestedProducts: parsed.suggestedProducts || defaultSuggestions,
               };
             }
           }
@@ -87,30 +93,10 @@ Notes from client: ${notes || 'None'}`;
       detectedColors: ['#FAF8F5 (Warm Cream)', '#3D3A38 (Espresso Wood)', '#8A5B3D (Teak Accent)'],
       detectedFurniture: ['Existing Sectional Sofa', 'Neutral Wall Panels', 'Hardwood Flooring'],
       recommendedStyle: 'Classic Royal Sheesham Upholstered Aesthetic',
-      suggestedProducts: [
-        {
-          name: 'Empress Royal Sheesham Velvet Sofa',
-          category: 'Sofas',
-          price: 299000,
-          reason: 'Harmonizes with natural warm lighting and provides 10-Year kiln-seasoned hardwood frame durability.',
-          image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
-        },
-        {
-          name: 'Nordic Curved Sheesham Armchair',
-          category: 'Armchairs',
-          price: 129000,
-          reason: 'Creates an intimate reading nook with organic bouclé upholstery.',
-          image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
-        },
-        {
-          name: 'Carrara Marble Horizon Sheesham Coffee Table',
-          category: 'Coffee Tables',
-          price: 185000,
-          reason: 'Honest Carrara marble surface with brushed gold steel geometry.',
-          image: 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=80',
-        },
-      ],
-      designAdvice: 'We recommend placing the Empress Royal Velvet Sofa along the main focal wall, anchored by the Carrara Marble Coffee Table. Pair with warm 3000K ambient illumination to highlight the rich 5-coat polyurethane Sheesham grain.',
+      suggestedProducts: defaultSuggestions,
+      designAdvice: defaultSuggestions.length > 0
+        ? `We recommend positioning ${defaultSuggestions[0].name} along the main focal wall. Pair with warm ambient illumination to highlight the rich 5-coat polyurethane Sheesham grain.`
+        : 'We recommend bespoke custom crafting tailored to your room specifications and preferred wood stain.',
     };
   }
 }

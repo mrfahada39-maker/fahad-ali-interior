@@ -13,7 +13,8 @@ function generateDynamicResponse(
   query: string,
   role: string,
   allProducts: any[],
-  history: any[]
+  history: any[],
+  dbCategories: any[] = []
 ): { replyText: string; products?: any[]; quote?: any; bundle?: any; suggestedPrompts?: string[] } {
   const cleanQ = query.replace(/[^\w\s]/g, ' ').toLowerCase().trim();
   const q = cleanQ || query.toLowerCase().trim();
@@ -41,11 +42,26 @@ function generateDynamicResponse(
 
   // 2. Dynamic Intent & Question Classification (Direct Question Answering)
 
-  // A. Greetings & Intro
+  // A. Greetings & Intro (100% Real Live Database Inventory)
   if (/^(hi|hello|hey|assalam|aoa|salam|kya haal|kaise ho|who are you|kon ho)/i.test(q)) {
+    const liveCount = allProducts.length;
+    const catNames = dbCategories.length > 0
+      ? dbCategories.map((c) => c.name)
+      : ['Living Room', 'Bedroom', 'Dining Room', 'Coffee Chairs', 'Center tables', 'Luxury Showcase', 'Luxury Wardrobes'];
+    const catListing = catNames.map((c, i) => `${i + 1}. **${c}**`).join(' | ');
+
+    const liveItemsSummary = liveCount > 0
+      ? `Showroom live inventory mein filhal **${liveCount} Masterpiece** (${allProducts.map((p) => `"${p.name}"`).join(', ')}) ready stock mein available hai.`
+      : `Tamam collections directly Lahore atelier se made-to-order craft ki ja rahi hain.`;
+
     return {
-      replyText: `Walaikum Assalam! Welcome to **FAHAD ALI INTERIOR** 👑\n\nHamare paas Total **15 Luxury Categories** (54 Live Items) available hain:\n\n1. 🛋️ **Living Room** | 2. 🛏️ **Bedroom** | 3. 🍽️ **Dining Room**\n4. 💼 **Executive Office** | 5. 🛋️ **Luxury Sofas** | 6. 🪑 **Coffee Chairs**\n7. 📺 **TV Units** | 8. 📦 **Storage** | 9. 🛠️ **Custom Solutions**\n10. 🌿 **Outdoor** | 11. 🪞 **Long Mirrors** | 12. 🏺 **Accessories**\n13. ☕ **Center Tables** | 14. 👑 **Showcase** | 15. 🚪 **Wardrobes**\n\nAap kis category ke products dekhna chahte hain? Code **LUXURY10** se 10% OFF hasil karein!`,
-      suggestedPrompts: ['🛋️ Living Room Sofas', '🛏️ Royal Bed Sets', '🍽️ Dining Tables', '🎁 View Bundles'],
+      replyText: `Walaikum Assalam! Welcome to **FAHAD ALI INTERIOR** 👑\n\nHamare atelier par **${catNames.length} Active Categories** available hain:\n\n${catListing}\n\n${liveItemsSummary}\n\nAap kisi bhi category ke ready products dekh sakte hain ya apne room size ke mutabiq 100% Solid Kiln-Seasoned Sheesham Wood mein bespoke custom order banwa sakte hain.\n\nAap kis category ya masterwork ke bare mein maloomat lena chahte hain? Code **LUXURY10** se 10% OFF hasil karein!`,
+      suggestedPrompts: [
+        ...(allProducts.slice(0, 2).map((p) => `🛋️ ${p.name}`)),
+        '📐 Request Custom Bespoke Quote',
+        '🪵 100% Sheesham & 10-Yr Guarantee',
+        '🚚 Delivery Policy',
+      ],
     };
   }
 
@@ -162,11 +178,41 @@ function generateDynamicResponse(
     };
   }
 
-  // J. Pricing Ranges
+  // J. Transparent PKR Database Pricing (Real Products Only)
   if (q.includes('price') || q.includes('cost') || q.includes('rate') || q.includes('kitne') || q.includes('paisa') || q.includes('rs') || q.includes('pkr')) {
+    const livePrices = allProducts.length > 0
+      ? allProducts.map((p) => `- 🛋️ **${p.name}** [${p.category || 'Furniture'}]: PKR ${new Intl.NumberFormat('en-PK').format(Number(p.price))}`).join('\n')
+      : 'Tamam showroom pieces made-to-order craft kiye ja rahe hain.';
+
     return {
-      replyText: `🏷️ **Transparent PKR Price Ranges:**\n\n- 🛋️ **Sheesham Sofas & Living Sets:** PKR 299,000 – PKR 480,000\n- 🛏️ **Royal Sheesham Bed Sets:** PKR 345,000 – PKR 580,000\n- 🍽️ **Grand Dining Sets:** PKR 350,000 – PKR 620,000\n- Code **LUXURY10** se Instant 10% Discount Save karein!`,
-      products: allProducts.slice(0, 3).map((p) => ({ id: p.id, name: p.name, price: Number(p.price), category: p.category, image: p.image })),
+      replyText: `🏷️ **Authentic PKR Database Pricing:**\n\n${livePrices}\n\n- 🪵 **Custom Bespoke Orders:** Pricing wood volume (Cubic Feet x PKR 2,400 + artisan joinery & finish) ke hisab se transparently calculate hoti hai.\n- 🏷️ Promo code **LUXURY10** se Instant 10% Discount حاصل karein!`,
+      products: allProducts.slice(0, 4).map((p) => ({ id: p.id, name: p.name, price: Number(p.price), category: p.category, image: p.image || p.images?.[0] })),
+    };
+  }
+
+  // J.1 Category Specific Lookup with Honest Out-of-Stock Notice
+  const catKeywords: Record<string, string> = {
+    bed: 'Bedroom & Royal Bed Sets',
+    bedroom: 'Bedroom',
+    dining: 'Dining Room & Banquet Tables',
+    wardrobe: 'Luxury Wardrobes',
+    closet: 'Luxury Wardrobes',
+    chair: 'Coffee Chairs & Accent Seating',
+    table: 'Center Tables & Consoles',
+    showcase: 'Luxury Display Showcase',
+    office: 'Executive Office',
+  };
+
+  const matchedCatKey = Object.keys(catKeywords).find((k) => q.includes(k));
+  if (matchedCatKey && (!formattedProducts || formattedProducts.length === 0)) {
+    const catLabel = catKeywords[matchedCatKey];
+    return {
+      replyText: `👑 **FAHAD ALI Bespoke Atelier — ${catLabel}:**\n\nFilhal showroom inventory mein is category ka ready-made stock available nahi hai. Lekin hum **100% Solid Kiln-Seasoned Sheesham Wood** mein aapki pasand aur exact room dimensions ke mutabiq bespoke manufacture karte hain:\n\n- 🪵 **Wood:** 100% Solid Kiln-Seasoned Sheesham (Zero MDF / Zero Chipboard)\n- ⏳ **Crafting Timeline:** 10–14 Business Days\n- 🛡️ **Warranty:** 10-Year Anti-Termite & Structural Guarantee\n- 🚚 **Delivery:** Poore Pakistan mein Free White-Glove Delivery & Assembly\n\nApne room ke exact dimensions (Inches ya Feet) batayein taake hum aapko **Bespoke Estimate** provide kar sakein!`,
+      suggestedPrompts: [
+        '📐 Request Custom Bespoke Quote',
+        '💬 Chat on WhatsApp Concierge',
+        '🪵 Wood Quality & Guarantee',
+      ],
     };
   }
 
@@ -277,26 +323,35 @@ export async function POST(request: NextRequest) {
     // 6. Determine Agent Role & System Context
     const activeAgentRole = AgentRouter.routeIntent(sanitizedUserQuery, requestedRole);
 
+    // Fetch active categories from database
+    let dbCategories: any[] = [];
+    try {
+      dbCategories = await db.category.findMany({
+        where: { deletedAt: null, isActive: true },
+        orderBy: { order: 'asc' },
+      });
+    } catch (e) {
+      console.warn('Prisma category fetch notice:', e);
+    }
+
     const categoriesMap: Record<string, number> = {};
     for (const p of allProducts) {
       const cat = p.category || 'Furniture';
       categoriesMap[cat] = (categoriesMap[cat] || 0) + 1;
     }
     const categoriesSummary = Object.entries(categoriesMap)
-      .map(([cat, count]) => `${cat} (${count} items)`)
+      .map(([cat, count]) => `${cat} (${count} live items)`)
       .join(', ');
+
+    const activeCatNames = dbCategories.map((c) => c.name).join(', ');
 
     const catalogContext = allProducts.length > 0
       ? `TOTAL STORE PRODUCTS IN DATABASE: ${allProducts.length} items across categories [${categoriesSummary}].
+ACTIVE STORE CATEGORIES: [${activeCatNames || 'Living Room, Bedroom, Dining Room, Coffee Chairs, Center tables, Luxury Showcase, Luxury Wardrobes'}].
 LIVE INVENTORY CATALOG:
-${allProducts.map((p) => `- "${p.name}" [Category: ${p.category || 'Furniture'}] | Price: PKR ${new Intl.NumberFormat('en-PK').format(Number(p.price))} | Stock: ${p.stock > 0 ? `${p.stock} units available` : 'In Stock (Custom Build 10-14 days)'} | Material: ${p.material || '100% Solid Seasoned Sheesham Wood'}`).join('\n')}`
-      : `
-TOTAL STORE PRODUCTS: 64 luxury Sheesham items across Living, Bedroom, Dining, Office, Accessories.
-- Empress Royal Sheesham Velvet Sofa: PKR 299,000 | Stock: 5 units
-- Monarch Tufted Sheesham King Bed Set: PKR 345,000 | Stock: 3 units
-- Grand Imperial Sheesham Dining Table: PKR 420,000 | Stock: 2 units
-- Carrara Marble Sheesham Coffee Table: PKR 185,000 | Stock: 8 units
-`;
+${allProducts.map((p) => `- "${p.name}" (ID: ${p.id}) [Category: ${p.category || 'Furniture'}] | Price: PKR ${new Intl.NumberFormat('en-PK').format(Number(p.price))} | Stock: ${(p.stockCount ?? 1) > 0 ? `${p.stockCount ?? 1} units available` : 'Ready for Custom Build (10-14 days)'} | Material: ${p.material || '100% Solid Seasoned Sheesham Wood'}`).join('\n')}`
+      : `TOTAL STORE PRODUCTS IN DATABASE: 0 items in ready stock. All pieces are crafted on-demand bespoke.
+ACTIVE STORE CATEGORIES: [${activeCatNames}].`;
 
     const systemPrompt = AgentRouter.getSystemPromptForAgent(activeAgentRole, catalogContext);
 
@@ -318,7 +373,7 @@ TOTAL STORE PRODUCTS: 64 luxury Sheesham items across Living, Bedroom, Dining, O
       replyText = llmResult.text;
     } else {
       // High-Capacity Dynamic AI Generator Engine
-      const dynamicResult = generateDynamicResponse(sanitizedUserQuery, activeAgentRole, allProducts, history);
+      const dynamicResult = generateDynamicResponse(sanitizedUserQuery, activeAgentRole, allProducts, history, dbCategories);
       replyText = dynamicResult.replyText;
       if (dynamicResult.products) retrievedProducts = dynamicResult.products;
       if (dynamicResult.quote) generatedQuote = dynamicResult.quote;

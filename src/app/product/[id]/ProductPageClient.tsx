@@ -6,7 +6,8 @@ import Link from 'next/link';
 import {
   Star, Minus, Plus, Truck, ShieldCheck, Heart,
   Sparkles, CheckCircle2, ShoppingBag,
-  MessageSquare, ArrowRight, Share2, Compass, PenTool, X
+  MessageSquare, ArrowRight, Share2, Compass, PenTool, X,
+  Layers, Hammer, Clock, Ruler, Paintbrush, Award
 } from 'lucide-react';
 import type { StorefrontProduct } from '@/lib/types';
 import { resolveImageUrl, LOCAL_IMAGES } from '@/lib/images';
@@ -184,8 +185,9 @@ export default function ProductPageClient({
   }
 
   const currentPrice = product.price;
-  const originalPrice = parsedSpecs.compareAtPrice ? Number(parsedSpecs.compareAtPrice) : Math.round(currentPrice * 1.33);
-  const monthlyInstallment = Math.round(currentPrice / 12);
+  const compareAt = parsedSpecs.compareAtPrice ? Number(parsedSpecs.compareAtPrice) : null;
+  const hasDiscount = Boolean(compareAt && compareAt > currentPrice);
+  const discountPercent = hasDiscount && compareAt ? Math.round(((compareAt - currentPrice) / compareAt) * 100) : null;
 
   const whatsappMessage = encodeURIComponent(
     `Hello Fahad Ali Interior, I am interested in ordering the masterwork "${product.name}". Can we discuss bespoke dimensions and availability?`
@@ -249,15 +251,6 @@ export default function ProductPageClient({
                 }
               />
 
-              {/* Floating Luxury Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FAF5EE]/95 backdrop-blur-md border border-amber-300/60 text-[#8C6239] text-[10px] font-black uppercase tracking-wider shadow-2xs">
-                  <Sparkles size={11} className="text-[#B88E4B]" /> 100% Solid Sheesham
-                </span>
-                <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-emerald-500/10 backdrop-blur-md border border-emerald-500/30 text-emerald-800 text-[10px] font-black uppercase tracking-wider shadow-2xs">
-                  Save 25% Luxury Privilege
-                </span>
-              </div>
 
               {/* Floating Wishlist Button */}
               <button
@@ -354,20 +347,19 @@ export default function ProductPageClient({
                     <span className="text-2xl sm:text-3xl font-black text-[#221814] font-sans tracking-tight">
                       Rs. {currentPrice.toLocaleString()}
                     </span>
-                    <span className="text-base text-stone-400 line-through">
-                      Rs. {originalPrice.toLocaleString()}
-                    </span>
+                    {hasDiscount && compareAt && (
+                      <span className="text-base text-stone-400 line-through">
+                        Rs. {compareAt.toLocaleString()}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <span className="bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 text-xs font-black px-3 py-1 rounded-xl">
-                  25% SAVINGS
-                </span>
-              </div>
-
-              <div className="pt-2 border-t border-amber-200/60 flex items-center justify-between text-xs text-[#7A6048] relative z-10">
-                <span>💳 0% Markup Installment Option:</span>
-                <span className="font-bold text-[#221814]">From Rs. {monthlyInstallment.toLocaleString()}/mo</span>
+                {hasDiscount && discountPercent && (
+                  <span className="bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 text-xs font-black px-3 py-1 rounded-xl">
+                    {discountPercent}% SAVINGS
+                  </span>
+                )}
               </div>
             </div>
 
@@ -432,8 +424,161 @@ export default function ProductPageClient({
                 <MessageSquare size={14} />
                 <span>Request Custom Dimensions on WhatsApp Concierge</span>
               </a>
+
+              {/* Quick Specs Snapshot */}
+              <div className="pt-2 grid grid-cols-3 gap-2 text-center">
+                <div className="bg-[#FAF5EE] border border-amber-200/60 rounded-xl p-2.5 shadow-2xs">
+                  <span className="block text-[8.5px] font-black uppercase text-stone-400 tracking-wider">Wood / Frame</span>
+                  <span className="text-[11px] font-black text-[#221814] truncate block mt-0.5">
+                    {parsedSpecs.woodType || product.material || 'Sheesham'}
+                  </span>
+                </div>
+                <div className="bg-[#FAF5EE] border border-amber-200/60 rounded-xl p-2.5 shadow-2xs">
+                  <span className="block text-[8.5px] font-black uppercase text-stone-400 tracking-wider">Polish Finish</span>
+                  <span className="text-[11px] font-black text-[#221814] truncate block mt-0.5">
+                    {parsedSpecs.finish || 'High Gloss'}
+                  </span>
+                </div>
+                <div className="bg-[#FAF5EE] border border-amber-200/60 rounded-xl p-2.5 shadow-2xs">
+                  <span className="block text-[8.5px] font-black uppercase text-stone-400 tracking-wider">Warranty</span>
+                  <span className="text-[11px] font-black text-[#221814] truncate block mt-0.5">
+                    {parsedSpecs.warranty || '5 Years'}
+                  </span>
+                </div>
+              </div>
             </div>
 
+          </div>
+        </div>
+
+        {/* ── FURNITURE CRAFTSMANSHIP & MATERIAL SPECIFICATIONS SECTION ── */}
+        <div className="mt-12 sm:mt-16 bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 rounded-[28px] p-6 sm:p-8 lg:p-10 shadow-[0_8px_32px_rgba(184,142,75,0.08)] relative overflow-hidden">
+          {/* Subtle Ambient Background Corner Glow */}
+          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full blur-3xl pointer-events-none bg-amber-500/10" />
+
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-amber-200/70 relative z-10">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-3 py-1 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-[#FAF0E2] text-[#8C6239] border border-[#B88E4B]/40 flex items-center gap-1.5 shadow-2xs">
+                  <Sparkles size={11} className="text-[#B88E4B]" />
+                  <span>Artisan Certified</span>
+                </span>
+                <span className="px-3 py-1 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-amber-50 text-amber-900 border border-amber-300/50 flex items-center gap-1.5 shadow-2xs">
+                  <ShieldCheck size={11} className="text-amber-700" />
+                  <span>100% Kiln-Seasoned Wood</span>
+                </span>
+              </div>
+              <h2 className="font-serif text-xl sm:text-2xl lg:text-3xl font-black text-[#221814] tracking-tight">
+                Furniture Craftsmanship & <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent">Material Specifications</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-[#7A6048] mt-1 font-medium">
+                Detailed architectural construction notes, timber grades, and upholstery data recorded at our Lahore atelier.
+              </p>
+            </div>
+
+            <div className="shrink-0 flex items-center gap-2">
+              <span className="text-[10px] font-mono font-bold text-stone-500 bg-white px-3 py-1.5 rounded-xl border border-amber-200/60 shadow-2xs">
+                Ref: {product.id.slice(-8).toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* Specifications Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 pt-6 relative z-10">
+            {/* 1. General Material */}
+            <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border border-amber-200/60 shadow-2xs hover:border-[#B88E4B] transition-all group">
+              <div className="flex items-center gap-2.5 text-stone-400 mb-2">
+                <Layers size={16} className="text-[#B88E4B] group-hover:scale-110 transition-transform" />
+                <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">General Material</span>
+              </div>
+              <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
+                {product.material || parsedSpecs.generalMaterial || '100% Solid Seasoned Sheesham Wood'}
+              </p>
+              <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Authentic hardwood with zero particle board or MDF veneer</p>
+            </div>
+
+            {/* 2. Wood Type / Frame */}
+            <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border border-amber-200/60 shadow-2xs hover:border-[#B88E4B] transition-all group">
+              <div className="flex items-center gap-2.5 text-stone-400 mb-2">
+                <Hammer size={16} className="text-[#B88E4B] group-hover:scale-110 transition-transform" />
+                <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Wood Type / Frame</span>
+              </div>
+              <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
+                {parsedSpecs.woodType || 'Solid Sheesham (Dalbergia Sissoo)'}
+              </p>
+              <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Kiln-seasoned for 30 days to 8-12% moisture equilibrium</p>
+            </div>
+
+            {/* 3. Fabric / Upholstery */}
+            <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border border-amber-200/60 shadow-2xs hover:border-[#B88E4B] transition-all group">
+              <div className="flex items-center gap-2.5 text-stone-400 mb-2">
+                <Sparkles size={16} className="text-[#B88E4B] group-hover:scale-110 transition-transform" />
+                <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Fabric / Upholstery</span>
+              </div>
+              <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
+                {parsedSpecs.upholstery || 'Imported High-Grade Fabric / Velvet'}
+              </p>
+              <p className="text-[10.5px] text-stone-400 mt-1 font-medium">High-density multi-layer royal ergonomic cushioning</p>
+            </div>
+
+            {/* 4. Polish / Finish */}
+            <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border border-amber-200/60 shadow-2xs hover:border-[#B88E4B] transition-all group">
+              <div className="flex items-center gap-2.5 text-stone-400 mb-2">
+                <Paintbrush size={16} className="text-[#B88E4B] group-hover:scale-110 transition-transform" />
+                <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Polish / Finish</span>
+              </div>
+              <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
+                {parsedSpecs.finish || '5-Coat Protective Polyurethane High-Gloss'}
+              </p>
+              <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Scratch-resistant lacquer emphasizing natural timber grains</p>
+            </div>
+
+            {/* 5. Production Lead Time */}
+            <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border border-amber-200/60 shadow-2xs hover:border-[#B88E4B] transition-all group">
+              <div className="flex items-center gap-2.5 text-stone-400 mb-2">
+                <Clock size={16} className="text-[#B88E4B] group-hover:scale-110 transition-transform" />
+                <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Production Lead Time</span>
+              </div>
+              <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
+                {parsedSpecs.leadTime
+                  ? (String(parsedSpecs.leadTime).toLowerCase().includes('day') ? parsedSpecs.leadTime : `${parsedSpecs.leadTime} Working Days`)
+                  : '10–14 Working Days'}
+              </p>
+              <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Bespoke handcrafted timeline with real-time workshop tracking</p>
+            </div>
+
+            {/* 6. Warranty Guarantee */}
+            <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border border-amber-200/60 shadow-2xs hover:border-[#B88E4B] transition-all group">
+              <div className="flex items-center gap-2.5 text-stone-400 mb-2">
+                <Award size={16} className="text-[#B88E4B] group-hover:scale-110 transition-transform" />
+                <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Warranty Guarantee</span>
+              </div>
+              <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
+                {parsedSpecs.warranty
+                  ? (String(parsedSpecs.warranty).toLowerCase().includes('year') ? parsedSpecs.warranty : `${parsedSpecs.warranty} Structural Warranty`)
+                  : '10-Year Craftsmanship Guarantee'}
+              </p>
+              <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Official anti-termite and structural joint integrity guarantee</p>
+            </div>
+
+            {/* 7. Dimensions (Span 3 on LG) */}
+            <div className="sm:col-span-2 lg:col-span-3 bg-white/90 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border border-amber-200/60 shadow-2xs hover:border-[#B88E4B] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-stone-400">
+                  <Ruler size={16} className="text-[#B88E4B] group-hover:scale-110 transition-transform" />
+                  <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Dimensions & Spatial Proportion</span>
+                </div>
+                <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
+                  {product.dimensions || parsedSpecs.dimensions || 'Bespoke custom dimensions available upon consultation'}
+                </p>
+              </div>
+              <div className="shrink-0 flex items-center gap-2">
+                <span className="text-[10px] font-bold text-[#8C6239] bg-[#FAF5EE] border border-amber-300/50 px-3 py-1 rounded-lg">
+                  📐 Custom Sizing Supported
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 

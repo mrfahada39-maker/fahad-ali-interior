@@ -119,13 +119,13 @@ export function AiEmployeeWidget() {
         {
           id: 'welcome',
           sender: 'ai',
-          text: "Assalam-o-Alaikum! Welcome to **FAHAD ALI INTERIOR** 👑\n\nHamare store me Total **15 Luxury Categories** (54 Live Items) available hain:\n\n1. 🛋️ Living Room | 2. 🛏️ Bedroom | 3. 🍽️ Dining Room\n4. 💼 Office | 5. 🛋️ Luxury Sofas | 6. 🪑 Coffee Chairs\n7. 📺 TV Units | 8. 📦 Storage | 9. 🛋️ Custom Solutions\n10. 🌿 Outdoor | 11. 🪞 Mirrors | 12. 🏺 Accessories\n13. ☕ Center Tables | 14. 👑 Showcase | 15. 🚪 Wardrobes\n\nAap kis category ke products dekhna chahte hain?",
+          text: "Assalam-o-Alaikum! Welcome to **FAHAD ALI INTERIOR** 👑\n\nHum 100% Solid Seasoned Sheesham Wood (Rosewood) furniture ke direct master craftsmen hain. Aap showroom inventory ke live products dekh sakte hain ya apne room dimensions ke mutabiq bespoke custom piece commission kar sakte hain.\n\nAap kis category ya design ke bare mein maloomat lena chahte hain?",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           suggestedPrompts: [
-            '🎁 View Room Packages & Bundles',
-            '🛋️ View Sheesham Sofas',
-            '🛏️ Royal Sheesham Beds',
-            '👑 Request Custom Quote',
+            '🛋️ View Live Showroom Products',
+            '📐 Request Custom Bespoke Quote',
+            '🪵 100% Solid Sheesham & 10-Yr Guarantee',
+            '🚚 Free Nationwide White-Glove Delivery',
           ],
         },
       ]);
@@ -197,7 +197,7 @@ export function AiEmployeeWidget() {
       const fallbackMsg: Message = {
         id: `ai_err_${Date.now()}`,
         sender: 'ai',
-        text: "Assalam-o-Alaikum! Welcome to FAHAD ALI INTERIOR 👑\nHamare store me Total 15 Luxury Categories (54 Live Items) hain: Living Room, Bedroom, Dining, Office, Sofas, Coffee Chairs, TV Units, Storage, Custom Solutions, Outdoor, Mirrors, Accessories, Center Tables, Showcase, Wardrobes.",
+        text: "Assalam-o-Alaikum! Welcome to **FAHAD ALI INTERIOR** 👑\nAap live products dekh sakte hain ya bespoke custom furniture commission kar sakte hain. WhatsApp Concierge par bhi direct rabta kiya ja sakta hai.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
