@@ -1,11 +1,11 @@
 /** Canonical local product/hero images — verified ultra-high-resolution luxury photography. */
 export const LOCAL_IMAGES = {
-  hero: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&fm=avif&q=70&w=1280',
-  bed: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&fm=avif&q=70&w=720',
-  sofa: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&fm=avif&q=70&w=720',
-  dining: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&fm=avif&q=70&w=720',
-  wardrobe: 'https://images.unsplash.com/photo-1558997519-83ea9252def8?auto=format&fit=crop&fm=avif&q=70&w=720',
-  chair: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&fm=avif&q=70&w=720',
+  hero: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&fm=avif&q=85&w=1920',
+  bed: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&fm=avif&q=85&w=1200',
+  sofa: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&fm=avif&q=85&w=1200',
+  dining: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&fm=avif&q=85&w=1200',
+  wardrobe: 'https://images.unsplash.com/photo-1558997519-83ea9252def8?auto=format&fit=crop&fm=avif&q=85&w=1200',
+  chair: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&fm=avif&q=85&w=1200',
 } as const;
 
 export type ImageCategory = keyof typeof LOCAL_IMAGES;
@@ -29,33 +29,33 @@ const CATEGORY_MAP: Record<string, string> = {
 };
 
 /**
- * Automatically compress any Cloudinary URL to ultra-fast AVIF/WebP format and perceptual auto quality.
+ * Automatically optimize any Cloudinary URL to ultra-sharp AVIF/WebP format with max visual clarity.
  */
-export function compressCloudinaryUrl(url: string, width = 380): string {
+export function compressCloudinaryUrl(url: string, width = 1200): string {
   if (!url || typeof url !== 'string') return url;
   if (!url.includes('res.cloudinary.com')) return url;
   if (url.includes('/f_auto') || url.includes('/q_auto')) return url;
 
-  // Transform /image/upload/... — f_auto automatically serves next-gen AVIF to Chrome/Safari/Firefox
+  // Transform /image/upload/... — q_auto:best delivers pristine sharpness without compression banding
   return url.replace(
     /\/image\/upload\/(v\d+\/)?/,
-    `/image/upload/f_auto,q_auto:good,c_limit,w_${width}/$1`
+    `/image/upload/f_auto,q_auto:best,dpr_auto,c_limit,w_${width}/$1`
   ).replace(
     /\/video\/upload\/(v\d+\/)?/,
-    `/video/upload/f_mp4,vc_h264:high:3.1,q_auto:good,ac_none,w_540,br_340k,fps_24/$1`
+    `/video/upload/f_mp4,vc_h264:high:3.1,q_auto:best,ac_none,w_720,br_600k,fps_30/$1`
   );
 }
 
 /**
- * Optimize Unsplash URLs to deliver lightweight AVIF/WebP with width capping.
+ * Optimize Unsplash URLs to deliver lightweight high-res AVIF/WebP with sharp quality.
  */
-export function optimizeUnsplashUrl(url: string, width = 380): string {
+export function optimizeUnsplashUrl(url: string, width = 1200): string {
   if (!url || !url.includes('images.unsplash.com')) return url;
   try {
     const parsed = new URL(url);
     parsed.searchParams.set('auto', 'format');
     parsed.searchParams.set('fit', 'crop');
-    parsed.searchParams.set('q', '65');
+    parsed.searchParams.set('q', '85');
     parsed.searchParams.set('w', String(width));
     return parsed.toString();
   } catch {
@@ -69,7 +69,7 @@ export function optimizeUnsplashUrl(url: string, width = 380): string {
 export function resolveImageUrl(
   image: string | null | undefined,
   category?: string | null,
-  width = 800
+  width = 1200
 ): string {
   if (!image || typeof image !== 'string' || image.trim() === '') {
     return (category && CATEGORY_MAP[category]) ? CATEGORY_MAP[category] : LOCAL_IMAGES.sofa;

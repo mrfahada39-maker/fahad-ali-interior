@@ -1,4 +1,4 @@
-﻿import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import {
   LOCAL_IMAGES,
   compressCloudinaryUrl,
@@ -9,16 +9,16 @@ import {
 
 describe('Image Optimization & Delivery Pipeline', () => {
   describe('compressCloudinaryUrl', () => {
-    it('injects f_auto, q_auto:good and width transformation into Cloudinary URLs', () => {
+    it('injects f_auto, q_auto:best, dpr_auto and width transformation into Cloudinary URLs', () => {
       const original = 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039209/sample.jpg';
       const compressed = compressCloudinaryUrl(original, 500);
-      expect(compressed).toContain('f_auto,q_auto:good,c_limit,w_500');
+      expect(compressed).toContain('f_auto,q_auto:best,dpr_auto,c_limit,w_500');
     });
 
     it('transforms Cloudinary video URLs to high-performance mp4 without audio', () => {
       const original = 'https://res.cloudinary.com/dfd8rzojj/video/upload/v1788039209/hero_reel.mp4';
       const compressed = compressCloudinaryUrl(original);
-      expect(compressed).toContain('f_mp4,vc_h264:high:3.1,q_auto:good,ac_none,w_540');
+      expect(compressed).toContain('f_mp4,vc_h264:high:3.1,q_auto:best,ac_none,w_720');
     });
 
     it('leaves already optimized or non-Cloudinary URLs unchanged', () => {
@@ -41,7 +41,7 @@ describe('Image Optimization & Delivery Pipeline', () => {
       const optimized = optimizeUnsplashUrl(original, 600);
       expect(optimized).toContain('auto=format');
       expect(optimized).toContain('fit=crop');
-      expect(optimized).toContain('q=65');
+      expect(optimized).toContain('q=85');
       expect(optimized).toContain('w=600');
     });
 

@@ -66,13 +66,13 @@ export default function ProductPageClient({
       </div>
     );
   }
-  const mainImage = resolveImageUrl(product.image, product.category, 1200);
+  const mainImage = resolveImageUrl(product.image, product.category, 1600);
   const allImages = [
     mainImage,
     ...(product.images && product.images.length > 0
-      ? product.images.map((img) => resolveImageUrl(img, product.category, 1200))
+      ? product.images.map((img) => resolveImageUrl(img, product.category, 1600))
       : [
-          resolveImageUrl(null, product.category, 1200),
+          resolveImageUrl(null, product.category, 1600),
           LOCAL_IMAGES.dining,
           LOCAL_IMAGES.bed,
         ])
