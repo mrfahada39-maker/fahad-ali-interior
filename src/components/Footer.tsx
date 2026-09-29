@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -40,25 +40,19 @@ export default function Footer() {
 
   return (
     <footer 
-      className="w-full relative bg-[#F7F3ED] text-[#2C1E18] pt-8 sm:pt-11 pb-24 sm:pb-28 lg:pb-6 border-t border-[#E8DFC8]/60 overflow-hidden font-sans select-none cv-auto" 
+      className="w-full relative bg-[#F7F3ED] text-[#2C1E18] pt-8 sm:pt-11 pb-24 sm:pb-28 lg:pb-6 border-t border-[#E8DFC8]/60 overflow-hidden font-sans select-none" 
       data-testid="footer"
     >
 
-      {/* ── Soft Ambient Animated Glow in Background ── */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-amber-400/10 blur-3xl pointer-events-none z-0 animate-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-[#B88E4B]/10 blur-3xl pointer-events-none z-0 animate-pulse" />
+      {/* ── Soft Ambient Glow in Background (Static GPU radial — zero paint stutter) ── */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-amber-400/10 blur-3xl pointer-events-none z-0" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-[#B88E4B]/10 blur-3xl pointer-events-none z-0" />
 
       {/* ── MAIN FOOTER LAYOUT (DESKTOP GRID & MOBILE ACCORDIONS) ── */}
       <div className="w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-5 sm:px-8 relative z-20">
         
-        {/* DESKTOP 5-COLUMN GRID (>= lg) WITH ANIMATED STAGGER */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="hidden lg:grid grid-cols-5 gap-0"
-        >
+        {/* DESKTOP 5-COLUMN GRID (>= lg) */}
+        <div className="hidden lg:grid grid-cols-5 gap-0">
           
           {/* Column 1: Brand Info */}
           <div className="pr-8 flex flex-col justify-between">
@@ -241,18 +235,13 @@ export default function Footer() {
             </div>
           </div>
 
-        </motion.div>
+        </div>
 
-        {/* MOBILE & TABLET ACCORDIONS LAYOUT (< lg) WITH SMOOTH ANIMATIONS */}
+        {/* MOBILE & TABLET ACCORDIONS LAYOUT (< lg) */}
         <div className="block lg:hidden space-y-4">
           
           {/* Top Brand Card (Centered & Larger Text) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-6 pb-6 border-b border-[#2C1E18]/15 flex flex-col items-center text-center"
-          >
+          <div className="mb-6 pb-6 border-b border-[#2C1E18]/15 flex flex-col items-center text-center">
             {/* Brand Name with Luxury Two-Tone Combination */}
             <h2 className="font-serif text-2xl sm:text-3xl font-black tracking-tight text-center mb-2 uppercase text-[#221814]">
               FAHAD ALI <span className="font-serif italic font-normal text-[#C9A24D] mx-1.5 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">INTERIOR</span>
@@ -282,7 +271,7 @@ export default function Footer() {
                 </motion.a>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* ACCORDIONS LIST */}
           {[
@@ -393,15 +382,13 @@ export default function Footer() {
 
       </div>
 
-      {/* ── GIANT ELEGANT WATERMARK TEXT (ANIMATED BREATHING SHIMMER) ── */}
+      {/* ── GIANT ELEGANT WATERMARK TEXT ── */}
       <div className="w-full text-center mt-5 sm:mt-6 overflow-hidden pointer-events-none z-10 select-none flex justify-center">
-        <motion.span 
-          animate={{ opacity: [0.06, 0.12, 0.06] }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-          className="font-serif text-[6.5vw] sm:text-[7.2vw] lg:text-[7.8vw] xl:text-[8.2vw] font-normal tracking-[0.06em] uppercase text-[#2C1E18] leading-none block whitespace-nowrap"
+        <span 
+          className="font-serif text-[6.5vw] sm:text-[7.2vw] lg:text-[7.8vw] xl:text-[8.2vw] font-normal tracking-[0.06em] uppercase text-[#2C1E18]/[0.08] leading-none block whitespace-nowrap"
         >
           FAHAD ALI INTERIOR
-        </motion.span>
+        </span>
       </div>
 
     </footer>

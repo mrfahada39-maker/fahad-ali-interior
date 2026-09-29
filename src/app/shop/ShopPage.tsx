@@ -14,6 +14,7 @@ import type { StorefrontProduct } from '@/lib/types';
 import { resolveImageUrl } from '@/lib/images';
 import { useCartStore, useClientCacheStore, type CachedProduct } from '@/store';
 import { toast } from 'sonner';
+import { formatPrice } from '@/lib/pakistan-localization';
 
 const DEFAULT_CATEGORIES = [
   'All',
@@ -45,8 +46,6 @@ const colors = [
   { name: 'Black', hex: '#2C1E18' },
   { name: 'Teal', hex: '#2A6B7C' },
 ];
-
-const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface ShopPageProps {
   initialProducts?: StorefrontProduct[];

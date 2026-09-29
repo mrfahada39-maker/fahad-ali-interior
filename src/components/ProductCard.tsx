@@ -12,6 +12,7 @@ import { useSession } from 'next-auth/react';
 import { apiFetch } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { toast } from 'sonner';
+import { formatPrice } from '@/lib/pakistan-localization';
 
 type ProductCardProduct = {
   id: string;
@@ -33,8 +34,6 @@ interface ProductCardProps {
   onQuickView?: (product: ProductCardProduct) => void;
   layoutMode?: 'grid3' | 'grid4' | 'list';
 }
-
-const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 export default function ProductCard({ product, index = 0, onQuickView, layoutMode = 'grid3' }: ProductCardProps) {
   const router = useRouter();

@@ -154,8 +154,8 @@ const nextConfig: NextConfig = {
 
   experimental: {
     staleTimes: {
-      dynamic: 86400, // 24 hours in-memory client router cache (0ms instant page switches)
-      static: 86400, // 24 hours in-memory client router cache
+      dynamic: 30, // 30 seconds for dynamic pages (fresh cart, price, and stock updates)
+      static: 86400, // 24 hours for static pages (instant sub-0ms page switches)
     },
     optimizePackageImports: [
       'lucide-react',

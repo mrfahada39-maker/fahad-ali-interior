@@ -63,6 +63,13 @@ export function formatPKR(amount: number): string {
 }
 
 /**
+ * Formats a number with Pakistani digit grouping (e.g. 150,000).
+ */
+export function formatPrice(amount: number): string {
+  return new Intl.NumberFormat('en-PK').format(Math.round(amount));
+}
+
+/**
  * Detects Pakistani telecom operator based on national 4-digit dialing prefix.
  */
 export function detectPakistaniTelecom(phone: string): { name: string; brandColor: string } | null {

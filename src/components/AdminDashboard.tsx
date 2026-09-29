@@ -38,8 +38,7 @@ import { tabs, AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-ta
 
 import { useSiteSettingsStore } from '@/store';
 import { DEFAULT_ADMIN_STATS, DEFAULT_ADMIN_ORDERS } from '@/lib/utils';
-
-const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
+import { formatPrice } from '@/lib/pakistan-localization';
 
 
 function normalizeWhatsapp(value: string): string {
