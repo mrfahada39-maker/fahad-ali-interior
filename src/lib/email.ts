@@ -259,6 +259,17 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                               ${order.customerPhone}
                             </td>
                           </tr>
+                          ${order.discount && order.discount > 0 ? `
+                          <tr>
+                            <td colspan="2" style="border-top: 1px solid #ECE3D6; padding: 0;"></td>
+                          </tr>
+                          <tr>
+                            <td style="color: #7A6354; font-weight: 600; padding: 8px 0 2px;">Voucher Applied:</td>
+                            <td style="text-align: right; font-weight: 800; color: #10B981; padding: 8px 0 2px; font-size: 12.5px;">
+                              ✓ FAHAD10 (Rs. ${order.discount.toLocaleString()} OFF)
+                            </td>
+                          </tr>
+                          ` : ''}
                         </table>
                       </td>
                     </tr>
@@ -318,6 +329,18 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                               </span>
                             </td>
                           </tr>
+
+                          ${order.discount && order.discount > 0 ? `
+                          <!-- Discount Voucher Row -->
+                          <tr>
+                            <td align="left" style="color: #34D399; font-size: 13.5px; font-weight: 700; padding: 6px 0;">
+                              Privilege Voucher Discount:
+                            </td>
+                            <td align="right" style="color: #34D399; font-size: 14.5px; font-weight: 800; padding: 6px 0;">
+                              - Rs. ${order.discount.toLocaleString()}
+                            </td>
+                          </tr>
+                          ` : ''}
 
                           <!-- Divider Line -->
                           <tr>

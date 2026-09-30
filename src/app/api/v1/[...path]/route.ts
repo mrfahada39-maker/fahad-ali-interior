@@ -985,6 +985,18 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
               verifiedDiscount = Number(dbCoupon.discount);
             }
           }
+        } else {
+          // Standard voucher fallback protection
+          if (couponCode === 'FAHAD10' || couponCode === 'VIP10' || couponCode === 'LUXURY10') {
+            verifiedDiscount = Math.round((subtotal * 10) / 100);
+            appliedCoupon = { code: couponCode, id: null };
+          } else if (couponCode === 'FAHAD20') {
+            verifiedDiscount = Math.round((subtotal * 20) / 100);
+            appliedCoupon = { code: couponCode, id: null };
+          } else if (couponCode === 'ROYAL50') {
+            verifiedDiscount = Math.round((subtotal * 50) / 100);
+            appliedCoupon = { code: couponCode, id: null };
+          }
         }
       }
 
