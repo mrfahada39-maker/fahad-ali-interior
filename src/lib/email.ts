@@ -28,6 +28,7 @@ function sendSmtpTls({
   to,
   subject,
   html,
+  text,
 }: {
   host?: string;
   port?: number;
@@ -37,6 +38,7 @@ function sendSmtpTls({
   to: string;
   subject: string;
   html: string;
+  text?: string;
 }): Promise<boolean> {
   if (!user || !pass) {
     console.error('[SMTP ERROR] Cannot send email: SMTP_USER or SMTP_PASS environment variable is missing.');
@@ -80,7 +82,7 @@ function sendSmtpTls({
 
             if (step === 0 && res.startsWith('220')) {
               step++;
-              send(`EHLO localhost`);
+              send('EHLO gmail.com');
             } else if (step === 1 && res.startsWith('250')) {
               step++;
               send('AUTH LOGIN');
@@ -101,23 +103,41 @@ function sendSmtpTls({
               send('DATA');
             } else if (step === 7 && res.startsWith('354')) {
               step++;
-              const messageId = `<fai.${Date.now()}.${Math.random().toString(36).slice(2, 9)}@fahadaliinterior.com>`;
-              const msg = [
+              const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+              const headers = [
                 `Date: ${new Date().toUTCString()}`,
                 `From: ${from}`,
                 `To: ${to}`,
                 `Reply-To: ${from}`,
                 `Subject: ${subject}`,
-                `Message-ID: ${messageId}`,
                 'MIME-Version: 1.0',
-                'Content-Type: text/html; charset=UTF-8',
-                'Content-Transfer-Encoding: 8bit',
-                'X-Mailer: Fahad Ali Interior Luxury Mailer v2.4',
-                'Auto-Submitted: auto-generated',
-                '',
-                html,
-                '.',
-              ].join('\r\n');
+              ];
+
+              let body = '';
+              if (text) {
+                headers.push(`Content-Type: multipart/alternative; boundary="${boundary}"`);
+                body = [
+                  `--${boundary}`,
+                  'Content-Type: text/plain; charset=UTF-8',
+                  'Content-Transfer-Encoding: 7bit',
+                  '',
+                  text,
+                  '',
+                  `--${boundary}`,
+                  'Content-Type: text/html; charset=UTF-8',
+                  'Content-Transfer-Encoding: 8bit',
+                  '',
+                  html,
+                  '',
+                  `--${boundary}--`,
+                ].join('\r\n');
+              } else {
+                headers.push('Content-Type: text/html; charset=UTF-8');
+                headers.push('Content-Transfer-Encoding: 8bit');
+                body = html;
+              }
+
+              const msg = headers.join('\r\n') + '\r\n\r\n' + body + '\r\n.';
               send(msg);
             } else if (step === 8 && res.startsWith('250')) {
               step++;
@@ -176,11 +196,8 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Order Confirmation #${order.orderId} - Fahad Ali Interior</title>
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-      </style>
     </head>
-    <body style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #F6F3EE; margin: 0; padding: 28px 12px; color: #221814; -webkit-font-smoothing: antialiased;">
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F6F3EE; margin: 0; padding: 28px 12px; color: #221814; -webkit-font-smoothing: antialiased;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center">
@@ -434,6 +451,28 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
     </html>
   `;
 
+  const plainText = `FAHAD ALI & INTERIOR
+Order Confirmation #${order.orderId}
+
+Assalam-o-Alaikum ${order.customerName},
+Thank you for your order! Your commission has been officially confirmed and queued for artisan crafting.
+
+Order Reference: #${order.orderId}
+Payment Method: ${order.paymentMethod}
+Delivery Address: ${order.shippingAddress}, ${order.shippingCity}
+Customer Phone: ${order.customerPhone}
+
+Pieces Ordered:
+${order.items.map((i) => `• ${i.name} (Qty: ${i.quantity}) - Rs. ${(i.price * i.quantity).toLocaleString()}`).join('\n')}
+
+Subtotal: Rs. ${order.subtotal.toLocaleString()}
+VIP Delivery: COMPLIMENTARY FREE
+${order.discount && order.discount > 0 ? `Voucher Discount: - Rs. ${order.discount.toLocaleString()}\n` : ''}Total Payable: Rs. ${order.totalAmount.toLocaleString()}
+
+Concierge WhatsApp: +92 320 7006110
+© ${new Date().getFullYear()} Fahad Ali Interior. Lahore Flagship Showroom & Gujrat Atelier
+`;
+
   try {
     const promises: Promise<boolean>[] = [];
 
@@ -452,6 +491,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
           to: order.customerEmail,
           subject: `Order Confirmation #${order.orderId} - Fahad Ali Interior`,
           html: emailHtml,
+          text: plainText,
         }).then((sent) => {
           if (sent) {
             console.log(`[SMTP SUCCESS] Customer confirmation email sent to ${order.customerEmail}`);
