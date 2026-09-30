@@ -1081,8 +1081,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         return order;
       });
 
-      // Dispatch real confirmation email via Gmail SMTP
-      sendOrderConfirmationEmail({
+      // Dispatch real confirmation email via Gmail SMTP (awaited so serverless runtime does not abort)
+      await sendOrderConfirmationEmail({
         orderId: newOrder.id,
         customerName: newOrder.shippingName,
         customerEmail: newOrder.shippingEmail,

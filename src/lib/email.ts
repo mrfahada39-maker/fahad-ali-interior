@@ -67,6 +67,14 @@ function sendSmtpTls({
           socket.on('data', (data) => {
             const res = data.toString();
 
+            if (res.startsWith('5') || res.startsWith('4')) {
+              console.error(`[SMTP ERROR RESPONSE] Step ${step} code: ${res.trim()}`);
+              send('QUIT');
+              socket.end();
+              finish(false);
+              return;
+            }
+
             if (step === 0 && res.startsWith('220')) {
               step++;
               send(`EHLO localhost`);
@@ -90,12 +98,19 @@ function sendSmtpTls({
               send('DATA');
             } else if (step === 7 && res.startsWith('354')) {
               step++;
+              const messageId = `<fai.${Date.now()}.${Math.random().toString(36).slice(2, 9)}@fahadaliinterior.com>`;
               const msg = [
+                `Date: ${new Date().toUTCString()}`,
                 `From: ${from}`,
                 `To: ${to}`,
+                `Reply-To: ${from}`,
                 `Subject: ${subject}`,
+                `Message-ID: ${messageId}`,
                 'MIME-Version: 1.0',
                 'Content-Type: text/html; charset=UTF-8',
+                'Content-Transfer-Encoding: 8bit',
+                'X-Mailer: Fahad Ali Interior Luxury Mailer v2.4',
+                'Auto-Submitted: auto-generated',
                 '',
                 html,
                 '.',
@@ -417,27 +432,46 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
   `;
 
   try {
+    const promises: Promise<boolean>[] = [];
+
     // 1. Send to Customer
-    if (order.customerEmail && order.customerEmail.includes('@')) {
-      await sendSmtpTls({
-        user,
-        pass,
-        from,
-        to: order.customerEmail,
-        subject: `Order Confirmation #${order.orderId} - Fahad Ali Interior`,
-        html: emailHtml,
-      });
-      console.log(`[SMTP] Customer confirmation email sent to ${order.customerEmail}`);
+    const isCustomerEmailValid =
+      order.customerEmail &&
+      order.customerEmail.includes('@') &&
+      order.customerEmail !== 'customer@fahadaliinterior.com';
+
+    if (isCustomerEmailValid) {
+      promises.push(
+        sendSmtpTls({
+          user,
+          pass,
+          from,
+          to: order.customerEmail,
+          subject: `Order Confirmation #${order.orderId} - Fahad Ali Interior`,
+          html: emailHtml,
+        }).then((sent) => {
+          if (sent) {
+            console.log(`[SMTP SUCCESS] Customer confirmation email sent to ${order.customerEmail}`);
+          } else {
+            console.error(`[SMTP FAILED] Customer confirmation email could not be delivered to ${order.customerEmail}`);
+          }
+          return sent;
+        })
+      );
+    } else {
+      console.log(`[SMTP SKIP] Customer email '${order.customerEmail}' is skipped.`);
     }
 
     // 2. Send New Order Alert to Admin
-    await sendSmtpTls({
-      user,
-      pass,
-      from,
-      to: user,
-      subject: `🚨 NEW ORDER RECEIVED #${order.orderId} (Rs. ${order.totalAmount.toLocaleString()})`,
-      html: `
+    if (user) {
+      promises.push(
+        sendSmtpTls({
+          user,
+          pass,
+          from,
+          to: user,
+          subject: `🚨 NEW ORDER RECEIVED #${order.orderId} (Rs. ${order.totalAmount.toLocaleString()})`,
+          html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; background: #FAF5EE;">
           <div style="max-width: 600px; margin: 0 auto; background: #FFFFFF; border-radius: 16px; padding: 24px; border: 1.5px solid #D4AF37;">
             <h2 style="color: #221814; font-family: Georgia, serif; margin-top: 0;">🚨 New Customer Order Received!</h2>
@@ -452,9 +486,18 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
           </div>
         </div>
       `,
-    });
-    console.log(`[SMTP] Admin new order alert sent to ${user}`);
+        }).then((sent) => {
+          if (sent) {
+            console.log(`[SMTP SUCCESS] Admin order notification sent to ${user}`);
+          } else {
+            console.error(`[SMTP FAILED] Admin order notification could not be delivered to ${user}`);
+          }
+          return sent;
+        })
+      );
+    }
 
+    await Promise.allSettled(promises);
     return { success: true };
   } catch (err: any) {
     console.error('[SMTP ERROR]', err.message);
