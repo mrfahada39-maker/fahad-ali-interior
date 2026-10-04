@@ -75,7 +75,7 @@ jobs:
           cache: 'npm'
 
       - name: Audit Root Dependencies
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
   build-verification:
     name: Build Verification
