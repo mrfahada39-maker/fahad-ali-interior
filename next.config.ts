@@ -214,6 +214,35 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/shipping',
+        destination: '/faq#delivery',
+        permanent: true,
+      },
+      {
+        source: '/delivery',
+        destination: '/faq#delivery',
+        permanent: true,
+      },
+      {
+        source: '/returns',
+        destination: '/faq#returns',
+        permanent: true,
+      },
+      {
+        source: '/refund',
+        destination: '/faq#returns',
+        permanent: true,
+      },
+      {
+        source: '/refund-policy',
+        destination: '/faq#returns',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       { source: '/(.*)', headers: securityHeaders },

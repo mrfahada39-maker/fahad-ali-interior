@@ -89,6 +89,32 @@ export default function FAQPage() {
 
   const categories = useMemo(() => ['All', ...faqCategories.map((c) => c.title)], []);
 
+  // Handle URL hash on load (e.g., #delivery, #returns, #payment)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash.toLowerCase().replace('#', '');
+    if (!hash) return;
+
+    if (hash === 'delivery' || hash === 'orders-and-delivery' || hash === 'shipping') {
+      setSelectedCategory('Orders & Delivery');
+    } else if (hash === 'returns' || hash === 'returns-and-refunds' || hash === 'refund') {
+      setSelectedCategory('Returns & Refunds');
+    } else if (hash === 'payment' || hash === 'payments') {
+      setSelectedCategory('Payment');
+    } else if (hash === 'custom' || hash === 'products-and-customization') {
+      setSelectedCategory('Products & Customization');
+    }
+
+    // Smooth scroll into view after render
+    const timer = setTimeout(() => {
+      const target = document.getElementById(hash) || document.getElementById(`faq-cat-${hash}`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
+
   const filteredCategories = useMemo(() => {
     return faqCategories
       .filter((cat) => selectedCategory === 'All' || cat.title === selectedCategory)
@@ -207,8 +233,13 @@ export default function FAQPage() {
         ) : (
           filteredCategories.map((cat) => {
             const Icon = CATEGORY_ICONS[cat.title] || Sparkles;
+            const slug = cat.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const aliasId = 
+              cat.title === 'Orders & Delivery' ? 'delivery' :
+              cat.title === 'Returns & Refunds' ? 'returns' :
+              cat.title === 'Payment' ? 'payment' : 'custom';
             return (
-              <div key={cat.title} className="space-y-4">
+              <div key={cat.title} id={aliasId} data-slug={slug} className="space-y-4 scroll-mt-32">
                 <div className="flex items-center gap-3 pb-2 border-b border-[#E8DFC8]">
                   <div className="w-8 h-8 rounded-xl bg-[#FAF5EE] border border-[#D4AF37]/50 flex items-center justify-center text-[#8C6239] shadow-2xs">
                     <Icon size={16} strokeWidth={2.2} />
