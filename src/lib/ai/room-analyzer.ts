@@ -26,7 +26,9 @@ export class RoomAnalyzer {
         orderBy: { createdAt: 'desc' },
       });
     } catch (e) {
-      console.warn('RoomAnalyzer db product fetch error', e);
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn('RoomAnalyzer db product fetch error', e);
+      }
     }
 
     const defaultSuggestions = dbProducts.map((p) => ({
