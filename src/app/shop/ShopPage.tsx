@@ -77,6 +77,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
 
   const [layoutMode, setLayoutMode] = useState<'grid3' | 'grid4' | 'list'>('grid3');
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+  const [displayLimit, setDisplayLimit] = useState(18);
 
   const addItem = useCartStore((s) => s.addItem);
 
@@ -375,6 +376,16 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
     }
     return list;
   }, [products, activeCategory, debouncedSearchQuery, priceRange, userAdjustedPrice, selectedMaterial, sortBy]);
+
+  // Reset pagination when category, search, or filters change
+  useEffect(() => {
+    setDisplayLimit(18);
+  }, [activeCategory, debouncedSearchQuery, sortBy, priceRange, selectedMaterial]);
+
+  // Progressive slicing to keep DOM lightweight and scrolling silky smooth
+  const visibleProducts = useMemo(() => {
+    return filteredProducts.slice(0, displayLimit);
+  }, [filteredProducts, displayLimit]);
 
   return (
     <div className="min-h-screen bg-[#FCFAF7] text-[#221814] pt-24 sm:pt-28">
@@ -716,26 +727,43 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                 </div>
               )
             ) : (
-              /* Dynamic Layout Switcher Rendering */
-              <div
-                className={
-                  layoutMode === 'list'
-                    ? 'space-y-4'
-                    : layoutMode === 'grid4'
-                    ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5'
-                    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                }
-              >
-                {filteredProducts.map((product, idx) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    index={idx}
-                    layoutMode={layoutMode}
-                    onQuickView={(p) => setQuickViewProduct(p)}
-                  />
-                ))}
-              </div>
+              <>
+                <div
+                  className={
+                    layoutMode === 'list'
+                      ? 'space-y-4'
+                      : layoutMode === 'grid4'
+                      ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5'
+                      : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                  }
+                >
+                  {visibleProducts.map((product, idx) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      index={idx}
+                      layoutMode={layoutMode}
+                      onQuickView={(p) => setQuickViewProduct(p)}
+                    />
+                  ))}
+                </div>
+
+                {filteredProducts.length > displayLimit && (
+                  <div className="mt-12 text-center">
+                    <p className="text-xs text-[#7A6048] mb-3 font-serif">
+                      Showing {visibleProducts.length} of {filteredProducts.length} masterpieces
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setDisplayLimit((prev) => prev + 18)}
+                      className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] text-white font-serif font-bold text-xs uppercase tracking-widest shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer inline-flex items-center gap-2"
+                    >
+                      <span>Load More Masterpieces</span>
+                      <ChevronDown size={15} />
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
 

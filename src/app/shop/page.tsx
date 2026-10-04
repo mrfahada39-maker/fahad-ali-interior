@@ -21,7 +21,7 @@ export default async function Shop(props: { searchParams?: Promise<Record<string
   const resolved = await (props.searchParams ?? Promise.resolve({}));
   const searchParams = resolved as Record<string, string | undefined>;
   const [initialProducts, initialCategories] = await Promise.all([
-    getStorefrontProducts(100),
+    getStorefrontProducts(24),
     getStorefrontCategories(),
   ]);
   return (
