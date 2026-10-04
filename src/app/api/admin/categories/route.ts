@@ -33,72 +33,7 @@ const fallbackCategories = [
   { id: 'cat_wardrobe', name: 'Luxury Wardrobes', description: 'Custom solid wood wardrobes', order: 8 },
 ];
 
-async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser | null> {
-  const adminCookie = req.cookies.get('fai_admin_token')?.value;
-  const authHeader = req.headers.get('authorization') || req.headers.get('x-enterprise-token') || adminCookie;
-  if (authHeader && authHeader.includes('fai_token_')) {
-    const match = authHeader.match(/fai_token_([^_]+)_([^_]+)_([a-f0-9]+)/);
-    if (match) {
-      const [, userId, timestampStr, signature] = match;
-      const timestamp = parseInt(timestampStr, 10);
-      const maxAgeMs = 30 * 24 * 60 * 60 * 1000;
-      if (!isNaN(timestamp) && (Date.now() - timestamp) < maxAgeMs) {
-        const secret = process.env.NEXTAUTH_SECRET;
-        if (secret && secret.length >= 32) {
-          const expectedSig = crypto.createHmac('sha256', secret).update(userId + ':' + timestamp).digest('hex');
-          try {
-            if (crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSig, 'hex'))) {
-              const dbUser = await db.user.findUnique({
-                where: { id: userId },
-                select: { id: true, email: true, role: true },
-              });
-              if (dbUser) {
-                return {
-                  id: dbUser.id,
-                  email: dbUser.email,
-                  role: String(dbUser.role).toUpperCase(),
-                };
-              }
-            }
-          } catch {}
-        }
-      }
-    }
-  }
-
-  try {
-    const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
-    const token =
-      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
-      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
-    if (token) {
-      return {
-        id: token.id as string,
-        email: token.email as string,
-        role: String(token.role ?? '').toUpperCase(),
-      };
-    }
-  } catch {}
-
-  try {
-    const session = await getServerSession(authOptions);
-    if (session?.user) {
-      return {
-        id: (session.user as any).id,
-        email: session.user.email || undefined,
-        role: String((session.user as any).role ?? '').toUpperCase(),
-      };
-    }
-  } catch {}
-
-  return null;
-}
-
-function requireAdmin(user: SessionUser | null): boolean {
-  if (!user?.role) return false;
-  const r = user.role.toUpperCase();
-  return r === 'ADMIN' || r === 'SUPER_ADMIN';
-}
+import { getVerifiedAdmin } from '@/lib/admin-auth';
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -131,8 +66,8 @@ export async function GET() {
 // POST /api/admin/categories
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUserFromSessionOrToken(req);
-    if (!requireAdmin(user)) {
+    const user = await getVerifiedAdmin(req);
+    if (!user) {
       return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
     }
 
@@ -175,8 +110,8 @@ export async function POST(req: NextRequest) {
 // PUT /api/admin/categories
 export async function PUT(req: NextRequest) {
   try {
-    const user = await getUserFromSessionOrToken(req);
-    if (!requireAdmin(user)) {
+    const user = await getVerifiedAdmin(req);
+    if (!user) {
       return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
     }
 
@@ -221,8 +156,8 @@ export const PATCH = PUT;
 // DELETE /api/admin/categories
 export async function DELETE(req: NextRequest) {
   try {
-    const user = await getUserFromSessionOrToken(req);
-    if (!requireAdmin(user)) {
+    const user = await getVerifiedAdmin(req);
+    if (!user) {
       return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
     }
 
