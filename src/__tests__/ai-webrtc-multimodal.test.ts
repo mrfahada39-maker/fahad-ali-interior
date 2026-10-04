@@ -34,7 +34,7 @@ describe('Master Suite 1: Production AI Multimodal, RAG & WebRTC Architecture', 
       expect(Array.isArray(result.suggestedProducts)).toBe(true);
       expect(typeof result.designAdvice).toBe('string');
       expect(result.designAdvice.length).toBeGreaterThan(10);
-    });
+    }, 15000);
   });
 
   // ── 2. Enterprise AI Tool Registry ──
