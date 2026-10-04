@@ -21,7 +21,9 @@ export async function GET() {
         status: dbHealth.ok ? 'connected' : 'disconnected',
         dialect: dbHealth.dialect,
         latencyMs: dbHealth.latencyMs,
-        ...(dbHealth.error ? { error: dbHealth.error } : {}),
+        ...(dbHealth.error
+          ? { error: process.env.NODE_ENV === 'production' ? 'Database connection unavailable' : dbHealth.error }
+          : {}),
       },
     },
     system: {
