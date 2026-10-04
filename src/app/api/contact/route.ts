@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { db } from '@/lib/db';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+
+const contactInquirySchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(200),
+  phone: z.string().trim().min(3, 'Phone is required').max(50).optional().or(z.literal('')),
+  email: z.string().trim().email('Invalid email address').max(200).optional().or(z.literal('')),
+  projectType: z.string().trim().max(200).optional(),
+  budget: z.string().trim().max(100).optional(),
+  message: z.string().trim().max(2000).optional(),
+}).refine((data) => (data.name && data.phone) || (data.name && data.email), {
+  message: 'Name and either phone or email are required.',
+});
 
 export async function GET() {
   return NextResponse.json({
@@ -24,18 +36,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { name, phone, email, projectType, budget, message } = body;
+    const rawBody = await req.json().catch(() => ({}));
+    const parseResult = contactInquirySchema.safeParse(rawBody);
 
-    if (!name && !email) {
-      return NextResponse.json({ success: false, error: 'Name or email is required' }, { status: 400 });
+    if (!parseResult.success) {
+      const firstIssue = parseResult.error.issues[0]?.message || 'Invalid form input.';
+      return NextResponse.json({ success: false, error: firstIssue }, { status: 400 });
     }
 
-    const contactName = (name || 'VIP Inquirer').toString().slice(0, 200);
-    const contactPhone = (phone || '+92 300 0000000').toString().slice(0, 50);
-    const contactEmail = (email || '').toString().slice(0, 200);
-    const contactMessage = (message || 'N/A').toString().slice(0, 2000);
-    const contactProject = (projectType || 'Custom Furniture').toString().slice(0, 200);
+    const { name, phone, email, projectType, message } = parseResult.data;
+
+    const contactName = name.slice(0, 200);
+    const contactPhone = (phone || '+92 300 0000000').slice(0, 50);
+    const contactEmail = (email || '').slice(0, 200);
+    const contactMessage = (message || 'N/A').slice(0, 2000);
+    const contactProject = (projectType || 'Custom Furniture').slice(0, 200);
 
     // Create an Admin Notification in DB
     const adminUser = await db.user.findFirst({
