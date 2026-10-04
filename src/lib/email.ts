@@ -16,15 +16,12 @@ export interface OrderEmailData {
 }
 
 // Pure Node.js TLS SMTP Sender - 0 External Dependencies, 100% Reliable across all Next.js/Vercel versions
-const DEFAULT_SMTP_USER = 'mrfahada39@gmail.com';
-const DEFAULT_SMTP_PASS = 'naqxyqlglbvegztw';
-
 function sendSmtpTls({
   host = process.env.SMTP_HOST || 'smtp.gmail.com',
   port = Number(process.env.SMTP_PORT) || 465,
-  user = process.env.SMTP_USER || DEFAULT_SMTP_USER,
-  pass = process.env.SMTP_PASS || DEFAULT_SMTP_PASS,
-  from = process.env.SMTP_FROM || `Fahad Ali Interior <${process.env.SMTP_USER || DEFAULT_SMTP_USER}>`,
+  user = process.env.SMTP_USER,
+  pass = process.env.SMTP_PASS,
+  from = process.env.SMTP_FROM || (process.env.SMTP_USER ? `Fahad Ali Interior <${process.env.SMTP_USER}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>'),
   to,
   subject,
   html,
@@ -166,9 +163,9 @@ function sendSmtpTls({
 }
 
 export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise<{ success: boolean; error?: string }> {
-  const user = process.env.SMTP_USER || DEFAULT_SMTP_USER;
-  const pass = process.env.SMTP_PASS || DEFAULT_SMTP_PASS;
-  const from = process.env.SMTP_FROM || `Fahad Ali Interior <${user}>`;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
 
   const itemsHtml = order.items
     .map(
@@ -559,9 +556,9 @@ export async function sendPasswordResetEmail({
   resetUrl: string;
   code?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const user = process.env.SMTP_USER || DEFAULT_SMTP_USER;
-  const pass = process.env.SMTP_PASS || DEFAULT_SMTP_PASS;
-  const from = process.env.SMTP_FROM || `Fahad Ali Interior <${user}>`;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
 
   const html = `
     <!DOCTYPE html>
@@ -665,9 +662,9 @@ export async function sendVerificationEmail({
   verifyUrl: string;
   code?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const user = process.env.SMTP_USER || DEFAULT_SMTP_USER;
-  const pass = process.env.SMTP_PASS || DEFAULT_SMTP_PASS;
-  const from = process.env.SMTP_FROM || `Fahad Ali Interior <${user}>`;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
 
   const html = `
     <!DOCTYPE html>
