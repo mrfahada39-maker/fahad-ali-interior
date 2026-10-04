@@ -81,7 +81,7 @@ export const metadata: Metadata = {
     template: "%s | Fahad Ali Interior",
   },
   description:
-    "Handcrafted luxury furniture from Lahore, Pakistan. Premium beds, sofas, dining sets, and wardrobes crafted by master artisans. Where heritage meets contemporary design.",
+    "Handcrafted luxury furniture from Lahore, Pakistan. Premium solid Sheesham beds, sofas, dining sets, and wardrobes crafted by master artisans.",
   keywords: [
     "luxury furniture", "Pakistan", "Lahore", "handcrafted",
     "Sheesham wood", "interior design", "beds", "sofas", "dining", "wardrobes",

@@ -1,4 +1,4 @@
-﻿import { Metadata } from 'next';
+import { Metadata } from 'next';
 import StoreShell from '@/components/StoreShell';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -7,7 +7,7 @@ import { Sparkles, Award, ShieldCheck, ArrowRight } from 'lucide-react';
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: 'About Us | Fahad Ali Interior — Lahore Heritage Craftsmanship',
+  title: 'About Us — Lahore Heritage Craftsmanship',
   description: 'Learn about Fahad Ali Interior: handcrafted solid Sheesham luxury furniture, generational woodworking masters, and bespoke royal craftsmanship from Lahore, Pakistan.',
 };
 

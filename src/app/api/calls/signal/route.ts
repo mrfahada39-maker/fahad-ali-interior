@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getToken } from 'next-auth/jwt';
+import { getVerifiedAdmin } from '@/lib/admin-auth';
 
 interface CallSession {
   id: string;
@@ -65,13 +65,7 @@ export async function POST(req: NextRequest) {
 
     // Verify admin identity if caller claims to be admin
     if (fromUserId === 'admin' || userAliases.includes('admin')) {
-      const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
-      const token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
-                    (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
-      const role = String(token?.role ?? '').toUpperCase();
-      const adminCookie = req.cookies.get('fai_admin_token')?.value;
-      const isAdminToken = Boolean(adminCookie && adminCookie.includes('fai_token_'));
-      const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN' || isAdminToken;
+      const isAdmin = Boolean(await getVerifiedAdmin(req));
       // Allow status checks to proceed without hard 403 failures that disrupt client polling loops
       if (!isAdmin && action !== 'status') {
         return NextResponse.json({ error: 'Unauthorized: Admin authentication required.' }, { status: 403 });

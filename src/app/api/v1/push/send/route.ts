@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { broadcastPushNotification, sendPushNotification } from '@/lib/push-notifications';
 import { db } from '@/lib/db';
-import { getToken } from 'next-auth/jwt';
+import { getVerifiedAdmin } from '@/lib/admin-auth';
 
 export async function POST(req: NextRequest) {
   try {
-    const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
-    const token = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
-                  (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
-    const role = String(token?.role ?? '').toUpperCase();
-    const adminCookie = req.cookies.get('fai_admin_token')?.value;
-    const isAdminToken = Boolean(adminCookie && adminCookie.includes('fai_token_'));
+    const admin = await getVerifiedAdmin(req);
 
-    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && !isAdminToken) {
+    if (!admin) {
       return NextResponse.json({ error: 'Unauthorized. Admin role required to broadcast push notifications.' }, { status: 403 });
     }
 

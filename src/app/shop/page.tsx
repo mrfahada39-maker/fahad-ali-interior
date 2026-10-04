@@ -7,7 +7,7 @@ import ShopPage from './ShopPage';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Shop | Fahad Ali Interior — Luxury Furniture Collection',
+  title: 'Shop — Luxury Furniture Collection',
   description:
     'Browse our collection of handcrafted luxury furniture. Premium beds, sofas, dining sets, and wardrobes crafted in Pakistan.',
   openGraph: {
