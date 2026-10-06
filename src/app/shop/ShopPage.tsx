@@ -333,14 +333,13 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
         const isMatch =
           pCat === aCat ||
           pNorm === aNorm ||
-          pCat.includes(aCat) ||
-          aCat.includes(pCat) ||
-          (aCat.includes('bed') && (pCat.includes('bed') || (p.name || '').toLowerCase().includes('bed'))) ||
-          (aCat.includes('living') && (pCat.includes('living') || pCat.includes('sofa') || (p.name || '').toLowerCase().includes('sofa'))) ||
-          (aCat.includes('dining') && (pCat.includes('dining') || (p.name || '').toLowerCase().includes('dining') || (p.name || '').toLowerCase().includes('table'))) ||
-          (aCat.includes('chair') && (pCat.includes('chair') || (p.name || '').toLowerCase().includes('chair'))) ||
-          (aCat.includes('table') && (pCat.includes('table') || (p.name || '').toLowerCase().includes('table'))) ||
-          (aCat.includes('wardrobe') && (pCat.includes('wardrobe') || (p.name || '').toLowerCase().includes('wardrobe') || (p.name || '').toLowerCase().includes('closet')));
+          (Boolean(pCat) && Boolean(aCat) && (pCat.includes(aCat) || aCat.includes(pCat))) ||
+          (aCat.includes('bed') && pCat.includes('bed')) ||
+          (aCat.includes('dining') && pCat.includes('dining')) ||
+          (aCat.includes('chair') && pCat.includes('chair')) ||
+          (aCat.includes('table') && pCat.includes('table')) ||
+          (aCat.includes('wardrobe') && (pCat.includes('wardrobe') || pCat.includes('closet'))) ||
+          (!pCat && (p.name || '').toLowerCase().includes(aCat));
 
         if (!isMatch) return false;
       }

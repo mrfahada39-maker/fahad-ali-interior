@@ -18,6 +18,24 @@ import { AgentRouter, AgentRole } from '@/lib/ai/agents';
 import { RTC_CONFIGURATION, WebRtcCallClient } from '@/lib/webrtc-call-manager';
 import { sendPushNotification } from '@/lib/push-notifications';
 
+jest.mock('@/lib/db', () => ({
+  db: {
+    product: {
+      findMany: jest.fn().mockResolvedValue([
+        {
+          id: 'mock-sheesham-1',
+          name: 'Royal Sheesham Bed Set',
+          category: 'Bedroom',
+          price: 250000,
+          image: '/images/mock-bed.jpg',
+          images: ['/images/mock-bed.jpg'],
+          deletedAt: null,
+        },
+      ]),
+    },
+  },
+}));
+
 describe('Master Suite 1: Production AI Multimodal, RAG & WebRTC Architecture', () => {
 
   // ── 1. Production AI Room Analyzer ──
