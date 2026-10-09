@@ -31,16 +31,47 @@ import { toast } from 'sonner';
 import CloudinaryImageUpload from '@/components/CloudinaryImageUpload';
 import AnimatedCounter from '@/components/AnimatedCounter';
 import LuxurySelect from '@/components/LuxurySelect';
+import { AdminProductSummary } from './admin-tab-types';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
+export interface ProductFormData {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  images: string;
+  material: string;
+  dimensions: string;
+  stockCount: number;
+  isPremium: boolean;
+  compareAtPrice: string;
+  woodType: string;
+  upholstery: string;
+  finish: string;
+  leadTime: string;
+  warranty?: string;
+  [key: string]: unknown;
+}
+
+export interface AdminCategoryItem {
+  id?: string;
+  name: string;
+  icon?: string;
+  image?: string;
+  description?: string;
+  items?: string;
+  [key: string]: unknown;
+}
+
 interface ProductsTabProps {
-  products: any[];
-  categories: any[];
+  products: AdminProductSummary[];
+  categories: AdminCategoryItem[];
   showAddProduct: boolean;
   setShowAddProduct: (show: boolean) => void;
-  productForm: any;
-  setProductForm: (form: any) => void;
+  productForm: ProductFormData;
+  setProductForm: React.Dispatch<React.SetStateAction<any>> | ((form: any) => void);
   addProduct: () => void;
   deleteProduct: (id: string) => void;
   defaultProductImage: (cat: string) => string;

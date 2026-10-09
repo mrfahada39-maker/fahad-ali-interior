@@ -55,16 +55,115 @@ export const STORE_SETTINGS_KEYS = [
   'themeAccentColor',
 ] as const;
 
+export interface AdminProductSummary {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  image?: string;
+  images?: string[];
+  stockCount?: number;
+  stock?: number;
+  isPremium?: boolean;
+  material?: string | null;
+  dimensions?: string | null;
+  description?: string | null;
+  createdAt?: string | Date;
+  [key: string]: any;
+}
+
+export interface AdminOrderSummary {
+  id?: string;
+  orderNumber?: string;
+  shippingName?: string | null;
+  shippingEmail?: string | null;
+  shippingPhone?: string | null;
+  shippingAddress?: string | { fullName?: string; email?: string; phone?: string; address?: string; street?: string; city?: string; province?: string } | null;
+  shippingInfo?: { name?: string; email?: string; phone?: string; address?: string; city?: string; province?: string } | null;
+  shippingCity?: string | null;
+  shippingProvince?: string | null;
+  city?: string | null;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  totalAmount?: any;
+  subtotal?: any;
+  discount?: any;
+  status?: string | null;
+  paymentStatus?: string | null;
+  paymentMethod?: string | null;
+  createdAt?: string | Date | null;
+  user?: { name?: string | null; email?: string | null; phone?: string | null } | null;
+  items?: Array<{ id?: string; name?: string; price?: any; quantity?: number; image?: string }> | null;
+  [key: string]: any;
+}
+
+export interface AdminCustomerSummary {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  role?: string;
+  loyaltyTier?: string;
+  loyaltyPoints?: number;
+  totalOrders?: number;
+  totalSpent?: number;
+  createdAt?: string | Date;
+  [key: string]: any;
+}
+
+export interface AdminMessageSummary {
+  id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  subject?: string;
+  message?: string;
+  status?: string;
+  createdAt?: string | Date;
+  [key: string]: any;
+}
+
+export interface AdminInquirySummary {
+  id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  roomType?: string;
+  budget?: number;
+  message?: string;
+  status?: string;
+  createdAt?: string | Date;
+  [key: string]: any;
+}
+
+export interface AdminSiteSettings {
+  siteName?: string;
+  adminEmail?: string;
+  contactPhone?: string;
+  storeAddress?: string;
+  foundedYear?: string;
+  socialInstagram?: string;
+  socialFacebook?: string;
+  socialWhatsapp?: string;
+  bankName?: string;
+  accountTitle?: string;
+  accountNumber?: string;
+  iban?: string;
+  jazzcashNumber?: string;
+  easypaisaNumber?: string;
+  [key: string]: any;
+}
+
 export type AdminBundle = {
-  stats: any;
-  products: any[] | { products: any[] };
-  orders: any[];
-  customers: any[];
-  users?: any[];
-  messages: any[];
+  stats: Record<string, any>;
+  products: AdminProductSummary[] | { products: AdminProductSummary[] };
+  orders: AdminOrderSummary[];
+  customers: AdminCustomerSummary[];
+  users?: AdminCustomerSummary[];
+  messages: AdminMessageSummary[];
   reviews: any[];
-  inquiries: any[];
-  siteSettings: any;
-  analytics: any;
+  inquiries: AdminInquirySummary[];
+  siteSettings: AdminSiteSettings;
+  analytics: Record<string, any>;
   account: { name?: string; email?: string; phone?: string };
 };

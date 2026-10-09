@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DollarSign,
@@ -34,14 +34,15 @@ import {
   ComposedChart
 } from 'recharts';
 import AnimatedCounter from '@/components/AnimatedCounter';
+import { AdminOrderSummary, AdminProductSummary } from './admin-tab-types';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface AnalyticsTabProps {
-  stats: any;
-  analytics: any;
-  orders: any[];
-  products: any[];
+  stats: Record<string, any>;
+  analytics: Record<string, any>;
+  orders: AdminOrderSummary[];
+  products: AdminProductSummary[];
 }
 
 export default function AnalyticsTab({ stats, analytics, orders = [], products = [] }: AnalyticsTabProps) {

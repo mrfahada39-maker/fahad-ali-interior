@@ -40,6 +40,7 @@ import {
   LabelList
 } from 'recharts';
 import AnimatedCounter from '@/components/AnimatedCounter';
+import { AdminOrderSummary } from './admin-tab-types';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
@@ -133,9 +134,9 @@ const formatOrderDateTime = (dateVal: any) => {
 };
 
 interface OverviewTabProps {
-  stats: any;
-  analytics: any;
-  orders: any[];
+  stats: Record<string, any>;
+  analytics: Record<string, any>;
+  orders: AdminOrderSummary[];
   setActiveTab: (tab: string) => void;
 }
 
