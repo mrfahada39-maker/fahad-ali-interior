@@ -138,11 +138,13 @@ const fallbackCategories = [
 // Handles queries directly from the database if the NestJS backend is offline
 async function handleDatabaseFallback(method: string, segment: string, req: NextRequest): Promise<NextResponse> {
   try {
+    const normalizedSegment = segment.replace(/^v1\//, '').replace(/^\/+|\/+$/g, '');
+    const pathParts = normalizedSegment.split('/');
     // ── Rate limiting for sensitive endpoints ─────────────────────────
     const ip = getClientIp(req);
 
     // Order creation — prevent order flooding
-    if (method === 'POST' && (segment === 'orders' || segment === 'v1/orders')) {
+    if (method === 'POST' && (normalizedSegment === 'orders' || segment === 'orders' || segment === 'v1/orders')) {
       const rl = await rateLimit(`orders:${ip}`, 'api');
       if (!rl.allowed) {
         return NextResponse.json({ error: 'Too many requests. Please wait and try again.' }, { status: 429 });
@@ -150,7 +152,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // Contact/inquiry spam protection
-    if (method === 'POST' && (segment === 'contact' || segment === 'v1/contact' || segment === 'inquiries' || segment === 'v1/inquiries')) {
+    if (method === 'POST' && (normalizedSegment === 'contact' || normalizedSegment === 'inquiries' || segment === 'contact' || segment === 'v1/contact' || segment === 'inquiries' || segment === 'v1/inquiries')) {
       const rl = await rateLimit(`contact:${ip}`, 'inquiry');
       if (!rl.allowed) {
         return NextResponse.json({ error: 'Too many requests. Please wait a minute and try again.' }, { status: 429 });
@@ -158,7 +160,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // Register — anti-bot account flood protection
-    if (method === 'POST' && (segment === 'auth/register' || segment === 'v1/auth/register' || segment === 'register' || segment === 'v1/register')) {
+    if (method === 'POST' && (normalizedSegment === 'auth/register' || normalizedSegment === 'register' || segment === 'auth/register' || segment === 'v1/auth/register' || segment === 'register' || segment === 'v1/register')) {
       const rl = await rateLimit(`register:${ip}`, 'register');
       if (!rl.allowed) {
         return NextResponse.json({ error: 'Too many registration attempts. Please wait and try again.' }, { status: 429 });
@@ -169,7 +171,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     // (also enforced in dedicated ai/chat route)
 
     // Admin segments fallback - Enforce Executive RBAC (except public GET reads like categories)
-    if ((segment.startsWith('admin') || segment.startsWith('v1/admin')) && !(method === 'GET' && segment.includes('categories'))) {
+    const hasAdminInPath = pathParts.includes('admin') || normalizedSegment.startsWith('admin') || segment.includes('admin');
+    const isPublicCategory = method === 'GET' && (normalizedSegment === 'categories' || normalizedSegment === 'admin/categories' || segment.includes('categories'));
+
+    if (hasAdminInPath && !isPublicCategory) {
       const user = await getUserFromSessionOrToken(req);
       if (!requireAdmin(user)) {
         return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
@@ -177,7 +182,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // Uploads Image Fallback (Protected)
-    if (method === 'POST' && (segment.startsWith('uploads/image') || segment.startsWith('v1/uploads/image'))) {
+    if (method === 'POST' && (normalizedSegment === 'uploads/image' || normalizedSegment.startsWith('uploads/image/') || segment.startsWith('uploads/image') || segment.startsWith('v1/uploads/image'))) {
       const user = await getUserFromSessionOrToken(req);
       if (!user) {
         return NextResponse.json({ error: 'Unauthorized. Sign in to upload images.' }, { status: 401 });
@@ -913,47 +918,52 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       };
 
       const rawItems = Array.isArray(body.items) ? body.items : [];
-      let defaultProd = await db.product.findFirst({ where: { deletedAt: null } }).catch(() => null);
-      if (!defaultProd) {
-        defaultProd = await db.product.create({
-          data: {
-            name: 'Handcrafted Sheesham Furniture',
-            category: 'Living Room',
-            price: 50000,
-            image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?fm=webp&q=65&w=480',
-          },
-        }).catch(() => null);
+      if (rawItems.length === 0) {
+        return NextResponse.json({ error: 'Order must contain at least one item.' }, { status: 400 });
       }
-      const safeProductId = defaultProd?.id || 'prod_fallback';
 
-      const formattedItems = await Promise.all(
-        rawItems.map(async (item: any) => {
-          const rawId = item.productId || item.id;
-          let prodId = safeProductId;
-          let serverPrice = 10000;
-          let prodName = item.name || 'Furniture Item';
-          let prodImage = item.image || '';
+      const formattedItems: Array<{
+        productId: string;
+        name: string;
+        price: number;
+        quantity: number;
+        image: string;
+      }> = [];
 
-          if (rawId) {
-            const dbProd = await db.product.findUnique({ where: { id: rawId } }).catch(() => null);
-            if (dbProd) {
-              prodId = dbProd.id;
-              serverPrice = Number(dbProd.price);
-              prodName = dbProd.name;
-              prodImage = dbProd.image || prodImage;
-            }
-          }
+      for (const item of rawItems) {
+        const rawId = (item?.productId || item?.id || '').toString().trim();
+        if (!rawId) {
+          return NextResponse.json({ error: 'Product ID is required for all order items.' }, { status: 400 });
+        }
 
-          const quantity = Math.max(1, parseNum(item.quantity, 1));
-          return {
-            productId: prodId,
-            name: prodName,
-            price: serverPrice,
-            quantity,
-            image: prodImage,
-          };
-        })
-      );
+        const rawQty = item?.quantity;
+        const quantity = Number(rawQty);
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+          return NextResponse.json(
+            { error: 'Quantity must be an integer between 1 and 20.' },
+            { status: 400 }
+          );
+        }
+
+        const dbProd = await db.product.findFirst({
+          where: { id: rawId, deletedAt: null },
+        });
+
+        if (!dbProd) {
+          return NextResponse.json(
+            { error: `Product not found or unavailable: ${rawId}` },
+            { status: 400 }
+          );
+        }
+
+        formattedItems.push({
+          productId: dbProd.id,
+          name: dbProd.name,
+          price: Number(dbProd.price),
+          quantity,
+          image: dbProd.image || '',
+        });
+      }
 
       // Secure Server-Side Financial Calculation (Prevents Client-Side Price & Discount Tampering)
       const subtotal = formattedItems.reduce((sum: number, i: any) => sum + (i.price * i.quantity), 0);
@@ -970,33 +980,34 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
             isActive: true,
             deletedAt: null,
           },
-        }).catch(() => null);
+        });
 
-        if (dbCoupon) {
-          const isExpired = dbCoupon.expiresAt && new Date(dbCoupon.expiresAt) < new Date();
-          const isMaxedOut = dbCoupon.maxUses > 0 && dbCoupon.usedCount >= dbCoupon.maxUses;
-          const meetsMinAmount = subtotal >= Number(dbCoupon.minOrderAmount || 0);
+        if (!dbCoupon) {
+          return NextResponse.json({ error: 'Invalid or inactive coupon code.' }, { status: 400 });
+        }
 
-          if (!isExpired && !isMaxedOut && meetsMinAmount) {
-            appliedCoupon = dbCoupon;
-            if (dbCoupon.discountType === 'PERCENTAGE') {
-              verifiedDiscount = Math.round((subtotal * Number(dbCoupon.discount)) / 100);
-            } else {
-              verifiedDiscount = Number(dbCoupon.discount);
-            }
-          }
+        const isExpired = dbCoupon.expiresAt && new Date(dbCoupon.expiresAt) < new Date();
+        if (isExpired) {
+          return NextResponse.json({ error: 'This coupon has expired.' }, { status: 400 });
+        }
+
+        const isMaxedOut = dbCoupon.maxUses > 0 && dbCoupon.usedCount >= dbCoupon.maxUses;
+        if (isMaxedOut) {
+          return NextResponse.json({ error: 'This coupon has reached its maximum usage limit.' }, { status: 400 });
+        }
+
+        const meetsMinAmount = subtotal >= Number(dbCoupon.minOrderAmount || 0);
+        if (!meetsMinAmount) {
+          return NextResponse.json({
+            error: `Minimum order amount of Rs. ${Number(dbCoupon.minOrderAmount).toLocaleString()} required for this coupon.`
+          }, { status: 400 });
+        }
+
+        appliedCoupon = dbCoupon;
+        if (dbCoupon.discountType === 'PERCENTAGE') {
+          verifiedDiscount = Math.round((subtotal * Number(dbCoupon.discount)) / 100);
         } else {
-          // Standard voucher fallback protection
-          if (couponCode === 'FAHAD10' || couponCode === 'VIP10' || couponCode === 'LUXURY10') {
-            verifiedDiscount = Math.round((subtotal * 10) / 100);
-            appliedCoupon = { code: couponCode, id: null };
-          } else if (couponCode === 'FAHAD20') {
-            verifiedDiscount = Math.round((subtotal * 20) / 100);
-            appliedCoupon = { code: couponCode, id: null };
-          } else if (couponCode === 'ROYAL50') {
-            verifiedDiscount = Math.round((subtotal * 50) / 100);
-            appliedCoupon = { code: couponCode, id: null };
-          }
+          verifiedDiscount = Number(dbCoupon.discount);
         }
       }
 
@@ -1019,67 +1030,107 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const shippingProvince = body.shippingProvince || shippingInfo.province || body.province || 'Punjab';
       const shippingNotes = body.shippingNotes || shippingInfo.notes || body.notes || '';
 
-      const newOrder = await (db as any).$transaction(async (tx: any) => {
-        const order = await tx.order.create({
-          data: {
-            user: { connect: { id: targetUserId } },
-            shippingName,
-            shippingPhone,
-            shippingEmail: shippingEmail || 'customer@fahadaliinterior.com',
-            shippingAddress,
-            shippingCity,
-            shippingProvince,
-            shippingNotes,
-            paymentMethod: validPaymentMethod,
-            couponCode: appliedCoupon?.code || null,
-            subtotal,
-            gst,
-            discount,
-            totalAmount,
-            status: 'PENDING',
-            paymentStatus: 'PENDING',
-            items: {
-              create: formattedItems,
-            },
-          },
-          include: { items: true },
-        });
+      let newOrder: any;
+      try {
+        newOrder = await (db as any).$transaction(async (tx: any) => {
+          // Atomic inventory stock decrement for purchased items - fail if insufficient stock
+          for (const item of formattedItems) {
+            const stockUpdate = await tx.product.updateMany({
+              where: {
+                id: item.productId,
+                deletedAt: null,
+                stockCount: { gte: item.quantity },
+              },
+              data: {
+                stockCount: { decrement: item.quantity },
+              },
+            });
 
-        // Track coupon usage atomically if applied
-        if (appliedCoupon?.id) {
-          await tx.coupon.update({
-            where: { id: appliedCoupon.id },
-            data: { usedCount: { increment: 1 } },
-          }).catch(() => null);
-        }
-
-        // Record audit trail within the transaction
-        await tx.auditLog.create({
-          data: {
-            userId: targetUserId,
-            action: 'ORDER_PLACED',
-            entity: 'Order',
-            entityId: order.id,
-            metadata: {
-              totalAmount: Number(totalAmount),
-              itemCount: formattedItems.length,
-              paymentMethod: validPaymentMethod,
-            },
-          },
-        }).catch(() => null);
-
-        // Atomic inventory stock decrement for purchased items
-        for (const item of formattedItems) {
-          if (item.productId) {
-            await tx.product.updateMany({
-              where: { id: item.productId, stockCount: { gte: item.quantity } },
-              data: { stockCount: { decrement: item.quantity } },
-            }).catch(() => null);
+            if (stockUpdate.count === 0) {
+              throw new Error(`INSUFFICIENT_STOCK:${item.name}`);
+            }
           }
-        }
 
-        return order;
-      });
+          // Track coupon usage atomically if applied - fail if maxUses reached
+          if (appliedCoupon?.id) {
+            const couponCondition: any = {
+              id: appliedCoupon.id,
+              isActive: true,
+              deletedAt: null,
+            };
+            if (appliedCoupon.maxUses > 0) {
+              couponCondition.usedCount = { lt: appliedCoupon.maxUses };
+            }
+
+            const couponUpdate = await tx.coupon.updateMany({
+              where: couponCondition,
+              data: { usedCount: { increment: 1 } },
+            });
+
+            if (couponUpdate.count === 0) {
+              throw new Error('COUPON_LIMIT_REACHED:Coupon usage limit reached or coupon no longer valid.');
+            }
+          }
+
+          const order = await tx.order.create({
+            data: {
+              user: { connect: { id: targetUserId } },
+              shippingName,
+              shippingPhone,
+              shippingEmail: shippingEmail || 'customer@fahadaliinterior.com',
+              shippingAddress,
+              shippingCity,
+              shippingProvince,
+              shippingNotes,
+              paymentMethod: validPaymentMethod,
+              couponCode: appliedCoupon?.code || null,
+              subtotal,
+              gst,
+              discount,
+              totalAmount,
+              status: 'PENDING',
+              paymentStatus: 'PENDING',
+              items: {
+                create: formattedItems,
+              },
+            },
+            include: { items: true },
+          });
+
+          // Record audit trail within the transaction
+          await tx.auditLog.create({
+            data: {
+              userId: targetUserId,
+              action: 'ORDER_PLACED',
+              entity: 'Order',
+              entityId: order.id,
+              metadata: {
+                totalAmount: Number(totalAmount),
+                itemCount: formattedItems.length,
+                paymentMethod: validPaymentMethod,
+              },
+            },
+          }).catch(() => null);
+
+          return order;
+        });
+      } catch (txError: any) {
+        const msg = String(txError?.message || '');
+        if (msg.startsWith('INSUFFICIENT_STOCK:')) {
+          const prodName = msg.split(':')[1] || 'one of the selected items';
+          return NextResponse.json(
+            { error: `Insufficient stock for "${prodName}". Please adjust quantity or select another item.` },
+            { status: 400 }
+          );
+        }
+        if (msg.startsWith('COUPON_LIMIT_REACHED:')) {
+          return NextResponse.json(
+            { error: 'This coupon has reached its maximum usage limit or is no longer valid.' },
+            { status: 400 }
+          );
+        }
+        throw txError;
+      }
 
       // Dispatch real confirmation email via Gmail SMTP (awaited so serverless runtime does not abort)
       await sendOrderConfirmationEmail({
@@ -1713,7 +1764,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 5. GET /admin/reviews
-    if (method === 'GET' && (segment === 'admin/reviews' || segment === 'v1/admin/reviews')) {
+    if (method === 'GET' && (normalizedSegment === 'admin/reviews' || segment === 'admin/reviews' || segment === 'v1/admin/reviews')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const reviews = await db.review.findMany({
         where: { deletedAt: null },
         include: {
@@ -1726,13 +1781,21 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 6. GET /admin/inquiries
-    if (method === 'GET' && (segment === 'admin/inquiries' || segment === 'v1/admin/inquiries')) {
+    if (method === 'GET' && (normalizedSegment === 'admin/inquiries' || segment === 'admin/inquiries' || segment === 'v1/admin/inquiries')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const inquiries = await db.inquiry.findMany({ where: { deletedAt: null }, orderBy: { createdAt: 'desc' } }).catch(() => []);
       return NextResponse.json(inquiries);
     }
 
     // 7. GET /admin/messages
-    if (method === 'GET' && (segment === 'admin/messages' || segment === 'v1/admin/messages')) {
+    if (method === 'GET' && (normalizedSegment === 'admin/messages' || segment === 'admin/messages' || segment === 'v1/admin/messages')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const usersWithMessages = await db.user.findMany({
         where: { messages: { some: {} } },
         select: {
@@ -1764,7 +1827,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       return NextResponse.json(threads);
     }
 
-    if (method === 'POST' && (segment.includes('admin/messages') || segment.includes('v1/admin/messages'))) {
+    if (method === 'POST' && (normalizedSegment === 'admin/messages' || segment === 'admin/messages' || segment === 'v1/admin/messages')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json().catch(() => ({}));
       const userId = body.userId || body.threadId;
       const audioUrl = body.audioUrl;
@@ -1959,7 +2026,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 7.2 GET /api/v1/ai/admin/analytics
-    if (method === 'GET' && (segment === 'ai/admin/analytics' || segment === 'v1/ai/admin/analytics' || segment === 'admin/ai/analytics')) {
+    if (method === 'GET' && (normalizedSegment === 'ai/admin/analytics' || normalizedSegment === 'admin/ai/analytics' || segment === 'ai/admin/analytics' || segment === 'v1/ai/admin/analytics' || segment === 'admin/ai/analytics')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const sessions = await db.chatSession.findMany({
         include: {
           messages: {
@@ -2147,7 +2218,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 8.1 GET /admin/customers
-    if (method === 'GET' && (segment === 'admin/customers' || segment === 'v1/admin/customers')) {
+    if (method === 'GET' && (normalizedSegment === 'admin/customers' || segment === 'admin/customers' || segment === 'v1/admin/customers')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const users = await db.user.findMany({
         where: { deletedAt: null },
         include: {
@@ -2241,7 +2316,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 8.2 GET /admin/customers/stats
-    if (method === 'GET' && (segment === 'admin/customers/stats' || segment === 'v1/admin/customers/stats')) {
+    if (method === 'GET' && (normalizedSegment === 'admin/customers/stats' || segment === 'admin/customers/stats' || segment === 'v1/admin/customers/stats')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const users = await db.user.findMany({
         where: { deletedAt: null },
         include: { orders: { where: { deletedAt: null } } },
@@ -2270,7 +2349,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 8.3 GET /admin/customers/analytics
-    if (method === 'GET' && (segment === 'admin/customers/analytics' || segment === 'v1/admin/customers/analytics')) {
+    if (method === 'GET' && (normalizedSegment === 'admin/customers/analytics' || segment === 'admin/customers/analytics' || segment === 'v1/admin/customers/analytics')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const users = await db.user.findMany({
         where: { deletedAt: null },
         include: { orders: { where: { deletedAt: null } } },
@@ -2297,8 +2380,13 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 8.4 GET /admin/customers/:id
-    if (method === 'GET' && (segment.startsWith('admin/customers/') || segment.startsWith('v1/admin/customers/')) && !segment.endsWith('stats') && !segment.endsWith('analytics')) {
-      const id = segment.split('/').pop();
+    const customerIdMatch = normalizedSegment.match(/^admin\/customers\/([^/]+)$/) || segment.match(/^(?:v1\/)?admin\/customers\/([^/]+)$/);
+    if (method === 'GET' && customerIdMatch && !['stats', 'analytics', 'export', 'bulk-action'].includes(customerIdMatch[1])) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
+      const id = customerIdMatch[1];
       const u = await db.user.findFirst({
         where: { id, deletedAt: null },
         include: {
@@ -2399,9 +2487,13 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 8.5 PATCH /admin/customers/:id/lock
-    if (method === 'PATCH' && (segment.includes('admin/customers/') && segment.endsWith('/lock'))) {
-      const parts = segment.split('/');
-      const id = parts[parts.indexOf('customers') + 1];
+    const customerLockMatch = normalizedSegment.match(/^admin\/customers\/([^/]+)\/lock$/) || segment.match(/^(?:v1\/)?admin\/customers\/([^/]+)\/lock$/);
+    if (method === 'PATCH' && customerLockMatch) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
+      const id = customerLockMatch[1];
       const body = await req.json().catch(() => ({}));
       const block = Boolean(body.block);
       const lockedUntil = block ? new Date(Date.now() + (body.durationMinutes || 1440) * 60 * 1000) : null;
@@ -2415,9 +2507,13 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 8.6 PATCH /admin/customers/:id/segment
-    if (method === 'PATCH' && (segment.includes('admin/customers/') && segment.endsWith('/segment'))) {
-      const parts = segment.split('/');
-      const id = parts[parts.indexOf('customers') + 1];
+    const customerSegmentMatch = normalizedSegment.match(/^admin\/customers\/([^/]+)\/segment$/) || segment.match(/^(?:v1\/)?admin\/customers\/([^/]+)\/segment$/);
+    if (method === 'PATCH' && customerSegmentMatch) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
+      const id = customerSegmentMatch[1];
       const body = await req.json().catch(() => ({}));
 
       if (body.segment) {
@@ -2431,17 +2527,15 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 8.7 POST /admin/customers/:id/notes
-    if (method === 'POST' && (segment.includes('admin/customers/') && segment.endsWith('/notes'))) {
-      const parts = segment.split('/');
-      const id = parts[parts.indexOf('customers') + 1];
-      const body = await req.json().catch(() => ({}));
-      const adminUser = await getUserFromSessionOrToken(req);
-
-      let authorId = adminUser?.id;
-      if (!authorId) {
-        const firstAdmin = await db.user.findFirst({ where: { role: 'ADMIN' } });
-        authorId = firstAdmin?.id || id;
+    const customerNotesMatch = normalizedSegment.match(/^admin\/customers\/([^/]+)\/notes$/) || segment.match(/^(?:v1\/)?admin\/customers\/([^/]+)\/notes$/);
+    if (method === 'POST' && customerNotesMatch) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
       }
+      const id = customerNotesMatch[1];
+      const body = await req.json().catch(() => ({}));
+      const authorId = user?.id || id;
 
       const note = await db.customerNote.create({
         data: {
@@ -2456,7 +2550,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 8.8 PATCH /admin/customers/bulk-action
-    if (method === 'PATCH' && (segment === 'admin/customers/bulk-action' || segment === 'v1/admin/customers/bulk-action')) {
+    if (method === 'PATCH' && (normalizedSegment === 'admin/customers/bulk-action' || segment === 'admin/customers/bulk-action' || segment === 'v1/admin/customers/bulk-action')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json().catch(() => ({}));
       const ids: string[] = Array.isArray(body.ids) ? body.ids : [];
       const action: string = body.action || '';
@@ -2484,7 +2582,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 8.9 GET /admin/customers/export
-    if (method === 'GET' && (segment === 'admin/customers/export' || segment === 'v1/admin/customers/export')) {
+    if (method === 'GET' && (normalizedSegment === 'admin/customers/export' || segment === 'admin/customers/export' || segment === 'v1/admin/customers/export')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const idsParam = req.nextUrl.searchParams.get('ids');
       const ids = idsParam ? idsParam.split(',').filter(Boolean) : undefined;
 
@@ -2513,7 +2615,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 9. POST & PUT /admin/products
-    if (method === 'POST' && (segment === 'admin/products' || segment === 'v1/admin/products')) {
+    if (method === 'POST' && (normalizedSegment === 'admin/products' || segment === 'admin/products' || segment === 'v1/admin/products')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json();
       if (!body?.name?.trim()) {
         return NextResponse.json({ error: 'Product name is required' }, { status: 400 });
@@ -2555,7 +2661,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       });
     }
 
-    if ((method === 'PUT' || method === 'PATCH') && (segment === 'admin/products' || segment === 'v1/admin/products')) {
+    if ((method === 'PUT' || method === 'PATCH') && (normalizedSegment === 'admin/products' || segment === 'admin/products' || segment === 'v1/admin/products')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json();
       const { id, ...rest } = body;
       if (!id) return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
@@ -2590,7 +2700,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 10. DELETE /admin/products - 100% PERMANENT POSTGRESQL HARD DELETE
-    if (method === 'DELETE' && (segment === 'admin/products' || segment === 'v1/admin/products' || segment.includes('admin/products'))) {
+    if (method === 'DELETE' && (normalizedSegment === 'admin/products' || /^admin\/products\/[^/]+$/.test(normalizedSegment) || segment === 'admin/products' || segment === 'v1/admin/products')) {
       const user = await getUserFromSessionOrToken(req);
       if (!requireAdmin(user)) {
         return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
@@ -2635,7 +2745,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 11. PUT & PATCH /admin/orders
-    if ((method === 'PUT' || method === 'PATCH') && (segment === 'admin/orders' || segment === 'v1/admin/orders' || segment.includes('admin/orders'))) {
+    if ((method === 'PUT' || method === 'PATCH') && (normalizedSegment === 'admin/orders' || /^admin\/orders\/[^/]+$/.test(normalizedSegment) || segment === 'admin/orders' || segment === 'v1/admin/orders')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json().catch(() => ({}));
       if (!body?.id) {
         return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
@@ -2694,13 +2808,22 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 11.0 GET /public/settings, /v1/public/settings, /settings, /admin/settings
     if (method === 'GET' && (
+      normalizedSegment === 'public/settings' ||
       segment === 'public/settings' ||
       segment === 'v1/public/settings' ||
+      normalizedSegment === 'settings' ||
       segment === 'settings' ||
       segment === 'v1/settings' ||
+      normalizedSegment === 'admin/settings' ||
       segment === 'admin/settings' ||
       segment === 'v1/admin/settings'
     )) {
+      if (normalizedSegment === 'admin/settings' || segment === 'admin/settings' || segment === 'v1/admin/settings') {
+        const user = await getUserFromSessionOrToken(req);
+        if (!requireAdmin(user)) {
+          return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+        }
+      }
       const existing = await db.settings.findFirst().catch(() => null);
       const defaultSettings = {
         id: 'singleton',
@@ -2727,7 +2850,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 11.1 PUT & POST /admin/settings
-    if ((method === 'PUT' || method === 'POST') && (segment === 'admin/settings' || segment === 'v1/admin/settings')) {
+    if ((method === 'PUT' || method === 'POST') && (normalizedSegment === 'admin/settings' || segment === 'admin/settings' || segment === 'v1/admin/settings')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json();
       const existing = await db.settings.findFirst();
       let updated;
@@ -2765,7 +2892,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 12. PUT & DELETE /admin/reviews
-    if (method === 'PUT' && (segment === 'admin/reviews' || segment === 'v1/admin/reviews' || segment.includes('admin/reviews'))) {
+    if (method === 'PUT' && (normalizedSegment === 'admin/reviews' || segment === 'admin/reviews' || segment === 'v1/admin/reviews')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json().catch(() => ({}));
       if (!body?.id) {
         return NextResponse.json({ error: 'Review ID is required' }, { status: 400 });
@@ -2798,7 +2929,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }
     }
 
-    if (method === 'DELETE' && (segment === 'admin/reviews' || segment === 'v1/admin/reviews')) {
+    if (method === 'DELETE' && (normalizedSegment === 'admin/reviews' || segment === 'admin/reviews' || segment === 'v1/admin/reviews')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const searchId = req.nextUrl.searchParams.get('id');
       const body = await req.json().catch(() => ({}));
       const id = body.id || searchId;
@@ -2821,7 +2956,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 13. PUT /admin/inquiries
-    if (method === 'PUT' && (segment === 'admin/inquiries' || segment === 'v1/admin/inquiries')) {
+    if (method === 'PUT' && (normalizedSegment === 'admin/inquiries' || segment === 'admin/inquiries' || segment === 'v1/admin/inquiries')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json();
       const updated = await db.inquiry.update({
         where: { id: body.id },
@@ -2831,7 +2970,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 13.1 PUT /admin/account
-    if ((method === 'PUT' || method === 'POST') && (segment === 'admin/account' || segment === 'v1/admin/account')) {
+    if ((method === 'PUT' || method === 'POST') && (normalizedSegment === 'admin/account' || segment === 'admin/account' || segment === 'v1/admin/account')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json();
       const admin = await db.user.findFirst({
         where: { role: 'ADMIN', deletedAt: null },
@@ -2849,7 +2992,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 13.2 PUT /admin/password
-    if ((method === 'PUT' || method === 'POST') && (segment === 'admin/password' || segment === 'v1/admin/password')) {
+    if ((method === 'PUT' || method === 'POST') && (normalizedSegment === 'admin/password' || segment === 'admin/password' || segment === 'v1/admin/password')) {
+      const user = await getUserFromSessionOrToken(req);
+      if (!requireAdmin(user)) {
+        return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
+      }
       const body = await req.json();
       const { currentPassword, newPassword } = body;
       const admin = await db.user.findFirst({
@@ -3108,7 +3255,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     }
 
     // 23. Admin Recycle Bin (GET, POST, DELETE /admin/recycle-bin)
-    if (segment.includes('admin/recycle-bin') || segment.includes('recycle-bin')) {
+    if (normalizedSegment === 'admin/recycle-bin' || /^admin\/recycle-bin\/.*$/.test(normalizedSegment) || segment === 'admin/recycle-bin' || segment === 'v1/admin/recycle-bin') {
       const user = await getUserFromSessionOrToken(req);
       if (!requireAdmin(user)) {
         return NextResponse.json({ error: 'Forbidden. Executive admin credentials required.' }, { status: 403 });
