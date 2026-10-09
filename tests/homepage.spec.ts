@@ -39,7 +39,7 @@ test.describe('Homepage', () => {
     if (await aiBtn.count() > 0) {
       await aiBtn.click();
       await page.waitForTimeout(500);
-      const chatWidget = page.locator('text=/Executive AI|Advisor|FAHAD ALI/i, [role="dialog"]').first();
+      const chatWidget = page.locator('[role="dialog"]').or(page.locator('text=/Executive AI/i')).first();
       await expect(chatWidget).toBeVisible();
     }
   });
