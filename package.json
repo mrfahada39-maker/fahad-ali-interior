@@ -33,7 +33,8 @@
     "browserslist": "^4.29.0",
     "deepmerge-ts": "^8.0.2",
     "brace-expansion": "^1.1.21",
-    "sharp": "^0.35.4"
+    "handlebars": "^4.7.10",
+    "source-map-js": "^1.2.2"
   },
   "allowScripts": {
     "@prisma/client": true,
@@ -68,7 +69,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.4",
-    "sharp": "^0.35.4",
+    "sharp": "^0.35.5",
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1",
     "web-push": "^3.6.7",
