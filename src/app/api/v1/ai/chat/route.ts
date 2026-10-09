@@ -7,6 +7,9 @@ import { VectorIndexer, HybridSearchEngine } from '@/lib/ai/rag';
 import { RoomAnalyzer } from '@/lib/ai/room-analyzer';
 import { MultiProviderLlm, LlmMessage } from '@/lib/ai/llm-provider';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import crypto from 'crypto';
+import { getToken } from 'next-auth/jwt';
+import { AI_SESSION_COOKIE_NAME, signAiSessionId, verifyAiSessionCookie } from '@/lib/ai-session-binding';
 
 /** High-capacity Dynamic AI Response Generator (ChatGPT/Claude/Gemini style) */
 function generateDynamicResponse(
@@ -235,8 +238,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const sessionId = body.sessionId || `session-${Date.now()}`;
+    const body = await request.json().catch(() => ({}));
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const userId = (token?.id as string) || null;
+
+    // H6: Server-side UUID generation & binding to signed httpOnly cookie or user
+    const cookieVal = request.cookies.get(AI_SESSION_COOKIE_NAME)?.value;
+    const verifiedCookieSession = verifyAiSessionCookie(cookieVal);
+
+    let sessionId: string;
+    if (body.sessionId) {
+      if (verifiedCookieSession && verifiedCookieSession === body.sessionId) {
+        sessionId = body.sessionId;
+      } else if (userId) {
+        const existingSession = await db.chatSession.findUnique({
+          where: { sessionId: body.sessionId },
+          select: { userId: true },
+        }).catch(() => null);
+        if (existingSession && existingSession.userId === userId) {
+          sessionId = body.sessionId;
+        } else {
+          sessionId = crypto.randomUUID();
+        }
+      } else {
+        sessionId = crypto.randomUUID();
+      }
+    } else if (verifiedCookieSession) {
+      sessionId = verifiedCookieSession;
+    } else {
+      sessionId = crypto.randomUUID();
+    }
+
     // ── Input length cap: max 2000 chars to prevent token exhaustion ──
     const rawUserQuery = (body.message || 'Show catalog').trim().slice(0, 2000);
     const requestedRole: AgentRole = body.agentRole || 'sales';
@@ -247,6 +279,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: {
+          sessionId,
           replyText: `Assalam-o-Alaikum! Main FAHAD ALI Executive AI Employee hoon 👑. Main aapki kis tarah madad kar sakta hoon?`,
           suggestedPrompts: ['🛋️ View Sheesham Sofas', '🛏️ Royal Sheesham Beds', '👑 Request Custom Quote'],
         },
@@ -273,12 +306,14 @@ export async function POST(request: NextRequest) {
         where: { sessionId },
         create: {
           sessionId,
+          userId,
           customerName: body.customerName || null,
           city: body.city || null,
           status: isEscalationIntent ? 'escalated' : 'active',
         },
         update: {
           updatedAt: new Date(),
+          ...(userId ? { userId } : {}),
           ...(isEscalationIntent ? { status: 'escalated' } : {}),
         },
       });
@@ -512,9 +547,10 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].`;
       console.warn('Chat message save notice:', e);
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       data: {
+        sessionId,
         replyText,
         agentRole: activeAgentRole,
         intent: activeAgentRole.toUpperCase(),
@@ -526,6 +562,16 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].`;
         suggestedPrompts,
       },
     });
+
+    res.cookies.set(AI_SESSION_COOKIE_NAME, signAiSessionId(sessionId), {
+      path: '/',
+      httpOnly: true,
+      secure: request.url.startsWith('https://') || process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+    });
+
+    return res;
   } catch (err: any) {
     console.error('Global Error in /api/v1/ai/chat route:', err);
     return NextResponse.json({

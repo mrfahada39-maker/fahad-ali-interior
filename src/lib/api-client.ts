@@ -14,7 +14,6 @@ export function getEnterpriseAccessToken(): string | null {
   try {
     return (
       sessionStorage.getItem('enterprise_access_token') ||
-      localStorage.getItem('enterprise_access_token') ||
       sessionStorage.getItem('has_enterprise_session')
     );
   } catch {
@@ -25,7 +24,7 @@ export function getEnterpriseAccessToken(): string | null {
 export function getEnterpriseRefreshToken(): string | null {
   if (typeof window === 'undefined') return null;
   try {
-    return sessionStorage.getItem('enterprise_refresh_token') || localStorage.getItem('enterprise_refresh_token');
+    return sessionStorage.getItem('enterprise_refresh_token');
   } catch {
     return null;
   }
@@ -37,12 +36,13 @@ export function setEnterpriseTokens(accessToken: string, refreshToken: string): 
     sessionStorage.setItem('has_enterprise_session', 'present');
     if (accessToken) {
       sessionStorage.setItem('enterprise_access_token', accessToken);
-      localStorage.setItem('enterprise_access_token', accessToken);
     }
     if (refreshToken) {
       sessionStorage.setItem('enterprise_refresh_token', refreshToken);
-      localStorage.setItem('enterprise_refresh_token', refreshToken);
     }
+    // H4: Prohibit tokens from being persisted to localStorage (protect against XSS persistence)
+    localStorage.removeItem('enterprise_access_token');
+    localStorage.removeItem('enterprise_refresh_token');
   } catch { /* ignore */ }
 }
 

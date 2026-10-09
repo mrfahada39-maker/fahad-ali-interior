@@ -6,6 +6,7 @@ import { verifySync } from 'otplib';
 import { db } from '@/lib/db';
 import { sessionRole } from '@/lib/enums';
 import { shouldSkipEmailVerification } from '@/lib/utils';
+import { decryptTotpSecret, verifyBackupCode } from '@/lib/totp-crypto';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isLocalAuth =
@@ -29,8 +30,10 @@ function getAdminEmails(): string[] {
   if (envEmails && envEmails.trim()) {
     return envEmails.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
   }
-  // Fallback defaults (set ADMIN_EMAILS in .env to override)
-  return ['mrfahada39@gmail.com'];
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ADMIN_EMAILS environment variable is required in production.');
+  }
+  return [];
 }
 
 function isAdminEmail(email: string): boolean {
@@ -84,14 +87,6 @@ const providers: NextAuthOptions['providers'] = [
         return null;
       }
 
-      // 3. Reset failed login attempts on successful password verification
-      if (user.loginAttempts > 0 || user.lockedUntil) {
-        await db.user.update({
-          where: { id: user.id },
-          data: { loginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
-        }).catch(() => {});
-      }
-
       if (!user.emailVerified) {
         if (!shouldSkipEmailVerification()) {
           throw new Error(
@@ -111,29 +106,56 @@ const providers: NextAuthOptions['providers'] = [
           throw new Error('2FA_REQUIRED');
         }
 
-        const isBackupCode = user.backupCodes?.includes(totpCode.toUpperCase());
-        if (isBackupCode) {
+        const recordFailed2Fa = async () => {
+          const attempts = (user.loginAttempts || 0) + 1;
+          const shouldLock = attempts >= 5;
           await db.user.update({
             where: { id: user.id },
             data: {
-              backupCodes: user.backupCodes.filter((c: string) => c !== totpCode.toUpperCase()),
+              loginAttempts: attempts,
+              lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+            },
+          }).catch(() => {});
+        };
+
+        const matchedBackup = verifyBackupCode(totpCode, user.backupCodes || []);
+        if (matchedBackup) {
+          await db.user.update({
+            where: { id: user.id },
+            data: {
+              backupCodes: (user.backupCodes || []).filter((c: string) => c !== matchedBackup),
             },
           });
-        } else if (user.totpSecret) {
+        } else if (!user.totpSecret) {
+          // H3: Fail closed — missing totpSecret fails login (no 6-digit wildcard)
+          await recordFailed2Fa();
+          throw new Error('INVALID_2FA_CODE');
+        } else {
+          const plainSecret = decryptTotpSecret(user.totpSecret);
+          if (!plainSecret) {
+            await recordFailed2Fa();
+            throw new Error('INVALID_2FA_CODE');
+          }
+
           try {
-            const check = verifySync({ token: totpCode, secret: user.totpSecret });
+            const check = verifySync({ token: totpCode, secret: plainSecret });
             if (!check || !check.valid) {
+              await recordFailed2Fa();
               throw new Error('INVALID_2FA_CODE');
             }
           } catch {
-            throw new Error('INVALID_2FA_CODE');
-          }
-        } else {
-          const isValidOtpFormat = /^\d{6}$/.test(totpCode);
-          if (!isValidOtpFormat) {
+            await recordFailed2Fa();
             throw new Error('INVALID_2FA_CODE');
           }
         }
+      }
+
+      // Reset failed login attempts only AFTER both password and 2FA succeed
+      if (user.loginAttempts > 0 || user.lockedUntil) {
+        await db.user.update({
+          where: { id: user.id },
+          data: { loginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
+        }).catch(() => {});
       }
 
       return {
@@ -229,27 +251,34 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as { role?: string }).role;
         token.id = user.id;
       }
-      const emailLower = (token.email || '').toLowerCase().trim();
-      if (isAdminEmail(emailLower)) {
-        token.role = 'ADMIN';
-      }
-      // Only re-fetch role from DB on explicit session.update() triggers
-      if (trigger === 'update' && token.id) {
+
+      // H5: In the NextAuth jwt callback, re-check role, deletedAt and lockedUntil
+      // from the DB at least every few minutes, so banned/deleted users lose access.
+      const lastCheck = typeof (token as any).lastCheckedAt === 'number' ? (token as any).lastCheckedAt : 0;
+      const now = Date.now();
+      if (token.id && (!lastCheck || now - lastCheck > 5 * 60 * 1000 || trigger === 'update')) {
         try {
           const dbUser = await db.user.findUnique({
             where: { id: token.id as string },
-            select: { role: true },
+            select: { role: true, deletedAt: true, lockedUntil: true },
           });
-          if (dbUser) {
-            token.role = sessionRole(dbUser.role);
+          if (!dbUser || dbUser.deletedAt || (dbUser.lockedUntil && new Date(dbUser.lockedUntil) > new Date())) {
+            (token as any).revoked = true;
+            (token as any).role = undefined;
+            return token;
           }
+          token.role = sessionRole(dbUser.role);
+          (token as any).lastCheckedAt = now;
         } catch {
-          // Silently ignore DB errors — keep existing token role
+          // Preserve existing token on transient DB network error
         }
       }
       return token;
     },
     async session({ session, token }) {
+      if ((token as any)?.revoked) {
+        return null as any;
+      }
       if (session.user) {
         (session.user as { role?: string }).role = token.role as string;
         (session.user as { id?: string }).id = token.id as string;

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate secure 6-digit OTP code & hex token
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = crypto.randomInt(100000, 1000000).toString();
     const token = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
@@ -44,12 +44,6 @@ export async function POST(req: NextRequest) {
     // Clean old tokens and save new token
     await db.passwordResetToken.deleteMany({
       where: { userId: user.id },
-    }).catch(() => {});
-
-    // Clear any previous lockout so user has 5 fresh attempts with the new code
-    await db.user.update({
-      where: { id: user.id },
-      data: { loginAttempts: 0, lockedUntil: null },
     }).catch(() => {});
 
     await db.passwordResetToken.create({
@@ -60,10 +54,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const hostHeader = req.headers.get('x-forwarded-host') || req.headers.get('host');
-    const protoHeader = req.headers.get('x-forwarded-proto') || (req.url.startsWith('https') ? 'https' : 'http');
-    const requestOrigin = hostHeader ? `${protoHeader}://${hostHeader}` : req.nextUrl.origin;
-    const siteUrl = requestOrigin || getSiteUrl();
+    const siteUrl = getSiteUrl();
     const resetUrl = `${siteUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
     await sendPasswordResetEmail({

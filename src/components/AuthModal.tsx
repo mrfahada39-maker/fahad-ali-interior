@@ -76,31 +76,6 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
 
     setLoading(true);
     try {
-      const checkRes = await fetch(`/api/auth/check-2fa?email=${encodeURIComponent(loginData.email)}`);
-      const checkData = await checkRes.json().catch(() => ({ requires2fa: false }));
-
-      if (checkData?.requires2fa) {
-        const res = await apiFetchJsonWithStatus<{
-          requires2fa?: boolean;
-          twoFactorToken?: string;
-        }>('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: loginData.email, password: loginData.password }),
-        });
-
-        if (!res.ok) {
-          toast.error('Invalid email or password');
-          return;
-        }
-
-        if (res.data?.twoFactorToken) {
-          setTwoFactorToken(res.data.twoFactorToken);
-          setTwoFactorStep(true);
-          return;
-        }
-      }
-
       const authRes = await signIn('credentials', {
         email: loginData.email,
         password: loginData.password,
@@ -108,6 +83,10 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
       });
 
       if (authRes?.error) {
+        if (authRes.error.includes('2FA_REQUIRED')) {
+          setTwoFactorStep(true);
+          return;
+        }
         if (authRes.error.toLowerCase().includes('verify')) {
           toast.error(authRes.error);
         } else {
@@ -137,26 +116,17 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
     }
     setTwoFactorLoading(true);
     try {
-      const res = await apiFetchJsonWithStatus<Record<string, unknown>>('/api/auth/login/2fa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ twoFactorToken, token: twoFactorCode }),
-      });
-
-      if (!res.ok) {
-        toast.error('Invalid verification code. Try again.');
-        return;
-      }
-
       const authRes = await signIn('credentials', {
         email: loginData.email,
         password: loginData.password,
+        totpCode: twoFactorCode,
         redirect: false,
       });
 
       if (authRes?.error) {
-        window.location.reload();
+        toast.error('Invalid verification code. Try again.');
       } else {
+        setEnterpriseTokens('present', '');
         toast.success('Welcome back!');
         onClose();
         const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -167,11 +137,6 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
           router.push(nextUrl);
         }
       }
-    } catch {
-      toast.error('Verification failed. Please try logging in again.');
-      setTwoFactorStep(false);
-      setTwoFactorToken('');
-      setTwoFactorCode('');
     } finally {
       setTwoFactorLoading(false);
     }

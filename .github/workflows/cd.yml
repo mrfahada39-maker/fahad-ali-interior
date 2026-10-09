@@ -1,13 +1,17 @@
 name: Continuous Deployment (CD)
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Continuous Integration (CI)"]
     branches: [ main ]
+    types:
+      - completed
 
 jobs:
   deploy-vercel-frontend:
     name: Trigger Vercel Deployment
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Trigger Vercel Deploy Webhook
         env:

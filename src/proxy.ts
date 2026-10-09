@@ -38,7 +38,7 @@ function isLocalHost(request: NextRequest): boolean {
 }
 
 function buildContentSecurityPolicy(nonce: string, isProduction: boolean, httpsOnly: boolean): string {
-  const scriptSrc = `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
+  const scriptSrc = `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
   const styleDirectives = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "style-src-attr 'unsafe-inline'",
@@ -48,11 +48,11 @@ function buildContentSecurityPolicy(nonce: string, isProduction: boolean, httpsO
     "default-src 'self'",
     scriptSrc,
     ...styleDirectives,
-    "img-src 'self' data: https: blob: http:",
-    "media-src 'self' data: blob: https: http:",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://va.vercel-scripts.com",
+    "media-src 'self' data: blob: https://res.cloudinary.com",
     "font-src 'self' https://fonts.gstatic.com data:",
-    "manifest-src 'self' https: data: blob:",
-    "connect-src 'self' https: http: ws: wss: https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+    "manifest-src 'self' data: blob:",
+    "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com https://res.cloudinary.com https://images.unsplash.com wss:",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -111,6 +111,12 @@ export async function proxy(request: NextRequest) {
     const ip = getClientIp(request);
 
     if (isNextAuthInternalRoute(pathname)) {
+      if (pathname.includes('/auth/callback/credentials')) {
+        const rl = await rateLimit(`login:${ip}`, 'login');
+        if (!rl.allowed) {
+          return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
+        }
+      }
       if (isUnsafeMethod(request.method) && !isSameOriginRequest(request)) {
         return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
       }

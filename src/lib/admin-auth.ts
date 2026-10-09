@@ -24,7 +24,32 @@ export interface VerifiedAdmin {
 /** Admin tokens are issued with a 24h cookie lifetime; enforce the same on verify. */
 export const ADMIN_TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-const TOKEN_PATTERN = /fai_token_([^_]+)_([^_]+)_([a-f0-9]+)/;
+const TOKEN_PATTERN = /fai_token_(.+)_(\d+)_([a-f0-9]{64})/;
+
+const revokedAdminSignatures = new Set<string>();
+
+export function getAdminTokenSecret(): string {
+  const adminSecret = process.env.ADMIN_TOKEN_SECRET;
+  if (adminSecret && adminSecret.length >= 32) return adminSecret;
+  if (process.env.NODE_ENV === 'production' && !adminSecret) {
+    throw new Error('ADMIN_TOKEN_SECRET environment variable (min 32 chars) is required in production.');
+  }
+  return adminSecret || process.env.NEXTAUTH_SECRET || 'fai_default_admin_token_secret_min_32_chars_fallback';
+}
+
+export function revokeAdminToken(raw: string | null | undefined): boolean {
+  if (!raw) return false;
+  const clean = raw.replace(/^Bearer\s+/i, '').trim();
+  const match = clean.match(TOKEN_PATTERN);
+  if (!match) return false;
+  const [, , , signature] = match;
+  revokedAdminSignatures.add(signature);
+  return true;
+}
+
+export function isTokenRevoked(signature: string): boolean {
+  return revokedAdminSignatures.has(signature);
+}
 
 export function isAdminRole(role: unknown): boolean {
   const r = String(role ?? '').toUpperCase();
@@ -35,13 +60,16 @@ export function isAdminRole(role: unknown): boolean {
 export function verifySignedTokenUserId(raw: string | null | undefined, now = Date.now()): string | null {
   if (!raw || !raw.includes('fai_token_')) return null;
 
-  const secret = process.env.NEXTAUTH_SECRET;
-  if (!secret || secret.length < 32) return null;
-
-  const match = raw.match(TOKEN_PATTERN);
+  const clean = raw.replace(/^Bearer\s+/i, '').trim();
+  const match = clean.match(TOKEN_PATTERN);
   if (!match) return null;
 
   const [, userId, timestampStr, signature] = match;
+  if (isTokenRevoked(signature)) return null;
+
+  const secret = getAdminTokenSecret();
+  if (!secret || secret.length < 32) return null;
+
   const timestamp = parseInt(timestampStr, 10);
   if (Number.isNaN(timestamp)) return null;
 

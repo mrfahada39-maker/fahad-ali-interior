@@ -11,6 +11,8 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { getSiteUrl } from '@/lib/utils';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { encryptTotpSecret, hashBackupCode } from '@/lib/totp-crypto';
+import { getAdminTokenSecret } from '@/lib/admin-auth';
 import {
   moveToRecycleBin,
   listRecycleBinItems,
@@ -640,19 +642,15 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       if (!user) {
         return NextResponse.json({ success: true, message: 'If an account exists with this email, a reset link has been sent.' });
       }
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const code = crypto.randomInt(100000, 1000000).toString();
       const token = crypto.randomBytes(32).toString('hex');
       const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       await db.passwordResetToken.deleteMany({ where: { userId: user.id } }).catch(() => {});
-      await db.user.update({ where: { id: user.id }, data: { loginAttempts: 0, lockedUntil: null } }).catch(() => {});
       await db.passwordResetToken.create({
         data: { userId: user.id, tokenHash: `${tokenHash}:${code}`, expiresAt },
       });
-      const hostHeader = req.headers.get('x-forwarded-host') || req.headers.get('host');
-      const protoHeader = req.headers.get('x-forwarded-proto') || (req.url.startsWith('https') ? 'https' : 'http');
-      const requestOrigin = hostHeader ? `${protoHeader}://${hostHeader}` : req.nextUrl.origin;
-      const siteUrl = requestOrigin || getSiteUrl();
+      const siteUrl = getSiteUrl();
       const resetUrl = `${siteUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
       await sendPasswordResetEmail({ to: user.email, name: user.name || 'Valued Client', resetUrl, code });
       return NextResponse.json({ success: true, message: 'Password reset instructions have been sent to your email.' });
@@ -836,14 +834,15 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     // 2.90 Authentication: Check 2FA
     if ((segment === 'auth/check-2fa' || segment === 'v1/auth/check-2fa' || segment === 'check-2fa')) {
-      let email = req.nextUrl.searchParams.get('email');
-      if (!email && method === 'POST') {
-        const body = await req.json().catch(() => ({}));
-        email = body.email;
+      const ip = getClientIp(req);
+      const rl = await rateLimit(`check_2fa:${ip}`, 'login');
+      if (!rl.allowed) {
+        return NextResponse.json({ error: 'Too many requests. Please wait a minute and try again.' }, { status: 429 });
       }
-      if (!email) return NextResponse.json({ requires2fa: false });
-      const user = await db.user.findUnique({ where: { email: email.toLowerCase().trim() }, select: { totpEnabled: true } });
-      return NextResponse.json({ requires2fa: !!user?.totpEnabled });
+      return NextResponse.json({
+        requires2fa: false,
+        message: 'Two-factor requirements are resolved during credentials authentication.',
+      });
     }
 
     // 2.91 Contact & Inquiries
@@ -886,30 +885,36 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const body = await req.json().catch(() => ({}));
 
       let targetUserId = user?.id;
-      if (!targetUserId && body.shippingEmail) {
-        const emailLower = body.shippingEmail.toLowerCase().trim();
-        let existingUser = await db.user.findUnique({
-          where: { email: emailLower },
+      if (!targetUserId) {
+        const rawEmail = (body.shippingEmail || body.shippingInfo?.email || body.email || '').trim().toLowerCase();
+        if (!rawEmail || !rawEmail.includes('@')) {
+          return NextResponse.json(
+            { error: 'Please provide a valid shipping email address to complete your order.' },
+            { status: 400 }
+          );
+        }
+
+        // H1: Guest checkout must NOT attach an order to an existing user found by shippingEmail.
+        // Never create passwordless users from checkout. Link to isolated system guest account.
+        const SYSTEM_GUEST_EMAIL = 'guest-checkout@system.fahadali.local';
+        let guestSystemUser = await db.user.findUnique({
+          where: { email: SYSTEM_GUEST_EMAIL },
         }).catch(() => null);
 
-        if (!existingUser) {
-          existingUser = await db.user.create({
+        if (!guestSystemUser) {
+          guestSystemUser = await db.user.create({
             data: {
-              email: emailLower,
-              name: body.shippingName || 'Guest Customer',
-              phone: body.shippingPhone || '',
+              id: 'guest_system_account',
+              email: SYSTEM_GUEST_EMAIL,
+              name: 'Guest Customer',
+              phone: '',
+              role: 'USER',
+              password: null,
+              lockedUntil: new Date('2099-01-01'), // Disabled for credentials login
             },
           }).catch(() => null);
         }
-        targetUserId = existingUser?.id;
-      }
-
-      // Require either authenticated user or valid shippingEmail — never link to random user
-      if (!targetUserId) {
-        return NextResponse.json(
-          { error: 'Please provide a shipping email address to complete your order.' },
-          { status: 400 }
-        );
+        targetUserId = guestSystemUser?.id || 'guest_system_account';
       }
 
       const parseNum = (val: any, fallback = 0) => {
@@ -3055,7 +3060,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const randomSecret = crypto.randomBytes(16).toString('hex').toUpperCase();
       await db.user.update({
         where: { id: user.id },
-        data: { totpSecret: randomSecret },
+        data: { totpSecret: encryptTotpSecret(randomSecret) },
       }).catch(() => {});
       const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`otpauth://totp/FahadAliInterior:${user.email}?secret=${randomSecret}&issuer=FahadAliInterior`)}`;
       return NextResponse.json({ qrCode, manualKey: randomSecret });
@@ -3064,10 +3069,11 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
     if (segment.includes('auth/2fa/enable')) {
       const user = await getUserFromSessionOrToken(req);
       if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      const backupCodes = Array.from({ length: 8 }, () => Math.random().toString(36).substring(2, 10).toUpperCase());
+      const backupCodes = Array.from({ length: 8 }, () => crypto.randomBytes(4).toString('hex').toUpperCase());
+      const hashedBackupCodes = backupCodes.map((code) => hashBackupCode(code));
       await db.user.update({
         where: { id: user.id },
-        data: { totpEnabled: true, backupCodes },
+        data: { totpEnabled: true, backupCodes: hashedBackupCodes },
       }).catch(() => {});
       return NextResponse.json({ enabled: true, backupCodes });
     }

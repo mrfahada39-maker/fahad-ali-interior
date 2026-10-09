@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import { verifySync } from 'otplib';
 import { db } from '@/lib/db';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { decryptTotpSecret, verifyBackupCode } from '@/lib/totp-crypto';
+import { getAdminTokenSecret } from '@/lib/admin-auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,26 +63,46 @@ export async function POST(req: NextRequest) {
           { status: 200 }
         );
       }
-      const isBackupCode = user.backupCodes?.includes(totpCode.toUpperCase());
-      if (isBackupCode) {
+
+      const recordFailed2Fa = async () => {
+        const attempts = (user.loginAttempts || 0) + 1;
+        const shouldLock = attempts >= 5;
         await db.user.update({
           where: { id: user.id },
           data: {
-            backupCodes: user.backupCodes.filter((c: string) => c !== totpCode.toUpperCase()),
+            loginAttempts: attempts,
+            lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
           },
-        });
-      } else if (user.totpSecret) {
+        }).catch(() => {});
+      };
+
+      const matchedBackup = verifyBackupCode(totpCode, user.backupCodes || []);
+      if (matchedBackup) {
+        await db.user.update({
+          where: { id: user.id },
+          data: {
+            backupCodes: (user.backupCodes || []).filter((c: string) => c !== matchedBackup),
+          },
+        }).catch(() => {});
+      } else if (!user.totpSecret) {
+        // H3: Fail closed — if totpSecret missing, fail login (no 6-digit wildcard)
+        await recordFailed2Fa();
+        return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
+      } else {
+        const plainSecret = decryptTotpSecret(user.totpSecret);
+        if (!plainSecret) {
+          await recordFailed2Fa();
+          return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
+        }
+
         try {
-          const check = verifySync({ token: totpCode, secret: user.totpSecret });
+          const check = verifySync({ token: totpCode, secret: plainSecret });
           if (!check || !check.valid) {
+            await recordFailed2Fa();
             return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
           }
         } catch {
-          return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
-        }
-      } else {
-        const isValidFormat = /^\d{6}$/.test(totpCode);
-        if (!isValidFormat) {
+          await recordFailed2Fa();
           return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
         }
       }
@@ -99,9 +121,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized. Admin role required.' }, { status: 403 });
     }
 
-    const secret = process.env.NEXTAUTH_SECRET;
+    const secret = getAdminTokenSecret();
     if (!secret || secret.length < 32) {
-      return NextResponse.json({ error: 'Authentication security error: NEXTAUTH_SECRET is invalid or missing.' }, { status: 500 });
+      return NextResponse.json({ error: 'Authentication security error: ADMIN_TOKEN_SECRET is invalid or missing.' }, { status: 500 });
     }
     const timestamp = Date.now();
     const signature = crypto.createHmac('sha256', secret).update(`${user.id}:${timestamp}`).digest('hex');
