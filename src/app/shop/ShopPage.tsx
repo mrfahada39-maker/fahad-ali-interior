@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Search, PackageSearch, SlidersHorizontal, RotateCcw, Sparkles, Compass,
   CheckCircle2, LayoutGrid, Grid, List, Eye, ShoppingBag, Heart, X, MessageSquare,
@@ -793,13 +794,12 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center">
                 {/* Left Showcase Image Frame */}
                 <div className="relative aspect-[4/3] rounded-[20px] overflow-hidden bg-[#FAF5EE] border-2 border-[#E7DDD0] shadow-sm">
-                  <img
+                  <Image
                     src={resolveImageUrl(quickViewProduct.image, quickViewProduct.category)}
                     alt={quickViewProduct.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover w-full h-full"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = resolveImageUrl(null, quickViewProduct.category);
-                    }}
                   />
                   <div className="absolute top-3 left-3">
                     <span className="text-[9.5px] font-black uppercase tracking-wider text-[#8C6239] bg-[#FAF5EE]/95 backdrop-blur-md border border-[#E2D1BC] px-3 py-0.5 rounded-full shadow-2xs">

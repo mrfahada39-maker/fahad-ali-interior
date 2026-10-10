@@ -34,8 +34,9 @@ import AiChatbotTab from './AiChatbotTab';
 import AiRadarTab from './AiRadarTab';
 import RecycleBinTab from './RecycleBinTab';
 const LuxuryCallModal = dynamic(() => import('@/components/LuxuryCallModal'), { ssr: false });
-import { toneGenerator, WebRtcCallClient, acquireUserMediaWithFallback } from '@/lib/webrtc-call-manager';
-import { tabs, AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
+import { useAdminCall } from '@/hooks/use-admin-call';
+import { AdminNavigationChrome } from '@/components/admin/AdminNavigationChrome';
+import { AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
 
 import { useSiteSettingsStore } from '@/store';
 import { DEFAULT_ADMIN_STATS, DEFAULT_ADMIN_ORDERS } from '@/lib/utils';
@@ -250,254 +251,23 @@ export default function AdminDashboard() {
   const initializedMessageTrackingRef = useRef(false);
 
   // ── ADMIN CALLING & VOICE NOTE SYSTEM ──
-  const [isCallOpen, setIsCallOpen] = useState(false);
-  const [callType, setCallType] = useState<'voice' | 'video'>('voice');
-  const [callStatus, setCallStatus] = useState<'outgoing' | 'incoming' | 'connected' | 'ended'>('outgoing');
-  const [currentCaller, setCurrentCaller] = useState<any>(null);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [callDuration, setCallDuration] = useState(0);
-  const [callConnectedAt, setCallConnectedAt] = useState<number | null>(null);
-  const callDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const adminRtcClientRef = useRef<WebRtcCallClient | null>(null);
-  const adminIncomingOfferSdpRef = useRef<any>(null);
-  const adminAutoAnswerTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const startAdminCall = async (type: 'voice' | 'video', targetUser: any) => {
-    setCurrentCaller(targetUser);
-    setCallType(type);
-    setIsCallOpen(true);
-    setCallStatus('outgoing');
-    setCallDuration(0);
-    setCallConnectedAt(null);
-    toneGenerator.playOutgoingRing();
-
-    try {
-      const { stream, fallbackNote } = await acquireUserMediaWithFallback(type);
-      setLocalStream(stream);
-      if (fallbackNote) toast.info(fallbackNote);
-
-      const targetId = targetUser?.id || targetUser?.userId || 'client';
-
-      const rtcClient = new WebRtcCallClient(
-        (remote) => setRemoteStream(remote),
-        async (candidate) => {
-          await apiFetch('/api/calls/signal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'candidate', fromUserId: 'admin', toUserId: targetId, candidate }),
-          }).catch(() => {});
-        }
-      );
-      rtcClient.init(stream);
-      adminRtcClientRef.current = rtcClient;
-
-      const offerSdp = await rtcClient.createOffer();
-
-      await apiFetch('/api/calls/signal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'initiate',
-          fromUserId: 'admin',
-          fromUserName: 'Fahad Ali Atelier Concierge',
-          toUserId: targetId,
-          toUserName: targetUser?.name || 'Valued Client',
-          toUserEmail: targetUser?.email || '',
-          callType: type,
-          offerSdp,
-        }),
-      });
-
-      if (adminAutoAnswerTimerRef.current) clearTimeout(adminAutoAnswerTimerRef.current);
-      adminAutoAnswerTimerRef.current = setTimeout(() => {
-        setCallStatus((prev) => {
-          if (prev === 'outgoing') {
-            toast.info(`Calling client. If client does not pick up, you can also connect via WhatsApp hotline.`);
-          }
-          return prev;
-        });
-      }, 7000);
-    } catch {
-      toast.error('Could not initiate audio/video call channel');
-      endAdminCall();
-    }
-  };
-
-  const acceptIncomingCall = async () => {
-    toneGenerator.stop();
-    setCallStatus('connected');
-    setCallDuration(0);
-    const now = Date.now();
-    setCallConnectedAt(now);
-
-    try {
-      const { stream, fallbackNote } = await acquireUserMediaWithFallback(callType);
-      setLocalStream(stream);
-      if (fallbackNote) toast.info(fallbackNote);
-
-      const callerId = currentCaller?.id || 'client';
-
-      const rtcClient = new WebRtcCallClient(
-        (remote) => setRemoteStream(remote),
-        async (candidate) => {
-          await apiFetch('/api/calls/signal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'candidate', fromUserId: 'admin', toUserId: callerId, candidate }),
-          }).catch(() => {});
-        }
-      );
-      rtcClient.init(stream);
-      adminRtcClientRef.current = rtcClient;
-
-      const answerSdp = adminIncomingOfferSdpRef.current
-        ? await rtcClient.createAnswer(adminIncomingOfferSdpRef.current)
-        : null;
-
-      if (!callDurationIntervalRef.current) {
-        callDurationIntervalRef.current = setInterval(() => {
-          setCallDuration((d) => d + 1);
-        }, 1000);
-      }
-
-      const acceptRes = await apiFetch('/api/calls/signal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'accept',
-          fromUserId: 'admin',
-          toUserId: callerId,
-          answerSdp,
-        }),
-      });
-      if (acceptRes.ok) {
-        const acceptData = await acceptRes.json().catch(() => ({}));
-        if (acceptData.session?.connectedAt) {
-          setCallConnectedAt(acceptData.session.connectedAt);
-        }
-      }
-      toast.success(`Connected to VIP Client: ${currentCaller?.name || 'Customer'}`);
-    } catch {
-      toast.error('Could not connect call');
-      endAdminCall();
-    }
-  };
-
-  const endAdminCall = () => {
-    toneGenerator.stop();
-    if (adminAutoAnswerTimerRef.current) {
-      clearTimeout(adminAutoAnswerTimerRef.current);
-      adminAutoAnswerTimerRef.current = null;
-    }
-    if (callDurationIntervalRef.current) clearInterval(callDurationIntervalRef.current);
-    if (adminRtcClientRef.current) {
-      adminRtcClientRef.current.cleanup();
-      adminRtcClientRef.current = null;
-    }
-    if (localStream) {
-      localStream.getTracks().forEach((t) => t.stop());
-      setLocalStream(null);
-    }
-    setRemoteStream(null);
-    setIsCallOpen(false);
-    setCallStatus('ended');
-    setCallConnectedAt(null);
-
-    void apiFetch('/api/calls/signal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'end',
-        fromUserId: 'admin',
-        toUserId: currentCaller?.id || 'client',
-      }),
-    });
-  };
-
-  const toggleAdminMute = () => {
-    if (localStream) {
-      localStream.getAudioTracks().forEach((t) => { t.enabled = !t.enabled; });
-      setIsMuted((prev) => !prev);
-    }
-  };
-
-  const toggleAdminVideo = () => {
-    if (localStream) {
-      localStream.getVideoTracks().forEach((t) => { t.enabled = !t.enabled; });
-      setIsVideoOff((prev) => !prev);
-    }
-  };
-
-  // Background listener for incoming customer calls to Admin
-  useEffect(() => {
-    const checkIncomingCalls = async () => {
-      try {
-        const res = await apiFetch('/api/calls/signal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'status', fromUserId: 'admin' }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.session) {
-            // Incoming call from Client
-            if (data.session.status === 'outgoing' && data.session.fromUserId !== 'admin' && !isCallOpen) {
-              adminIncomingOfferSdpRef.current = data.session.offerSdp;
-              setCurrentCaller({ id: data.session.fromUserId, name: data.session.fromUserName || 'VIP Customer' });
-              setCallType(data.session.callType || 'voice');
-              setCallStatus('incoming');
-              setIsCallOpen(true);
-              toneGenerator.playIncomingRing();
-            }
-            // Call connected (either Admin answered Client or Client answered Admin)
-            else if (data.session.status === 'connected' && isCallOpen) {
-              if (adminAutoAnswerTimerRef.current) {
-                clearTimeout(adminAutoAnswerTimerRef.current);
-                adminAutoAnswerTimerRef.current = null;
-              }
-              if (data.session.connectedAt) {
-                setCallConnectedAt(data.session.connectedAt);
-              }
-              toneGenerator.stop();
-
-              // If Admin made an outgoing call that was just answered
-              if (callStatus === 'outgoing') {
-                setCallStatus('connected');
-                if (data.session.answerSdp && adminRtcClientRef.current) {
-                  await adminRtcClientRef.current.handleAnswer(data.session.answerSdp);
-                }
-                if (!callDurationIntervalRef.current) {
-                  callDurationIntervalRef.current = setInterval(() => {
-                    setCallDuration((d) => d + 1);
-                  }, 1000);
-                }
-              }
-
-              // Ingest ICE candidates from Client continuously
-              if (data.session.candidates && adminRtcClientRef.current) {
-                for (const c of data.session.candidates) {
-                  const sender = c.fromUserId || (typeof c === 'object' && c.fromUserId);
-                  if (!sender || sender !== 'admin') {
-                    await adminRtcClientRef.current.addIceCandidate(c);
-                  }
-                }
-              }
-            }
-            // Call ended or declined
-            else if ((data.session.status === 'ended' || data.session.status === 'declined') && isCallOpen) {
-              endAdminCall();
-            }
-          }
-        }
-      } catch {}
-    };
-
-    const interval = setInterval(checkIncomingCalls, isCallOpen ? 1200 : 2000);
-    return () => clearInterval(interval);
-  }, [isCallOpen, callStatus, currentCaller]);
+  const {
+    isCallOpen,
+    callType,
+    callStatus,
+    currentCaller,
+    localStream,
+    remoteStream,
+    isMuted,
+    isVideoOff,
+    callDuration,
+    callConnectedAt,
+    startAdminCall,
+    acceptIncomingCall,
+    endAdminCall,
+    toggleAdminMute,
+    toggleAdminVideo,
+  } = useAdminCall();
 
   const handleSendAdminVoiceNote = async (threadId: string, audioUrl: string, duration: number) => {
     const tempId = 'admin_audio_' + Date.now();
@@ -1059,32 +829,6 @@ export default function AdminDashboard() {
     toast.error(data?.error || 'Failed to change password');
   };
 
-  // Generate chart data from analytics
-  const revenueChartData = (() => {
-    if (!analytics?.revenueByMonth) return [];
-    return Object.entries(analytics.revenueByMonth)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([month, revenue]) => ({
-        name: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short' }),
-        revenue: revenue as number,
-      }));
-  })();
-
-  const orderStatusData = (() => {
-    const statusCounts: Record<string, number> = { pending: 0, processing: 0, shipped: 0, delivered: 0, cancelled: 0 };
-    orders.forEach(o => { if (statusCounts[o.status] !== undefined) statusCounts[o.status]++; });
-    return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
-  })();
-
-  const categoryChartData = analytics?.categoryDistribution?.map((c: any) => ({
-    name: c.category,
-    count: c._count?.category || 0,
-    value: c._count?.category || 0,
-  })) || [];
-
-  // Use only real revenue data from database
-  const chartData = revenueChartData;
-
   const statusColor = (s: string) => {
     return statusStyles[s] || 'bg-white/10 text-white/50';
   };
@@ -1096,217 +840,12 @@ export default function AdminDashboard() {
           {unreadMessageCount} new message{unreadMessageCount > 1 ? 's' : ''} received
         </div>
       )}
-      
-      {/* ── LEFT SIDEBAR NAVIGATION ($100,000 ULTRA-LUXURY CAPSULE STYLE) ── */}
-      <aside className="hidden lg:flex w-18 flex-col gap-2.5 h-full shrink-0 z-30">
-        
-        {/* Top Navigation Capsule */}
-        <div className="bg-white/95 backdrop-blur-md rounded-[26px] border-2 border-[#E7DDD0] py-3.5 px-2 flex flex-col items-center gap-2 shadow-[0_8px_30px_rgba(44,30,24,0.03)] w-full overflow-y-auto scrollbar-hide flex-1 hover:border-[#B88E4B]/35 transition-all">
-          
-          {/* Live Storefront Home Website Button */}
-          <div className="relative group/nav shrink-0 pb-2 mb-1 border-b border-[#E7DDD0]/80 w-full flex justify-center">
-            <Link
-              href="/"
-              className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3] text-[#8C6239] hover:bg-gradient-to-br hover:from-[#B88E4B] hover:to-[#996515] hover:text-white flex items-center justify-center border border-[#E2D1BC] shadow-2xs hover:shadow-[0_4px_16px_rgba(184,142,75,0.35)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
-            >
-              <Home size={19} className="stroke-[2.2]" />
-            </Link>
 
-            {/* Tooltip */}
-            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
-              <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3 py-1.5 rounded-xl shadow-xl whitespace-nowrap border border-white/10 flex items-center gap-1.5">
-                <span className="text-[#B88E4B]">✦</span>
-                <span>Go to Storefront Website</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Item Tabs */}
-          {tabs.filter(t => t.id !== 'settings').map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <div key={tab.id} className="relative group/nav shrink-0">
-                <button
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-200 relative ${
-                    isActive 
-                      ? 'bg-gradient-to-br from-[#B88E4B] via-[#A87E47] to-[#8C6239] text-white shadow-[0_4px_16px_rgba(184,142,75,0.35)] scale-105 border border-white/30' 
-                      : 'text-[#7A6354] hover:text-[#1F1612] hover:bg-[#FAF5EE] hover:border-[#E2D1BC] border border-transparent'
-                  }`}
-                >
-                  <tab.icon size={19} className="relative z-10 stroke-[2.1]" />
-                  
-                  {/* Active Indicator Glow Ring */}
-                  {isActive && (
-                    <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-5 bg-[#B88E4B] rounded-r-full shadow-sm" />
-                  )}
-
-                  {/* Unread Message Pill */}
-                  {tab.id === 'messages' && unreadMessageCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
-                      {unreadMessageCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Floating Tooltip Bubble */}
-                <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
-                  <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3 py-1.5 rounded-xl shadow-xl whitespace-nowrap border border-white/10 flex items-center gap-1.5">
-                    <span className="text-[#B88E4B]">✦</span>
-                    {tab.label}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Bottom Configuration Capsule */}
-        <div className="bg-white/95 backdrop-blur-md rounded-[26px] border-2 border-[#E7DDD0] py-2.5 px-2 flex flex-col items-center gap-2 shadow-[0_8px_30px_rgba(44,30,24,0.03)] w-full shrink-0 hover:border-[#B88E4B]/35 transition-all">
-          
-          {/* Settings */}
-          <div className="relative group/nav">
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-200 ${
-                activeTab === 'settings'
-                  ? 'bg-gradient-to-br from-[#B88E4B] via-[#A87E47] to-[#8C6239] text-white shadow-[0_4px_16px_rgba(184,142,75,0.35)] scale-105 border border-white/30'
-                  : 'text-[#7A6354] hover:text-[#1F1612] hover:bg-[#FAF5EE] hover:border-[#E2D1BC] border border-transparent'
-              }`}
-            >
-              <Settings size={19} className="group-hover/nav:rotate-45 transition-transform duration-300 stroke-[2.1]" />
-            </button>
-
-            {/* Tooltip */}
-            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
-              <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3 py-1.5 rounded-xl shadow-xl whitespace-nowrap border border-white/10">
-                ⚙ï¸ Enterprise Settings
-              </div>
-            </div>
-          </div>
-
-          {/* Glowing Red Logout Button */}
-          <div className="relative group/nav">
-            <button 
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-500/15 via-red-500/10 to-rose-600/20 text-rose-600 hover:text-white hover:bg-gradient-to-br hover:from-rose-500 hover:to-red-600 flex items-center justify-center border-2 border-rose-400/40 hover:border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.25)] hover:shadow-[0_0_22px_rgba(244,63,94,0.6)] relative cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95"
-            >
-              <LogOut size={18} className="stroke-[2.3] group-hover/nav:-translate-x-0.5 transition-transform" />
-              {/* Pulsing Red Glowing Dot */}
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white absolute -bottom-0.5 -right-0.5 shadow-xs animate-pulse" />
-            </button>
-
-            {/* Tooltip */}
-            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover/nav:flex items-center z-50 pointer-events-none">
-              <div className="bg-[#221814] text-white font-serif font-black text-[11px] px-3 py-1.5 rounded-xl shadow-xl whitespace-nowrap border border-rose-500/30 flex items-center gap-1.5">
-                <LogOut size={12} className="text-rose-400" />
-                Sign Out / Logout
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </aside>
-
-      {/* ── MOBILE & TABLET DUAL FLOATING LUXURY CARDS (SEPARATE TOP NAVBAR & SEPARATE TAB SLIDER) ── */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 p-2 sm:p-3 flex flex-col gap-2 bg-gradient-to-b from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent pointer-events-none">
-        
-        {/* 1. SEPARATE TOP BRAND NAVBAR CARD (ULTRA-LUXURY MASTERPIECE EDITION) */}
-        <div className="bg-gradient-to-r from-white via-[#FCFAF7] to-white backdrop-blur-2xl border border-[#E7DDD0] rounded-2xl sm:rounded-[22px] shadow-[0_8px_25px_rgba(44,30,24,0.04)] px-4 py-3 sm:py-3.5 flex items-center justify-between pointer-events-auto relative overflow-hidden group">
-          
-          {/* Ambient Gold Glimmer in Background */}
-          <div className="absolute -top-12 -left-12 w-32 h-32 bg-[#B88E4B]/5 rounded-full blur-xl pointer-events-none" />
-          <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-rose-500/5 rounded-full blur-xl pointer-events-none" />
-
-          {/* Left: Storefront Home Button (Pure Glowing Gold Icon) */}
-          <Link
-            href="/"
-            className="w-10 h-10 flex items-center justify-center text-[#8C6239] hover:text-[#B88E4B] transition-all duration-200 active:scale-90 group cursor-pointer shrink-0 relative z-10"
-            title="Go to Storefront Website"
-          >
-            <Home size={18} className="stroke-[2.5] text-[#8C6239] group-hover:text-[#B88E4B] group-hover:scale-115 transition-transform drop-shadow-[0_0_8px_rgba(184,142,75,0.6)]" />
-          </Link>
-
-          {/* Center: Brand Title & Executive Suite with Live Pulse Micro-Capsule */}
-          <Link href="/admin" className="flex flex-col items-center text-center px-2 group relative z-10">
-            <span className="font-serif font-black text-[17px] sm:text-[19px] tracking-tight text-[#1F1612] uppercase leading-none whitespace-nowrap">
-              FAHAD ALI <span className="font-serif italic font-normal text-[#C9A24D] text-sm sm:text-base">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">INTERIOR</span>
-            </span>
-            <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-[#FAF5EE]/90 border border-[#E7DDD0] shadow-2xs">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-              </span>
-              <span className="text-[8.5px] sm:text-[9.5px] tracking-[0.25em] font-mono font-black text-[#8C6239] uppercase whitespace-nowrap">
-                EXECUTIVE SUITE
-              </span>
-            </div>
-          </Link>
-
-          {/* Right: Sign Out Button (Pure Glowing Red Icon) */}
-          <button
-            onClick={() => signOut({ callbackUrl: '/' })}
-            className="w-10 h-10 flex items-center justify-center text-rose-500 hover:text-rose-600 transition-all duration-200 active:scale-90 group cursor-pointer shrink-0 relative z-10"
-            title="Sign Out"
-          >
-            <LogOut size={18} className="stroke-[2.5] text-rose-500 group-hover:scale-115 transition-transform drop-shadow-[0_0_8px_rgba(244,63,94,0.7)]" />
-          </button>
-
-        </div>
-
-        {/* 2. SEPARATE BOTTOM TAB SLIDER CARD (PRECISION SIZED FOR 4 VISIBLE TABS) */}
-        <div className="bg-white/95 backdrop-blur-2xl border border-[#E7DDD0] rounded-2xl shadow-[0_4px_20px_rgba(44,30,24,0.035)] p-1 sm:p-1.5 flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide pointer-events-auto relative">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const isAiRadar = tab.id === 'ai-control-center';
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center gap-1 sm:gap-1.5 h-[34px] sm:h-[36px] px-2 sm:px-3.5 rounded-xl text-[11px] sm:text-[12.5px] whitespace-nowrap transition-colors duration-200 cursor-pointer shrink-0 z-10 ${
-                  isActive
-                    ? 'text-white font-black'
-                    : 'text-[#6B5345] hover:text-[#18110D] font-bold'
-                }`}
-              >
-                {/* Fluid Framer-Motion Animated Pill Background */}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTabMobileHighlight"
-                    className="absolute inset-0 bg-gradient-to-r from-[#B88E4B] via-[#C9A24D] to-[#996515] rounded-xl shadow-[0_2px_10px_rgba(184,142,75,0.4)] border border-white/25 -z-10"
-                    transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                  />
-                )}
-
-                <tab.icon size={13.5} className={isActive ? 'text-white stroke-[2.2]' : 'text-[#8C6239] shrink-0 stroke-[2.2]'} />
-                <span>
-                  {isAiRadar ? (
-                    <>
-                      <span className="sm:hidden">AI Radar</span>
-                      <span className="hidden sm:inline">AI Control Radar</span>
-                    </>
-                  ) : (
-                    tab.label
-                  )}
-                </span>
-                {isAiRadar && (
-                  <span className="relative flex h-1.5 w-1.5 ml-0.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                  </span>
-                )}
-                {tab.id === 'messages' && unreadMessageCount > 0 && (
-                  <span className="min-w-4 h-4 px-1 bg-rose-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-pulse shadow-xs">
-                    {unreadMessageCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-      </div>
+      <AdminNavigationChrome
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        unreadMessageCount={unreadMessageCount}
+      />
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full pr-0 pt-[130px] lg:pt-0 min-h-0 overflow-y-auto">

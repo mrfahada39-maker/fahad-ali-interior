@@ -1,0 +1,583 @@
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { sendOrderConfirmationEmail } from '@/lib/email';
+import { safeApiErrorResponse } from '@/lib/api-error';
+import { createOrderSchema, updateOrderStatusSchema } from '@/lib/validations/api-schemas';
+import {
+  ApiDispatchContext,
+  DbOrderItemRecord,
+  DbOrderRecord,
+  getUserFromSessionOrToken,
+  requireAdmin,
+} from './shared';
+
+export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextResponse | null> {
+  const { method, segment, normalizedSegment, req } = ctx;
+
+  // 2.1 GET /orders or /v1/orders
+  if (method === 'GET' && (segment === 'orders' || segment === 'v1/orders')) {
+    const user = await getUserFromSessionOrToken(req);
+    if (!user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please sign in to view orders.' },
+        { status: 401 }
+      );
+    }
+
+    const isAdmin = requireAdmin(user);
+    const whereCondition = isAdmin ? { deletedAt: null } : { userId: user.id, deletedAt: null };
+
+    const orders = (await db.order
+      .findMany({
+        where: whereCondition,
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      })
+      .catch(() => [])) as DbOrderRecord[];
+
+    const formatted = orders.map((o: DbOrderRecord) => ({
+      ...o,
+      discount: Number(o.discount),
+      gst: Number(o.gst),
+      subtotal: Number(o.subtotal),
+      totalAmount: Number(o.totalAmount),
+      total: Number(o.totalAmount),
+      items: (o.items || []).map((item: DbOrderItemRecord) => ({
+        ...item,
+        price: Number(item.price),
+      })),
+    }));
+
+    return NextResponse.json({ orders: formatted });
+  }
+
+  // 2.3 GET /orders/my-orders or /v1/orders/my-orders
+  if (method === 'GET' && (segment === 'orders/my-orders' || segment === 'v1/orders/my-orders')) {
+    const user = await getUserFromSessionOrToken(req);
+    if (!user?.id) {
+      return NextResponse.json([]);
+    }
+    const orders = (await db.order
+      .findMany({
+        where: { userId: user.id, deletedAt: null },
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+      })
+      .catch(() => [])) as DbOrderRecord[];
+    const formatted = orders.map((o: DbOrderRecord) => ({
+      ...o,
+      totalAmount: Number(o.totalAmount),
+      items: (o.items || []).map((i: DbOrderItemRecord) => ({ ...i, price: Number(i.price) })),
+    }));
+    return NextResponse.json(formatted);
+  }
+
+  // 2.4 Wishlist Endpoints
+  if (segment === 'wishlist' || segment === 'v1/wishlist') {
+    const user = await getUserFromSessionOrToken(req);
+    if (method === 'GET') {
+      if (!user?.id) return NextResponse.json([]);
+      const items = await db.wishlistItem
+        .findMany({
+          where: { userId: user.id },
+          include: { product: true },
+          orderBy: { createdAt: 'desc' },
+        })
+        .catch(() => []);
+      return NextResponse.json(items);
+    }
+    if (method === 'POST') {
+      if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const body = await req.json().catch(() => ({}));
+      if (!body.productId) {
+        return NextResponse.json({ error: 'productId is required' }, { status: 400 });
+      }
+      const item = await db.wishlistItem
+        .create({
+          data: { userId: user.id, productId: body.productId },
+          include: { product: true },
+        })
+        .catch(() => null);
+      return NextResponse.json(item || { success: true });
+    }
+    if (method === 'DELETE') {
+      if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const id = req.nextUrl.searchParams.get('id');
+      const productId = req.nextUrl.searchParams.get('productId');
+      if (id) {
+        await db.wishlistItem.deleteMany({ where: { id, userId: user.id } }).catch(() => {});
+      } else if (productId) {
+        await db.wishlistItem.deleteMany({ where: { userId: user.id, productId } }).catch(() => {});
+      }
+      return NextResponse.json({ success: true });
+    }
+  }
+
+  // 2.92 POST /orders or /v1/orders (Create Order / Checkout)
+  if (method === 'POST' && (segment === 'orders' || segment === 'v1/orders')) {
+    const user = await getUserFromSessionOrToken(req);
+    const body = await req.json().catch(() => ({}));
+
+    let targetUserId = user?.id;
+    if (!targetUserId) {
+      const rawEmail = (body.shippingEmail || body.shippingInfo?.email || body.email || '')
+        .trim()
+        .toLowerCase();
+      if (!rawEmail || !rawEmail.includes('@')) {
+        return NextResponse.json(
+          { error: 'Please provide a valid shipping email address to complete your order.' },
+          { status: 400 }
+        );
+      }
+
+      // H1: Guest checkout must NOT attach an order to an existing user found by shippingEmail.
+      const SYSTEM_GUEST_EMAIL = 'guest-checkout@system.fahadali.local';
+      let guestSystemUser = await db.user
+        .findUnique({
+          where: { email: SYSTEM_GUEST_EMAIL },
+        })
+        .catch(() => null);
+
+      if (!guestSystemUser) {
+        guestSystemUser = await db.user
+          .create({
+            data: {
+              id: 'guest_system_account',
+              email: SYSTEM_GUEST_EMAIL,
+              name: 'Guest Customer',
+              phone: '',
+              role: 'USER',
+              password: null,
+              lockedUntil: new Date('2099-01-01'),
+            },
+          })
+          .catch(() => null);
+      }
+      targetUserId = guestSystemUser?.id || 'guest_system_account';
+    }
+
+    const parsedOrder = createOrderSchema.safeParse(body);
+    const rawItems = Array.isArray(body.items) ? body.items : [];
+    if (!parsedOrder.success || rawItems.length === 0) {
+      return NextResponse.json(
+        { error: 'Order must contain at least one item.' },
+        { status: 400 }
+      );
+    }
+
+    const formattedItems: Array<{
+      productId: string;
+      name: string;
+      price: number;
+      quantity: number;
+      image: string;
+    }> = [];
+
+    for (const item of rawItems) {
+      const itemObj = (item || {}) as Record<string, unknown>;
+      const rawId = String(itemObj.productId || itemObj.id || '').trim();
+      if (!rawId) {
+        return NextResponse.json(
+          { error: 'Product ID is required for all order items.' },
+          { status: 400 }
+        );
+      }
+
+      const rawQty = itemObj.quantity;
+      const quantity = Number(rawQty);
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+        return NextResponse.json(
+          { error: 'Quantity must be an integer between 1 and 20.' },
+          { status: 400 }
+        );
+      }
+
+      const dbProd = await db.product.findFirst({
+        where: { id: rawId, deletedAt: null },
+      });
+
+      if (!dbProd) {
+        return NextResponse.json(
+          { error: `Product not found or unavailable: ${rawId}` },
+          { status: 400 }
+        );
+      }
+
+      formattedItems.push({
+        productId: dbProd.id,
+        name: dbProd.name,
+        price: Number(dbProd.price),
+        quantity,
+        image: dbProd.image || '',
+      });
+    }
+
+    const subtotal = formattedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const gst = 0;
+
+    let verifiedDiscount = 0;
+    let appliedCoupon: {
+      id: string;
+      code: string;
+      maxUses: number;
+      usedCount: number;
+    } | null = null;
+    const couponCode = (body.couponCode || body.coupon)?.toString()?.trim()?.toUpperCase();
+
+    if (couponCode) {
+      const dbCoupon = await db.coupon.findFirst({
+        where: {
+          code: couponCode,
+          isActive: true,
+          deletedAt: null,
+        },
+      });
+
+      if (!dbCoupon) {
+        return NextResponse.json({ error: 'Invalid or inactive coupon code.' }, { status: 400 });
+      }
+
+      const isExpired = dbCoupon.expiresAt && new Date(dbCoupon.expiresAt) < new Date();
+      if (isExpired) {
+        return NextResponse.json({ error: 'This coupon has expired.' }, { status: 400 });
+      }
+
+      const isMaxedOut = dbCoupon.maxUses > 0 && dbCoupon.usedCount >= dbCoupon.maxUses;
+      if (isMaxedOut) {
+        return NextResponse.json(
+          { error: 'This coupon has reached its maximum usage limit.' },
+          { status: 400 }
+        );
+      }
+
+      const meetsMinAmount = subtotal >= Number(dbCoupon.minOrderAmount || 0);
+      if (!meetsMinAmount) {
+        return NextResponse.json(
+          {
+            error: `Minimum order amount of Rs. ${Number(dbCoupon.minOrderAmount).toLocaleString()} required for this coupon.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      appliedCoupon = dbCoupon;
+      if (dbCoupon.discountType === 'PERCENTAGE') {
+        verifiedDiscount = Math.round((subtotal * Number(dbCoupon.discount)) / 100);
+      } else {
+        verifiedDiscount = Number(dbCoupon.discount);
+      }
+    }
+
+    const discount = Math.min(subtotal, Math.max(0, verifiedDiscount));
+    const totalAmount = Math.max(0, subtotal + gst - discount);
+
+    const rawMethod = String(body.paymentMethod || 'COD').toUpperCase();
+    let validPaymentMethod: 'COD' | 'JAZZCASH' | 'EASYPAISA' | 'BANK' = 'COD';
+    if (rawMethod.includes('JAZZ')) validPaymentMethod = 'JAZZCASH';
+    else if (rawMethod.includes('EASY')) validPaymentMethod = 'EASYPAISA';
+    else if (
+      rawMethod.includes('BANK') ||
+      rawMethod.includes('RAAST') ||
+      rawMethod.includes('CARD')
+    )
+      validPaymentMethod = 'BANK';
+    else validPaymentMethod = 'COD';
+
+    const shippingInfo = body.shippingInfo || {};
+    const shippingName =
+      body.shippingName || shippingInfo.name || body.name || 'Valued Customer';
+    const shippingPhone =
+      body.shippingPhone || shippingInfo.phone || body.phone || '+92 300 0000000';
+    const shippingEmail = body.shippingEmail || shippingInfo.email || body.email || '';
+    const shippingAddress =
+      body.shippingAddress || shippingInfo.address || body.address || 'Lahore, Pakistan';
+    const shippingCity = body.shippingCity || shippingInfo.city || body.city || 'Lahore';
+    const shippingProvince =
+      body.shippingProvince || shippingInfo.province || body.province || 'Punjab';
+    const shippingNotes = body.shippingNotes || shippingInfo.notes || body.notes || '';
+
+    let newOrder: {
+      id: string;
+      shippingName: string;
+      shippingEmail: string;
+      shippingPhone: string;
+      shippingAddress: string;
+      shippingCity: string;
+      paymentMethod: string;
+      totalAmount: unknown;
+      subtotal: unknown;
+      gst: unknown;
+      discount: unknown;
+      items: Array<{ price: unknown; [key: string]: unknown }>;
+    };
+
+    try {
+      const runTx = db.$transaction.bind(db) as unknown as <T>(
+        fn: (tx: typeof db) => Promise<T>
+      ) => Promise<T>;
+      newOrder = await runTx(async (tx) => {
+        for (const item of formattedItems) {
+          const stockUpdate = await tx.product.updateMany({
+            where: {
+              id: item.productId,
+              deletedAt: null,
+              stockCount: { gte: item.quantity },
+            },
+            data: {
+              stockCount: { decrement: item.quantity },
+            },
+          });
+
+          if (stockUpdate.count === 0) {
+            throw new Error(`INSUFFICIENT_STOCK:${item.name}`);
+          }
+        }
+
+        if (appliedCoupon?.id) {
+          const couponCondition: Record<string, unknown> = {
+            id: appliedCoupon.id,
+            isActive: true,
+            deletedAt: null,
+          };
+          if (appliedCoupon.maxUses > 0) {
+            couponCondition.usedCount = { lt: appliedCoupon.maxUses };
+          }
+
+          const couponUpdate = await tx.coupon.updateMany({
+            where: couponCondition,
+            data: { usedCount: { increment: 1 } },
+          });
+
+          if (couponUpdate.count === 0) {
+            throw new Error(
+              'COUPON_LIMIT_REACHED:Coupon usage limit reached or coupon no longer valid.'
+            );
+          }
+        }
+
+        const order = await tx.order.create({
+          data: {
+            user: { connect: { id: targetUserId } },
+            shippingName,
+            shippingPhone,
+            shippingEmail: shippingEmail || 'customer@fahadaliinterior.com',
+            shippingAddress,
+            shippingCity,
+            shippingProvince,
+            shippingNotes,
+            paymentMethod: validPaymentMethod,
+            couponCode: appliedCoupon?.code || null,
+            subtotal,
+            gst,
+            discount,
+            totalAmount,
+            status: 'PENDING',
+            paymentStatus: 'PENDING',
+            items: {
+              create: formattedItems,
+            },
+          },
+          include: { items: true },
+        });
+
+        await tx.auditLog
+          .create({
+            data: {
+              userId: targetUserId,
+              action: 'ORDER_PLACED',
+              entity: 'Order',
+              entityId: order.id,
+              metadata: {
+                totalAmount: Number(totalAmount),
+                itemCount: formattedItems.length,
+                paymentMethod: validPaymentMethod,
+              },
+            },
+          })
+          .catch(() => null);
+
+        return order;
+      });
+    } catch (txError: unknown) {
+      const msg = txError instanceof Error ? txError.message : String(txError || '');
+      if (msg.startsWith('INSUFFICIENT_STOCK:')) {
+        const prodName = msg.split(':')[1] || 'one of the selected items';
+        return NextResponse.json(
+          {
+            error: `Insufficient stock for "${prodName}". Please adjust quantity or select another item.`,
+          },
+          { status: 400 }
+        );
+      }
+      if (msg.startsWith('COUPON_LIMIT_REACHED:')) {
+        return NextResponse.json(
+          { error: 'This coupon has reached its maximum usage limit or is no longer valid.' },
+          { status: 400 }
+        );
+      }
+      throw txError;
+    }
+
+    await sendOrderConfirmationEmail({
+      orderId: newOrder.id,
+      customerName: newOrder.shippingName,
+      customerEmail: newOrder.shippingEmail,
+      customerPhone: newOrder.shippingPhone,
+      shippingAddress: newOrder.shippingAddress,
+      shippingCity: newOrder.shippingCity,
+      paymentMethod: newOrder.paymentMethod,
+      items: formattedItems,
+      subtotal,
+      gst,
+      discount,
+      totalAmount,
+    }).catch((err) => console.error('[SMTP BACKGROUND ERROR]', err));
+
+    return NextResponse.json({
+      success: true,
+      order: {
+        ...newOrder,
+        totalAmount: Number(newOrder.totalAmount),
+        subtotal: Number(newOrder.subtotal),
+        gst: Number(newOrder.gst),
+        discount: Number(newOrder.discount),
+        items: newOrder.items.map((i) => ({ ...i, price: Number(i.price) })),
+      },
+    });
+  }
+
+  // 2.3 GET /orders/:id or /v1/orders/:id
+  if (method === 'GET' && (segment.startsWith('orders/') || segment.startsWith('v1/orders/'))) {
+    const user = await getUserFromSessionOrToken(req);
+    if (!user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please sign in to view this order.' },
+        { status: 401 }
+      );
+    }
+
+    const rawOrderId = segment.split('/').pop() || '';
+    const orderId = decodeURIComponent(rawOrderId).replace(/^[#\s]+/, '').trim();
+    const order = (await db.order.findFirst({
+      where: {
+        OR: [
+          { id: orderId },
+          { id: { endsWith: orderId, mode: 'insensitive' } },
+          { id: { equals: orderId, mode: 'insensitive' } },
+        ],
+        deletedAt: null,
+      },
+      include: {
+        items: true,
+        user: { select: { id: true, name: true, email: true, phone: true } },
+      },
+    })) as DbOrderRecord | null;
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    const isAdmin = requireAdmin(user);
+    if (!isAdmin && order.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Forbidden. Access denied to this order.' },
+        { status: 403 }
+      );
+    }
+
+    const formattedOrder = {
+      ...order,
+      discount: Number(order.discount),
+      gst: Number(order.gst),
+      subtotal: Number(order.subtotal),
+      totalAmount: Number(order.totalAmount),
+      total: Number(order.totalAmount),
+      items: (order.items || []).map((item: DbOrderItemRecord) => ({
+        ...item,
+        price: Number(item.price),
+      })),
+    };
+
+    return NextResponse.json({
+      success: true,
+      order: formattedOrder,
+      data: formattedOrder,
+      ...formattedOrder,
+    });
+  }
+
+  // 11. PUT & PATCH /admin/orders
+  if (
+    (method === 'PUT' || method === 'PATCH') &&
+    (normalizedSegment === 'admin/orders' ||
+      /^admin\/orders\/[^/]+$/.test(normalizedSegment) ||
+      segment === 'admin/orders' ||
+      segment === 'v1/admin/orders')
+  ) {
+    const user = await getUserFromSessionOrToken(req);
+    if (!requireAdmin(user)) {
+      return NextResponse.json(
+        { error: 'Forbidden. Executive admin credentials required.' },
+        { status: 403 }
+      );
+    }
+    const rawBody = await req.json().catch(() => ({}));
+    const parsed = updateOrderStatusSchema.safeParse(rawBody);
+    if (!parsed.success || !rawBody?.id) {
+      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (rawBody.status) {
+      const rawStatus = String(rawBody.status).trim().toUpperCase();
+      const validStatuses: Record<string, string> = {
+        PENDING: 'PENDING',
+        PROCESSING: 'PROCESSING',
+        SHIPPED: 'SHIPPED',
+        DELIVERED: 'DELIVERED',
+        CANCELLED: 'CANCELLED',
+        CANCELED: 'CANCELLED',
+      };
+      if (validStatuses[rawStatus]) {
+        updateData.status = validStatuses[rawStatus];
+      }
+    }
+
+    if (rawBody.paymentStatus) {
+      const rawPayment = String(rawBody.paymentStatus).trim().toUpperCase();
+      const validPaymentStatuses: Record<string, string> = {
+        PENDING: 'PENDING',
+        PAID: 'PAID',
+        FAILED: 'FAILED',
+        AWAITING_VERIFICATION: 'AWAITING_VERIFICATION',
+        VERIFICATION: 'AWAITING_VERIFICATION',
+        REFUNDED: 'REFUNDED',
+      };
+      if (validPaymentStatuses[rawPayment]) {
+        updateData.paymentStatus = validPaymentStatuses[rawPayment];
+      }
+    }
+
+    if (rawBody.trackingNumber !== undefined) updateData.trackingNumber = rawBody.trackingNumber;
+
+    try {
+      const updated = await db.order.update({
+        where: { id: rawBody.id },
+        data: updateData,
+      });
+      return NextResponse.json({
+        success: true,
+        ...updated,
+        totalAmount: Number(updated.totalAmount),
+        subtotal: Number(updated.subtotal),
+        discount: Number(updated.discount),
+        gst: Number(updated.gst),
+      });
+    } catch (err: unknown) {
+      return safeApiErrorResponse(err, 'Failed to update order', 400, req);
+    }
+  }
+
+  return null;
+}

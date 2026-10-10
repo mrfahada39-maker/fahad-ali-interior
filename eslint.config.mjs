@@ -1,4 +1,4 @@
-﻿import js from "@eslint/js";
+import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import nextPlugin from "@next/eslint-plugin-next";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
@@ -123,15 +123,15 @@ export default [
   {
     files: ["src/**/*.ts", "src/**/*.tsx"],
     rules: {
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
       "no-undef": "off",
       "react-hooks/set-state-in-effect": "off",
-      "react-hooks/exhaustive-deps": "off",
+      "react-hooks/exhaustive-deps": "warn",
       "react-hooks/purity": "off",
       "react-hooks/refs": "off",
-      "@next/next/no-img-element": "off",
+      "@next/next/no-img-element": "warn",
       "no-empty": ["error", { "allowEmptyCatch": true }],
       "prefer-const": "error",
       "no-var": "error",
@@ -141,19 +141,13 @@ export default [
   },
   {
     files: [
-      "src/components/**/*.ts",
-      "src/components/**/*.tsx",
-      "src/components/home-v2/**/*.ts",
-      "src/components/home-v2/**/*.tsx",
-      "src/hooks/**/*.ts",
-      "src/hooks/**/*.tsx",
-      "src/lib/**/*.ts",
-      "src/proxy.ts",
-      "src/app/orders/**/*.tsx",
-      "src/app/sitemap.ts",
+      "src/lib/api-handlers/**/*.ts",
+      "src/lib/validations/**/*.ts",
+      "src/app/api/v1/[...path]/**/*.ts",
     ],
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
     },
   },
   {

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -128,7 +128,7 @@ export default function CartDrawer() {
                     >
                       {/* High-Res Product Thumbnail */}
                       <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center">
-                        <img
+                        <Image
                           src={resolveImageUrl(item.image, item.name)}
                           alt={item.name}
                           width={64}
