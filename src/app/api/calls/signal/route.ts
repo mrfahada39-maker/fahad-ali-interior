@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Redis } from '@upstash/redis';
 import { db } from '@/lib/db';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
 
-interface CallSession {
+export interface CallSession {
   id: string;
   fromUserId: string;
   fromUserName: string;
@@ -19,30 +20,133 @@ interface CallSession {
   updatedAt: number;
 }
 
-import { Redis } from '@upstash/redis';
-
-// Serverless-safe Redis session store with in-memory fallback
-const fallbackCallStore = new Map<string, CallSession>();
+const CALL_TTL_SECONDS = 300; // 5-minute short TTL for serverless WebRTC signaling
+const CALL_TTL_MS = CALL_TTL_SECONDS * 1000;
 
 let redisClient: Redis | null = null;
 function getRedis(): Redis | null {
   const url = process.env.UPSTASH_REDIS_REST_URL ?? '';
   const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? '';
-  if (url.startsWith('https://') && token.length > 10 && !url.includes('example')) {
+  if (
+    url.startsWith('https://') &&
+    token.length > 10 &&
+    !url.includes('example') &&
+    !url.includes('your-db')
+  ) {
     if (!redisClient) redisClient = new Redis({ url, token });
     return redisClient;
   }
   return null;
 }
 
-async function persistCallSession(key: string, session: CallSession) {
-  fallbackCallStore.set(key, session);
+function matchesSession(
+  s: CallSession,
+  sessionKey: string,
+  fromUserId: string,
+  allAliases: string[]
+): boolean {
+  if (fromUserId === 'admin' || allAliases.includes('admin')) {
+    return s.id === sessionKey || s.fromUserId === 'admin' || s.toUserId === 'admin';
+  }
+  return (
+    s.id === sessionKey ||
+    allAliases.includes(s.toUserId) ||
+    allAliases.includes(s.toUserEmail || '') ||
+    allAliases.includes(s.fromUserId) ||
+    allAliases.includes(s.fromUserEmail || '') ||
+    s.toUserId === 'client' ||
+    s.fromUserId === 'client'
+  );
+}
+
+async function saveCallSessionToStores(sessionKey: string, session: CallSession, actionName: string) {
   const redis = getRedis();
   if (redis) {
     try {
-      await redis.set(`call_session:${key}`, JSON.stringify(session), { ex: 300 });
-    } catch (_) {}
+      await redis.set(`call_session:${sessionKey}`, JSON.stringify(session), { ex: CALL_TTL_SECONDS });
+      await redis.sadd('call_sessions:active_keys', sessionKey);
+      await redis.expire('call_sessions:active_keys', CALL_TTL_SECONDS);
+    } catch {
+      // Fall through to DB persistence
+    }
   }
+
+  try {
+    if ((db as any)?.auditLog) {
+      await (db as any).auditLog.deleteMany({
+        where: { entity: 'call_signal', entityId: sessionKey },
+      });
+      await (db as any).auditLog.create({
+        data: {
+          action: actionName,
+          entity: 'call_signal',
+          entityId: sessionKey,
+          metadata: session as any,
+        },
+      });
+    }
+  } catch {
+    // Ignore DB errors if auditLog is unavailable in mock tests
+  }
+}
+
+async function loadActiveCallSessions(now: number): Promise<CallSession[]> {
+  const sessionsMap = new Map<string, CallSession>();
+
+  // 1. Read from Upstash Redis (primary low-latency serverless store)
+  const redis = getRedis();
+  if (redis) {
+    try {
+      const keys = (await redis.smembers('call_sessions:active_keys')) || [];
+      for (const k of keys) {
+        const raw = await redis.get(`call_session:${k}`);
+        if (raw) {
+          const parsed: CallSession = typeof raw === 'string' ? JSON.parse(raw) : (raw as CallSession);
+          if (parsed && now - (parsed.updatedAt || 0) < CALL_TTL_MS) {
+            sessionsMap.set(parsed.id || k, parsed);
+          }
+        }
+      }
+    } catch {
+      // Fall through to DB query
+    }
+  }
+
+  // 2. Read from Database (persistent serverless fallback with 5-minute TTL)
+  try {
+    if ((db as any)?.auditLog) {
+      await (db as any).auditLog.deleteMany({
+        where: {
+          entity: 'call_signal',
+          createdAt: { lt: new Date(now - CALL_TTL_MS) },
+        },
+      }).catch(() => {});
+
+      const records = await (db as any).auditLog.findMany({
+        where: {
+          entity: 'call_signal',
+          createdAt: { gte: new Date(now - CALL_TTL_MS) },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 15,
+      });
+
+      for (const rec of records || []) {
+        if (rec?.metadata) {
+          const s = rec.metadata as CallSession;
+          const key = s.id || rec.entityId;
+          const existing = sessionsMap.get(key);
+          if (!existing || (s.updatedAt || 0) > (existing.updatedAt || 0)) {
+            sessionsMap.set(key, s);
+          }
+        }
+      }
+    }
+  } catch {
+    // Ignore DB errors
+  }
+
+  return Array.from(sessionsMap.values());
 }
 
 export async function POST(req: NextRequest) {
@@ -64,9 +168,8 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // Verify admin identity if caller claims to be admin
-    if (fromUserId === 'admin' || userAliases.includes('admin')) {
+    if (fromUserId === 'admin' || (Array.isArray(userAliases) && userAliases.includes('admin'))) {
       const isAdmin = Boolean(await getVerifiedAdmin(req));
-      // Allow status checks to proceed without hard 403 failures that disrupt client polling loops
       if (!isAdmin && action !== 'status') {
         return NextResponse.json({ error: 'Unauthorized: Admin authentication required.' }, { status: 403 });
       }
@@ -78,18 +181,6 @@ export async function POST(req: NextRequest) {
     );
 
     const sessionKey = [fromUserId, toUserId].filter(Boolean).sort().join('_') || fromUserId || 'global_call';
-
-    // 1. Clean up stale call signal records (> 5 minutes)
-    try {
-      if ((db as any)?.auditLog) {
-        await (db as any).auditLog.deleteMany({
-          where: {
-            entity: 'call_signal',
-            createdAt: { lt: new Date(now - 300000) },
-          },
-        });
-      }
-    } catch {}
 
     // ── INITIATE CALL ──────────────────────────────────────────────────────────
     if (action === 'initiate') {
@@ -108,197 +199,66 @@ export async function POST(req: NextRequest) {
         updatedAt: now,
       };
 
-      await persistCallSession(sessionKey, session);
-
-      try {
-        if ((db as any)?.auditLog) {
-          await (db as any).auditLog.deleteMany({
-            where: { entity: 'call_signal', entityId: sessionKey },
-          });
-
-          await (db as any).auditLog.create({
-            data: {
-              action: 'call_initiate',
-              entity: 'call_signal',
-              entityId: sessionKey,
-              metadata: session as any,
-            },
-          });
-        }
-      } catch {}
-
+      await saveCallSessionToStores(sessionKey, session, 'call_initiate');
       return NextResponse.json({ success: true, session });
     }
 
+    const allSessions = await loadActiveCallSessions(now);
+
     // ── ACCEPT CALL ────────────────────────────────────────────────────────────
     if (action === 'accept') {
-      let session: CallSession | null = null;
-
-      // Find in memory first
-      for (const [k, s] of fallbackCallStore.entries()) {
-        if (
-          k === sessionKey ||
-          allAliases.includes(s.toUserId) ||
-          allAliases.includes(s.fromUserId) ||
-          allAliases.includes(s.toUserEmail || '') ||
-          (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
-        ) {
-          session = s;
-          break;
-        }
-      }
-
-      // Check DB
-      try {
-        if ((db as any)?.auditLog) {
-          const records = await (db as any).auditLog.findMany({
-            where: { entity: 'call_signal' },
-            orderBy: { createdAt: 'desc' },
-            take: 5,
-          });
-
-          for (const rec of records) {
-            if (rec.metadata) {
-              const s = rec.metadata as CallSession;
-              if (
-                rec.entityId === sessionKey ||
-                allAliases.includes(s.toUserId) ||
-                allAliases.includes(s.fromUserId) ||
-                allAliases.includes(s.toUserEmail || '') ||
-                (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
-              ) {
-                session = s;
-                session.status = 'connected';
-                session.connectedAt = session.connectedAt || now;
-                if (answerSdp) session.answerSdp = answerSdp;
-                session.updatedAt = now;
-
-                await (db as any).auditLog.update({
-                  where: { id: rec.id },
-                  data: { metadata: session as any, action: 'call_accept' },
-                });
-                break;
-              }
-            }
-          }
-        }
-      } catch {}
+      const session = allSessions.find((s) => matchesSession(s, sessionKey, fromUserId, allAliases)) || null;
 
       if (session) {
         session.status = 'connected';
         session.connectedAt = session.connectedAt || now;
         if (answerSdp) session.answerSdp = answerSdp;
         session.updatedAt = now;
-        await persistCallSession(session.id || sessionKey, session);
+        await saveCallSessionToStores(session.id || sessionKey, session, 'call_accept');
         return NextResponse.json({ success: true, session });
       }
 
-      return NextResponse.json({ success: true, status: 'connected' });
+      return NextResponse.json({ success: true, status: 'connected', session: null });
     }
 
     // ── CANDIDATE EXCHANGE ────────────────────────────────────────────────────
     if (action === 'candidate' && candidate) {
-      for (const [k, s] of fallbackCallStore.entries()) {
-        if (
-          k === sessionKey ||
-          allAliases.includes(s.toUserId) ||
-          allAliases.includes(s.fromUserId) ||
-          (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
-        ) {
-          s.candidates = s.candidates || [];
-          s.candidates.push(candidate);
-          s.updatedAt = now;
-          break;
-        }
+      const session = allSessions.find((s) => matchesSession(s, sessionKey, fromUserId, allAliases)) || null;
+
+      if (session) {
+        session.candidates = session.candidates || [];
+        const rawCand = candidate.candidate !== undefined ? candidate.candidate : candidate;
+        const candPayload =
+          typeof rawCand === 'object' && rawCand !== null && !('candidate' in candidate)
+            ? candidate
+            : {
+                candidate: typeof rawCand === 'string' ? rawCand : rawCand?.candidate || '',
+                sdpMid: candidate.sdpMid !== undefined ? candidate.sdpMid : rawCand?.sdpMid,
+                sdpMLineIndex:
+                  candidate.sdpMLineIndex !== undefined ? candidate.sdpMLineIndex : rawCand?.sdpMLineIndex,
+                fromUserId: fromUserId || 'client',
+              };
+        session.candidates.push(candPayload);
+        session.updatedAt = now;
+        await saveCallSessionToStores(session.id || sessionKey, session, 'call_candidate');
       }
-
-      try {
-        if ((db as any)?.auditLog) {
-          const records = await (db as any).auditLog.findMany({
-            where: { entity: 'call_signal' },
-            orderBy: { createdAt: 'desc' },
-            take: 5,
-          });
-
-          for (const rec of records) {
-            if (rec.metadata) {
-              const s = rec.metadata as CallSession;
-              if (
-                rec.entityId === sessionKey ||
-                allAliases.includes(s.toUserId) ||
-                allAliases.includes(s.fromUserId) ||
-                (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
-              ) {
-                s.candidates = s.candidates || [];
-                s.candidates.push(candidate);
-                s.updatedAt = now;
-
-                await (db as any).auditLog.update({
-                  where: { id: rec.id },
-                  data: { metadata: s as any },
-                });
-                break;
-              }
-            }
-          }
-        }
-      } catch {}
 
       return NextResponse.json({ success: true });
     }
 
     // ── END CALL ──────────────────────────────────────────────────────────────
     if (action === 'end' || action === 'decline') {
-      for (const [k, s] of fallbackCallStore.entries()) {
-        if (
-          k === sessionKey ||
-          allAliases.includes(s.toUserId) ||
-          allAliases.includes(s.fromUserId) ||
-          allAliases.includes(s.toUserEmail || '') ||
-          (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
-        ) {
-          s.status = 'ended';
-          s.updatedAt = now;
-        }
+      const matching = allSessions.filter((s) => matchesSession(s, sessionKey, fromUserId, allAliases));
+      for (const s of matching) {
+        s.status = 'ended';
+        s.updatedAt = now;
+        await saveCallSessionToStores(s.id || sessionKey, s, 'call_end');
       }
-
-      try {
-        if ((db as any)?.auditLog) {
-          const records = await (db as any).auditLog.findMany({
-            where: { entity: 'call_signal' },
-            orderBy: { createdAt: 'desc' },
-            take: 5,
-          });
-
-          for (const rec of records) {
-            if (rec.metadata) {
-              const s = rec.metadata as CallSession;
-              if (
-                rec.entityId === sessionKey ||
-                allAliases.includes(s.toUserId) ||
-                allAliases.includes(s.fromUserId) ||
-                allAliases.includes(s.toUserEmail || '') ||
-                (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
-              ) {
-                s.status = 'ended';
-                s.updatedAt = now;
-                await (db as any).auditLog.update({
-                  where: { id: rec.id },
-                  data: { metadata: s as any, action: 'call_end' },
-                });
-              }
-            }
-          }
-        }
-      } catch {}
-
       return NextResponse.json({ success: true, status: 'ended' });
     }
 
     // ── STATUS POLLING ────────────────────────────────────────────────────────
     if (action === 'status') {
-      let found: CallSession | null = null;
-
       const prioritySort = (a: CallSession, b: CallSession) => {
         const aActive = a.status === 'outgoing' || a.status === 'connected' ? 1 : 0;
         const bActive = b.status === 'outgoing' || b.status === 'connected' ? 1 : 0;
@@ -308,76 +268,13 @@ export async function POST(req: NextRequest) {
 
       const isLiveOrRecent = (s: CallSession) => {
         if (s.status === 'outgoing' || s.status === 'connected') return true;
-        return (now - (s.updatedAt || 0)) < 15000;
+        return now - (s.updatedAt || 0) < 15000;
       };
 
-      // 1. Check memory store sorted by active status then latest updatedAt
-      const memSessions = Array.from(fallbackCallStore.values())
-        .filter(isLiveOrRecent)
-        .sort(prioritySort);
+      const sorted = allSessions.filter(isLiveOrRecent).sort(prioritySort);
+      const found = sorted.find((s) => matchesSession(s, sessionKey, fromUserId, allAliases)) || null;
 
-      for (const s of memSessions) {
-        if (fromUserId === 'admin' || allAliases.includes('admin')) {
-          if (s.fromUserId === 'admin' || s.toUserId === 'admin') {
-            found = s;
-            break;
-          }
-        } else {
-          const matches =
-            allAliases.includes(s.toUserId) ||
-            allAliases.includes(s.toUserEmail || '') ||
-            allAliases.includes(s.fromUserId) ||
-            allAliases.includes(s.fromUserEmail || '') ||
-            s.toUserId === 'client' ||
-            s.fromUserId === 'client';
-          if (matches) {
-            found = s;
-            break;
-          }
-        }
-      }
-
-      // 2. Check DB
-      if (!found) {
-        try {
-          if ((db as any)?.auditLog) {
-            const records = await (db as any).auditLog.findMany({
-              where: { entity: 'call_signal' },
-              orderBy: { createdAt: 'desc' },
-              take: 15,
-            });
-
-            const parsedSessions = records
-              .map((r: any) => r.metadata as CallSession)
-              .filter(Boolean)
-              .filter(isLiveOrRecent)
-              .sort(prioritySort);
-
-            for (const s of parsedSessions) {
-              if (fromUserId === 'admin' || allAliases.includes('admin')) {
-                if (s.fromUserId === 'admin' || s.toUserId === 'admin') {
-                  found = s;
-                  break;
-                }
-              } else {
-                const matches =
-                  allAliases.includes(s.toUserId) ||
-                  allAliases.includes(s.toUserEmail || '') ||
-                  allAliases.includes(s.fromUserId) ||
-                  allAliases.includes(s.fromUserEmail || '') ||
-                  s.toUserId === 'client' ||
-                  s.fromUserId === 'client';
-                if (matches) {
-                  found = s;
-                  break;
-                }
-              }
-            }
-          }
-        } catch {}
-      }
-
-      return NextResponse.json({ session: found || null, success: true });
+      return NextResponse.json({ session: found, success: true });
     }
 
     return NextResponse.json({ success: true });

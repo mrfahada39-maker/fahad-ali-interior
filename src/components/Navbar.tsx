@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Menu, X, Search, ShoppingBag, User, Home, Armchair, Sparkles, PhoneCall, Bell, LogOut, Compass, Crown, ChevronRight, Heart, LayoutGrid, Phone, UserPlus, Headphones, Facebook, Instagram, Youtube } from 'lucide-react';
-import { useCartStore } from '@/store';
+import { useCartStore, useSiteSettingsStore } from '@/store';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,6 +15,8 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
+  const settings = useSiteSettingsStore((s) => s.settings);
+  const contactPhone = settings?.contactPhone || BUSINESS_CONTACT.phone;
   const cartItemCount = useCartStore((s) => s.getItemCount());
   const openCart = useCartStore((s) => s.openCart);
   const { data: session } = useSession();
@@ -389,8 +392,8 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               <span className="text-[10px] font-semibold tracking-widest uppercase text-[#8A5A2B] block mb-0.5">
                 NEED HELP?
               </span>
-              <a href="tel:+923001234567" className="text-xs font-semibold text-[#2C1E18] block hover:underline">
-                +92 300 1234567
+              <a href={`tel:${contactPhone.replace(/\s+/g, '')}`} className="text-xs font-semibold text-[#2C1E18] block hover:underline">
+                {contactPhone}
               </a>
               <a href="mailto:support@fahadaliinterior.com" className="text-[11px] text-[#7A6048] block hover:underline">
                 support@fahadaliinterior.com

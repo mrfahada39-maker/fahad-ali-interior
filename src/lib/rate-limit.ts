@@ -83,27 +83,61 @@ if (typeof setInterval !== 'undefined') {
   }
 }
 
+let loggedMissingUpstashError = false;
+
+if (process.env.NODE_ENV === 'production' && !isRateLimitConfigured()) {
+  console.error(
+    '[RateLimit FATAL] Upstash Redis configuration (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) is missing in production! Distributed rate limiting is required.'
+  );
+  loggedMissingUpstashError = true;
+}
+
+function checkShortLivedFallback(
+  identifier: string,
+  maxRequests: number,
+  windowMs: number
+): { allowed: boolean; remaining: number; resetTime: number } {
+  const now = Date.now();
+  const bucket = memoryBuckets.get(identifier);
+
+  if (!bucket || now > bucket.resetAt) {
+    memoryBuckets.set(identifier, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, remaining: maxRequests - 1, resetTime: now + windowMs };
+  }
+
+  if (bucket.count < maxRequests) {
+    bucket.count++;
+    return { allowed: true, remaining: maxRequests - bucket.count, resetTime: bucket.resetAt };
+  }
+
+  return { allowed: false, remaining: 0, resetTime: bucket.resetAt };
+}
+
 export async function rateLimit(
   identifier: string,
   name: LimitName,
 ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
   const config = RATE_LIMITS[name];
+  const isProduction = process.env.NODE_ENV === 'production';
 
   if (!isRateLimitConfigured()) {
-    const now = Date.now();
-    const bucket = memoryBuckets.get(identifier);
-
-    if (!bucket || now > bucket.resetAt) {
-      memoryBuckets.set(identifier, { count: 1, resetAt: now + config.windowMs });
-      return { allowed: true, remaining: config.maxRequests - 1, resetTime: now + config.windowMs };
+    if (isProduction) {
+      if (!loggedMissingUpstashError) {
+        console.error(
+          '[RateLimit FATAL] Upstash Redis configuration (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) is missing in production! Per-instance memory limits are disabled.'
+        );
+        loggedMissingUpstashError = true;
+      }
+      // Do not fall back to per-instance memory limits in production when unconfigured
+      return {
+        allowed: false,
+        remaining: 0,
+        resetTime: Date.now() + config.windowMs,
+      };
     }
 
-    if (bucket.count < config.maxRequests) {
-      bucket.count++;
-      return { allowed: true, remaining: config.maxRequests - bucket.count, resetTime: bucket.resetAt };
-    }
-
-    return { allowed: false, remaining: 0, resetTime: bucket.resetAt };
+    // Development / test environment in-memory sliding window
+    return checkShortLivedFallback(identifier, config.maxRequests, config.windowMs);
   }
 
   try {
@@ -115,13 +149,17 @@ export async function rateLimit(
       resetTime: result.reset,
     };
   } catch (err) {
-    // If Upstash is temporarily unavailable, fail open in dev, fail closed in prod
     console.error('[RateLimit] Upstash error:', err);
-    const isProduction = process.env.NODE_ENV === 'production';
-    return {
-      allowed: !isProduction,
-      remaining: 0,
-      resetTime: Date.now() + config.windowMs,
-    };
+    // Strict fail-closed only for login
+    if (name === 'login') {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetTime: Date.now() + config.windowMs,
+      };
+    }
+    // Short-lived safe fallback (15s window) for non-auth routes so users aren't locked out if Upstash is down
+    const shortWindowMs = Math.min(config.windowMs, 15 * 1000);
+    return checkShortLivedFallback(`fallback:${identifier}`, config.maxRequests, shortWindowMs);
   }
 }

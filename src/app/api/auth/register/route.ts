@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { sendVerificationEmail } from '@/lib/email';
 import { getSiteUrl, shouldSkipEmailVerification } from '@/lib/utils';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { validatePasswordStrength, runDummyBcryptCompare } from '@/lib/password-policy';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -38,33 +39,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (typeof password !== 'string' || password.length < 8) {
+    const pwCheck = validatePasswordStrength(password);
+    if (!pwCheck.valid) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
-        { status: 400 }
-      );
-    }
-
-    if (password.length > 128) {
-      return NextResponse.json(
-        { error: 'Password cannot exceed 128 characters' },
-        { status: 400 }
-      );
-    }
-
-    const hasLetter = /[a-zA-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    if (!hasLetter || !hasNumber) {
-      return NextResponse.json(
-        { error: 'Password must contain both letters and numbers for high security.' },
-        { status: 400 }
-      );
-    }
-
-    const commonPasswords = ['password', '12345678', 'admin123', 'qwerty123', 'password123'];
-    if (commonPasswords.includes(password.toLowerCase())) {
-      return NextResponse.json(
-        { error: 'This password is too common and easily guessed. Please choose a stronger password.' },
+        { error: pwCheck.error },
         { status: 400 }
       );
     }
@@ -74,8 +52,9 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingUser) {
+      await runDummyBcryptCompare(password);
       return NextResponse.json(
-        { error: 'An account with this email already exists' },
+        { error: 'An account with this email already exists or is unavailable' },
         { status: 409 }
       );
     }
@@ -102,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     if (!skipVerification) {
       try {
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const code = crypto.randomInt(100000, 1000000).toString();
         const token = crypto.randomBytes(32).toString('hex');
         const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);

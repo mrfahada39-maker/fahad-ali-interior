@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { getSiteUrl } from '@/lib/utils';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { runDummyBcryptCompare } from '@/lib/password-policy';
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
+      await runDummyBcryptCompare(email);
       // Return success to prevent email enumeration
       return NextResponse.json({
         success: true,

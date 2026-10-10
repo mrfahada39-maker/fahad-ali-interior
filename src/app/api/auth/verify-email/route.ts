@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import crypto from 'crypto';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { runDummyBcryptCompare } from '@/lib/password-policy';
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,7 +44,8 @@ export async function POST(req: NextRequest) {
 
       if (existingUser) {
         if (existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date()) {
-          return NextResponse.json({ error: 'Account temporarily locked due to failed attempts. Please try again later.' }, { status: 423 });
+          await runDummyBcryptCompare(cleanEmail);
+          return NextResponse.json({ error: 'Invalid or expired verification link/code. Please request a new one.' }, { status: 400 });
         }
 
         const verifyRecord = await db.emailVerificationToken.findFirst({
@@ -71,6 +73,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user) {
+      await runDummyBcryptCompare(String(email || token || 'dummy'));
       return NextResponse.json(
         { error: 'Invalid or expired verification link/code. Please request a new one.' },
         { status: 400 }

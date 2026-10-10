@@ -1118,7 +1118,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                         </span>
                       </div>
                       <p className="text-xs text-stone-600 font-medium">Bespoke Architectural Interiors, Sovereign Decor & Luxury Catalog</p>
-                      <p className="text-[11px] text-stone-400 mt-0.5">Lahore & Karachi, Pakistan • Support: +92 300 1234567 • NTN: #FAI-PK-9821</p>
+                      <p className="text-[11px] text-stone-400 mt-0.5">Lahore & Karachi, Pakistan • Support: +92 320 7006110 • NTN: #FAI-PK-9821</p>
                     </div>
 
                     <div className="text-left sm:text-right text-xs bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3] border border-[#D9C4AC] rounded-2xl p-3.5 shadow-xs shrink-0 min-w-[210px]">

@@ -15,8 +15,13 @@ import {
   Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import { useSiteSettingsStore } from '@/store';
 
 export default function ContactPageClient() {
+  const settings = useSiteSettingsStore((s) => s.settings);
+  const contactPhone = settings?.contactPhone || BUSINESS_CONTACT.phone;
+  const whatsappNumber = (settings?.socialWhatsapp || BUSINESS_CONTACT.whatsapp).replace(/\D/g, '');
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -57,7 +62,7 @@ export default function ContactPageClient() {
     }
   };
 
-  const whatsappUrl = `https://wa.me/923001234567?text=${encodeURIComponent(
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     `Assalam-o-Alaikum Fahad Ali Interior! I am reaching out regarding: ${formData.projectType || 'Furniture Inquiry'}`
   )}`;
 
@@ -147,7 +152,7 @@ export default function ContactPageClient() {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="e.g. 0300 1234567"
+                      placeholder="e.g. 0320 7006110"
                       className="w-full h-11 px-3.5 rounded-xl bg-white border border-amber-300/60 focus:border-[#B88E4B] text-[#221814] font-medium text-xs sm:text-sm outline-none transition-colors shadow-2xs"
                     />
                   </div>
@@ -273,7 +278,7 @@ export default function ContactPageClient() {
               <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-xl pointer-events-none bg-amber-500/10 opacity-70" />
 
               <a
-                href="tel:+923001234567"
+                href={`tel:${contactPhone.replace(/\s+/g, '')}`}
                 className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white border border-transparent hover:border-amber-300/60 transition-all group relative z-10"
               >
                 <div className="w-10 h-10 rounded-xl bg-white border border-amber-300/70 flex items-center justify-center text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white transition-all shadow-2xs shrink-0">
@@ -281,7 +286,7 @@ export default function ContactPageClient() {
                 </div>
                 <div>
                   <p className="text-[9.5px] font-black uppercase tracking-widest text-[#8C6239]">Direct Call</p>
-                  <p className="text-xs sm:text-sm font-bold text-[#221814]">+92 300 1234567</p>
+                  <p className="text-xs sm:text-sm font-bold text-[#221814]">{contactPhone}</p>
                 </div>
               </a>
 

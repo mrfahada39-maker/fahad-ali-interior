@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import { sessionRole } from '@/lib/enums';
 import { shouldSkipEmailVerification } from '@/lib/utils';
 import { decryptTotpSecret, verifyBackupCode } from '@/lib/totp-crypto';
+import { runDummyBcryptCompare } from '@/lib/password-policy';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isLocalAuth =
@@ -59,18 +60,20 @@ const providers: NextAuthOptions['providers'] = [
       });
 
       if (!user?.password) {
-        return null; // OAuth user trying credentials
+        await runDummyBcryptCompare(credentials.password);
+        return null; // OAuth user or non-existent user trying credentials
       }
 
       // 1. Enforce deactivation check (banned / deleted users cannot log in)
       if (user.deletedAt) {
+        await runDummyBcryptCompare(credentials.password);
         return null;
       }
 
-      // 2. Enforce account lockout cooldown (anti-brute force defense)
+      // 2. Enforce account lockout cooldown (anti-brute force defense, no distinct locked message)
       if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
-        const remainingMinutes = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
-        throw new Error(`Account temporarily locked due to excessive failed attempts. Please try again in ${remainingMinutes} minute(s).`);
+        await runDummyBcryptCompare(credentials.password);
+        return null;
       }
 
       const isPasswordValid = await bcrypt.compare(credentials.password, user.password);

@@ -19,9 +19,12 @@ import {
 } from 'lucide-react';
 
 import { useSiteSettingsStore } from '@/store';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 export default function Footer() {
   const settings = useSiteSettingsStore((s) => s.settings) || {};
+  const contactPhone = settings.contactPhone || BUSINESS_CONTACT.phone;
+  const contactPhoneDial = contactPhone.replace(/\s+/g, '');
 
   // Mobile Accordions State (Menu open by default)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -214,11 +217,11 @@ export default function Footer() {
             </div>
 
             <div className="space-y-2.5 text-sm sm:text-base text-[#221814] pt-2 flex flex-col items-center text-center">
-              <a href="tel:+923001234567" className="flex items-center justify-center gap-2.5 hover:text-[#B88E4B] transition-colors duration-200 group">
+              <a href={`tel:${contactPhoneDial}`} className="flex items-center justify-center gap-2.5 hover:text-[#B88E4B] transition-colors duration-200 group">
                 <div className="w-8 h-8 rounded-lg bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all shadow-2xs">
                   <Phone size={15} />
                 </div>
-                <span className="font-semibold text-xs sm:text-sm">+92 300 1234567</span>
+                <span className="font-semibold text-xs sm:text-sm">{contactPhone}</span>
               </a>
               <a href="mailto:info@fahadaliinterior.com" className="flex items-center justify-center gap-2.5 hover:text-[#B88E4B] transition-colors duration-200 group">
                 <div className="w-8 h-8 rounded-lg bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all shadow-2xs">
@@ -364,9 +367,9 @@ export default function Footer() {
 
           {/* Direct Mobile Contact Info (Centered & Large) */}
           <div className="pt-6 space-y-2.5 text-xs sm:text-sm text-[#2C1E18] flex flex-col items-center text-center">
-            <a href="tel:+923001234567" className="flex items-center gap-2 hover:text-[#B88E4B] transition-colors">
+            <a href={`tel:${contactPhoneDial}`} className="flex items-center gap-2 hover:text-[#B88E4B] transition-colors">
               <Phone size={15} />
-              <span className="font-semibold">+92 300 1234567</span>
+              <span className="font-semibold">{contactPhone}</span>
             </a>
             <a href="mailto:info@fahadaliinterior.com" className="flex items-center gap-2 hover:text-[#B88E4B] transition-colors">
               <Mail size={15} />

@@ -18,7 +18,18 @@ function isSameOriginRequest(request: NextRequest): boolean {
 
   if (!origin) {
     const fetchSite = request.headers.get('sec-fetch-site');
-    return !fetchSite || fetchSite === 'same-origin' || fetchSite === 'same-site' || fetchSite === 'none';
+    if (!fetchSite) {
+      const cookieHeader = request.headers.get('cookie') ?? '';
+      const hasCookieAuth =
+        cookieHeader.includes('next-auth.session-token') ||
+        cookieHeader.includes('__Secure-next-auth.session-token') ||
+        cookieHeader.includes('fai_admin_token');
+      if (hasCookieAuth) {
+        return false;
+      }
+      return true;
+    }
+    return fetchSite === 'same-origin' || fetchSite === 'same-site' || fetchSite === 'none';
   }
 
   try {

@@ -17,6 +17,7 @@ import { apiFetch, apiFetchJsonWithStatus, clearEnterpriseTokens } from '@/lib/a
 import { apiErrorMessage, ensureEnterpriseTokens } from '@/hooks/use-enterprise-auth-sync';
 import { signOut } from 'next-auth/react';
 import { defaultProductImage } from '@/lib/images';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 import dynamic from 'next/dynamic';
 import OverviewTab from './OverviewTab';
 import ProductsTab from './ProductsTab';
@@ -206,14 +207,14 @@ export default function AdminDashboard() {
           if (parsed?.account) {
             return {
               name: parsed.account.name || 'Fahad Ali',
-              email: parsed.account.email || 'mrfahada39@gmail.com',
-              phone: parsed.account.phone || '+92 300 1234567',
+              email: parsed.account.email || BUSINESS_CONTACT.adminEmail,
+              phone: parsed.account.phone || BUSINESS_CONTACT.phone,
             };
           }
         }
       } catch {}
     }
-    return { name: 'Fahad Ali', email: 'mrfahada39@gmail.com', phone: '+92 300 1234567' };
+    return { name: 'Fahad Ali', email: BUSINESS_CONTACT.adminEmail, phone: BUSINESS_CONTACT.phone };
   });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState({ current: false, next: false, confirm: false });

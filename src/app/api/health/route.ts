@@ -1,16 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { checkDatabaseHealth } from '@/lib/db';
+import { getVerifiedAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req?: NextRequest) {
   const dbHealth = await checkDatabaseHealth();
+  const isHealthy = dbHealth.ok;
+  const statusCode = isHealthy ? 200 : 503;
+
+  const admin = req ? await getVerifiedAdmin(req).catch(() => null) : null;
+
+  if (!admin) {
+    return NextResponse.json(
+      { status: isHealthy ? 'healthy' : 'degraded' },
+      {
+        status: statusCode,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'X-Health-Status': isHealthy ? 'PASS' : 'FAIL',
+        },
+      }
+    );
+  }
+
   const uptimeSeconds = Math.floor(process.uptime());
   const memUsage = process.memoryUsage();
   const memoryUsageMb = Math.round(memUsage.rss / 1024 / 1024);
-
-  const isHealthy = dbHealth.ok;
-  const statusCode = isHealthy ? 200 : 503;
 
   const payload = {
     status: isHealthy ? 'healthy' : 'degraded',

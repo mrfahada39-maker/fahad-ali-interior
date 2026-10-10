@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 export const dynamic = 'force-dynamic';
 
 const DEFAULT_SETTINGS = {
   id: 'singleton',
   siteName: 'Fahad Ali Interior',
-  adminEmail: 'mrfahada39@gmail.com',
-  contactPhone: '+92 320 7006110',
-  storeAddress: 'Main Boulevard, Gulberg III, Lahore, Pakistan',
+  adminEmail: BUSINESS_CONTACT.adminEmail,
+  contactPhone: BUSINESS_CONTACT.phone,
+  storeAddress: BUSINESS_CONTACT.address,
   currency: 'PKR',
   socialInstagram: 'https://instagram.com/fahadaliinterior',
   socialFacebook: 'https://facebook.com/fahadaliinterior',
-  socialWhatsapp: '923207006110',
+  socialWhatsapp: BUSINESS_CONTACT.whatsapp,
   foundedYear: '2020',
   themeFontFamily: 'Playfair Display',
   themeBgColor: '#FAF7F2',

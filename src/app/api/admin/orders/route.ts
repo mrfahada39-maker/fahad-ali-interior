@@ -8,6 +8,7 @@ import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { moveToRecycleBin } from '@/lib/recycle-bin';
 
 import { getVerifiedAdmin } from '@/lib/admin-auth';
+import { safeApiErrorResponse } from '@/lib/api-error';
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: formatted, orders: formatted });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to fetch orders' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to fetch orders', 500, req);
   }
 }
 
@@ -119,7 +120,7 @@ export async function PUT(req: NextRequest) {
       gst: Number(updated.gst),
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to update order' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to update order', 500, req);
   }
 }
 
@@ -165,6 +166,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to delete order' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to delete order', 500, req);
   }
 }

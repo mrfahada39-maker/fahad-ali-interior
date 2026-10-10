@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 const contactInquirySchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(200),
@@ -15,12 +16,13 @@ const contactInquirySchema = z.object({
 });
 
 export async function GET() {
+  const settings = await db.settings.findFirst().catch(() => null);
   return NextResponse.json({
     success: true,
     status: 'ACTIVE',
     concierge: 'Fahad Ali Interior VIP Concierge Desk',
-    phone: '+92 320 7006110',
-    email: 'mrfahada39@gmail.com',
+    phone: settings?.contactPhone || BUSINESS_CONTACT.phone,
+    email: settings?.adminEmail || BUSINESS_CONTACT.supportEmail,
   });
 }
 

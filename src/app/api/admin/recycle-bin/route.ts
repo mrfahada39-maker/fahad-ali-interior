@@ -13,6 +13,7 @@ import {
 } from '@/lib/recycle-bin';
 
 import { getVerifiedAdmin } from '@/lib/admin-auth';
+import { safeApiErrorResponse } from '@/lib/api-error';
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
       ...result,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to list recycle bin items' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to list recycle bin items', 500, req);
   }
 }
 
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid action. Supported: restore' }, { status: 400 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to restore item' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to restore item', 500, req);
   }
 }
 
@@ -111,6 +112,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ error: 'Provide item id or specify empty/all action' }, { status: 400 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to delete from recycle bin' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to delete from recycle bin', 500, req);
   }
 }

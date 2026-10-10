@@ -15,6 +15,7 @@ import { useCartStore, useWishlistStore, useClientCacheStore, type CachedProduct
 import { useIsInWishlist } from '@/hooks/use-is-in-wishlist';
 import { useSession } from 'next-auth/react';
 import { apiFetch } from '@/lib/api-client';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 import { toast } from 'sonner';
 
 export default function ProductPageClient({
@@ -416,7 +417,7 @@ export default function ProductPageClient({
 
               {/* Direct Artisan WhatsApp Concierge */}
               <a
-                href={`https://wa.me/923001234567?text=${whatsappMessage}`}
+                href={`https://wa.me/${BUSINESS_CONTACT.whatsapp}?text=${whatsappMessage}`}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full py-2.5 bg-[#25D366]/10 border border-[#25D366]/30 hover:bg-[#25D366]/20 text-[#128C7E] text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"

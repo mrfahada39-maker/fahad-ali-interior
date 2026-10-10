@@ -34,6 +34,7 @@ const fallbackCategories = [
 ];
 
 import { getVerifiedAdmin } from '@/lib/admin-auth';
+import { safeApiErrorResponse } from '@/lib/api-error';
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -47,7 +48,7 @@ export async function OPTIONS() {
 }
 
 // GET /api/admin/categories
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const categories = await db.category.findMany({
       where: { deletedAt: null },
@@ -59,7 +60,7 @@ export async function GET() {
     }
     return NextResponse.json(categories);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to fetch categories' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to fetch categories', 500, req);
   }
 }
 
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
     invalidateStorefrontCache();
     return NextResponse.json({ success: true, data: category, category });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to create category' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to create category', 500, req);
   }
 }
 
@@ -147,7 +148,7 @@ export async function PUT(req: NextRequest) {
     invalidateStorefrontCache();
     return NextResponse.json({ success: true, data: updated, category: updated });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to update category' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to update category', 500, req);
   }
 }
 
@@ -190,6 +191,6 @@ export async function DELETE(req: NextRequest) {
     invalidateStorefrontCache();
     return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to delete category' }, { status: 500 });
+    return safeApiErrorResponse(error, 'Failed to delete category', 500, req);
   }
 }

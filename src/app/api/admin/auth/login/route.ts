@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { decryptTotpSecret, verifyBackupCode } from '@/lib/totp-crypto';
 import { getAdminTokenSecret } from '@/lib/admin-auth';
+import { runDummyBcryptCompare } from '@/lib/password-policy';
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,15 +29,16 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user || !user.password) {
+      await runDummyBcryptCompare(password);
       return NextResponse.json({ error: 'Invalid executive credentials' }, { status: 401 });
     }
 
-    // Check account lockout
+    // Check account lockout (no distinct locked message to prevent enumeration)
     if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
-      const remainingMinutes = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
+      await runDummyBcryptCompare(password);
       return NextResponse.json(
-        { error: `Account temporarily locked due to excessive failed attempts. Try again in ${remainingMinutes} minute(s).` },
-        { status: 423 }
+        { error: 'Invalid executive credentials' },
+        { status: 401 }
       );
     }
 

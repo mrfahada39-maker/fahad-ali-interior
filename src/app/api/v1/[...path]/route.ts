@@ -13,6 +13,11 @@ import { getSiteUrl } from '@/lib/utils';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { encryptTotpSecret, hashBackupCode } from '@/lib/totp-crypto';
 import { getAdminTokenSecret } from '@/lib/admin-auth';
+import { validatePasswordStrength, runDummyBcryptCompare } from '@/lib/password-policy';
+import { validateImageBuffer } from '@/lib/image-validator';
+import { safeApiErrorResponse } from '@/lib/api-error';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import { POST as handleCallSignal } from '@/app/api/calls/signal/route';
 import {
   moveToRecycleBin,
   listRecycleBinItems,
@@ -28,26 +33,40 @@ interface SessionUser {
   role?: string;
 }
 
-const globalForCalls = globalThis as unknown as { activeCallSessions?: Map<string, any> };
-const activeCallSessions =
-  globalForCalls.activeCallSessions ?? (globalForCalls.activeCallSessions = new Map<string, any>());
-
 async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser | null> {
   // 1. Try cryptographic HMAC signed token from Authorization, x-enterprise-token or cookie
   const adminCookie = req.cookies.get('fai_admin_token')?.value;
   const authHeader = req.headers.get('authorization') || req.headers.get('x-enterprise-token') || adminCookie;
   if (authHeader && authHeader.includes('fai_token_')) {
-    const match = authHeader.match(/fai_token_([^_]+)_([^_]+)_([a-f0-9]+)/);
+    const cleanToken = authHeader.replace(/^Bearer\s+/i, '').trim();
+    const match = cleanToken.match(/fai_token_(.+)_(\d+)_([a-f0-9]+)/);
     if (match) {
       const [, userId, timestampStr, signature] = match;
       const timestamp = parseInt(timestampStr, 10);
       const maxAgeMs = 24 * 60 * 60 * 1000; // 24 hours (Hardened)
       if (!isNaN(timestamp) && (Date.now() - timestamp) < maxAgeMs) {
-        const secret = process.env.NEXTAUTH_SECRET;
-        if (!secret || secret.length < 32) return null;
-        const expectedSig = crypto.createHmac('sha256', secret).update(`${userId}:${timestamp}`).digest('hex');
+        const adminSecret = getAdminTokenSecret();
+        const nextAuthSecret = process.env.NEXTAUTH_SECRET || '';
+        const candidateSigs: string[] = [];
+        if (adminSecret) {
+          candidateSigs.push(
+            crypto.createHmac('sha256', adminSecret).update(`${userId}:${timestamp}:ADMIN`).digest('hex'),
+            crypto.createHmac('sha256', adminSecret).update(`${userId}:${timestamp}`).digest('hex')
+          );
+        }
+        if (nextAuthSecret && nextAuthSecret.length >= 32) {
+          candidateSigs.push(
+            crypto.createHmac('sha256', nextAuthSecret).update(`${userId}:${timestamp}`).digest('hex'),
+            crypto.createHmac('sha256', nextAuthSecret).update(`${userId}:${timestamp}:ADMIN`).digest('hex')
+          );
+        }
         try {
-          if (crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSig, 'hex'))) {
+          const sigBuf = Buffer.from(signature, 'hex');
+          const isValidSig = candidateSigs.some((expected) => {
+            const expBuf = Buffer.from(expected, 'hex');
+            return sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
+          });
+          if (isValidSig) {
             const dbUser = await db.user.findUnique({
               where: { id: userId },
               select: { id: true, email: true, role: true, deletedAt: true },
@@ -198,7 +217,13 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const base64 = `data:${file.type || 'image/jpeg'};base64,${buffer.toString('base64')}`;
+
+      const validation = validateImageBuffer(buffer, file.type);
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+      }
+
+      const base64 = `data:${validation.mimeType};base64,${buffer.toString('base64')}`;
 
       const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
       const API_KEY = process.env.CLOUDINARY_API_KEY;
@@ -206,7 +231,6 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
       if (CLOUD_NAME && API_KEY && API_SECRET) {
         const timestamp = Math.round(Date.now() / 1000);
-        const crypto = await import('crypto');
         const paramsToSign = `folder=${folder}&timestamp=${timestamp}${API_SECRET}`;
         const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
 
@@ -243,7 +267,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         url: base64,
         secureUrl: base64,
         publicId: `local_${Date.now()}`,
-        format: 'jpg',
+        format: validation.mimeType?.split('/')[1] || 'jpg',
         resourceType: 'image',
         bytes: buffer.length,
       };
@@ -255,32 +279,48 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       if (!user) {
         return NextResponse.json({ error: 'Unauthorized. Sign in to upload images.' }, { status: 401 });
       }
-      const folder = req.nextUrl.searchParams.get('folder') || 'fahad-ali-interior/products';
       const formData = await req.formData().catch(() => null);
       const files = (formData?.getAll('files') || []) as File[];
       if (!files || files.length === 0) {
         return NextResponse.json({ error: 'No files provided' }, { status: 400 });
       }
-      const results = await Promise.all(
-        files.map(async (file) => {
-          const bytes = await file.arrayBuffer();
-          const buffer = Buffer.from(bytes);
-          const base64 = `data:${file.type || 'image/jpeg'};base64,${buffer.toString('base64')}`;
-          return {
-            url: base64,
-            secureUrl: base64,
-            publicId: `local_${Date.now()}`,
-            format: 'jpg',
-            resourceType: 'image',
-            bytes: buffer.length,
-          };
-        })
-      );
+      const results = [];
+      for (const file of files) {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const validation = validateImageBuffer(buffer, file.type);
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error }, { status: 400 });
+        }
+        const base64 = `data:${validation.mimeType};base64,${buffer.toString('base64')}`;
+        results.push({
+          url: base64,
+          secureUrl: base64,
+          publicId: `local_${Date.now()}`,
+          format: validation.mimeType?.split('/')[1] || 'jpg',
+          resourceType: 'image',
+          bytes: buffer.length,
+        });
+      }
       return NextResponse.json({ success: true, data: results });
     }
 
     // 0. GET /health or /api/v1/health — Instant Sub-10ms Edge Health Check
     if (method === 'GET' && (segment === 'health' || segment === 'v1/health')) {
+      const user = await getUserFromSessionOrToken(req).catch(() => null);
+      if (!requireAdmin(user)) {
+        return NextResponse.json(
+          { status: 'healthy' },
+          {
+            status: 200,
+            headers: {
+              'Cache-Control': 'no-store, no-cache, must-revalidate',
+              'X-Health-Status': 'PASS',
+            },
+          }
+        );
+      }
+
       return NextResponse.json(
         {
           status: 'healthy',
@@ -294,7 +334,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         {
           status: 200,
           headers: {
-            'Cache-Control': 'public, max-age=10, s-maxage=30, stale-while-revalidate=60',
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
             'X-Health-Status': 'PASS',
           },
         }
@@ -665,8 +705,9 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
       const body = await req.json().catch(() => ({}));
       const { token, code, email, password } = body;
-      if (!password || password.length < 8) {
-        return NextResponse.json({ error: 'Password must be at least 8 characters long.' }, { status: 400 });
+      const pwCheck = validatePasswordStrength(password);
+      if (!pwCheck.valid) {
+        return NextResponse.json({ error: pwCheck.error }, { status: 400 });
       }
       let user = null;
       if (token) {
@@ -685,7 +726,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         const existing = await db.user.findUnique({ where: { email: cleanEmail } });
         if (existing) {
           if (existing.lockedUntil && new Date(existing.lockedUntil) > new Date()) {
-            return NextResponse.json({ error: 'Account temporarily locked due to excessive failed attempts. Please try again later.' }, { status: 423 });
+            await runDummyBcryptCompare(password);
+            return NextResponse.json({ error: 'Invalid or expired reset code/link. Please request a new one.' }, { status: 400 });
           }
 
           const record = await db.passwordResetToken.findFirst({
@@ -711,6 +753,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         }
       }
       if (!user) {
+        await runDummyBcryptCompare(password);
         return NextResponse.json({ error: 'Invalid or expired reset code/link. Please request a new one.' }, { status: 400 });
       }
       const hashedPassword = await bcrypt.hash(password, 12);
@@ -745,7 +788,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         const existing = await db.user.findUnique({ where: { email: cleanEmail } });
         if (existing) {
           if (existing.lockedUntil && new Date(existing.lockedUntil) > new Date()) {
-            return NextResponse.json({ error: 'Account temporarily locked due to failed attempts. Please try again later.' }, { status: 423 });
+            await runDummyBcryptCompare(cleanEmail);
+            return NextResponse.json({ error: 'Invalid or expired verification code/link. Please request a new one.' }, { status: 400 });
           }
 
           const record = await db.emailVerificationToken.findFirst({
@@ -767,6 +811,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         }
       }
       if (!user) {
+        await runDummyBcryptCompare(String(email || token || 'dummy'));
         return NextResponse.json({ error: 'Invalid or expired verification code/link. Please request a new one.' }, { status: 400 });
       }
       await db.user.update({
@@ -791,9 +836,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }
       const user = await db.user.findUnique({ where: { email } });
       if (!user || user.emailVerified) {
+        await runDummyBcryptCompare(email);
         return NextResponse.json({ success: true, message: 'If an unverified account exists, a new verification email has been sent.' });
       }
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const code = crypto.randomInt(100000, 1000000).toString();
       const token = crypto.randomBytes(32).toString('hex');
       const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -814,12 +860,17 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       if (!email || !password) {
         return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
       }
+      const pwCheck = validatePasswordStrength(password);
+      if (!pwCheck.valid) {
+        return NextResponse.json({ error: pwCheck.error }, { status: 400 });
+      }
       const normalizedEmail = email.toLowerCase().trim();
       const existing = await db.user.findFirst({ where: { email: normalizedEmail, deletedAt: null } });
       if (existing) {
-        return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
+        await runDummyBcryptCompare(password);
+        return NextResponse.json({ error: 'An account with this email already exists or is unavailable' }, { status: 409 });
       }
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, 12);
       const user = await db.user.create({
         data: {
           name: name?.trim() || normalizedEmail.split('@')[0],
@@ -852,8 +903,8 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           success: true,
           status: 'ACTIVE',
           concierge: 'Fahad Ali Interior VIP Concierge Desk',
-          phone: '+92 320 7006110',
-          email: 'mrfahada39@gmail.com',
+          phone: BUSINESS_CONTACT.phone,
+          email: BUSINESS_CONTACT.supportEmail,
         });
       }
       if (method === 'POST') {
@@ -1370,9 +1421,9 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const settings = settingsRaw || {
         id: 'default',
         siteName: 'Fahad Ali Interior',
-        adminEmail: 'mrfahada39@gmail.com',
-        contactPhone: '+92 300 1234567',
-        storeAddress: 'Gulberg III, Lahore, Pakistan',
+        adminEmail: BUSINESS_CONTACT.adminEmail,
+        contactPhone: BUSINESS_CONTACT.phone,
+        storeAddress: BUSINESS_CONTACT.address,
         currency: 'PKR',
       };
 
@@ -1453,7 +1504,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         inquiries,
         siteSettings: settings,
         analytics,
-        account: { name: 'Fahad Ali', email: 'mrfahada39@gmail.com', phone: '+92 300 1234567' },
+        account: { name: 'Fahad Ali', email: BUSINESS_CONTACT.adminEmail, phone: BUSINESS_CONTACT.phone },
       });
     }
 
@@ -1857,177 +1908,9 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       return NextResponse.json({ success: true, message: newMsg });
     }
 
-    // 7.1 POST & GET /api/v1/calls/signal
+    // 7.1 POST & GET /api/v1/calls/signal (Redis + DB backed with 5m TTL)
     if (segment.includes('calls/signal') || segment.includes('calls') || segment.endsWith('signal')) {
-      try {
-        const body = await req.json().catch(() => ({}));
-        const {
-          action,
-          fromUserId = 'client',
-          toUserId = 'admin',
-          fromUserName = 'Valued Client',
-          fromUserEmail,
-          toUserName,
-          toUserEmail,
-          callType = 'voice',
-          offerSdp,
-          answerSdp,
-          candidate,
-          userAliases = [],
-        } = body;
-
-        // Verify admin identity if caller claims to be admin
-        if (fromUserId === 'admin' || userAliases.includes('admin')) {
-          const user = await getUserFromSessionOrToken(req);
-          if (!requireAdmin(user)) {
-            return NextResponse.json({ error: 'Unauthorized: Admin authentication required.' }, { status: 403 });
-          }
-        }
-
-        const now = Date.now();
-        const allAliases: string[] = Array.from(
-          new Set([fromUserId, fromUserEmail, ...(Array.isArray(userAliases) ? userAliases : [])].filter(Boolean))
-        );
-        const sessionKey = [fromUserId, toUserId].filter(Boolean).sort().join('_') || fromUserId || 'global_call';
-
-        if (action === 'initiate') {
-          const session = {
-            id: sessionKey,
-            fromUserId: String(fromUserId || 'client'),
-            fromUserName: String(fromUserName || 'Valued Client'),
-            fromUserEmail: fromUserEmail ? String(fromUserEmail) : undefined,
-            toUserId: String(toUserId || 'admin'),
-            toUserName: toUserName ? String(toUserName) : undefined,
-            toUserEmail: toUserEmail ? String(toUserEmail) : undefined,
-            callType: callType === 'video' ? 'video' : 'voice',
-            status: 'outgoing',
-            offerSdp: offerSdp || null,
-            candidates: [],
-            updatedAt: now,
-          };
-          activeCallSessions.set(sessionKey, session);
-
-          try {
-            if ((db as any)?.auditLog) {
-              await (db as any).auditLog.deleteMany({
-                where: { entity: 'call_signal', entityId: sessionKey },
-              });
-              await (db as any).auditLog.create({
-                data: {
-                  action: 'call_initiate',
-                  entity: 'call_signal',
-                  entityId: sessionKey,
-                  metadata: session as any,
-                },
-              });
-            }
-          } catch {}
-
-          return NextResponse.json({ success: true, session });
-        }
-
-        if (action === 'accept') {
-          let session: any = null;
-          for (const [k, s] of activeCallSessions.entries()) {
-            if (
-              k === sessionKey ||
-              allAliases.includes(s.toUserId) ||
-              allAliases.includes(s.fromUserId) ||
-              allAliases.includes(s.toUserEmail || '') ||
-              (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
-            ) {
-              session = s;
-              break;
-            }
-          }
-
-          if (session) {
-            session.status = 'connected';
-            session.connectedAt = session.connectedAt || now;
-            if (answerSdp) session.answerSdp = answerSdp;
-            session.updatedAt = now;
-            activeCallSessions.set(session.id || sessionKey, session);
-          }
-
-          return NextResponse.json({ success: true, session });
-        }
-
-        if (action === 'candidate' && candidate) {
-          for (const [k, s] of activeCallSessions.entries()) {
-            if (
-              k === sessionKey ||
-              allAliases.includes(s.toUserId) ||
-              allAliases.includes(s.fromUserId) ||
-              (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
-            ) {
-              s.candidates = s.candidates || [];
-              const rawCand = candidate.candidate !== undefined ? candidate.candidate : candidate;
-              const candPayload = {
-                candidate: typeof rawCand === 'string' ? rawCand : (rawCand?.candidate || ''),
-                sdpMid: candidate.sdpMid !== undefined ? candidate.sdpMid : rawCand?.sdpMid,
-                sdpMLineIndex: candidate.sdpMLineIndex !== undefined ? candidate.sdpMLineIndex : rawCand?.sdpMLineIndex,
-                fromUserId: fromUserId || 'client',
-              };
-              s.candidates.push(candPayload);
-              s.updatedAt = now;
-              break;
-            }
-          }
-          return NextResponse.json({ success: true });
-        }
-
-        if (action === 'end' || action === 'decline') {
-          for (const [k, s] of activeCallSessions.entries()) {
-            if (
-              k === sessionKey ||
-              allAliases.includes(s.toUserId) ||
-              allAliases.includes(s.fromUserId) ||
-              allAliases.includes(s.toUserEmail || '') ||
-              (fromUserId === 'admin' && (s.toUserId === 'admin' || s.fromUserId === 'admin'))
-            ) {
-              s.status = 'ended';
-              s.updatedAt = now;
-            }
-          }
-          return NextResponse.json({ success: true, status: 'ended' });
-        }
-
-        if (action === 'status') {
-          let found = null;
-          const prioritySort = (a: any, b: any) => {
-            const aActive = a.status === 'outgoing' || a.status === 'connected' ? 1 : 0;
-            const bActive = b.status === 'outgoing' || b.status === 'connected' ? 1 : 0;
-            if (aActive !== bActive) return bActive - aActive;
-            return (b.updatedAt || 0) - (a.updatedAt || 0);
-          };
-          const sessions = Array.from(activeCallSessions.values()).sort(prioritySort);
-          for (const s of sessions) {
-            if (fromUserId === 'admin' || allAliases.includes('admin')) {
-              if (s.fromUserId === 'admin' || s.toUserId === 'admin') {
-                found = s;
-                break;
-              }
-            } else {
-              const matches =
-                allAliases.includes(s.toUserId) ||
-                allAliases.includes(s.toUserEmail || '') ||
-                allAliases.includes(s.fromUserId) ||
-                allAliases.includes(s.fromUserEmail || '') ||
-                s.toUserId === 'client' ||
-                s.fromUserId === 'client';
-              if (matches) {
-                found = s;
-                break;
-              }
-            }
-          }
-          return NextResponse.json({ session: found || null, success: true });
-        }
-
-        return NextResponse.json({ success: true });
-      } catch {
-        return NextResponse.json({ session: null, success: true });
-      }
+      return handleCallSignal(req);
     }
 
     // 7.2 GET /api/v1/ai/admin/analytics
@@ -2807,7 +2690,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
           gst: Number(updated.gst),
         });
       } catch (err: any) {
-        return NextResponse.json({ error: err.message || 'Failed to update order' }, { status: 400 });
+        return safeApiErrorResponse(err, 'Failed to update order', 400, req);
       }
     }
 
@@ -2833,13 +2716,13 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       const defaultSettings = {
         id: 'singleton',
         siteName: 'Fahad Ali Interior',
-        adminEmail: 'mrfahada39@gmail.com',
-        contactPhone: '+92 320 7006110',
-        storeAddress: 'Main Boulevard, Gulberg III, Lahore, Pakistan',
+        adminEmail: BUSINESS_CONTACT.adminEmail,
+        contactPhone: BUSINESS_CONTACT.phone,
+        storeAddress: BUSINESS_CONTACT.address,
         currency: 'PKR',
         socialInstagram: 'https://instagram.com/fahadaliinterior',
         socialFacebook: 'https://facebook.com/fahadaliinterior',
-        socialWhatsapp: '923207006110',
+        socialWhatsapp: BUSINESS_CONTACT.whatsapp,
         foundedYear: '2020',
         themeFontFamily: 'Playfair Display',
         themeBgColor: '#FAF7F2',
@@ -2930,7 +2813,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
         }
         return NextResponse.json({ success: true, ...updated });
       } catch (err: any) {
-        return NextResponse.json({ error: err.message || 'Failed to update review' }, { status: 400 });
+        return safeApiErrorResponse(err, 'Failed to update review', 400, req);
       }
     }
 
@@ -3004,6 +2887,10 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
       }
       const body = await req.json();
       const { currentPassword, newPassword } = body;
+      const pwCheck = validatePasswordStrength(newPassword);
+      if (!pwCheck.valid) {
+        return NextResponse.json({ error: pwCheck.error }, { status: 400 });
+      }
       const admin = await db.user.findFirst({
         where: { role: 'ADMIN', deletedAt: null },
       });
@@ -3327,7 +3214,7 @@ async function handleDatabaseFallback(method: string, segment: string, req: Next
 
     return NextResponse.json({ error: 'Fallback handler matching segment not found' }, { status: 501 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Database query failed' }, { status: 500 });
+    return safeApiErrorResponse(error, 'An unexpected server error occurred', 500, req);
   }
 }
 

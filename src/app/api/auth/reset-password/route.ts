@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { validatePasswordStrength, runDummyBcryptCompare } from '@/lib/password-policy';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,19 +16,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { token, code, email, password } = body;
 
-    if (!password || password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters long.' }, { status: 400 });
-    }
-
-    const hasLetter = /[a-zA-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    if (!hasLetter || !hasNumber) {
-      return NextResponse.json({ error: 'Password must contain both letters and numbers for high security.' }, { status: 400 });
-    }
-
-    const commonPasswords = ['password', '12345678', 'admin123', 'qwerty123', 'password123'];
-    if (commonPasswords.includes(password.toLowerCase())) {
-      return NextResponse.json({ error: 'This password is too common and easily guessed. Please choose a stronger password.' }, { status: 400 });
+    const pwCheck = validatePasswordStrength(password);
+    if (!pwCheck.valid) {
+      return NextResponse.json({ error: pwCheck.error }, { status: 400 });
     }
 
     let user = null;
@@ -61,7 +52,8 @@ export async function POST(req: NextRequest) {
 
       if (existingUser) {
         if (existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date()) {
-          return NextResponse.json({ error: 'Account temporarily locked due to failed attempts. Please request a new code later.' }, { status: 423 });
+          await runDummyBcryptCompare(password);
+          return NextResponse.json({ error: 'Invalid or expired password reset link/code. Please request a new one.' }, { status: 400 });
         }
 
         const resetRecord = await db.passwordResetToken.findFirst({
@@ -93,6 +85,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user) {
+      await runDummyBcryptCompare(password);
       return NextResponse.json(
         { error: 'Invalid or expired password reset link/code. Please request a new one.' },
         { status: 400 }

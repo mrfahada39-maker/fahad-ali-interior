@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { sendVerificationEmail } from '@/lib/email';
 import { getSiteUrl } from '@/lib/utils';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { runDummyBcryptCompare } from '@/lib/password-policy';
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,13 +29,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user || user.emailVerified) {
+      await runDummyBcryptCompare(email);
       return NextResponse.json({
         success: true,
         message: 'If an unverified account exists with this email, a verification link has been sent.',
       });
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = crypto.randomInt(100000, 1000000).toString();
     const token = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
