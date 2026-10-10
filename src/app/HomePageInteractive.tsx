@@ -17,7 +17,7 @@ const CATEGORIES = [
   { name: 'Bedroom', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
   { name: 'Dining Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
   { name: 'Coffee Chairs', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg' },
-  { name: 'Center tables', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
+  { name: 'Center Tables', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
   { name: 'Luxury Showcase', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg' },
   { name: 'Luxury Wardrobes', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
 ];
@@ -44,9 +44,13 @@ export default function HomePageInteractive({
   );
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [mountVideo, setMountVideo] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   // ── Defer heavy video stream until after initial page load paint ──
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobileViewport(window.innerWidth <= 768);
+    }
     const t = setTimeout(() => setMountVideo(true), 250);
     return () => clearTimeout(t);
   }, []);
@@ -103,22 +107,16 @@ export default function HomePageInteractive({
       <section ref={heroSectionRef} className="gsap-hero-section relative w-full h-screen h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
         {/* Background Parallax & Video Container */}
         <div className="gsap-hero-bg absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-          {/* Instant SSR Responsive Poster (Zero Flash, Single Device Image Only) */}
-          <picture className="absolute inset-0 w-full h-full">
-            <source media="(max-width: 768px)" srcSet={CLOUDINARY_ASSETS.heroMobilePoster} />
-            <source media="(min-width: 769px)" srcSet={CLOUDINARY_ASSETS.heroDesktopPoster} />
-            <img
-              src={CLOUDINARY_ASSETS.heroMobilePoster}
-              alt="Fahad Ali Interior Royal Luxury Showcase"
-              width={1920}
-              height={1080}
-              style={{ aspectRatio: '16/9' }}
-              className="w-full h-full object-cover object-center"
-              loading="eager"
-              decoding="sync"
-              fetchPriority="high"
-            />
-          </picture>
+          {/* Instant SSR Responsive LCP Poster Image */}
+          <Image
+            src={isMobileViewport ? CLOUDINARY_ASSETS.heroMobilePoster : CLOUDINARY_ASSETS.heroDesktopPoster}
+            alt="Fahad Ali Interior Royal Luxury Showcase"
+            fill
+            priority
+            unoptimized
+            sizes="100vw"
+            className="object-cover object-center"
+          />
 
           {/* CINEMATIC LUXURY VIDEO (Single Responsive Hardware Accelerated Stream) */}
           {mountVideo && (
@@ -129,7 +127,8 @@ export default function HomePageInteractive({
               muted
               playsInline
               crossOrigin="anonymous"
-              preload="metadata"
+              poster={isMobileViewport ? CLOUDINARY_ASSETS.heroMobilePoster : CLOUDINARY_ASSETS.heroDesktopPoster}
+              preload={isMobileViewport ? 'none' : 'metadata'}
               disablePictureInPicture
               disableRemotePlayback
               onLoadedData={(e) => { e.currentTarget.play().catch(() => {}); setVideoLoaded(true); }}
@@ -240,6 +239,8 @@ export default function HomePageInteractive({
                     width={550}
                     height={440}
                     unoptimized
+                    priority={i < 2}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     loading={i < 2 ? 'eager' : 'lazy'}
                     decoding="async"
                     style={{ aspectRatio: '5/4' }}

@@ -1,14 +1,23 @@
 import { Metadata } from 'next';
-import { getProductById } from '@/lib/catalog-api';
+import { getProductById, getStorefrontProducts } from '@/lib/catalog-api';
 import { resolveImageUrl } from '@/lib/images';
 import { getSiteUrl } from '@/lib/utils';
 import StoreShell from '@/components/StoreShell';
 import ProductPageClient from './ProductPageClient';
 import JsonLd from '@/components/JsonLd';
-import { headers } from 'next/headers';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  try {
+    const products = await getStorefrontProducts(50);
+    return products
+      .filter((p) => p && typeof p.id === 'string' && p.id.length > 0)
+      .map((p) => ({ id: p.id }));
+  } catch {
+    return [];
+  }
+}
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -40,9 +49,6 @@ export default async function ProductDetail({ params }: Props) {
   const { id } = await params;
   const product = await getProductById(id);
 
-  const headersList = await headers();
-  const nonce = headersList.get('x-nonce') || undefined;
-
   const jsonLd = product ? {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -63,7 +69,7 @@ export default async function ProductDetail({ params }: Props) {
 
   return (
     <StoreShell>
-      {jsonLd && <JsonLd data={jsonLd} nonce={nonce} />}
+      {jsonLd && <JsonLd data={jsonLd} />}
       <ProductPageClient initialProduct={product} productId={id} />
     </StoreShell>
   );

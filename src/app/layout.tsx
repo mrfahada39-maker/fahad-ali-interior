@@ -119,12 +119,21 @@ export const metadata: Metadata = {
     title: "Fahad Ali Interior | Luxury Pakistani Furniture",
     description:
       "Handcrafted luxury furniture from Lahore, Pakistan. Where heritage meets contemporary design.",
-    images: [{ url: "/logo.svg" }],
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Fahad Ali Interior | Luxury Pakistani Furniture",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Fahad Ali Interior | Luxury Pakistani Furniture",
     description: "Handcrafted luxury furniture from Lahore, Pakistan.",
+    images: ["/og-image.png"],
   },
   metadataBase: new URL(siteUrl),
   alternates: { canonical: "/" },

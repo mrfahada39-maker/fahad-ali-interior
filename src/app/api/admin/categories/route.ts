@@ -27,10 +27,9 @@ const fallbackCategories = [
   { id: 'cat_bedroom', name: 'Bedroom', description: 'Artisanal beds, wardrobes and side tables', order: 2 },
   { id: 'cat_dining', name: 'Dining Room', description: 'Handcrafted dining sets and buffets', order: 3 },
   { id: 'cat_coffee', name: 'Coffee Chairs', description: 'Premium accent and coffee chairs', order: 4 },
-  { id: 'cat_fahad_ali', name: 'FAHAD ALI', description: 'ASSLAAM ALIKUM', order: 5 },
-  { id: 'cat_center', name: 'Center tables', description: 'Luxury center and nesting tables', order: 6 },
-  { id: 'cat_showcase', name: 'Luxury Showcase', description: 'Exquisite consoles and display units', order: 7 },
-  { id: 'cat_wardrobe', name: 'Luxury Wardrobes', description: 'Custom solid wood wardrobes', order: 8 },
+  { id: 'cat_center', name: 'Center Tables', description: 'Luxury center and nesting tables', order: 5 },
+  { id: 'cat_showcase', name: 'Luxury Showcase', description: 'Exquisite consoles and display units', order: 6 },
+  { id: 'cat_wardrobe', name: 'Luxury Wardrobes', description: 'Custom solid wood wardrobes', order: 7 },
 ];
 
 import { getVerifiedAdmin } from '@/lib/admin-auth';

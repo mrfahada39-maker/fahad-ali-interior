@@ -22,6 +22,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const rawPathname = usePathname();
   const pathname = rawPathname || '/';
   const roleUpper = (session?.user as { role?: string })?.role?.toUpperCase();
@@ -45,6 +46,22 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
     
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!mounted || !session?.user) {
+      setUnreadCount(0);
+      return;
+    }
+    fetch('/api/v1/customers/notifications')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        const data = body?.data || body;
+        if (data && typeof data.unreadCount === 'number') {
+          setUnreadCount(data.unreadCount);
+        }
+      })
+      .catch(() => {});
+  }, [mounted, session?.user]);
 
   // Left primary links with outline icons + text
   const leftLinks = [
@@ -154,7 +171,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
               {/* 3. Account / Profile */}
               <Link
-                href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '#'}
+                href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
                 prefetch={true}
                 onClick={mounted && session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}
                 className="hidden sm:flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-opacity hover:opacity-75 whitespace-nowrap"
@@ -304,7 +321,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
           {/* 6. WISHLIST */}
           <Link
-            href={mounted && session?.user ? '/dashboard?tab=wishlist' : '#'}
+            href={mounted && session?.user ? '/dashboard?tab=wishlist' : '/?auth=login'}
             prefetch={true}
             onClick={(e) => {
               setMobileOpen(false);
@@ -321,9 +338,9 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
           </Link>
 
-          {/* 7. NOTIFICATION (with Badge 2) */}
+          {/* 7. NOTIFICATION (with Live Unread Badge) */}
           <Link
-            href={mounted && session?.user ? '/dashboard?tab=notifications' : '#'}
+            href={mounted && session?.user ? '/dashboard?tab=notifications' : '/?auth=login'}
             prefetch={true}
             onClick={(e) => {
               setMobileOpen(false);
@@ -338,16 +355,18 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#C9A96E] text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                2
-              </span>
+              {mounted && session?.user && unreadCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-[#C9A96E] text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                  {unreadCount}
+                </span>
+              )}
               <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
             </div>
           </Link>
 
           {/* 8. LOGIN / REGISTER */}
           <Link
-            href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '#'}
+            href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
             prefetch={true}
             onClick={(e) => {
               setMobileOpen(false);
@@ -408,7 +427,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             </span>
             <div className="flex items-center gap-3">
               <a 
-                href="https://facebook.com" 
+                href={settings?.socialFacebook || 'https://facebook.com/fahadaliinterior'} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-10 h-10 rounded-full bg-[#F4ECE1] border border-[#E6DCCF] text-[#8A5A2B] flex items-center justify-center hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer shadow-sm"
@@ -417,7 +436,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                 <Facebook size={18} strokeWidth={1.5} />
               </a>
               <a 
-                href="https://instagram.com" 
+                href={settings?.socialInstagram || 'https://instagram.com/fahadaliinterior'} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-10 h-10 rounded-full bg-[#F4ECE1] border border-[#E6DCCF] text-[#8A5A2B] flex items-center justify-center hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer shadow-sm"
@@ -426,7 +445,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                 <Instagram size={18} strokeWidth={1.5} />
               </a>
               <a 
-                href="https://pinterest.com" 
+                href="https://pinterest.com/fahadaliinterior" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-10 h-10 rounded-full bg-[#F4ECE1] border border-[#E6DCCF] text-[#8A5A2B] flex items-center justify-center hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer shadow-sm"
@@ -435,7 +454,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                 <Sparkles size={18} strokeWidth={1.5} />
               </a>
               <a 
-                href="https://youtube.com" 
+                href="https://youtube.com/@fahadaliinterior" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-10 h-10 rounded-full bg-[#F4ECE1] border border-[#E6DCCF] text-[#8A5A2B] flex items-center justify-center hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer shadow-sm"
@@ -541,7 +560,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
         {/* 5. Account */}
         <Link
-          href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '#'}
+          href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
           onClick={mounted && session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}
           className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
             mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? '-top-3.5' : 'py-1'

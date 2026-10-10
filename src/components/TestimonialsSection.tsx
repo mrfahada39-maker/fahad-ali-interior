@@ -12,6 +12,15 @@ import {
   Sparkles
 } from 'lucide-react';
 
+const DISTINCT_FALLBACK_AVATARS = [
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=96&q=75&fm=webp',
+];
+
 const TESTIMONIALS_DATA = [
   {
     id: 'test-1',
@@ -21,8 +30,8 @@ const TESTIMONIALS_DATA = [
     text: 'The quality and finish of the furniture is outstanding. Fahad Ali Interior truly understands luxury and comfort.',
     rating: 5,
     score: '5.0',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&q=75&fm=webp',
-    fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=75&fm=webp',
+    avatar: DISTINCT_FALLBACK_AVATARS[0],
+    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[0],
     roomImage: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&fm=webp&q=60&w=480',
     theme: 'amber',
     tag: '14 Orders in Period',
@@ -41,8 +50,8 @@ const TESTIMONIALS_DATA = [
     text: 'Elegant design, durable materials, and excellent customer service. My whole experience was amazing!',
     rating: 5,
     score: '5.0',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=96&q=75&fm=webp',
-    fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=75&fm=webp',
+    avatar: DISTINCT_FALLBACK_AVATARS[1],
+    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[1],
     roomImage: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&fm=webp&q=60&w=480',
     theme: 'blue',
     tag: '4 Delivered / Completed',
@@ -61,8 +70,8 @@ const TESTIMONIALS_DATA = [
     text: 'The craftsmanship and finish on our dining and sofa set is breathtaking. Everyone who visits our home compliments it!',
     rating: 5,
     score: '5.0',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=96&q=75&fm=webp',
-    fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=75&fm=webp',
+    avatar: DISTINCT_FALLBACK_AVATARS[2],
+    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[2],
     roomImage: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&fm=webp&q=60&w=480',
     theme: 'purple',
     tag: 'Live Registered Accounts',
@@ -81,8 +90,8 @@ const TESTIMONIALS_DATA = [
     text: 'Custom tailored luxury furniture delivered with meticulous care. Royal aesthetic, rich wood finish, and sublime comfort.',
     rating: 5,
     score: '5.0',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=96&q=75&fm=webp',
-    fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=75&fm=webp',
+    avatar: DISTINCT_FALLBACK_AVATARS[3],
+    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[3],
     roomImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&fm=webp&q=60&w=480',
     theme: 'emerald',
     tag: '100% In-Stock Database',
@@ -101,8 +110,8 @@ const TESTIMONIALS_DATA = [
     text: 'From custom sizing to delivery, everything was seamless. Highly recommend for anyone looking for premium furniture.',
     rating: 5,
     score: '5.0',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=75&fm=webp',
-    fallbackAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=75&fm=webp',
+    avatar: DISTINCT_FALLBACK_AVATARS[4],
+    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[4],
     roomImage: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&fm=webp&q=60&w=480',
     theme: 'rose',
     tag: '5-Star Verified Project',
@@ -184,18 +193,28 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
-  // Map ONLY real approved reviews from database (zero fake reviews)
+  // Map ONLY real approved reviews from database (deduplicated, with unique avatars per reviewer)
   const testimonials = useMemo(() => {
     if (!reviews || reviews.length === 0) {
       return [];
     }
 
-    return reviews.map((r, idx) => {
+    const seenKeys = new Set<string>();
+    const uniqueReviews = reviews.filter((r) => {
+      const nameKey = (r.customerName || r.user?.name || 'Verified Patron').trim().toLowerCase();
+      const commentKey = (r.comment || '').trim().toLowerCase();
+      const dedupKey = `${nameKey}::${commentKey}`;
+      if (seenKeys.has(dedupKey)) return false;
+      seenKeys.add(dedupKey);
+      return true;
+    });
+
+    return uniqueReviews.map((r, idx) => {
       const theme = THEME_PRESETS[idx % THEME_PRESETS.length];
       const ratingNum = Math.min(5, Math.max(1, Math.round(Number(r.rating) || 5)));
       const clientName = r.customerName || r.user?.name || 'Verified Patron';
       const fallbackRoom = 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg';
-      const fallbackAvatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&q=75&fm=webp';
+      const distinctAvatar = DISTINCT_FALLBACK_AVATARS[idx % DISTINCT_FALLBACK_AVATARS.length];
 
       return {
         id: r.id || `real-rev-${idx}`,
@@ -205,8 +224,8 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
         text: r.comment && r.comment.trim() ? r.comment.trim() : 'Masterpiece solid sheesham wood craftsmanship. Outstanding luxury comfort and detailing.',
         rating: ratingNum,
         score: `${Number(r.rating || 5).toFixed(1)}`,
-        avatar: r.user?.image || fallbackAvatar,
-        fallbackAvatar: fallbackAvatar,
+        avatar: r.user?.image || distinctAvatar,
+        fallbackAvatar: distinctAvatar,
         roomImage: (r as any).image || r.product?.image || fallbackRoom,
         tag: '✓ Verified Purchase',
         ...theme,

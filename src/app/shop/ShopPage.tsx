@@ -340,6 +340,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
           (aCat.includes('chair') && pCat.includes('chair')) ||
           (aCat.includes('table') && pCat.includes('table')) ||
           (aCat.includes('wardrobe') && (pCat.includes('wardrobe') || pCat.includes('closet'))) ||
+          ((aCat.includes('decor') || aCat.includes('lighting')) && (pCat.includes('decor') || pCat.includes('lighting') || pCat.includes('showcase'))) ||
           (!pCat && (p.name || '').toLowerCase().includes(aCat));
 
         if (!isMatch) return false;

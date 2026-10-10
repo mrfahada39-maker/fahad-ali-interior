@@ -90,10 +90,10 @@ export default function Footer() {
             {/* Animated Social Icons */}
             <div className="flex items-center gap-2.5 pt-1.5">
               {[
-                { icon: Facebook, href: settings.socialFacebook || 'https://facebook.com', label: 'Facebook' },
-                { icon: Instagram, href: settings.socialInstagram || 'https://instagram.com', label: 'Instagram' },
-                { isPinterest: true, href: 'https://pinterest.com', label: 'Pinterest' },
-                { icon: Youtube, href: 'https://youtube.com', label: 'YouTube' }
+                { icon: Facebook, href: settings.socialFacebook || 'https://facebook.com/fahadaliinterior', label: 'Facebook' },
+                { icon: Instagram, href: settings.socialInstagram || 'https://instagram.com/fahadaliinterior', label: 'Instagram' },
+                { isPinterest: true, href: 'https://pinterest.com/fahadaliinterior', label: 'Pinterest' },
+                { icon: Youtube, href: 'https://youtube.com/@fahadaliinterior', label: 'YouTube' }
               ].map((soc, i) => (
                 <motion.a 
                   key={soc.label}
@@ -176,7 +176,7 @@ export default function Footer() {
                 { label: 'Chairs & Stools', href: '/shop?category=Coffee%20Chairs' },
                 { label: 'Coffee Tables', href: '/shop?category=Center%20Tables' },
                 { label: 'Storage & Cabinets', href: '/shop?category=Luxury%20Wardrobes' },
-                { label: 'Decor & Lighting', href: '/shop?category=Luxury%20Showcase' },
+                { label: 'Decor & Lighting', href: '/shop?category=Decor%20%26%20Lighting' },
               ].map((item) => (
                 <li key={item.label}>
                   <Link 
@@ -257,9 +257,9 @@ export default function Footer() {
             {/* Centered Social Media Buttons */}
             <div className="flex items-center justify-center gap-3">
               {[
-                { icon: Facebook, href: settings.socialFacebook || 'https://facebook.com', label: 'Facebook' },
-                { icon: Instagram, href: settings.socialInstagram || 'https://instagram.com', label: 'Instagram' },
-                { icon: Youtube, href: 'https://youtube.com', label: 'YouTube' }
+                { icon: Facebook, href: settings.socialFacebook || 'https://facebook.com/fahadaliinterior', label: 'Facebook' },
+                { icon: Instagram, href: settings.socialInstagram || 'https://instagram.com/fahadaliinterior', label: 'Instagram' },
+                { icon: Youtube, href: 'https://youtube.com/@fahadaliinterior', label: 'YouTube' }
               ].map((soc) => (
                 <motion.a 
                   key={soc.label}
@@ -311,7 +311,7 @@ export default function Footer() {
                 { label: 'Chairs & Stools', href: '/shop?category=Coffee%20Chairs' },
                 { label: 'Coffee Tables', href: '/shop?category=Center%20Tables' },
                 { label: 'Storage & Cabinets', href: '/shop?category=Luxury%20Wardrobes' },
-                { label: 'Decor & Lighting', href: '/shop?category=Luxury%20Showcase' },
+                { label: 'Decor & Lighting', href: '/shop?category=Decor%20%26%20Lighting' },
               ]
             },
             {

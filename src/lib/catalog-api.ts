@@ -26,6 +26,17 @@ function setCached<T>(key: string, data: T, ttlSeconds = 60): void {
   memoryCache.set(key, { data, expiry: Date.now() + ttlSeconds * 1000 });
 }
 
+function normalizeCatalogText(text: string | null | undefined, fallback = ''): string {
+  if (!text) return fallback;
+  return text
+    .replace(/\bProuducts\b/g, 'Products')
+    .replace(/\bprouducts\b/gi, 'products')
+    .replace(/\bProuduct\b/g, 'Product')
+    .replace(/\bprouduct\b/gi, 'product')
+    .replace(/\bcenter tables\b/gi, 'Center Tables')
+    .trim();
+}
+
 /** Server-side category list for storefront pages */
 export async function getStorefrontCategories(): Promise<string[]> {
   const cacheKey = 'storefront_categories';
@@ -41,7 +52,7 @@ export async function getStorefrontCategories(): Promise<string[]> {
       select: { name: true },
     });
     if (cats && cats.length > 0) {
-      const names = ['All', ...cats.map((c: any) => c.name)];
+      const names = ['All', ...cats.map((c: any) => normalizeCatalogText(c.name, c.name))];
       setCached(cacheKey, names, 120);
       return names;
     }
@@ -95,6 +106,9 @@ export async function getStorefrontProducts(limit = 50): Promise<StorefrontProdu
     });
     const result = (products || []).map((p: any) => ({
       ...p,
+      name: normalizeCatalogText(p.name, p.name),
+      category: normalizeCatalogText(p.category, p.category),
+      description: normalizeCatalogText(p.description, p.description),
       price: Number(p.price),
     })) as unknown as StorefrontProduct[];
     setCached(cacheKey, result, 60);

@@ -50,7 +50,7 @@ function generateDynamicResponse(
     const liveCount = allProducts.length;
     const catNames = dbCategories.length > 0
       ? dbCategories.map((c) => c.name)
-      : ['Living Room', 'Bedroom', 'Dining Room', 'Coffee Chairs', 'Center tables', 'Luxury Showcase', 'Luxury Wardrobes'];
+      : ['Living Room', 'Bedroom', 'Dining Room', 'Coffee Chairs', 'Center Tables', 'Luxury Showcase', 'Luxury Wardrobes'];
     const catListing = catNames.map((c, i) => `${i + 1}. **${c}**`).join(' | ');
 
     const liveItemsSummary = liveCount > 0
@@ -382,7 +382,7 @@ export async function POST(request: NextRequest) {
 
     const catalogContext = allProducts.length > 0
       ? `TOTAL STORE PRODUCTS IN DATABASE: ${allProducts.length} items across categories [${categoriesSummary}].
-ACTIVE STORE CATEGORIES: [${activeCatNames || 'Living Room, Bedroom, Dining Room, Coffee Chairs, Center tables, Luxury Showcase, Luxury Wardrobes'}].
+ACTIVE STORE CATEGORIES: [${activeCatNames || 'Living Room, Bedroom, Dining Room, Coffee Chairs, Center Tables, Luxury Showcase, Luxury Wardrobes'}].
 LIVE INVENTORY CATALOG:
 ${allProducts.map((p) => `- "${p.name}" (ID: ${p.id}) [Category: ${p.category || 'Furniture'}] | Price: PKR ${new Intl.NumberFormat('en-PK').format(Number(p.price))} | Stock: ${(p.stockCount ?? 1) > 0 ? `${p.stockCount ?? 1} units available` : 'Ready for Custom Build (10-14 days)'} | Material: ${p.material || '100% Solid Seasoned Sheesham Wood'}`).join('\n')}`
       : `TOTAL STORE PRODUCTS IN DATABASE: 0 items in ready stock. All pieces are crafted on-demand bespoke.

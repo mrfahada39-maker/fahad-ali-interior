@@ -13,7 +13,7 @@ FAHAD ALI INTERIOR — COMPLETE WEBSITE & SYSTEM SITEMAP
   2. Bedroom
   3. Dining Room
   4. Coffee Chairs
-  5. Center tables
+  5. Center Tables
   6. Luxury Showcase
   7. Luxury Wardrobes
   (Plus custom bespoke orders for any architectural room dimensions)

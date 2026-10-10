@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
 
 interface AnimatedCounterProps {
   value: number;
@@ -26,25 +25,45 @@ export default function AnimatedCounter({
     if (!spanRef.current) return;
     const targetVal = Number(value) || 0;
     const obj = { val: 0 };
+    let isCancelled = false;
+    let ctx: { revert: () => void } | null = null;
 
-    const ctx = gsap.context(() => {
-      gsap.to(obj, {
-        val: targetVal,
-        duration: duration,
-        ease: 'power2.out',
-        onUpdate: () => {
-          if (spanRef.current) {
-            const currentNum = obj.val;
-            const formatted = decimals > 0 
-              ? currentNum.toFixed(decimals)
-              : new Intl.NumberFormat('en-PK').format(Math.floor(currentNum));
-            spanRef.current.textContent = `${prefix}${formatted}${suffix}`;
-          }
-        },
+    import('gsap')
+      .then((mod) => {
+        if (isCancelled || !spanRef.current) return;
+        const gsap = mod.default || mod.gsap;
+        ctx = gsap.context(() => {
+          gsap.to(obj, {
+            val: targetVal,
+            duration: duration,
+            ease: 'power2.out',
+            onUpdate: () => {
+              if (spanRef.current) {
+                const currentNum = obj.val;
+                const formatted =
+                  decimals > 0
+                    ? currentNum.toFixed(decimals)
+                    : new Intl.NumberFormat('en-PK').format(Math.floor(currentNum));
+                spanRef.current.textContent = `${prefix}${formatted}${suffix}`;
+              }
+            },
+          });
+        }, spanRef);
+      })
+      .catch(() => {
+        if (spanRef.current) {
+          const formatted =
+            decimals > 0
+              ? targetVal.toFixed(decimals)
+              : new Intl.NumberFormat('en-PK').format(Math.floor(targetVal));
+          spanRef.current.textContent = `${prefix}${formatted}${suffix}`;
+        }
       });
-    }, spanRef);
 
-    return () => ctx.revert();
+    return () => {
+      isCancelled = true;
+      ctx?.revert();
+    };
   }, [value, prefix, suffix, decimals, duration]);
 
   return <span ref={spanRef} className={className}>{prefix}0{suffix}</span>;

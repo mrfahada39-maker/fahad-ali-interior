@@ -201,20 +201,35 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       }
     }
 
+    const normalizeCatalogText = (text: string | null | undefined, fallback = ''): string => {
+      if (!text) return fallback;
+      return text
+        .replace(/\bProuducts\b/g, 'Products')
+        .replace(/\bprouducts\b/gi, 'products')
+        .replace(/\bProuduct\b/g, 'Product')
+        .replace(/\bprouduct\b/gi, 'product')
+        .replace(/\bcenter tables\b/gi, 'Center Tables')
+        .trim();
+    };
+
     const formattedProducts = products.map((p: any) => ({
       ...p,
+      name: normalizeCatalogText(p.name, p.name),
+      category: normalizeCatalogText(p.category, p.category),
+      description: normalizeCatalogText(p.description, p.description),
       price: Number(p.price),
     })) as unknown as StorefrontProduct[];
 
     const formattedCategories = categories.map((c: any) => {
-      const cleanName = (c.name || '').trim().toLowerCase();
+      const normalizedName = normalizeCatalogText(c.name, '');
+      const cleanName = normalizedName.toLowerCase();
       const liveCount = categoryCountMap.get(cleanName) ?? 0;
-      const customItems = (c.items || '').trim();
+      const customItems = normalizeCatalogText(c.items, '');
       return {
-        name: (c.name || '').trim(),
+        name: normalizedName,
         count: liveCount,
         image: c.image || '/images/placeholder.webp',
-        description: c.description || 'Solid Sheesham Wood',
+        description: normalizeCatalogText(c.description, 'Solid Sheesham Wood'),
         items: liveCount > 0 
           ? `${liveCount} ${liveCount === 1 ? 'Item' : 'Items'} Available` 
           : (customItems || 'Collection Available'),
@@ -228,7 +243,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       comment: r.comment || '',
       createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
       product: {
-        name: r.product?.name || 'Handcrafted Solid Sheesham',
+        name: normalizeCatalogText(r.product?.name, 'Handcrafted Solid Sheesham'),
         image: r.image || r.product?.image || undefined,
       },
       user: {
@@ -250,8 +265,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
         { name: 'Bedroom', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg', description: 'Solid Sheesham' },
         { name: 'Dining Room', count: 15, items: '15 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg', description: 'Solid Sheesham' },
         { name: 'Coffee Chairs', count: 20, items: '20 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg', description: 'Solid Sheesham' },
-        { name: 'FAHAD ALI', count: 0, items: 'Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1789601781/fahad-ali-categories/thpviq9ejmsr0jt9rqyf.webp', description: 'ASSLAAM ALIKUM' },
-        { name: 'Center tables', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg', description: 'Solid Sheesham' },
+        { name: 'Center Tables', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg', description: 'Solid Sheesham' },
         { name: 'Luxury Showcase', count: 10, items: '10 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg', description: 'Solid Sheesham' },
         { name: 'Luxury Wardrobes', count: 20, items: '20 Items Available', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg', description: 'Solid Sheesham' },
       ],
