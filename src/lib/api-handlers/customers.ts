@@ -274,10 +274,19 @@ export async function handleCustomerRoutes(ctx: ApiDispatchContext): Promise<Nex
     if (detailRes) return detailRes;
   }
 
-  // 14. GET /user/notifications
-  if (method === 'GET' && (segment === 'user/notifications' || segment === 'v1/user/notifications')) {
+  // 14. GET /user/notifications or /customers/notifications
+  if (
+    method === 'GET' &&
+    (normalizedSegment === 'user/notifications' ||
+      normalizedSegment === 'users/notifications' ||
+      normalizedSegment === 'customers/notifications' ||
+      segment === 'user/notifications' ||
+      segment === 'v1/user/notifications' ||
+      segment === 'customers/notifications' ||
+      segment === 'v1/customers/notifications')
+  ) {
     const user = await getUserFromSessionOrToken(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user?.id) return NextResponse.json({ notifications: [], unreadCount: 0 });
     const notifications = (await db.notification
       .findMany({
         where: { userId: user.id },
@@ -289,13 +298,19 @@ export async function handleCustomerRoutes(ctx: ApiDispatchContext): Promise<Nex
     return NextResponse.json({ notifications, unreadCount });
   }
 
-  // 15. POST /users/notifications/read
+  // 15. POST /users/notifications/read or /customers/notifications/read
   if (
     method === 'POST' &&
-    (segment === 'users/notifications/read' || segment === 'v1/users/notifications/read')
+    (normalizedSegment === 'users/notifications/read' ||
+      normalizedSegment === 'user/notifications/read' ||
+      normalizedSegment === 'customers/notifications/read' ||
+      segment === 'users/notifications/read' ||
+      segment === 'v1/users/notifications/read' ||
+      segment === 'customers/notifications/read' ||
+      segment === 'v1/customers/notifications/read')
   ) {
     const user = await getUserFromSessionOrToken(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user?.id) return NextResponse.json({ success: true });
     await db.notification
       .updateMany({
         where: { userId: user.id, isNew: true },
