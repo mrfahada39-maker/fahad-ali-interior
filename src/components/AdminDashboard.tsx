@@ -340,7 +340,8 @@ export default function AdminDashboard() {
       setProducts(Array.isArray(p) ? p : (p as { products?: unknown[] }).products || []);
     }
     if (Array.isArray(bundle.orders)) setOrders(bundle.orders);
-    if (Array.isArray(bundle.users)) setUsers(bundle.users);
+    const bUsers = Array.isArray(bundle.users) ? bundle.users : (bundle as any).customers;
+    if (Array.isArray(bUsers)) setUsers(bUsers);
     if (bundle.messages) applyMessageThreads(bundle.messages);
     if (Array.isArray(bundle.reviews)) setReviews(bundle.reviews);
     if (Array.isArray(bundle.inquiries)) setInquiries(bundle.inquiries);

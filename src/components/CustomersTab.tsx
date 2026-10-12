@@ -96,16 +96,18 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
 
       if (custRes.ok) {
         const custData = await custRes.json();
-        if (custData && Array.isArray(custData.data)) {
-          setCustomers(custData.data);
+        const list = Array.isArray(custData) ? custData : Array.isArray(custData?.data) ? custData.data : Array.isArray(custData?.customers) ? custData.customers : null;
+        if (list) {
+          setCustomers(list);
         }
       } else {
         // Fallback to dashboard-bundle
         const bundleRes = await fetch('/api/v1/admin/dashboard-bundle', { cache: 'no-store' });
         if (bundleRes.ok) {
           const bundle = await bundleRes.json();
-          if (Array.isArray(bundle.users)) {
-            setCustomers(bundle.users);
+          const bList = Array.isArray(bundle?.users) ? bundle.users : Array.isArray(bundle?.customers) ? bundle.customers : null;
+          if (bList) {
+            setCustomers(bList);
           }
         }
       }

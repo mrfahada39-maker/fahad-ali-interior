@@ -188,17 +188,20 @@ export async function handleSettingsAndBundleRoutes(
       categoryDistribution,
     };
 
+    const formattedCustomers = (users as DbUserRecord[]).map((u: DbUserRecord) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      createdAt: u.createdAt,
+    }));
+
     return NextResponse.json({
       stats,
       products: formattedProducts,
       orders: formattedOrders,
-      customers: (users as DbUserRecord[]).map((u: DbUserRecord) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        phone: u.phone,
-        createdAt: u.createdAt,
-      })),
+      customers: formattedCustomers,
+      users: formattedCustomers,
       messages: messageThreads,
       reviews,
       inquiries,
