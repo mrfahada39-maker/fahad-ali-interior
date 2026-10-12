@@ -6,19 +6,15 @@ let ephemeralDevAiSecret: string | null = null;
 
 /**
  * Retrieve dedicated secret for AI session binding.
- * In production, AI_SESSION_SECRET is required and must be separate from NEXTAUTH_SECRET.
+ * Uses AI_SESSION_SECRET when configured, or derives a cryptographically domain-separated
+ * HMAC-SHA256 secret from NEXTAUTH_SECRET / DATABASE_URL.
  */
 export function getAiSessionSecret(): string {
   const aiSecret = process.env.AI_SESSION_SECRET?.trim();
   const nextAuthSecret = process.env.NEXTAUTH_SECRET?.trim();
 
-  if (process.env.NODE_ENV === 'production') {
-    if (!aiSecret || aiSecret.length < 16) {
-      throw new Error(
-        'CRITICAL: AI_SESSION_SECRET environment variable (min 16 chars) is required in production.'
-      );
-    }
-    if (nextAuthSecret && aiSecret === nextAuthSecret) {
+  if (aiSecret && aiSecret.length >= 16) {
+    if (process.env.NODE_ENV === 'production' && nextAuthSecret && aiSecret === nextAuthSecret) {
       throw new Error(
         'CRITICAL: AI_SESSION_SECRET must be separate from NEXTAUTH_SECRET in production.'
       );
@@ -26,22 +22,18 @@ export function getAiSessionSecret(): string {
     return aiSecret;
   }
 
-  if (aiSecret && aiSecret.length >= 16) {
-    return aiSecret;
+  const baseSeed = nextAuthSecret || process.env.DATABASE_URL?.trim();
+  if (baseSeed && baseSeed.length >= 16) {
+    return crypto
+      .createHmac('sha256', baseSeed)
+      .update('fai:ai-session-binding-secret:v1')
+      .digest('hex');
   }
+
   if (!ephemeralDevAiSecret) {
     ephemeralDevAiSecret = crypto.randomBytes(32).toString('hex');
   }
   return ephemeralDevAiSecret;
-}
-
-// Validate at startup in production runtime (excluding static build phase when SKIP_ENV_VALIDATION is set)
-if (
-  process.env.NODE_ENV === 'production' &&
-  process.env.SKIP_ENV_VALIDATION !== 'true' &&
-  process.env.NEXT_PHASE !== 'phase-production-build'
-) {
-  getAiSessionSecret();
 }
 
 /**

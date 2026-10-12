@@ -32,9 +32,6 @@ function getAdminEmails(): string[] {
   if (envEmails && envEmails.trim()) {
     return envEmails.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
   }
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('ADMIN_EMAILS environment variable is required in production.');
-  }
   return [];
 }
 

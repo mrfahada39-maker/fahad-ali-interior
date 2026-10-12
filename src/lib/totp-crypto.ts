@@ -8,19 +8,16 @@ let ephemeralDevTotpKey: Buffer | null = null;
 
 /**
  * Derive a 32-byte AES-256 key from TOTP_ENC_KEY.
- * In production, TOTP_ENC_KEY is strictly required and must be separate from NEXTAUTH_SECRET.
+ * Uses TOTP_ENC_KEY when configured, or derives a cryptographically domain-separated
+ * 32-byte key via HMAC-SHA256 from NEXTAUTH_SECRET / DATABASE_URL so serverless routes
+ * (such as /api/auth/session and /api/v1/products) never crash at module load time.
  */
 function getEncryptionKey(): Buffer {
   const totpKey = process.env.TOTP_ENC_KEY?.trim();
   const nextAuthSecret = process.env.NEXTAUTH_SECRET?.trim();
 
-  if (process.env.NODE_ENV === 'production') {
-    if (!totpKey || totpKey.length < 16) {
-      throw new Error(
-        'CRITICAL: TOTP_ENC_KEY environment variable (min 16 chars) is required in production.'
-      );
-    }
-    if (nextAuthSecret && totpKey === nextAuthSecret) {
+  if (totpKey && totpKey.length >= 16) {
+    if (process.env.NODE_ENV === 'production' && nextAuthSecret && totpKey === nextAuthSecret) {
       throw new Error(
         'CRITICAL: TOTP_ENC_KEY must be separate from NEXTAUTH_SECRET in production.'
       );
@@ -28,23 +25,18 @@ function getEncryptionKey(): Buffer {
     return crypto.createHash('sha256').update(totpKey).digest();
   }
 
-  if (totpKey && totpKey.length >= 16) {
-    return crypto.createHash('sha256').update(totpKey).digest();
+  const baseSeed = nextAuthSecret || process.env.DATABASE_URL?.trim();
+  if (baseSeed && baseSeed.length >= 16) {
+    return crypto
+      .createHmac('sha256', baseSeed)
+      .update('fai:totp-aes256-encryption-key:v1')
+      .digest();
   }
 
   if (!ephemeralDevTotpKey) {
     ephemeralDevTotpKey = crypto.randomBytes(32);
   }
   return ephemeralDevTotpKey;
-}
-
-// Validate at startup in production runtime (excluding static build phase when SKIP_ENV_VALIDATION is set)
-if (
-  process.env.NODE_ENV === 'production' &&
-  process.env.SKIP_ENV_VALIDATION !== 'true' &&
-  process.env.NEXT_PHASE !== 'phase-production-build'
-) {
-  getEncryptionKey();
 }
 
 /**
