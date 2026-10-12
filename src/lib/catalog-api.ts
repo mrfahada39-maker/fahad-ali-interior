@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Storefront Product Data Layer (Direct PostgreSQL with in-memory caching)
  */

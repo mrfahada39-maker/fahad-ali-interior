@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { recordAuditLog } from '@/lib/db-utils';

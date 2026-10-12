@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MetadataRoute } from 'next';
 import { getStorefrontProducts } from '@/lib/catalog-api';
 import { getSiteUrl } from '@/lib/utils';

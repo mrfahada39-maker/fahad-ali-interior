@@ -3,12 +3,10 @@ import { db } from '@/lib/db';
 import { createAddressSchema, updateProfileSchema } from '@/lib/validations/api-schemas';
 import {
   ApiDispatchContext,
-  DbMessageRecord,
   DbNotificationRecord,
   DbOrderItemRecord,
   DbOrderRecord,
   DbProductRecord,
-  DbUserRecord,
   getUserFromSessionOrToken,
 } from './shared';
 import { handleCustomerAdminListRoutes } from './customers-admin';

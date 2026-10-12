@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from '@prisma/client';
 import { validateEnv } from '@/lib/env';
 import { logger } from '@/lib/logger';

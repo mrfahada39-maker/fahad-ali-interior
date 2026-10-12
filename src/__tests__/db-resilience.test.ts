@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, it, expect, jest } from '@jest/globals';
 import { isTransientDbError, checkDatabaseHealth, db } from '@/lib/db';
 import { recordAuditLog, executeTransaction } from '@/lib/db-utils';

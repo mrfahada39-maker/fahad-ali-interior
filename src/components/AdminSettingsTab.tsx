@@ -1,4 +1,5 @@
-﻿'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+'use client';
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

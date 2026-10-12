@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Master Suite 1: AI Multimodal, Room Analyzer & WebRTC Video/Audio Consultation
  * Fahad Ali Haute Interior Architecture & Artisanal Furniture

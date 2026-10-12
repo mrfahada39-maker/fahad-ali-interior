@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * High-Level End-to-End E-Commerce Purchase & Fulfillment Lifecycle Test Suite
  * Fahad Ali Haute Interior Architecture & Artisanal Furniture

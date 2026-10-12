@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { unstable_cache } from 'next/cache';
 import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';

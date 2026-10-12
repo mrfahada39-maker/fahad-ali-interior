@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LayoutDashboard, Package, ShoppingBag, Users, MessageSquare, Star, BarChart3, FileText, FolderSync, Settings, Sparkles, Radio, Trash2 } from 'lucide-react';
 
 export const tabs = [

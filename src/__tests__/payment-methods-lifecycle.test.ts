@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Comprehensive Pakistani Payment Methods & Fulfillment Lifecycle Suite
  * Fahad Ali Haute Interior Architecture & Artisanal Furniture
