@@ -79,6 +79,8 @@ function buildContentSecurityPolicy(
   httpsOnly: boolean
 ): string {
   const scriptSrc = `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
+  const scriptSrcElem =
+    "script-src-elem 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vitals.vercel-insights.com";
   const styleDirectives = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "style-src-attr 'unsafe-inline'",
@@ -88,6 +90,7 @@ function buildContentSecurityPolicy(
   return [
     "default-src 'self'",
     scriptSrc,
+    scriptSrcElem,
     ...styleDirectives,
     "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://va.vercel-scripts.com",
     "media-src 'self' data: blob: https://res.cloudinary.com",
