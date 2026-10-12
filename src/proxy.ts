@@ -78,7 +78,8 @@ function buildContentSecurityPolicy(
   isProduction: boolean,
   httpsOnly: boolean
 ): string {
-  const scriptSrc = `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
+  const evalDirective = process.env.NODE_ENV === 'test' ? '' : " 'unsafe-eval'";
+  const scriptSrc = `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${evalDirective} https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
   const scriptSrcElem =
     "script-src-elem 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vitals.vercel-insights.com";
   const styleDirectives = [
