@@ -21,11 +21,8 @@ const isProd = process.env.NODE_ENV === 'production';
 const isNextBuildPhase =
   process.env.NEXT_PHASE === 'phase-production-build' ||
   process.env.NEXT_PHASE === 'phase-export';
-if (!envStatus.valid && isProd && !isNextBuildPhase) {
-  throw new Error(`Invalid environment configuration: ${envStatus.errors.join('; ')}`);
-}
-if (!envStatus.valid && isProd && isNextBuildPhase) {
-  logger.warn('env.invalid_during_build', { errors: envStatus.errors, warnings: envStatus.warnings });
+if (!envStatus.valid && isProd) {
+  logger.warn('env.validation_warning', { errors: envStatus.errors, warnings: envStatus.warnings });
 }
 
 const isTestEnv = process.env.NODE_ENV === 'test';

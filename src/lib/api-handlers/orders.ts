@@ -353,7 +353,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       shippingPhone: string | null;
       shippingAddress: string | null;
       shippingCity: string | null;
-      paymentMethod: string;
+      paymentMethod: string | null;
       totalAmount: unknown;
       subtotal: unknown;
       gst: unknown;
@@ -475,7 +475,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       customerPhone: newOrder.shippingPhone || shippingPhone,
       shippingAddress: newOrder.shippingAddress || shippingAddress,
       shippingCity: newOrder.shippingCity || shippingCity,
-      paymentMethod: newOrder.paymentMethod,
+      paymentMethod: newOrder.paymentMethod || validPaymentMethod,
       items: formattedItems,
       subtotal,
       gst,

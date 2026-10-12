@@ -43,7 +43,7 @@ export interface DbOrderRecord {
   shippingAddress?: string | null;
   shippingCity?: string | null;
   shippingProvince?: string | null;
-  paymentMethod: string;
+  paymentMethod?: string | null;
   status?: string;
   paymentStatus?: string;
   discount?: unknown;
