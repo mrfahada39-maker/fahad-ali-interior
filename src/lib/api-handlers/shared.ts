@@ -28,28 +28,28 @@ export interface DbOrderItemRecord {
   id?: string;
   productId?: string;
   name?: string;
-  price?: number | string;
+  price?: unknown;
   quantity?: number;
-  image?: string;
+  image?: string | null;
   [key: string]: unknown;
 }
 
 export interface DbOrderRecord {
   id: string;
-  userId?: string;
-  shippingName: string;
-  shippingEmail: string;
-  shippingPhone: string;
-  shippingAddress: string;
-  shippingCity: string;
-  shippingProvince?: string;
+  userId?: string | null;
+  shippingName?: string | null;
+  shippingEmail?: string | null;
+  shippingPhone?: string | null;
+  shippingAddress?: string | null;
+  shippingCity?: string | null;
+  shippingProvince?: string | null;
   paymentMethod: string;
   status?: string;
   paymentStatus?: string;
-  discount?: number | string;
-  gst?: number | string;
-  subtotal?: number | string;
-  totalAmount?: number | string;
+  discount?: unknown;
+  gst?: unknown;
+  subtotal?: unknown;
+  totalAmount?: unknown;
   createdAt: Date | string;
   items?: DbOrderItemRecord[];
   user?: { id: string; name?: string | null; email: string; phone?: string | null } | null;
@@ -73,7 +73,7 @@ export interface DbReviewRecord {
 export interface DbProductRecord {
   id: string;
   name: string;
-  price: number | string;
+  price: unknown;
   category: string;
   image?: string | null;
   images?: string[];

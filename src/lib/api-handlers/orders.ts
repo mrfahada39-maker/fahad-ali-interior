@@ -348,11 +348,11 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
 
     let newOrder: {
       id: string;
-      shippingName: string;
-      shippingEmail: string;
-      shippingPhone: string;
-      shippingAddress: string;
-      shippingCity: string;
+      shippingName: string | null;
+      shippingEmail: string | null;
+      shippingPhone: string | null;
+      shippingAddress: string | null;
+      shippingCity: string | null;
       paymentMethod: string;
       totalAmount: unknown;
       subtotal: unknown;
@@ -470,11 +470,11 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
 
     await sendOrderConfirmationEmail({
       orderId: newOrder.id,
-      customerName: newOrder.shippingName,
-      customerEmail: newOrder.shippingEmail,
-      customerPhone: newOrder.shippingPhone,
-      shippingAddress: newOrder.shippingAddress,
-      shippingCity: newOrder.shippingCity,
+      customerName: newOrder.shippingName || shippingName,
+      customerEmail: newOrder.shippingEmail || shippingEmail,
+      customerPhone: newOrder.shippingPhone || shippingPhone,
+      shippingAddress: newOrder.shippingAddress || shippingAddress,
+      shippingCity: newOrder.shippingCity || shippingCity,
       paymentMethod: newOrder.paymentMethod,
       items: formattedItems,
       subtotal,
