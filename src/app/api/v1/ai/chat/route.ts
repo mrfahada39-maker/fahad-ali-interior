@@ -10,6 +10,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import crypto from 'crypto';
 import { getToken } from 'next-auth/jwt';
 import { AI_SESSION_COOKIE_NAME, signAiSessionId, verifyAiSessionCookie } from '@/lib/ai-session-binding';
+import { findActivePromo, type ActivePromo } from '@/lib/coupons';
 
 /** High-capacity Dynamic AI Response Generator (ChatGPT/Claude/Gemini style) */
 function generateDynamicResponse(
@@ -17,10 +18,19 @@ function generateDynamicResponse(
   role: string,
   allProducts: any[],
   history: any[],
-  dbCategories: any[] = []
+  dbCategories: any[] = [],
+  activeCoupon?: { code: string; discount: number; discountType: string } | null
 ): { replyText: string; products?: any[]; quote?: any; bundle?: any; suggestedPrompts?: string[] } {
   const cleanQ = query.replace(/[^\w\s]/g, ' ').toLowerCase().trim();
   const q = cleanQ || query.toLowerCase().trim();
+  const promoLabel = activeCoupon
+    ? activeCoupon.discountType === 'PERCENTAGE'
+      ? `${activeCoupon.discount}% OFF with code **${activeCoupon.code}**`
+      : `PKR ${activeCoupon.discount.toLocaleString()} OFF with code **${activeCoupon.code}**`
+    : 'verified seasonal privilege vouchers at checkout';
+  const promoCtaUrdu = activeCoupon
+    ? `Code **${activeCoupon.code}** se ${activeCoupon.discountType === 'PERCENTAGE' ? `${activeCoupon.discount}%` : `PKR ${activeCoupon.discount.toLocaleString()}`} OFF hasil karein!`
+    : `Checkout par active privilege offers se faida uthayein!`;
 
   // 1. Live Products Retrieval & Formatting
   const matchedProducts = allProducts.filter((p) => {
@@ -58,7 +68,7 @@ function generateDynamicResponse(
       : `Tamam collections directly Lahore atelier se made-to-order craft ki ja rahi hain.`;
 
     return {
-      replyText: `Walaikum Assalam! Welcome to **FAHAD ALI INTERIOR** 👑\n\nHamare atelier par **${catNames.length} Active Categories** available hain:\n\n${catListing}\n\n${liveItemsSummary}\n\nAap kisi bhi category ke ready products dekh sakte hain ya apne room size ke mutabiq 100% Solid Kiln-Seasoned Sheesham Wood mein bespoke custom order banwa sakte hain.\n\nAap kis category ya masterwork ke bare mein maloomat lena chahte hain? Code **LUXURY10** se 10% OFF hasil karein!`,
+      replyText: `Walaikum Assalam! Welcome to **FAHAD ALI INTERIOR** 👑\n\nHamare atelier par **${catNames.length} Active Categories** available hain:\n\n${catListing}\n\n${liveItemsSummary}\n\nAap kisi bhi category ke ready products dekh sakte hain ya apne room size ke mutabiq 100% Solid Kiln-Seasoned Sheesham Wood mein bespoke custom order banwa sakte hain.\n\nAap kis category ya masterwork ke bare mein maloomat lena chahte hain? ${promoCtaUrdu}`,
       suggestedPrompts: [
         ...(allProducts.slice(0, 2).map((p) => `🛋️ ${p.name}`)),
         '📐 Request Custom Bespoke Quote',
@@ -103,8 +113,11 @@ function generateDynamicResponse(
 
   // E. Discounts, Coupon Code & Offers
   if (q.includes('discount') || q.includes('coupon') || q.includes('offer') || q.includes('sale') || q.includes('code') || q.includes('kam karo') || q.includes('kam hoga') || q.includes('coper') || q.includes('less')) {
+    const couponBullet = activeCoupon
+      ? `- 🏷️ **Coupon Code:** Apply **${activeCoupon.code}** at checkout for **Instant ${activeCoupon.discountType === 'PERCENTAGE' ? `${activeCoupon.discount}%` : `PKR ${activeCoupon.discount.toLocaleString()}`} OFF** on your cart!`
+      : `- 🏷️ **Privilege Offers:** Enter your active promotional voucher at checkout for instant savings!`;
     return {
-      replyText: `🎁 **Exclusive Discount & Promo Code:**\n\n- 🏷️ **Coupon Code:** Apply **LUXURY10** at checkout for **Instant 10% OFF** on your entire cart!\n- 🚛 **Free Delivery:** Free White-Glove Shipping across Pakistan on orders above PKR 100,000.\n- 🎁 **Room Bundles:** Save up to PKR 50,000+ on complete Bedroom & Living Room packages!`,
+      replyText: `🎁 **Exclusive Discount & Promo Offers:**\n\n${couponBullet}\n- 🚛 **Free Delivery:** Free White-Glove Shipping across Pakistan on orders above PKR 100,000.\n- 🎁 **Room Bundles:** Save up to PKR 50,000+ on complete Bedroom & Living Room packages!`,
       suggestedPrompts: ['🎁 View Room Bundles', '🛒 Go to Cart', '🛋️ Browse Living Collection'],
     };
   }
@@ -159,7 +172,7 @@ function generateDynamicResponse(
     }));
 
     return {
-      replyText: `🎁 **${bundleTitle} (Save PKR ${new Intl.NumberFormat('en-PK').format(savingsAmount)})**\n\n- **Package:** ${bundleDesc}\n- **Discount:** Instant 10% OFF with code **LUXURY10**\n- **Free Shipping:** Free Nationwide White-Glove Shipping & 10-Yr Guarantee!`,
+      replyText: `🎁 **${bundleTitle} (Save PKR ${new Intl.NumberFormat('en-PK').format(savingsAmount)})**\n\n- **Package:** ${bundleDesc}\n- **Discount:** Instant ${promoLabel}\n- **Free Shipping:** Free Nationwide White-Glove Shipping & 10-Yr Guarantee!`,
       products: formattedBundleItems,
       bundle: {
         title: bundleTitle,
@@ -167,7 +180,7 @@ function generateDynamicResponse(
         originalPrice: rawTotal,
         discountedPrice: discountedTotal,
         savings: savingsAmount,
-        couponCode: 'LUXURY10',
+        couponCode: activeCoupon?.code || null,
         items: formattedBundleItems,
       },
     };
@@ -176,7 +189,7 @@ function generateDynamicResponse(
   // I. Live Products Matching Inquiry (Sofas, Beds, Tables, Wardrobes, Chairs)
   if (formattedProducts && formattedProducts.length > 0) {
     return {
-      replyText: `✨ **FAHAD ALI Live Sheesham Collection:**\n\nAap ke question ke mutabiq niche **${formattedProducts.length} Live Items** show ho rahe hain:\n\n- 🪵 **Material:** 100% Solid Seasoned Sheesham Wood\n- 🛡️ **Guarantee:** 10-Year Anti-Termite & Structural Warranty\n- 🏷️ **10% OFF:** Use promo code **LUXURY10** at checkout!`,
+      replyText: `✨ **FAHAD ALI Live Sheesham Collection:**\n\nAap ke question ke mutabiq niche **${formattedProducts.length} Live Items** show ho rahe hain:\n\n- 🪵 **Material:** 100% Solid Seasoned Sheesham Wood\n- 🛡️ **Guarantee:** 10-Year Anti-Termite & Structural Warranty\n- 🏷️ **Special Offer:** Enjoy ${promoLabel} at checkout!`,
       products: formattedProducts,
     };
   }
@@ -188,7 +201,7 @@ function generateDynamicResponse(
       : 'Tamam showroom pieces made-to-order craft kiye ja rahe hain.';
 
     return {
-      replyText: `🏷️ **Authentic PKR Database Pricing:**\n\n${livePrices}\n\n- 🪵 **Custom Bespoke Orders:** Pricing wood volume (Cubic Feet x PKR 2,400 + artisan joinery & finish) ke hisab se transparently calculate hoti hai.\n- 🏷️ Promo code **LUXURY10** se Instant 10% Discount حاصل karein!`,
+      replyText: `🏷️ **Authentic PKR Database Pricing:**\n\n${livePrices}\n\n- 🪵 **Custom Bespoke Orders:** Pricing wood volume (Cubic Feet x PKR 2,400 + artisan joinery & finish) ke hisab se transparently calculate hoti hai.\n- 🏷️ ${promoCtaUrdu}`,
       products: allProducts.slice(0, 4).map((p) => ({ id: p.id, name: p.name, price: Number(p.price), category: p.category, image: p.image || p.images?.[0] })),
     };
   }
@@ -221,7 +234,7 @@ function generateDynamicResponse(
 
   // K. General Fallback
   return {
-    replyText: `👑 **FAHAD ALI Executive AI Advisor:**\n\nAap ne poocha: "${query}"\n\nHum aapki direct madad kar sakte hain:\n- 🛋️ **Sheesham Wood Collections:** Living, Bedroom, Dining & Executive Office\n- 📐 **Custom Sizes:** Bespoke Length x Width estimations\n- 🚚 **Free Shipping:** Nationwide White-Glove Delivery & 10-Yr Guarantee\n- 🏷️ **10% Discount:** Use code **LUXURY10** at checkout!`,
+    replyText: `👑 **FAHAD ALI Executive AI Advisor:**\n\nAap ne poocha: "${query}"\n\nHum aapki direct madad kar sakte hain:\n- 🛋️ **Sheesham Wood Collections:** Living, Bedroom, Dining & Executive Office\n- 📐 **Custom Sizes:** Bespoke Length x Width estimations\n- 🚚 **Free Shipping:** Nationwide White-Glove Delivery & 10-Yr Guarantee\n- 🏷️ **Discount Offers:** Enjoy ${promoLabel} at checkout!`,
     suggestedPrompts: ['🛋️ Living Room Sofas', '🛏️ Royal Sheesham Beds', '📐 Request Custom Size', '📍 Showroom Location'],
   };
 }
@@ -358,8 +371,9 @@ export async function POST(request: NextRequest) {
     // 6. Determine Agent Role & System Context
     const activeAgentRole = AgentRouter.routeIntent(sanitizedUserQuery, requestedRole);
 
-    // Fetch active categories from database
+    // Fetch active categories and active promo coupon from database
     let dbCategories: any[] = [];
+    const activeCoupon: ActivePromo | null = await findActivePromo();
     try {
       dbCategories = await db.category.findMany({
         where: { deletedAt: null, isActive: true },
@@ -379,14 +393,17 @@ export async function POST(request: NextRequest) {
       .join(', ');
 
     const activeCatNames = dbCategories.map((c) => c.name).join(', ');
+    const activePromoContext = activeCoupon
+      ? `\nACTIVE PROMO COUPON: "${activeCoupon.code}" (${activeCoupon.discountType === 'PERCENTAGE' ? `${activeCoupon.discount}%` : `PKR ${activeCoupon.discount.toLocaleString()}`} OFF).`
+      : '\nACTIVE PROMO COUPON: None currently active.';
 
     const catalogContext = allProducts.length > 0
       ? `TOTAL STORE PRODUCTS IN DATABASE: ${allProducts.length} items across categories [${categoriesSummary}].
-ACTIVE STORE CATEGORIES: [${activeCatNames || 'Living Room, Bedroom, Dining Room, Coffee Chairs, Center Tables, Luxury Showcase, Luxury Wardrobes'}].
+ACTIVE STORE CATEGORIES: [${activeCatNames || 'Living Room, Bedroom, Dining Room, Coffee Chairs, Center Tables, Luxury Showcase, Luxury Wardrobes'}].${activePromoContext}
 LIVE INVENTORY CATALOG:
 ${allProducts.map((p) => `- "${p.name}" (ID: ${p.id}) [Category: ${p.category || 'Furniture'}] | Price: PKR ${new Intl.NumberFormat('en-PK').format(Number(p.price))} | Stock: ${(p.stockCount ?? 1) > 0 ? `${p.stockCount ?? 1} units available` : 'Ready for Custom Build (10-14 days)'} | Material: ${p.material || '100% Solid Seasoned Sheesham Wood'}`).join('\n')}`
       : `TOTAL STORE PRODUCTS IN DATABASE: 0 items in ready stock. All pieces are crafted on-demand bespoke.
-ACTIVE STORE CATEGORIES: [${activeCatNames}].`;
+ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
 
     const systemPrompt = AgentRouter.getSystemPromptForAgent(activeAgentRole, catalogContext);
 
@@ -408,7 +425,14 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].`;
       replyText = llmResult.text;
     } else {
       // High-Capacity Dynamic AI Generator Engine
-      const dynamicResult = generateDynamicResponse(sanitizedUserQuery, activeAgentRole, allProducts, history, dbCategories);
+      const dynamicResult = generateDynamicResponse(
+        sanitizedUserQuery,
+        activeAgentRole,
+        allProducts,
+        history,
+        dbCategories,
+        activeCoupon
+      );
       replyText = dynamicResult.replyText;
       if (dynamicResult.products) retrievedProducts = dynamicResult.products;
       if (dynamicResult.quote) generatedQuote = dynamicResult.quote;

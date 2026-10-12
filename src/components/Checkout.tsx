@@ -1,58 +1,39 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User,
-  Mail,
-  Phone,
   MapPin,
-  ChevronDown,
-  ChevronUp,
   ArrowRight,
-  ArrowLeft,
-  Loader2,
   Check,
-  Copy,
-  CheckCheck,
   CreditCard,
-  Building,
-  Zap,
-  Lock,
   Tag,
   Sparkles,
-  ShieldCheck,
-  Truck,
-  Upload,
-  Plus,
-  Minus,
-  Wallet,
   ShoppingBag,
-  Crown,
 } from 'lucide-react';
 import { useCartStore } from '@/store';
 import { apiFetch } from '@/lib/api-client';
-import { resolveImageUrl } from '@/lib/images';
 import { toast } from 'sonner';
 import {
   PAKISTAN_CITIES,
-  PAKISTAN_PROVINCES,
   detectPakistaniTelecom,
   isValidPakistaniPhone,
-  RAAST_SBP_DETAILS,
 } from '@/lib/pakistan-localization';
 
 import {
   type PaymentMethodType,
   type BankItem,
   BANKS_LIST,
-  CheckoutBankCardPanel,
 } from '@/components/checkout/checkout-banks';
 export type { PaymentMethodType };
+import { CheckoutSectionSummary } from '@/components/checkout/CheckoutSectionSummary';
+import { CheckoutSectionCustomer } from '@/components/checkout/CheckoutSectionCustomer';
+import { CheckoutSectionShipping } from '@/components/checkout/CheckoutSectionShipping';
+import { CheckoutSectionPayment } from '@/components/checkout/CheckoutSectionPayment';
 
 export default function Checkout() {
   const { items: cartStoreItems, clearCart, updateQuantity, removeItem } = useCartStore();
@@ -115,6 +96,7 @@ export default function Checkout() {
   const [bankSearchQuery, setBankSearchQuery] = useState('');
   const [placing, setPlacing] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -176,7 +158,7 @@ export default function Checkout() {
   const itemsSubtotal = activeItems.reduce((sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 1), 0);
   const shippingFee = 0;
   const taxAmount = 0;
-  
+
   let discountAmount = 0;
   if (appliedCoupon) {
     if (appliedCoupon.percent) {
@@ -245,48 +227,33 @@ export default function Checkout() {
     reader.readAsDataURL(file);
   };
 
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const code = couponCode.trim().toUpperCase();
     if (!code) return;
-    if (code === 'FAHAD10' || code === 'VIP10') {
-      setAppliedCoupon({ code, percent: 10 });
-      toast.success('✦ VIP 10% Discount Applied!');
-    } else if (code === 'FAHAD20') {
-      setAppliedCoupon({ code, percent: 20 });
-      toast.success('✦ Royal Executive 20% Discount Applied!');
-    } else if (code === 'ROYAL50') {
-      setAppliedCoupon({ code, fixed: 50000 });
-      toast.success('✦ Rs. 50,000 Luxury Voucher Applied!');
-    } else {
-      toast.error('Invalid Voucher Code. Try: FAHAD10, FAHAD20, or ROYAL50');
+    setCouponLoading(true);
+    try {
+      const res = await apiFetch('/api/v1/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, subtotal: itemsSubtotal }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.valid) {
+        toast.error(data.error || 'Invalid or inactive voucher code.');
+        return;
+      }
+      if (data.discountType === 'PERCENTAGE') {
+        setAppliedCoupon({ code: data.code, percent: Number(data.discount) });
+        toast.success(`✦ ${data.discount}% Discount (${data.code}) Applied!`);
+      } else {
+        setAppliedCoupon({ code: data.code, fixed: Number(data.discount) });
+        toast.success(`✦ Rs. ${Number(data.discount).toLocaleString()} Voucher (${data.code}) Applied!`);
+      }
+    } catch {
+      toast.error('Unable to validate voucher right now. Please try again.');
+    } finally {
+      setCouponLoading(false);
     }
-  };
-
-  const autoFillSampleData = () => {
-    setForm({
-      name: 'Muhammad Fahad Ali',
-      email: 'fahadali@interior.pk',
-      phone: '+92 300 1234567',
-      address: 'House # 42, Executive Palm Avenue, Phase 6 DHA',
-      city: 'Lahore',
-      province: 'Punjab',
-      postalCode: '54000',
-      country: 'Pakistan',
-      saveAddress: true,
-      notes: 'White-glove delivery, please call 30 mins before arrival.',
-    });
-    setCardDetails({
-      number: '4532 8891 7890 3456',
-      expiry: '12/28',
-      cvv: '884',
-    });
-    setDigitalPaymentDetails({
-      senderNumber: '03001234567',
-      transactionId: 'TRX-' + Math.floor(10000000 + Math.random() * 90000000),
-      senderBank: 'Meezan Bank',
-      screenshotUrl: null,
-    });
-    toast.success('Sample VIP profile & address loaded!');
   };
 
   const goToNextSection = () => {
@@ -374,9 +341,12 @@ export default function Checkout() {
       if (res.ok) {
         const data = await res.json();
         const orderId = data.order?.id || data.id || 'ORD-' + Date.now().toString().slice(-6);
+        const guestToken = data.guestTrackingToken || data.order?.guestTrackingToken || '';
+        const email = form.email || '';
         clearCart();
         toast.success('Order placed successfully!');
-        router.push(`/orders/success?id=${orderId}`);
+        const guestQuery = email ? `&email=${encodeURIComponent(email)}${guestToken ? `&token=${encodeURIComponent(guestToken)}` : ''}` : '';
+        router.push(`/orders/success?id=${orderId}${guestQuery}`);
       } else if (res.status === 401) {
         toast.error('Please sign in to confirm order');
         if (typeof window !== 'undefined') {
@@ -459,15 +429,13 @@ export default function Checkout() {
     <div className="w-full min-h-screen bg-[#FAF6F0] text-[#1F1612] font-sans pt-21 sm:pt-22 lg:pt-23 pb-28 sm:pb-32 lg:pb-8 px-3 sm:px-5 lg:px-6 flex flex-col justify-start select-none">
       <div className="w-full flex-1 flex flex-col gap-2 sm:gap-2.5">
 
-        {/* ── 1. $100,000 LUXURY HEADER (DUAL RESPONSIVE: EXACT MATCH TO IMAGE 1) ── */}
-        <motion.div 
+        {/* ── 1. $100,000 LUXURY HEADER ── */}
+        <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2.5 bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E7DDD0] p-3 sm:py-2.5 sm:px-5 lg:py-3 lg:px-6 rounded-2xl lg:rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.02)] shrink-0 relative overflow-hidden group hover:border-[#B88E4B]/40 transition-all"
         >
-          {/* Left Title & Status Area */}
           <div className="relative z-10 w-full lg:w-auto">
-            {/* Badges Row */}
             <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
               <span className="px-2 sm:px-2.5 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/35 flex items-center gap-1 shadow-2xs">
                 <Sparkles size={9} className="text-[#B88E4B] animate-spin duration-3000" />
@@ -493,7 +461,6 @@ export default function Checkout() {
             </p>
           </div>
 
-          {/* Right Side Action Controls: Matching Exact Style to Image 1 */}
           <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full lg:w-auto shrink-0 relative z-10 pt-1 sm:pt-0 border-t sm:border-t-0 border-[#E7DDD0]/60">
             <Link
               href="/shop"
@@ -559,1071 +526,91 @@ export default function Checkout() {
           })}
         </div>
 
-        {/* ── 3. ACTIVE SECTION CARD (FULL WIDTH & SCREEN FITTED) ─────────── */}
+        {/* ── 3. ACTIVE SECTION CARD ─────────── */}
         <AnimatePresence mode="wait">
-          {/* ════════════════════════════════════════════════════════════════
-              SECTION 1: 🛒 ORDER SUMMARY & 🎟ï¸ DISCOUNT
-          ════════════════════════════════════════════════════════════════ */}
           {currentSection === 1 && (
-            <motion.div
-              key="section-1"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.99 }}
-              transition={{ duration: 0.15 }}
-              className="w-full flex-1 flex flex-col justify-between bg-white border border-[#E7DDD0] rounded-2xl p-3.5 sm:p-4.5 shadow-[0_4px_20px_rgba(44,30,24,0.02)]"
-            >
-              {/* Header Title */}
-              <div className="flex justify-between items-center border-b border-[#E7DDD0]/80 pb-2.5 mb-3 shrink-0">
-                <h2 className="text-sm sm:text-base lg:text-lg font-black text-[#221814] flex items-center gap-2 font-serif">
-                  <span className="text-[#B88E4B]">✦</span>
-                  <ShoppingBag size={18} className="text-[#8C6239] stroke-[2.2]" />
-                  <span>1. Order Summary & Review</span>
-                </h2>
-                <div className="flex items-center gap-2">
-                  {activeItems.length > 3 && (
-                    <span className="text-[9.5px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                      <span>Scroll to view all {activeItems.length} items</span>
-                      <ChevronDown size={12} />
-                    </span>
-                  )}
-                  <span className="text-[9.5px] sm:text-[10px] font-black text-[#B08552] bg-[#FAF5EE] border border-[#B88E4B]/35 px-2.5 py-0.5 rounded-full">
-                    {activeItems.length} {activeItems.length === 1 ? 'CURATED PIECE' : 'CURATED PIECES'}
-                  </span>
-                </div>
-              </div>
-
-              {/* 2-Column Full-Width Balanced Grid */}
-              <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch flex-1 min-h-0">
-
-                {/* Left Side: Product Items List + Custom Scroll Slider (lg:col-span-7) */}
-                <div className="lg:col-span-7 flex flex-col justify-between space-y-2">
-                  
-                  {/* Products Custom Scrollable Slider Box */}
-                  <div 
-                    className="space-y-2.5 overflow-y-auto max-h-[255px] sm:max-h-[270px] pr-1.5"
-                    style={{
-                      scrollbarWidth: 'thin',
-                      scrollbarColor: '#B88E4B #FAF0E2'
-                    }}
-                  >
-                    {activeItems.map((item) => (
-                      <div 
-                        key={item.id} 
-                        className="flex items-center gap-3.5 bg-gradient-to-r from-white via-[#FCFAF7] to-white p-2.5 sm:p-3 rounded-2xl border border-[#E7DDD0] hover:border-[#B88E4B]/50 transition-all shadow-[0_2px_10px_rgba(44,30,24,0.02)]"
-                      >
-                        {/* Product Thumbnail */}
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-[#EAE2D7] bg-[#F7F3ED] relative shrink-0 shadow-inner">
-                          <Image
-                            src={resolveImageUrl(item.image, item.category)}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                            sizes="70px"
-                          />
-                        </div>
-
-                        {/* Product Details (Admin Dashboard Fonts & Hierarchy) */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-serif font-bold text-sm sm:text-base text-[#221814] leading-snug truncate">
-                            {item.name}
-                          </h4>
-                          <div className="flex items-baseline gap-1 mt-0.5 font-sans">
-                            <span className="text-xs font-bold text-[#8C6D46]">Rs.</span>
-                            <span className="text-sm sm:text-base font-black text-[#1F1612] tracking-tight">
-                              {(item.price ?? 0).toLocaleString()}
-                            </span>
-                            <span className="text-[10px] text-stone-500 font-medium ml-0.5">/ unit</span>
-                          </div>
-                          <p className="text-[10.5px] sm:text-xs text-stone-500 font-medium truncate mt-0.5 font-sans">
-                            Category: <span className="font-bold text-[#8C6239]">{item.category || 'Living Room Atelier'}</span>
-                          </p>
-                        </div>
-
-                        {/* Quantity & Item Subtotal (Admin Counter & Gold Currency) */}
-                        <div className="flex flex-col items-end gap-1.5 shrink-0 font-sans">
-                          <div className="inline-flex items-center border border-[#E2D9CD] bg-white rounded-xl overflow-hidden shadow-2xs">
-                            <button
-                              type="button"
-                              onClick={() => handleItemQuantity(item.id, -1)}
-                              className="px-2.5 py-1 hover:bg-[#FAF5EE] text-stone-800 hover:text-[#B88E4B] cursor-pointer transition-colors"
-                              title="Decrease"
-                            >
-                              <Minus size={12} strokeWidth={2.5} />
-                            </button>
-                            <span className="px-2.5 text-xs sm:text-sm font-black text-[#1F1612]">
-                              {item.quantity ?? 1}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleItemQuantity(item.id, 1)}
-                              className="px-2.5 py-1 hover:bg-[#FAF5EE] text-stone-800 hover:text-[#B88E4B] cursor-pointer transition-colors"
-                              title="Increase"
-                            >
-                              <Plus size={12} strokeWidth={2.5} />
-                            </button>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-[9.5px] font-black uppercase tracking-wider text-[#7A6354] block leading-none">SUBTOTAL</span>
-                            <div className="text-sm sm:text-base font-black text-[#1F1612] tracking-tight mt-0.5 flex items-baseline justify-end">
-                              <span className="text-[10px] font-bold text-[#8C6D46] mr-0.5">Rs.</span>
-                              <span>{((item.price ?? 0) * (item.quantity ?? 1)).toLocaleString()}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Left Column Bottom: Compact White Glove Assurance Capsule */}
-                  <div className="bg-gradient-to-r from-[#FAF7F2] via-white to-[#FAF7F2] border border-[#E7DDD0] rounded-xl py-2 px-3 flex items-center justify-between gap-2 text-xs shadow-2xs font-sans">
-                    <div className="flex items-center gap-2">
-                      <Truck size={16} className="text-[#8C6239] shrink-0" />
-                      <p className="font-bold text-[#221814] text-[11px] sm:text-xs truncate">
-                        Complimentary White-Glove VIP Delivery & Room Assembly
-                      </p>
-                    </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-300 shrink-0">
-                      FREE (Rs. 0)
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right Side: Coupon Box + Breakdown + Next Button (lg:col-span-5) */}
-                <div className="lg:col-span-5 flex flex-col justify-between bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] p-4 sm:p-5 rounded-2xl border border-[#E7DDD0] shadow-[0_4px_20px_rgba(44,30,24,0.02)] hover:border-[#B88E4B]/40 transition-all">
-                  {/* Top: Coupon + Breakdown */}
-                  <div className="space-y-3.5">
-                    {/* 🎟ï¸ Discount / Coupon Box */}
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center">
-                        <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                          <Tag size={14} className="text-[#8C6239]" />
-                          <span>Discount Voucher</span>
-                        </label>
-                        <span className="text-xs font-bold text-[#8C6239] font-sans">Try: FAHAD10 / ROYAL50</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          id="checkout-coupon-code"
-                          name="couponCode"
-                          type="text"
-                          value={couponCode}
-                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                          placeholder="ENTER CODE"
-                          className="flex-1 bg-white border border-[#E2D9CD] focus:border-[#B88E4B] rounded-xl px-3 py-2 text-xs sm:text-sm font-sans font-bold text-[#1F1612] placeholder:text-stone-400 outline-none uppercase shadow-2xs"
-                        />
-                        <button
-                          type="button"
-                          onClick={applyCoupon}
-                          className="bg-[#221814] hover:bg-[#38261E] text-[#F3E5AB] px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-sans font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs active:scale-98 shrink-0"
-                        >
-                          Apply
-                        </button>
-                      </div>
-
-                      {appliedCoupon && (
-                        <div className="flex items-center justify-between text-xs sm:text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl font-sans">
-                          <span className="font-bold flex items-center gap-1.5">
-                            <Sparkles size={14} className="text-emerald-700" />
-                            Voucher ({appliedCoupon.code}): - Rs. {discountAmount.toLocaleString()}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setAppliedCoupon(null);
-                              setCouponCode('');
-                              toast.info('Coupon removed');
-                            }}
-                            className="text-stone-400 hover:text-red-600 text-xs font-bold cursor-pointer transition-colors font-sans"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Financial Breakdown Table (Exact Admin Dashboard Font & Colors) */}
-                    <div className="space-y-2.5 pt-3 border-t border-[#E7DDD0] font-sans">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs sm:text-sm font-black tracking-wider text-[#7A6354] uppercase">Subtotal</span>
-                        <div className="text-sm sm:text-base lg:text-lg font-black text-[#1F1612] tracking-tight leading-none flex items-baseline">
-                          <span className="text-xs font-bold text-[#8C6D46] mr-1 select-none">Rs.</span>
-                          <span>{itemsSubtotal.toLocaleString()}</span>
-                        </div>
-                      </div>
-
-                      {discountAmount > 0 && (
-                        <div className="flex justify-between items-center text-emerald-700">
-                          <span className="text-xs sm:text-sm font-black tracking-wider uppercase">Discount Voucher</span>
-                          <div className="text-sm sm:text-base font-black tracking-tight leading-none flex items-baseline">
-                            <span className="text-xs font-bold mr-1 select-none">- Rs.</span>
-                            <span>{discountAmount.toLocaleString()}</span>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs sm:text-sm font-black tracking-wider text-[#7A6354] uppercase">White-Glove VIP Delivery</span>
-                        <span className="text-xs sm:text-sm font-black text-emerald-700 uppercase tracking-wide">Rs. 0 (Free)</span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs sm:text-sm font-black tracking-wider text-[#7A6354] uppercase">0% Atelier Interior Tax</span>
-                        <span className="text-xs sm:text-sm font-black text-stone-500 uppercase tracking-wide">Rs. 0 (Exempt)</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom: Grand Total & Proceed Button (Balanced Admin KPI Display) */}
-                  <div className="space-y-2 pt-2.5 border-t border-[#DECDBB] mt-1.5">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs sm:text-[13px] font-black text-[#7A6354] uppercase tracking-wider font-sans">Grand Total:</span>
-                      <h3 className="text-lg sm:text-xl lg:text-[23px] font-black text-[#1F1612] tracking-tight leading-none flex items-baseline font-sans">
-                        <span className="text-xs sm:text-sm font-bold text-[#8C6D46] mr-1 select-none font-sans">Rs.</span>
-                        <span className="bg-gradient-to-r from-[#B88E4B] via-[#996515] to-[#8C6239] bg-clip-text text-transparent">{grandTotal.toLocaleString()}</span>
-                      </h3>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={goToNextSection}
-                      className="w-full bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] hover:brightness-110 text-white font-serif font-bold text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl shadow-[0_4px_16px_rgba(184,142,75,0.25)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
-                    >
-                      <span>Proceed to Customer Info (Section 2)</span>
-                      <ArrowRight size={16} />
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-            </motion.div>
+            <CheckoutSectionSummary
+              activeItems={activeItems}
+              handleItemQuantity={handleItemQuantity}
+              removeItem={removeItem}
+              itemsSubtotal={itemsSubtotal}
+              shippingFee={shippingFee}
+              taxAmount={taxAmount}
+              discountAmount={discountAmount}
+              grandTotal={grandTotal}
+              appliedCoupon={appliedCoupon}
+              couponCode={couponCode}
+              setCouponCode={setCouponCode}
+              applyCoupon={applyCoupon}
+              couponLoading={couponLoading}
+              goToNextSection={goToNextSection}
+            />
           )}
 
-          {/* ════════════════════════════════════════════════════════════════
-              SECTION 2: 👤 CUSTOMER PROFILE & CONTACT
-          ════════════════════════════════════════════════════════════════ */}
           {currentSection === 2 && (
-            <motion.div
-              key="section-2"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.99 }}
-              transition={{ duration: 0.15 }}
-              className="w-full flex-1 flex flex-col justify-between bg-white border border-[#E7DDD0] rounded-2xl p-4 sm:p-5 shadow-[0_4px_20px_rgba(44,30,24,0.02)]"
-            >
-              <div>
-                <div className="flex justify-between items-center border-b border-[#E7DDD0]/80 pb-2.5 mb-3.5">
-                  <h2 className="text-sm sm:text-base lg:text-lg font-black text-[#221814] flex items-center gap-2 font-serif">
-                    <span className="text-[#B88E4B]">✦</span>
-                    <User size={18} className="text-[#8C6239] stroke-[2.2]" />
-                    <span>2. Customer Profile & Contact Details</span>
-                  </h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/35 flex items-center gap-1 shadow-2xs">
-                    <Sparkles size={10} className="text-[#B88E4B]" />
-                    <span>VIP CLIENT REGISTRATION</span>
-                  </span>
-                </div>
-
-                <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4.5 items-start">
-                  {/* Form Inputs (lg:col-span-7) */}
-                  <div className="lg:col-span-7 space-y-3.5">
-                    {/* Full Name */}
-                    <div>
-                      <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
-                        Full Name / Honorific <span className="text-amber-700">*</span>
-                      </label>
-                      <div className="relative group">
-                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-[#FAF5EE] border border-[#E2D9CD] flex items-center justify-center pointer-events-none transition-colors group-focus-within:border-[#B88E4B]">
-                          <User size={14} className="text-[#8C6239]" />
-                        </div>
-                        <input
-                          type="text"
-                          name="name"
-                          value={form.name}
-                          onChange={handleInputChange}
-                          placeholder="e.g. Muhammad Fahad Ali"
-                          required
-                          className="w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] focus:border-[#B88E4B] focus:bg-white rounded-xl pl-12 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-[#1F1612] placeholder:text-stone-400 outline-none transition-all shadow-2xs font-sans"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Email & Phone */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      <div>
-                        <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
-                          Email Address <span className="text-amber-700">*</span>
-                        </label>
-                        <div className="relative group">
-                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-[#FAF5EE] border border-[#E2D9CD] flex items-center justify-center pointer-events-none transition-colors group-focus-within:border-[#B88E4B]">
-                            <Mail size={14} className="text-[#8C6239]" />
-                          </div>
-                          <input
-                            type="email"
-                            name="email"
-                            value={form.email}
-                            onChange={handleInputChange}
-                            placeholder="client@fahad-ali.com"
-                            required
-                            className="w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] focus:border-[#B88E4B] focus:bg-white rounded-xl pl-12 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-[#1F1612] placeholder:text-stone-400 outline-none transition-all shadow-2xs font-sans"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider font-sans">
-                            Phone Number <span className="text-amber-700">*</span>
-                          </label>
-                          {detectedTelecom && (
-                            <span
-                              className="text-[9.5px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs animate-fadeIn"
-                              style={{
-                                backgroundColor: `${detectedTelecom.brandColor}15`,
-                                color: detectedTelecom.brandColor,
-                                border: `1px solid ${detectedTelecom.brandColor}40`,
-                              }}
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: detectedTelecom.brandColor }} />
-                              {detectedTelecom.name}
-                            </span>
-                          )}
-                        </div>
-                        <div className="relative group">
-                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-[#FAF5EE] border border-[#E2D9CD] flex items-center justify-center pointer-events-none transition-colors group-focus-within:border-[#B88E4B]">
-                            <Phone size={14} className="text-[#8C6239]" />
-                          </div>
-                          <input
-                            type="tel"
-                            name="phone"
-                            value={form.phone}
-                            onChange={handleInputChange}
-                            placeholder="0300 1234567"
-                            required
-                            className={`w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border ${
-                              form.phone && !isPhoneValid
-                                ? 'border-amber-400 focus:border-amber-500'
-                                : form.phone && isPhoneValid
-                                ? 'border-emerald-500/70 focus:border-emerald-600'
-                                : 'border-[#E2D9CD] focus:border-[#B88E4B]'
-                            } focus:bg-white rounded-xl pl-12 pr-10 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-[#1F1612] placeholder:text-stone-400 outline-none transition-all font-sans shadow-2xs`}
-                          />
-                          {form.phone && isPhoneValid && (
-                            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-600" title="Valid Pakistani Mobile Number">
-                              <ShieldCheck size={16} />
-                            </div>
-                          )}
-                        </div>
-                        {form.phone && !isPhoneValid && form.phone.length > 3 && (
-                          <p className="text-[10px] text-amber-700 mt-1 font-medium font-sans">
-                            Enter standard 11-digit Pakistani mobile number (e.g. 0300 1234567 or +92 300...)
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* VIP Client Privilege Trio Capsule */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 font-sans">
-                      <div className="bg-[#FAF7F2] border border-[#E7DDD0] rounded-xl p-2.5 flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-white border border-[#E2D9CD] flex items-center justify-center shrink-0">
-                          <Crown size={12} className="text-[#8C6239]" />
-                        </div>
-                        <span className="text-[10px] font-bold text-[#221814] leading-tight">Assigned VIP Concierge</span>
-                      </div>
-                      <div className="bg-[#FAF7F2] border border-[#E7DDD0] rounded-xl p-2.5 flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-white border border-[#E2D9CD] flex items-center justify-center shrink-0">
-                          <Lock size={12} className="text-emerald-700" />
-                        </div>
-                        <span className="text-[10px] font-bold text-[#221814] leading-tight">100% Confidential Data</span>
-                      </div>
-                      <div className="bg-[#FAF7F2] border border-[#E7DDD0] rounded-xl p-2.5 flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-white border border-[#E2D9CD] flex items-center justify-center shrink-0">
-                          <Zap size={12} className="text-amber-600" />
-                        </div>
-                        <span className="text-[10px] font-bold text-[#221814] leading-tight">Instant SMS Updates</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Side Order Overview Card (Admin KPI Jewel Style - lg:col-span-5) */}
-                  <div className="lg:col-span-5 bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border border-[#E7DDD0] rounded-2xl p-4 sm:p-4.5 space-y-3 shadow-[0_4px_20px_rgba(44,30,24,0.02)] font-sans">
-                    <div className="flex justify-between items-center border-b border-[#E7DDD0] pb-2">
-                      <span className="text-[10.5px] font-black uppercase tracking-wider text-[#7A6354]">Executive Overview</span>
-                      <span className="text-[9.5px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full">
-                        LIVE CART SYNCED
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between items-center">
-                        <span className="text-stone-600 font-semibold">Curated Pieces:</span>
-                        <span className="font-bold text-[#1F1612] bg-white border border-[#E2D9CD] px-2.5 py-0.5 rounded-lg shadow-2xs">
-                          {activeItems.length} Bespoke Items
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center">
-                        <span className="text-stone-600 font-semibold">White-Glove VIP Delivery:</span>
-                        <span className="font-bold text-emerald-700">Rs. 0 (Complimentary)</span>
-                      </div>
-
-                      <div className="flex justify-between items-center pt-2 border-t border-[#DECDBB]">
-                        <span className="font-black text-xs uppercase tracking-wider text-[#7A6354]">Grand Total:</span>
-                        <div className="text-lg sm:text-xl font-black text-[#1F1612] tracking-tight leading-none flex items-baseline">
-                          <span className="text-xs font-bold text-[#8C6D46] mr-1 select-none">Rs.</span>
-                          <span className="bg-gradient-to-r from-[#B88E4B] via-[#996515] to-[#8C6239] bg-clip-text text-transparent">
-                            {grandTotal.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 bg-gradient-to-r from-emerald-50 to-[#FAF5EE] border border-emerald-200/80 rounded-xl text-emerald-900 text-[11px] font-semibold leading-relaxed flex items-start gap-2">
-                      <Sparkles size={14} className="text-emerald-700 shrink-0 mt-0.5" />
-                      <span>Dedicated VIP Concierge will coordinate white-glove delivery & room assembly upon order confirmation.</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Actions */}
-              <div className="pt-3 flex flex-col-reverse sm:flex-row justify-between items-center gap-2 border-t border-[#E7DDD0]/80 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setCurrentSection(1)}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-[#DECDBB] text-stone-700 hover:bg-[#FAF6F0] font-sans font-bold text-xs cursor-pointer transition-colors"
-                >
-                  ← Back to Order Summary
-                </button>
-                <button
-                  type="button"
-                  onClick={goToNextSection}
-                  className="w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] text-white font-serif font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-xl shadow-[0_4px_16px_rgba(184,142,75,0.25)] flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:scale-98 transition-all"
-                >
-                  <span>Proceed to Shipping Address (Section 3)</span>
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-            </motion.div>
+            <CheckoutSectionCustomer
+              form={form}
+              handleInputChange={handleInputChange}
+              detectedTelecom={detectedTelecom}
+              isPhoneValid={isPhoneValid}
+              activeItems={activeItems}
+              grandTotal={grandTotal}
+              setCurrentSection={setCurrentSection}
+              goToNextSection={goToNextSection}
+            />
           )}
 
-          {/* ════════════════════════════════════════════════════════════════
-              SECTION 3: 📍 SHIPPING ADDRESS & BESPOKE DELIVERY
-          ════════════════════════════════════════════════════════════════ */}
           {currentSection === 3 && (
-            <motion.div
-              key="section-3"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.99 }}
-              transition={{ duration: 0.15 }}
-              className="w-full flex-1 flex flex-col justify-between bg-white border border-[#E7DDD0] rounded-2xl p-4 sm:p-5 shadow-[0_4px_20px_rgba(44,30,24,0.02)]"
-            >
-              <div>
-                <div className="flex justify-between items-center border-b border-[#E7DDD0]/80 pb-2.5 mb-3.5">
-                  <h2 className="text-sm sm:text-base lg:text-lg font-black text-[#221814] flex items-center gap-2 font-serif">
-                    <span className="text-[#B88E4B]">✦</span>
-                    <MapPin size={18} className="text-[#8C6239] stroke-[2.2]" />
-                    <span>3. Shipping Address & White-Glove Delivery</span>
-                  </h2>
-                  <span className="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-300 font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
-                    <Truck size={12} className="text-emerald-700" />
-                    <span>Pakistan White-Glove (Rs. 0 Free)</span>
-                  </span>
-                </div>
-
-                <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4.5 items-start">
-                  {/* Inputs (lg:col-span-7) */}
-                  <div className="lg:col-span-7 space-y-3.5">
-                    {/* Street Address */}
-                    <div>
-                      <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
-                        House / Street / Architectural Area <span className="text-amber-700">*</span>
-                      </label>
-                      <div className="relative group">
-                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-[#FAF5EE] border border-[#E2D9CD] flex items-center justify-center pointer-events-none transition-colors group-focus-within:border-[#B88E4B]">
-                          <MapPin size={14} className="text-[#8C6239]" />
-                        </div>
-                        <input
-                          type="text"
-                          name="address"
-                          value={form.address}
-                          onChange={handleInputChange}
-                          placeholder="e.g. House # 42, Executive Palm Avenue, Phase 6 DHA"
-                          required
-                          className="w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] focus:border-[#B88E4B] focus:bg-white rounded-xl pl-12 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-[#1F1612] placeholder:text-stone-400 outline-none transition-all shadow-2xs font-sans"
-                        />
-                      </div>
-                    </div>
-
-                    {/* City & Province */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider font-sans">
-                            City <span className="text-amber-700">*</span>
-                          </label>
-                          {PAKISTAN_CITIES[form.city] && (
-                            <span className="text-[9px] font-bold text-[#8C6239] bg-[#FAF5EE] border border-[#E2D9CD] px-1.5 py-0.5 rounded">
-                              {PAKISTAN_CITIES[form.city].province}
-                            </span>
-                          )}
-                        </div>
-                        <select
-                          name="city"
-                          value={form.city}
-                          onChange={handleInputChange}
-                          className="w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] focus:border-[#B88E4B] focus:bg-white rounded-xl px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-[#1F1612] outline-none transition-all cursor-pointer shadow-2xs font-sans"
-                        >
-                          {Object.keys(PAKISTAN_CITIES).map((c) => (
-                            <option key={c} value={c}>
-                              {c} — {PAKISTAN_CITIES[c].province}
-                            </option>
-                          ))}
-                          <option value="Other">Other Pakistani City</option>
-                        </select>
-                        {PAKISTAN_CITIES[form.city]?.estDeliveryDays && (
-                          <div className="mt-1.5 text-[10.5px] text-emerald-800 bg-emerald-50/80 border border-emerald-200/60 rounded-lg px-2.5 py-1 flex items-center gap-1.5 font-medium">
-                            <Truck size={12} className="text-emerald-700 shrink-0" />
-                            <span>Transit: <strong className="font-bold">{PAKISTAN_CITIES[form.city].estDeliveryDays}</strong></span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
-                          Province <span className="text-amber-700">*</span>
-                        </label>
-                        <select
-                          name="province"
-                          value={form.province}
-                          onChange={handleInputChange}
-                          className="w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] focus:border-[#B88E4B] focus:bg-white rounded-xl px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-[#1F1612] outline-none transition-all cursor-pointer shadow-2xs font-sans"
-                        >
-                          {PAKISTAN_PROVINCES.map((p) => (
-                            <option key={p} value={p}>
-                              {p}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Postal Code & Country */}
-                    <div className="grid grid-cols-2 gap-3.5">
-                      <div>
-                        <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
-                          Postal Code / ZIP
-                        </label>
-                        <input
-                          type="text"
-                          name="postalCode"
-                          value={form.postalCode}
-                          onChange={handleInputChange}
-                          placeholder="e.g. 54000"
-                          className="w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] focus:border-[#B88E4B] focus:bg-white rounded-xl px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-[#1F1612] outline-none font-sans shadow-2xs"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
-                          Destination Country
-                        </label>
-                        <div className="w-full bg-gradient-to-r from-[#FAF5EE] to-[#F5E5CF] border border-[#B88E4B]/40 rounded-xl px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm text-[#1F1612] font-black flex items-center justify-between select-none shadow-2xs font-sans">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>Pakistan</span>
-                          </span>
-                          <span className="text-base">🇵🇰</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Save Address Checkbox */}
-                    <div className="pt-1 font-sans">
-                      <label className="flex items-center gap-2.5 cursor-pointer select-none bg-[#FAF7F2] border border-[#E7DDD0] rounded-xl p-3 hover:border-[#B88E4B]/50 transition-colors">
-                        <input
-                          type="checkbox"
-                          name="saveAddress"
-                          checked={form.saveAddress}
-                          onChange={handleInputChange}
-                          className="w-4 h-4 rounded text-[#B88E4B] focus:ring-[#B88E4B] border-stone-300 accent-[#B88E4B] cursor-pointer"
-                        />
-                        <span className="text-xs font-bold text-[#221814]">
-                          Save this verified delivery address for future atelier commissions
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Right Side Delivery Perks Card (Admin KPI Jewel Style - lg:col-span-5) */}
-                  <div className="lg:col-span-5 bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border border-[#E7DDD0] rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-[0_4px_20px_rgba(44,30,24,0.02)] font-sans">
-                    <div className="flex justify-between items-center border-b border-[#E7DDD0] pb-2">
-                      <span className="text-[10.5px] font-black uppercase tracking-wider text-[#7A6354] flex items-center gap-1.5">
-                        <Truck size={14} className="text-[#8C6239]" />
-                        <span>White-Glove Protocol</span>
-                      </span>
-                      <span className="text-[9.5px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full">
-                        SBP ASSURED
-                      </span>
-                    </div>
-
-                    <ul className="space-y-2 text-stone-700 text-xs font-medium">
-                      <li className="flex items-center gap-2 bg-white/80 border border-[#E2D9CD] p-2 rounded-xl shadow-2xs">
-                        <Check size={14} className="text-emerald-700 shrink-0 stroke-[2.5]" />
-                        <span className="font-bold text-[#221814]">Complimentary VIP Doorstep Delivery</span>
-                      </li>
-                      <li className="flex items-center gap-2 bg-white/80 border border-[#E2D9CD] p-2 rounded-xl shadow-2xs">
-                        <Check size={14} className="text-emerald-700 shrink-0 stroke-[2.5]" />
-                        <span className="font-bold text-[#221814]">Master Craftsmen Room Placement & Assembly</span>
-                      </li>
-                      <li className="flex items-center gap-2 bg-white/80 border border-[#E2D9CD] p-2 rounded-xl shadow-2xs">
-                        <Check size={14} className="text-emerald-700 shrink-0 stroke-[2.5]" />
-                        <span className="font-bold text-[#221814]">Full Packaging Removal & Quality Verification</span>
-                      </li>
-                    </ul>
-
-                    <div className="pt-2.5 border-t border-[#DECDBB] flex justify-between items-center">
-                      <div>
-                        <span className="text-[10px] text-stone-500 uppercase font-black tracking-wider block">Delivery Charge</span>
-                        <span className="text-xs font-black text-emerald-700">100% Free (Complimentary)</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[10px] text-stone-500 uppercase font-black tracking-wider block">Payable Total</span>
-                        <span className="text-sm sm:text-base font-black font-sans text-[#8C6239]">Rs. {grandTotal.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Action */}
-              <div className="pt-3 flex flex-col-reverse sm:flex-row justify-between items-center gap-2 border-t border-[#E7DDD0]/80 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setCurrentSection(2)}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-[#DECDBB] text-stone-700 hover:bg-[#FAF6F0] font-sans font-bold text-xs cursor-pointer transition-colors"
-                >
-                  ← Back to Customer Info
-                </button>
-                <button
-                  type="button"
-                  onClick={goToNextSection}
-                  className="w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] text-white font-serif font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-xl shadow-[0_4px_16px_rgba(184,142,75,0.25)] flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:scale-98 transition-all"
-                >
-                  <span>Proceed to Payment Methods (Section 4)</span>
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-            </motion.div>
+            <CheckoutSectionShipping
+              form={form}
+              handleInputChange={handleInputChange}
+              grandTotal={grandTotal}
+              setCurrentSection={setCurrentSection}
+              goToNextSection={goToNextSection}
+            />
           )}
 
-          {/* ════════════════════════════════════════════════════════════════
-              SECTION 4: 💳 PAYMENT METHODS & AUTHORIZATIONS
-          ════════════════════════════════════════════════════════════════ */}
           {currentSection === 4 && (
-            <motion.div
-              key="section-4"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.99 }}
-              transition={{ duration: 0.15 }}
-              className="w-full flex-1 flex flex-col justify-between bg-white border border-[#E7DDD0] rounded-2xl p-4 sm:p-5 shadow-[0_4px_20px_rgba(44,30,24,0.02)]"
-            >
-              <div>
-                {/* Header */}
-                <div className="flex justify-between items-center border-b border-[#E7DDD0]/80 pb-2.5 mb-3.5">
-                  <h2 className="text-sm sm:text-base lg:text-lg font-black text-[#221814] flex items-center gap-2 font-serif">
-                    <span className="text-[#B88E4B]">✦</span>
-                    <CreditCard size={18} className="text-[#8C6239] stroke-[2.2]" />
-                    <span>4. Payment Methods & Authorizations</span>
-                  </h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-2xs font-sans">
-                    <ShieldCheck size={12} className="text-emerald-700" />
-                    <span>SBP VERIFIED & 256-BIT ENCRYPTED</span>
-                  </span>
-                </div>
-
-                {/* 5 Ultra-Modern Payment Selector Micro-Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-4 font-sans">
-                  {/* 1. Cash on Delivery */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('cod')}
-                    className={`h-[74px] sm:h-[82px] p-2 rounded-xl sm:rounded-2xl transition-all cursor-pointer relative overflow-hidden flex flex-col items-center justify-center gap-1 group ${
-                      paymentMethod === 'cod'
-                        ? 'bg-gradient-to-b from-emerald-50/50 via-white to-emerald-50/40 border-2 border-emerald-600 shadow-[0_4px_16px_rgba(5,150,105,0.22)] scale-[1.02]'
-                        : 'bg-white hover:bg-[#FAF7F2] border border-[#E7DDD0] text-stone-600 hover:border-emerald-500/50 shadow-2xs'
-                    }`}
-                    title="Cash on Delivery (Pakistan)"
-                  >
-                    <div className="flex items-center gap-2 group-hover:scale-105 transition-transform">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-100/80 border border-emerald-300/80 flex items-center justify-center shadow-2xs">
-                        <Truck size={16} className="text-emerald-700" />
-                      </div>
-                      <div className="text-left">
-                        <span className="font-black text-xs text-[#221814] block leading-none">Cash on</span>
-                        <span className="font-black text-[11px] text-emerald-700 block leading-tight">Delivery</span>
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* 2. JazzCash (Official Cloudinary Logo) */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('jazzcash')}
-                    className={`h-[74px] sm:h-[82px] p-2.5 rounded-xl sm:rounded-2xl transition-all cursor-pointer relative overflow-hidden flex items-center justify-center group ${
-                      paymentMethod === 'jazzcash'
-                        ? 'bg-gradient-to-b from-[#FAF5EE] via-white to-[#FAF5EE] border-2 border-[#ED1C24] shadow-[0_4px_16px_rgba(237,28,36,0.25)] scale-[1.02]'
-                        : 'bg-white hover:bg-[#FAF7F2] border border-[#E7DDD0] hover:border-[#ED1C24]/50 shadow-2xs'
-                    }`}
-                    title="JazzCash Instant Mobile Account"
-                  >
-                    <Image
-                      src="https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039222/fahad-ali-interior/assets/jazzcash_logo.svg"
-                      alt="JazzCash"
-                      width={120}
-                      height={56}
-                      className="w-full h-full max-h-[52px] sm:max-h-[58px] object-contain group-hover:scale-105 transition-transform"
-                    />
-                  </button>
-
-                  {/* 3. Easypaisa (Official Cloudinary Logo) */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('easypaisa')}
-                    className={`h-[74px] sm:h-[82px] p-2.5 rounded-xl sm:rounded-2xl transition-all cursor-pointer relative overflow-hidden flex items-center justify-center group ${
-                      paymentMethod === 'easypaisa'
-                        ? 'bg-gradient-to-b from-[#FAF5EE] via-white to-[#FAF5EE] border-2 border-[#00A859] shadow-[0_4px_16px_rgba(0,168,89,0.25)] scale-[1.02]'
-                        : 'bg-white hover:bg-[#FAF7F2] border border-[#E7DDD0] hover:border-[#00A859]/50 shadow-2xs'
-                    }`}
-                    title="Easypaisa 1-Tap Wallet"
-                  >
-                    <Image
-                      src="https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039224/fahad-ali-interior/assets/easypaisa_logo.png"
-                      alt="Easypaisa"
-                      width={120}
-                      height={44}
-                      className="w-full h-full max-h-[38px] sm:max-h-[44px] max-w-[90%] object-contain group-hover:scale-105 transition-transform"
-                    />
-                  </button>
-
-                  {/* 4. Debit / Credit Card (Official Mastercard + Visa Box) */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('card')}
-                    className={`h-[74px] sm:h-[82px] p-2.5 rounded-xl sm:rounded-2xl transition-all cursor-pointer relative overflow-hidden flex items-center justify-center group ${
-                      paymentMethod === 'card'
-                        ? 'bg-gradient-to-b from-[#FAF5EE] via-white to-[#FAF5EE] border-2 border-[#1A1F71] shadow-[0_4px_16px_rgba(26,31,113,0.22)] scale-[1.02]'
-                        : 'bg-white hover:bg-[#FAF7F2] border border-[#E7DDD0] hover:border-[#1A1F71]/50 shadow-2xs'
-                    }`}
-                    title="Debit / Credit Card (Mastercard + Visa)"
-                  >
-                    <div className="w-full h-full flex items-center justify-center gap-2 sm:gap-2.5 px-1 group-hover:scale-105 transition-transform">
-                      {/* Official Mastercard Dual-Spheres Vector Logo */}
-                      <svg viewBox="0 0 72 44" className="h-6 sm:h-7 w-auto shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="24" cy="22" r="20" fill="#EB001B" />
-                        <circle cx="48" cy="22" r="20" fill="#F79E1B" />
-                        <path d="M36 7.4A20 20 0 0 1 43.6 22A20 20 0 0 1 36 36.6A20 20 0 0 1 28.4 22A20 20 0 0 1 36 7.4Z" fill="#FF5F00" />
-                      </svg>
-
-                      {/* Divider */}
-                      <div className="h-6 w-px bg-stone-300/80 shrink-0" />
-
-                      {/* Official Visa Vector Logo with Gold Wing */}
-                      <svg viewBox="0 0 102 32" className="h-5 sm:h-5.5 w-auto shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M38.5 2.5L25.3 30H17.2L10.5 8.8C10.1 7.2 9.8 6.6 8.5 6C6.5 4.9 3.1 3.9 0 3.3L0.2 2.5H13.6C15.3 2.5 16.9 3.7 17.3 5.7L20.6 22L28.8 2.5H38.5Z" fill="#1A1F71" />
-                        <path d="M53.8 20.6C53.8 13.5 43.6 13.1 43.7 9.8C43.7 8.8 44.7 7.7 47 7.4C48.1 7.2 51.3 7.1 54.9 8.7L56.4 2.3C54.4 1.6 51.8 0.9 48.6 0.9C41.2 0.9 36 4.7 36 10.1C36 14.1 39.7 16.3 42.5 17.6C45.3 18.9 46.3 19.8 46.3 21C46.3 22.8 44.1 23.6 42.1 23.6C39 23.6 37.2 23.1 34.6 21.9L33.1 28.5C35.1 29.4 38.8 30.1 42.6 30.1C50.6 30.1 53.8 26.2 53.8 20.6Z" fill="#1A1F71" />
-                        <path d="M69.8 30H77.5L83.5 2.5H75.8L69.8 30Z" fill="#1A1F71" />
-                        <path d="M98.6 2.5H91.1C89.5 2.5 88.2 3.4 87.6 4.8L74.8 30H82.9L84.5 25.5H94.4L95.3 30H102.5L98.6 2.5ZM86.7 19.4L90.8 7.8L93.2 19.4H86.7Z" fill="#1A1F71" />
-                        <path d="M8.5 6C6.5 4.9 3.1 3.9 0 3.3L0.2 2.5H13.6C15.3 2.5 16.9 3.7 17.3 5.7L20.6 22L10.5 8.8C10.1 7.2 9.8 6.6 8.5 6Z" fill="#F7B600" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {/* 5. Bank Transfer & Raast (Official Cloudinary Logo) */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('bank')}
-                    className={`h-[74px] sm:h-[82px] p-2 rounded-xl sm:rounded-2xl transition-all cursor-pointer relative overflow-hidden flex items-center justify-center col-span-2 sm:col-span-1 group ${
-                      paymentMethod === 'bank'
-                        ? 'bg-gradient-to-b from-[#FAF5EE] via-white to-[#FAF5EE] border-2 border-[#006A4E] shadow-[0_4px_16px_rgba(0,106,78,0.25)] scale-[1.02]'
-                        : 'bg-white hover:bg-[#FAF7F2] border border-[#E7DDD0] hover:border-[#006A4E]/50 shadow-2xs'
-                    }`}
-                    title="Raast Instant Payment (State Bank of Pakistan) / Bank Transfer"
-                  >
-                    <Image
-                      src="https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039224/fahad-ali-interior/assets/raast_logo.png"
-                      alt="Raast State Bank of Pakistan"
-                      width={120}
-                      height={60}
-                      className="w-full h-full max-h-[56px] sm:max-h-[62px] object-contain group-hover:scale-105 transition-transform"
-                    />
-                  </button>
-                </div>
-
-                {/* 2-Column Responsive Layout: Detail + Confirmation Card */}
-                <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4.5 items-start">
-                  
-                  {/* Left Column: Active Payment Method Form (lg:col-span-7) */}
-                  <div className="lg:col-span-7 space-y-3 font-sans">
-                    {/* 1. Cash on Delivery Protocol */}
-                    {paymentMethod === 'cod' && (
-                      <div className="bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border border-[#E7DDD0] rounded-2xl p-4 space-y-3.5 shadow-[0_4px_20px_rgba(44,30,24,0.02)]">
-                        <div className="flex items-center justify-between border-b border-[#E7DDD0] pb-2.5">
-                          <div className="flex items-center gap-2">
-                            <Truck size={17} className="text-[#8C6239]" />
-                            <h3 className="font-serif font-black text-sm sm:text-base text-[#221814]">
-                              White-Glove Doorstep Cash Protocol (Pakistan)
-                            </h3>
-                          </div>
-                          <span className="text-[9.5px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full">
-                            VERIFIED COD
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                          <div className="bg-white p-2.5 rounded-xl border border-[#E2D9CD] shadow-2xs space-y-1">
-                            <span className="font-black text-[#221814] text-[11px] block">1. Doorstep Delivery</span>
-                            <p className="text-stone-500 text-[10.5px] leading-relaxed">VIP logistics team delivers straight to your home.</p>
-                          </div>
-                          <div className="bg-white p-2.5 rounded-xl border border-[#E2D9CD] shadow-2xs space-y-1">
-                            <span className="font-black text-[#221814] text-[11px] block">2. Inspect & Verify</span>
-                            <p className="text-stone-500 text-[10.5px] leading-relaxed">Check wood carving, fabrics & finish before paying.</p>
-                          </div>
-                          <div className="bg-white p-2.5 rounded-xl border border-[#E2D9CD] shadow-2xs space-y-1">
-                            <span className="font-black text-[#221814] text-[11px] block">3. Room Assembly</span>
-                            <p className="text-stone-500 text-[10.5px] leading-relaxed">Master craftsmen assemble & level pieces free.</p>
-                          </div>
-                        </div>
-
-                        <div className="p-3 bg-[#FAF5EE] border border-[#B88E4B]/35 rounded-xl flex items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-[#7A6354]">Payable Cash at Doorstep:</span>
-                          <span className="font-sans font-black text-sm sm:text-base text-[#8C6239]">
-                            Rs. {grandTotal.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 2. Debit / Credit Card */}
-                    {paymentMethod === 'card' && (
-                      <CheckoutBankCardPanel
-                        selectedBank={selectedBank}
-                        setSelectedBank={setSelectedBank}
-                        cardType={cardType}
-                        setCardType={setCardType}
-                        cardDetails={cardDetails}
-                        setCardDetails={setCardDetails}
-                        cardholderName={form.name}
-                        handleCardNumberChange={handleCardNumberChange}
-                        handleExpiryChange={handleExpiryChange}
-                        dropdownRef={dropdownRef}
-                        isBankDropdownOpen={isBankDropdownOpen}
-                        setIsBankDropdownOpen={setIsBankDropdownOpen}
-                        bankSearchQuery={bankSearchQuery}
-                        setBankSearchQuery={setBankSearchQuery}
-                        cardRef={cardRef}
-                        isCardFlipped={isCardFlipped}
-                        setIsCardFlipped={setIsCardFlipped}
-                        tiltStyle={tiltStyle}
-                        handleCardMouseMove={handleCardMouseMove}
-                        handleCardMouseLeave={handleCardMouseLeave}
-                      />
-                    )}
-
-                    {/* 3. Mobile Wallets & Bank Transfer */}
-                    {paymentMethod !== 'card' && paymentMethod !== 'cod' && (
-                      <div className="space-y-3">
-                        <div className="bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border border-[#E7DDD0] rounded-2xl p-4 space-y-2.5 text-xs shadow-2xs">
-                          {/* Official Logo Banner */}
-                          <div className="flex items-center justify-between border-b border-[#E7DDD0] pb-2.5">
-                            <div className="flex items-center gap-2">
-                              {paymentMethod === 'jazzcash' && (
-                                <Image src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto,w_140/v1788039222/fahad-ali-interior/assets/jazzcash_logo.svg" alt="JazzCash" width={100} height={24} className="h-6 w-auto object-contain" />
-                              )}
-                              {paymentMethod === 'easypaisa' && (
-                                <Image src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/easypaisa_logo.png" alt="Easypaisa" width={100} height={22} className="h-5.5 w-auto object-contain" />
-                              )}
-                              {paymentMethod === 'bank' && (
-                                <Image src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/raast_logo.png" alt="Raast SBP" width={100} height={24} className="h-6 w-auto object-contain" />
-                              )}
-                            </div>
-                            <span className="text-[9.5px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full">
-                              VERIFIED MERCHANT
-                            </span>
-                          </div>
-
-                          <div className="flex justify-between items-center border-b border-[#E7DDD0] pb-2">
-                            <span className="text-stone-600 font-semibold">Official Account Title:</span>
-                            <span className="font-bold text-[#221814]">Fahad Ali Interior</span>
-                          </div>
-
-                          {paymentMethod === 'bank' ? (
-                            <div className="space-y-2.5 border-t border-[#E7DDD0] pt-2">
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <span className="text-stone-600 font-semibold block text-[11px]">State Bank Raast ID:</span>
-                                  <span className="text-[9px] text-emerald-700 font-medium">0% Fee Instant Settlement</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-mono font-black text-[#1F1612] text-xs sm:text-sm bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
-                                    {RAAST_SBP_DETAILS.raastId}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => copyToClipboard(RAAST_SBP_DETAILS.raastId, 'Raast ID')}
-                                    className="text-[#B88E4B] hover:text-[#8C6239] bg-white border border-[#E2D9CD] hover:border-[#B88E4B] p-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
-                                    title="Copy Raast ID"
-                                  >
-                                    {copiedField === 'Raast ID' ? <CheckCheck size={14} className="text-green-600" /> : <Copy size={14} />}
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <span className="text-stone-600 font-semibold block text-[11px]">Official IBAN:</span>
-                                  <span className="text-[9px] text-stone-500 font-medium">{RAAST_SBP_DETAILS.bankName}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-mono font-black text-[#1F1612] text-[11px] sm:text-xs bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
-                                    {RAAST_SBP_DETAILS.iban}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => copyToClipboard(RAAST_SBP_DETAILS.iban, 'IBAN')}
-                                    className="text-[#B88E4B] hover:text-[#8C6239] bg-white border border-[#E2D9CD] hover:border-[#B88E4B] p-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
-                                    title="Copy IBAN"
-                                  >
-                                    {copiedField === 'IBAN' ? <CheckCheck size={14} className="text-green-600" /> : <Copy size={14} />}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex justify-between items-center border-t border-[#E7DDD0] pt-2">
-                              <span className="text-stone-600 font-semibold">
-                                {paymentMethod === 'jazzcash'
-                                  ? 'JazzCash Merchant Mobile:'
-                                  : 'Easypaisa Merchant Mobile:'}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <span className="font-sans font-black text-[#1F1612] tracking-wider text-xs sm:text-sm bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
-                                  {paymentMethod === 'jazzcash' ? '0300 1234567' : '0345 1234567'}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    copyToClipboard(
-                                      paymentMethod === 'jazzcash' ? '03001234567' : '03451234567',
-                                      'Account Number'
-                                    )
-                                  }
-                                  className="text-[#B88E4B] hover:text-[#8C6239] bg-white border border-[#E2D9CD] hover:border-[#B88E4B] p-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
-                                  title="Copy Number"
-                                >
-                                  {copiedField === 'Account Number' ? <CheckCheck size={14} className="text-green-600" /> : <Copy size={14} />}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] rounded-2xl p-4 space-y-2 shadow-2xs">
-                          <label htmlFor="checkout-transaction-id" className="block text-[11px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
-                            Transaction Reference ID (TID) / Sender Account
-                          </label>
-                          <input
-                            id="checkout-transaction-id"
-                            name="transactionId"
-                            type="text"
-                            value={digitalPaymentDetails.transactionId}
-                            onChange={(e) => setDigitalPaymentDetails((p) => ({ ...p, transactionId: e.target.value }))}
-                            placeholder="e.g. 8492019482 / Trx # 0300XXXXXXX"
-                            className="w-full bg-white border border-[#E2D9CD] focus:border-[#B88E4B] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-sans font-bold text-[#1F1612] outline-none shadow-2xs"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right Column: Commission Confirmation Card (Admin KPI Jewel Style - lg:col-span-5) */}
-                  <div className="lg:col-span-5 bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border border-[#E7DDD0] rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-[0_4px_20px_rgba(44,30,24,0.02)] font-sans">
-                    <div className="flex justify-between items-center border-b border-[#E7DDD0] pb-2">
-                      <span className="text-[10.5px] font-black uppercase tracking-wider text-[#7A6354]">Commission Confirmation</span>
-                      <span className="text-[9.5px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full">
-                        SBP VERIFIED
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 text-xs text-stone-700">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-stone-600">Client / Recipient:</span>
-                        <span className="font-bold text-[#1F1612] truncate max-w-[150px]">{form.name || 'Muhammad Fahad Ali'}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-stone-600">Delivery Destination:</span>
-                        <span className="font-bold text-[#1F1612]">{form.city || 'Lahore'}, {form.province || 'Punjab'}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-stone-600">Transit Timeline:</span>
-                        <span className="font-bold text-emerald-700">{PAKISTAN_CITIES[form.city]?.estDeliveryDays || '2-3 Working Days (TCS Express)'}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-stone-600">Selected Method:</span>
-                        <span className="font-black text-[#8C6239] bg-[#FAF5EE] border border-[#B88E4B]/35 px-2 py-0.5 rounded-md uppercase text-[10.5px]">
-                          {paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod.toUpperCase()}
-                        </span>
-                      </div>
-
-                      <div className="pt-1">
-                        <div className="text-[10px] text-[#7A6354] bg-white border border-[#E7DDD0] rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 shadow-2xs">
-                          <ShieldCheck size={13} className="text-[#8C6239] shrink-0" />
-                          <span>FBR &amp; PRA Sales Tax Compliant (Digital Invoice Attached)</span>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center pt-2.5 border-t border-[#DECDBB]">
-                        <span className="font-black text-xs uppercase tracking-wider text-[#7A6354]">Payable Total:</span>
-                        <div className="text-lg sm:text-xl font-black text-[#1F1612] tracking-tight leading-none flex items-baseline">
-                          <span className="text-xs font-bold text-[#8C6D46] mr-1 select-none">Rs.</span>
-                          <span className="bg-gradient-to-r from-[#B88E4B] via-[#996515] to-[#8C6239] bg-clip-text text-transparent">
-                            {grandTotal.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handlePlaceOrder}
-                      disabled={placing}
-                      className="w-full bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] hover:brightness-110 text-white font-serif font-bold text-xs sm:text-sm py-3 rounded-xl shadow-[0_4px_16px_rgba(184,142,75,0.25)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 disabled:opacity-60"
-                    >
-                      {placing ? (
-                        <Loader2 size={16} className="animate-spin text-white" />
-                      ) : (
-                        <Sparkles size={16} className="text-white" />
-                      )}
-                      <span>Authorize & Place Order</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-            {/* Navigation Action */}
-            <div className="pt-3 flex justify-start border-t border-[#E7DDD0]/80 mt-4">
-              <button
-                type="button"
-                onClick={() => setCurrentSection(3)}
-                className="px-5 py-2.5 rounded-xl border border-[#DECDBB] text-stone-700 hover:bg-[#FAF6F0] font-sans font-bold text-xs cursor-pointer transition-colors"
-              >
-                ← Back to Shipping Address
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <CheckoutSectionPayment
+              form={form}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              selectedBank={selectedBank}
+              setSelectedBank={setSelectedBank}
+              cardType={cardType}
+              setCardType={setCardType}
+              cardDetails={cardDetails}
+              setCardDetails={setCardDetails}
+              cardholderName={form.name}
+              handleCardNumberChange={handleCardNumberChange}
+              handleExpiryChange={handleExpiryChange}
+              dropdownRef={dropdownRef}
+              isBankDropdownOpen={isBankDropdownOpen}
+              setIsBankDropdownOpen={setIsBankDropdownOpen}
+              bankSearchQuery={bankSearchQuery}
+              setBankSearchQuery={setBankSearchQuery}
+              cardRef={cardRef}
+              isCardFlipped={isCardFlipped}
+              setIsCardFlipped={setIsCardFlipped}
+              tiltStyle={tiltStyle}
+              handleCardMouseMove={handleCardMouseMove}
+              handleCardMouseLeave={handleCardMouseLeave}
+              digitalPaymentDetails={digitalPaymentDetails}
+              setDigitalPaymentDetails={setDigitalPaymentDetails}
+              copyToClipboard={copyToClipboard}
+              copiedField={copiedField}
+              handleFileUpload={handleFileUpload}
+              paymentScreenshot={digitalPaymentDetails.screenshotUrl}
+              fileInputRef={fileInputRef}
+              placing={placing}
+              handlePlaceOrder={handlePlaceOrder}
+              setCurrentSection={setCurrentSection}
+              grandTotal={grandTotal}
+              formNotes={form.notes}
+              handleInputChange={handleInputChange}
+            />
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

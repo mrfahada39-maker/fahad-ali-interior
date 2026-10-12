@@ -50,76 +50,188 @@ function statusColor(status: string) {
   return map[s] ?? 'bg-[#FAF5EE] text-[#8C6239] border border-[#E8DFC8]';
 }
 
+interface OrderItemRecord {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string | null;
+  size?: string | null;
+  color?: string | null;
+}
+
+interface OrderRecord {
+  id: string;
+  status: string;
+  paymentStatus?: string;
+  paymentMethod?: string;
+  trackingNumber?: string | null;
+  shippingName?: string | null;
+  shippingAddress?: string | null;
+  shippingCity?: string | null;
+  shippingProvince?: string | null;
+  shippingEmail?: string | null;
+  shippingPhone?: string | null;
+  shippingCost?: number | null;
+  shippingInfo?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    province?: string;
+    postalCode?: string;
+    notes?: string;
+  } | null;
+  subtotal: number;
+  discount: number;
+  gst: number;
+  totalAmount: number;
+  couponCode?: string | null;
+  items: OrderItemRecord[];
+  createdAt: string;
+  updatedAt?: string;
+  [key: string]: unknown;
+}
+
 export default function OrderDetailClient({ orderId }: { orderId: string }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const addItemToCart = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
 
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<OrderRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestVerifying, setGuestVerifying] = useState(false);
+  const [needsGuestVerification, setNeedsGuestVerification] = useState(false);
+
+  const handleVerifyGuestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = guestEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      toast.error('Please enter a valid shipping email address');
+      return;
+    }
+    setGuestVerifying(true);
+    try {
+      const cleanOrderId = decodeURIComponent(orderId).replace(/^[#\s]+/, '').trim();
+      const res = await apiFetchJsonWithStatus<{ order?: OrderRecord; data?: OrderRecord; error?: string }>(
+        `/api/v1/orders/${encodeURIComponent(cleanOrderId)}?email=${encodeURIComponent(cleanEmail)}`
+      );
+      if (res.ok && res.data && !res.data.error) {
+        const rawOrder = res.data?.order || res.data?.data || (res.data as unknown as OrderRecord);
+        if (rawOrder?.id) {
+          setOrder(rawOrder);
+          setNeedsGuestVerification(false);
+          toast.success('Order tracking verified successfully!');
+          return;
+        }
+      }
+      toast.error('Verification failed. No matching order found for this email.');
+    } catch {
+      toast.error('Verification failed. Please check the email and try again.');
+    } finally {
+      setGuestVerifying(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
 
     (async () => {
       if (status === 'loading') return;
-      if (status === 'unauthenticated') {
-        const tokenOk = await ensureEnterpriseTokens();
-        if (!tokenOk && isMounted) {
-          router.push('/');
-          return;
-        }
-      }
+
+      const cleanOrderId = decodeURIComponent(orderId).replace(/^[#\s]+/, '').trim();
+      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const urlEmail = (searchParams?.get('email') || '').trim();
+      const urlToken = (searchParams?.get('token') || searchParams?.get('guestToken') || '').trim();
+
+      const querySuffix = urlEmail || urlToken
+        ? `?email=${encodeURIComponent(urlEmail)}&token=${encodeURIComponent(urlToken)}`
+        : '';
 
       try {
         await ensureEnterpriseTokens();
 
-        const cleanOrderId = decodeURIComponent(orderId).replace(/^[#\s]+/, '').trim();
-
-        // Tier 1: Try single order endpoint
-        const res1 = await apiFetchJsonWithStatus<any>(`/api/v1/orders/${encodeURIComponent(cleanOrderId)}`);
+        // Tier 1: Try single order endpoint (authenticated or with guest query)
+        const res1 = await apiFetchJsonWithStatus<{ order?: OrderRecord; data?: OrderRecord; id?: string; error?: string }>(
+          `/api/v1/orders/${encodeURIComponent(cleanOrderId)}${querySuffix}`
+        );
         if (res1.ok && res1.data && !res1.data.error) {
-          const rawOrder = res1.data?.order || res1.data?.data || (res1.data?.id ? res1.data : null);
+          const rawOrder = (res1.data?.order || res1.data?.data || (res1.data?.id ? res1.data : null)) as OrderRecord | null;
           if (rawOrder && isMounted) {
             setOrder(rawOrder);
+            setLoading(false);
             return;
           }
         }
 
-        // Tier 2: Fallback to user orders list
-        const res2 = await apiFetchJsonWithStatus<any>(`/api/v1/orders`);
+        // If unauthenticated and order not accessible, allow guest verification
+        if (status === 'unauthenticated' && (!res1.ok || res1.status === 401 || res1.status === 403)) {
+          if (isMounted) {
+            setNeedsGuestVerification(true);
+            setLoading(false);
+          }
+          return;
+        }
+
+        // Tier 2: Fallback to user orders list (for logged-in user)
+        const res2 = await apiFetchJsonWithStatus<{ orders?: OrderRecord[]; data?: OrderRecord[] } | OrderRecord[]>(`/api/v1/orders`);
         if (res2.ok && res2.data) {
-          const list = Array.isArray(res2.data) ? res2.data : (res2.data.orders || res2.data.data || []);
+          const list = Array.isArray(res2.data)
+            ? res2.data
+            : (('orders' in res2.data && Array.isArray(res2.data.orders))
+                ? res2.data.orders
+                : (('data' in res2.data && Array.isArray(res2.data.data))
+                    ? res2.data.data
+                    : []));
           const cleanLower = cleanOrderId.toLowerCase();
-          const found = list.find((o: any) => {
-            const oid = String(o.id || '').toLowerCase();
-            return oid === cleanLower || oid.endsWith(cleanLower) || (o.orderFingerprint && o.orderFingerprint.toLowerCase().includes(cleanLower));
-          });
-          if (found && isMounted) {
-            setOrder(found);
-            return;
-          }
-        }
-
-        // Tier 3: Fallback to dashboard bundle
-        const res3 = await apiFetchJsonWithStatus<any>(`/api/user/dashboard-bundle`);
-        if (res3.ok && res3.data?.orders && Array.isArray(res3.data.orders)) {
-          const cleanLower = cleanOrderId.toLowerCase();
-          const found = res3.data.orders.find((o: any) => {
+          const found = list.find((o) => {
             const oid = String(o.id || '').toLowerCase();
             return oid === cleanLower || oid.endsWith(cleanLower);
           });
           if (found && isMounted) {
             setOrder(found);
+            setLoading(false);
             return;
           }
         }
 
+        // Tier 3: Fallback to dashboard bundle
+        const res3 = await apiFetchJsonWithStatus<{ orders?: OrderRecord[] }>(`/api/user/dashboard-bundle`);
+        if (res3.ok && res3.data?.orders && Array.isArray(res3.data.orders)) {
+          const cleanLower = cleanOrderId.toLowerCase();
+          const found = res3.data.orders.find((o) => {
+            const oid = String(o.id || '').toLowerCase();
+            return oid === cleanLower || oid.endsWith(cleanLower);
+          });
+          if (found && isMounted) {
+            setOrder(found);
+            setLoading(false);
+            return;
+          }
+        }
+
+        if (status === 'unauthenticated') {
+          if (isMounted) {
+            setNeedsGuestVerification(true);
+            setLoading(false);
+          }
+          return;
+        }
+
         if (isMounted) setError('Order not found or you do not have permission to view it.');
       } catch {
+        if (status === 'unauthenticated') {
+          if (isMounted) {
+            setNeedsGuestVerification(true);
+            setLoading(false);
+          }
+          return;
+        }
         if (isMounted) setError('Order not found or you do not have permission to view it.');
       } finally {
         if (isMounted) setLoading(false);
@@ -158,6 +270,73 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
         <p className="font-serif text-sm font-bold text-[#8C6239] uppercase tracking-widest animate-pulse">
           Fetching Royal Blueprint & Tracking...
         </p>
+      </div>
+    );
+  }
+
+  if (needsGuestVerification) {
+    const rawDisplayId = decodeURIComponent(orderId).replace(/^[#\s]+/, '').trim().toUpperCase();
+    return (
+      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center px-4 font-sans select-none">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center max-w-md w-full bg-white/95 border-[1.5px] border-[#E8DFC8] p-8 rounded-3xl shadow-xl"
+        >
+          <div className="w-16 h-16 bg-[#FAF5EE] rounded-2xl border border-[#D4AF37]/50 flex items-center justify-center mx-auto mb-4 text-[#8C6239]">
+            <ShieldCheck size={32} />
+          </div>
+          <h2 className="font-serif text-2xl font-black text-[#221814] mb-2">Track Guest Order</h2>
+          <p className="text-[#5C483E] text-xs sm:text-sm mb-6">
+            Enter the email address provided during checkout for Order{' '}
+            <span className="font-mono font-bold text-[#8C6239]">#{rawDisplayId}</span> to view real-time tracking details.
+          </p>
+          <form onSubmit={handleVerifyGuestEmail} className="space-y-4 text-left">
+            <div>
+              <label htmlFor="guest-tracking-email" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1">
+                Checkout Email Address
+              </label>
+              <input
+                id="guest-tracking-email"
+                type="email"
+                required
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+                placeholder="customer@example.com"
+                className="w-full bg-[#FAF7F2] border border-[#E2D9CD] focus:border-[#B88E4B] rounded-xl px-4 py-3 text-sm text-[#1F1612] outline-none shadow-2xs font-medium"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={guestVerifying}
+              className="w-full py-3 bg-gradient-to-r from-[#2A170D] via-[#1A0E07] to-[#0D0603] text-[#FFEAA0] font-serif font-bold text-xs uppercase tracking-wider rounded-xl hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50 cursor-pointer"
+            >
+              {guestVerifying ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin" /> Verifying...
+                </>
+              ) : (
+                'Verify & View Tracking'
+              )}
+            </button>
+          </form>
+          <div className="mt-6 pt-4 border-t border-[#EFE8DD] flex items-center justify-between text-xs">
+            <Link href="/" className="text-[#8C6239] hover:underline font-medium">
+              Return Home
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('open-auth'));
+                }
+              }}
+              className="text-[#B88E4B] hover:underline font-bold cursor-pointer"
+            >
+              Have an Account? Sign In
+            </button>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -421,7 +600,7 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
               <div className="flex justify-between text-xs sm:text-sm text-[#7A6354] font-medium">
                 <span>White-Glove Nationwide Delivery</span>
                 <span className="font-serif font-bold text-emerald-700">
-                  {(order.shippingCost || 0) === 0 ? 'COMPLIMENTARY (FREE)' : `PKR ${formatPrice(order.shippingCost)}`}
+                  {(order.shippingCost || 0) === 0 ? 'COMPLIMENTARY (FREE)' : `PKR ${formatPrice(order.shippingCost || 0)}`}
                 </span>
               </div>
               <div className="flex justify-between text-base sm:text-lg font-black text-[#221814] pt-3 border-t border-[#E8DFC8]">

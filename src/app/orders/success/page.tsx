@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import StoreShell from '@/components/StoreShell';
 import Link from 'next/link';
@@ -11,6 +11,8 @@ import { motion } from 'framer-motion';
 function SuccessContent() {
   const params = useSearchParams();
   const rawId = params.get('id') || 'FA-' + Date.now().toString().slice(-6);
+  const email = params.get('email') || '';
+  const token = params.get('token') || '';
   const displayId = (rawId.startsWith('order_') ? rawId.slice(6, 14) : rawId.slice(-8)).toUpperCase();
   const [copied, setCopied] = useState(false);
 
@@ -132,7 +134,7 @@ function SuccessContent() {
           className="flex flex-col sm:flex-row items-center justify-center gap-3.5"
         >
           <Link
-            href={`/orders/${rawId}`}
+            href={`/orders/${rawId}${email ? `?email=${encodeURIComponent(email)}${token ? `&token=${encodeURIComponent(token)}` : ''}` : ''}`}
             prefetch={true}
             className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-[#2A170D] via-[#1A0E07] to-[#0D0603] text-[#FFEAA0] font-serif font-bold text-xs uppercase tracking-wider rounded-xl hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md active:scale-95"
           >

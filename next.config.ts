@@ -1,83 +1,18 @@
 import type { NextConfig } from 'next';
 import path from 'path';
-import withPWAInit from 'next-pwa';
+import withSerwistInit from '@serwist/next';
 
-const isDev        = process.env.NODE_ENV === 'development';
-const isDockerBuild = process.env.DOCKER_BUILD === 'true';
+const isDev = process.env.NODE_ENV === 'development';
 
-// PWA — disabled in dev, active in production for 0-second offline-first caching
-const withPWA = withPWAInit({
-  dest:        'public',
-  disable:     isDev,
-  register:    !isDev,
-  skipWaiting: true,
-  fallbacks: {
-    document: '/offline.html',
-  },
+// PWA — disabled in dev, active in production for 0-second offline-first caching via Serwist
+const withPWA = withSerwistInit({
+  swSrc: 'src/app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: isDev,
+  register: !isDev,
+  reloadOnOnline: true,
   // sw-push.js is our custom push SW — exclude from PWA precache, exclude video media
   exclude: [/sw-push\.js$/, /\.mp4$/i, /\.webm$/i],
-  runtimeCaching: [
-    {
-      urlPattern: ({ request }: { request: { mode?: string } }) => request.mode === 'navigate',
-      handler:    'NetworkOnly',
-    },
-    {
-      urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-      handler:    'CacheFirst',
-      options: {
-        cacheName:  'google-fonts',
-        expiration: { maxEntries: 20, maxAgeSeconds: 365 * 24 * 60 * 60 },
-      },
-    },
-    {
-      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif|ico)$/i,
-      handler:    'CacheFirst',
-      options: {
-        cacheName:  'images',
-        expiration: { maxEntries: 1000, maxAgeSeconds: 365 * 24 * 60 * 60 },
-      },
-    },
-    {
-      urlPattern: /^https:\/\/(?:images\.unsplash\.com|plus\.unsplash\.com|res\.cloudinary\.com)\/.*/i,
-      handler:    'CacheFirst',
-      options: {
-        cacheName:  'remote-cdn-images',
-        expiration: { maxEntries: 1000, maxAgeSeconds: 365 * 24 * 60 * 60 },
-      },
-    },
-    {
-      urlPattern: /^https?:\/\/.*\/_next\/image\?.*/i,
-      handler:    'CacheFirst',
-      options: {
-        cacheName:  'next-image',
-        expiration: { maxEntries: 1000, maxAgeSeconds: 365 * 24 * 60 * 60 },
-      },
-    },
-    {
-      urlPattern: /^https?:\/\/.*\/_next\/static\/.*/i,
-      handler:    'CacheFirst',
-      options: {
-        cacheName:  'next-static',
-        expiration: { maxEntries: 300, maxAgeSeconds: 30 * 24 * 60 * 60 },
-      },
-    },
-    {
-      urlPattern: /^https?:\/\/.*\/api\/(?:v1\/)?public\/.*/i,
-      handler:    'StaleWhileRevalidate',
-      options: {
-        cacheName:  'public-api',
-        expiration: { maxEntries: 100, maxAgeSeconds: 15 * 60 },
-      },
-    },
-    {
-      urlPattern: /^https?:\/\/.*\/api\/(?:v1\/)?products.*/i,
-      handler:    'StaleWhileRevalidate',
-      options: {
-        cacheName:  'products-api',
-        expiration: { maxEntries: 100, maxAgeSeconds: 15 * 60 },
-      },
-    },
-  ],
 });
 
 // Security headers (CDN/edge layer — CSP is nonce-based in middleware)

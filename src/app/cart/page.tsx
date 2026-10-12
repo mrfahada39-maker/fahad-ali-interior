@@ -11,16 +11,47 @@ import { resolveImageUrl } from '@/lib/images';
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getSubtotal } = useCartStore();
   const [coupon, setCoupon] = useState('');
-  const [couponApplied, setCouponApplied] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountAmount: number;
+    discountType: string;
+    discount: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   const subtotal = getSubtotal();
   const shipping = subtotal > 0 ? 50 : 0;
-  const discount = couponApplied ? Math.round(subtotal * 0.1) : 0;
-  const total = subtotal + shipping - discount;
+  const discount = appliedCoupon
+    ? appliedCoupon.discountType === 'PERCENTAGE'
+      ? Math.round((subtotal * appliedCoupon.discount) / 100)
+      : Math.min(subtotal, appliedCoupon.discount)
+    : 0;
+  const total = Math.max(0, subtotal + shipping - discount);
 
-  const applyCoupon = () => {
-    if (coupon.trim().toUpperCase() === 'FAHAD10') {
-      setCouponApplied(true);
+  const applyCoupon = async () => {
+    const code = coupon.trim().toUpperCase();
+    if (!code) return;
+    setCouponError(null);
+    try {
+      const res = await fetch('/api/v1/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, subtotal }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.valid) {
+        setAppliedCoupon(null);
+        setCouponError(data.error || 'Invalid or inactive coupon code.');
+        return;
+      }
+      setAppliedCoupon({
+        code: data.code,
+        discountAmount: Number(data.discountAmount || 0),
+        discountType: data.discountType,
+        discount: Number(data.discount),
+      });
+    } catch {
+      setCouponError('Unable to validate coupon right now.');
     }
   };
 
@@ -129,9 +160,16 @@ export default function CartPage() {
                 <div className="w-full md:w-1/3 bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 rounded-[24px] p-6 shadow-[0_4px_20px_rgba(184,142,75,0.06)] relative overflow-hidden">
                   <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-xl pointer-events-none bg-amber-500/10 opacity-70" />
                   <span className="block text-xs font-black uppercase tracking-wider text-[#7A6354] mb-3 relative z-10">Privilege Coupon Code</span>
-                  {couponApplied ? (
-                    <div className="flex items-center gap-2 text-xs text-emerald-800 font-bold bg-emerald-50 border border-emerald-300/80 rounded-xl px-4 py-3 shadow-2xs">
-                      ✓ Coupon "FAHAD10" applied — 10% Royal Privilege Off!
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between gap-2 text-xs text-emerald-800 font-bold bg-emerald-50 border border-emerald-300/80 rounded-xl px-4 py-3 shadow-2xs">
+                      <span>✓ Coupon &ldquo;{appliedCoupon.code}&rdquo; applied!</span>
+                      <button
+                        type="button"
+                        onClick={() => setAppliedCoupon(null)}
+                        className="text-emerald-700 hover:text-emerald-950 font-black cursor-pointer"
+                      >
+                        ✕
+                      </button>
                     </div>
                   ) : (
                     <div className="flex relative z-10">
@@ -152,7 +190,10 @@ export default function CartPage() {
                       </button>
                     </div>
                   )}
-                  <p className="text-[11px] text-stone-500 mt-2.5 relative z-10">Try privilege code: <span className="font-bold text-[#B88E4B]">FAHAD10</span> for 10% instant off</p>
+                  {couponError && (
+                    <p className="text-[11px] text-rose-600 font-bold mt-2 relative z-10">{couponError}</p>
+                  )}
+                  <p className="text-[11px] text-stone-500 mt-2.5 relative z-10">Enter an active privilege voucher to unlock instant savings</p>
                 </div>
 
                 {/* Order Summary Card */}
@@ -168,9 +209,9 @@ export default function CartPage() {
                       <span className="text-[#7A6048]">Subtotal</span>
                       <span className="text-[#221814] font-bold font-sans">Rs. {(subtotal ?? 0).toLocaleString()}</span>
                     </div>
-                    {couponApplied && (
+                    {appliedCoupon && (
                       <div className="flex justify-between mb-3 text-sm text-emerald-700 font-bold relative z-10">
-                        <span>Royal Privilege (10%)</span>
+                        <span>Voucher ({appliedCoupon.code})</span>
                         <span className="font-sans">-Rs. {(discount ?? 0).toLocaleString()}</span>
                       </div>
                     )}

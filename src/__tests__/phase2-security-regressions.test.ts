@@ -201,14 +201,22 @@ describe('Phase 2 Security & Quality Regressions', () => {
       expect(decrypted).toBe(legacySecret);
     });
 
-    it('hashes backup codes with salt and verifies both hashed and legacy unhashed codes', () => {
+    it('hashes backup codes with per-code random salt and verifies v2, v1, and legacy unhashed codes', () => {
       const code1 = 'ABCD-1234';
       const hashed1 = hashBackupCode(code1);
-      expect(hashed1).toMatch(/^bkc:v1:[0-9a-f]{64}$/);
+      const hashed1Repeat = hashBackupCode(code1);
+      expect(hashed1).toMatch(/^bkc:v2:[0-9a-f]{32}:[0-9a-f]{64}$/);
+      // Per-code random salt produces distinct ciphertexts for the same input code
+      expect(hashed1).not.toBe(hashed1Repeat);
 
-      // Verification of hashed code
+      // Verification of v2 salted code
       const matchedHashed = verifyBackupCode('abcd-1234', [hashed1, 'OTHER-CODE']);
       expect(matchedHashed).toBe(hashed1);
+
+      // Safe migration for v1 hash
+      const v1Salt = ['fai', 'backup', 'code', 'salt', 'v1'].join('_');
+      const v1Hash = `bkc:v1:${crypto.createHash('sha256').update(`${v1Salt}:MIGR-9999`).digest('hex')}`;
+      expect(verifyBackupCode('migr-9999', [v1Hash])).toBe(v1Hash);
 
       // Safe migration for legacy unhashed code
       const legacyCode = 'EFGH-5678';
@@ -216,7 +224,7 @@ describe('Phase 2 Security & Quality Regressions', () => {
       expect(matchedLegacy).toBe(legacyCode);
 
       // Invalid code returns null
-      const invalid = verifyBackupCode('WRONG-CODE', [hashed1, legacyCode]);
+      const invalid = verifyBackupCode('WRONG-CODE', [hashed1, v1Hash, legacyCode]);
       expect(invalid).toBeNull();
     });
 
@@ -252,7 +260,7 @@ describe('Phase 2 Security & Quality Regressions', () => {
       expect(csp).not.toContain('http:');
     });
 
-    it('api-client does not store tokens in localStorage', () => {
+    it('api-client never stores tokens in sessionStorage or localStorage', () => {
       class MockStorage {
         store: Record<string, string> = {};
         getItem(k: string) { return this.store[k] ?? null; }
@@ -264,13 +272,18 @@ describe('Phase 2 Security & Quality Regressions', () => {
       (global as any).localStorage = new MockStorage();
       (global as any).window = global;
 
+      // Legacy value from an older build must be purged
+      (global as any).sessionStorage.setItem('enterprise_access_token', 'stale-legacy');
+
       setEnterpriseTokens('access-token-val', 'refresh-token-val');
 
-      // Tokens should be in sessionStorage, NEVER in localStorage
-      expect((global as any).sessionStorage.getItem('enterprise_access_token')).toBe('access-token-val');
+      expect((global as any).sessionStorage.getItem('enterprise_access_token')).toBeNull();
+      expect((global as any).sessionStorage.getItem('enterprise_refresh_token')).toBeNull();
+      expect((global as any).sessionStorage.getItem('has_enterprise_session')).toBeNull();
       expect((global as any).localStorage.getItem('enterprise_access_token')).toBeNull();
       expect((global as any).localStorage.getItem('enterprise_refresh_token')).toBeNull();
 
+      // In-memory marker only
       expect(getEnterpriseAccessToken()).toBe('access-token-val');
     });
   });

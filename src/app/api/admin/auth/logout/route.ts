@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revokeAdminToken } from '@/lib/admin-auth';
+import { revokeAdminTokenAsync } from '@/lib/admin-auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       req.cookies.get('fai_admin_token')?.value;
 
     if (raw) {
-      revokeAdminToken(raw);
+      await revokeAdminTokenAsync(raw);
     }
 
     const res = NextResponse.json({

@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       'Royal Beds & Bedroom Suites': 0,
       'Nationwide White-Glove Delivery': 0,
       '100% Solid Sheesham & 10-Yr Warranty': 0,
-      'Discounts & Promo Code (LUXURY10)': 0,
+      'Discounts & Promo Codes': 0,
       'Showroom Location & Timings': 0,
     };
 
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
           } else if (q.includes('sheesham') || q.includes('wood') || q.includes('deemak') || q.includes('termite') || q.includes('warranty')) {
             intentBuckets['100% Solid Sheesham & 10-Yr Warranty']++;
           } else if (q.includes('discount') || q.includes('coupon') || q.includes('offer') || q.includes('code') || q.includes('price')) {
-            intentBuckets['Discounts & Promo Code (LUXURY10)']++;
+            intentBuckets['Discounts & Promo Codes']++;
           } else if (q.includes('location') || q.includes('address') || q.includes('showroom') || q.includes('lahore')) {
             intentBuckets['Showroom Location & Timings']++;
           }

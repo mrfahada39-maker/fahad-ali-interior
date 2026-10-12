@@ -57,9 +57,73 @@ async function main() {
     });
   }
 
+  // ============================================================================
+  // DEMO DATA ONLY — Sample Promotional Coupons (Development / Staging Seed)
+  // ============================================================================
+  const demoCoupons = [
+    {
+      code: 'WELCOME10',
+      discount: 10,
+      discountType: DiscountType.PERCENTAGE,
+      minOrderAmount: 50000,
+      maxUses: 100,
+    },
+    {
+      code: 'FAHAD10',
+      discount: 10,
+      discountType: DiscountType.PERCENTAGE,
+      minOrderAmount: 0,
+      maxUses: 500,
+    },
+    {
+      code: 'VIP10',
+      discount: 10,
+      discountType: DiscountType.PERCENTAGE,
+      minOrderAmount: 50000,
+      maxUses: 200,
+    },
+    {
+      code: 'LUXURY10',
+      discount: 10,
+      discountType: DiscountType.PERCENTAGE,
+      minOrderAmount: 100000,
+      maxUses: 500,
+    },
+    {
+      code: 'FAHAD20',
+      discount: 20,
+      discountType: DiscountType.PERCENTAGE,
+      minOrderAmount: 250000,
+      maxUses: 100,
+    },
+    {
+      code: 'ROYAL50',
+      discount: 50000,
+      discountType: DiscountType.FIXED,
+      minOrderAmount: 300000,
+      maxUses: 50,
+    },
+  ];
+
+  for (const c of demoCoupons) {
+    await db.coupon.upsert({
+      where: { code: c.code },
+      update: {
+        discount: c.discount,
+        discountType: c.discountType,
+        minOrderAmount: c.minOrderAmount,
+        maxUses: c.maxUses,
+        isActive: true,
+        deletedAt: null,
+      },
+      create: c,
+    });
+  }
+  // === END DEMO COUPONS ===
+
   const productCount = await db.product.count();
   if (productCount > 0) {
-    console.log(`Database already has ${productCount} products. Skipping product/settings/coupon seed.`);
+    console.log(`Database already has ${productCount} products. Skipping product/settings seed.`);
     return;
   }
 
@@ -104,18 +168,6 @@ async function main() {
       },
     });
   }
-
-  await db.coupon.upsert({
-    where: { code: 'WELCOME10' },
-    update: {},
-    create: {
-      code: 'WELCOME10',
-      discount: 10,
-      discountType: DiscountType.PERCENTAGE,
-      minOrderAmount: 50000,
-      maxUses: 100,
-    },
-  });
 
   console.log('Seed completed.');
 }

@@ -251,7 +251,7 @@ export async function handleMessageRoutes(ctx: ApiDispatchContext): Promise<Next
       'Royal Beds & Bedroom Suites': 0,
       'Nationwide White-Glove Delivery': 0,
       '100% Solid Sheesham & 10-Yr Warranty': 0,
-      'Discounts & Promo Code (LUXURY10)': 0,
+      'Discounts & Promo Codes': 0,
       'Showroom Location & Timings': 0,
     };
 
@@ -325,7 +325,7 @@ export async function handleMessageRoutes(ctx: ApiDispatchContext): Promise<Next
             q.includes('code') ||
             q.includes('price')
           ) {
-            intentBuckets['Discounts & Promo Code (LUXURY10)']++;
+            intentBuckets['Discounts & Promo Codes']++;
           } else if (
             q.includes('location') ||
             q.includes('address') ||

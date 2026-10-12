@@ -78,9 +78,7 @@ async function handleApiV1Request(
       segment.includes('admin');
     const isPublicCategory =
       method === 'GET' &&
-      (normalizedSegment === 'categories' ||
-        normalizedSegment === 'admin/categories' ||
-        segment.includes('categories'));
+      (normalizedSegment === 'categories' || normalizedSegment === 'admin/categories');
 
     if (hasAdminInPath && !isPublicCategory) {
       const user = await getUserFromSessionOrToken(req);

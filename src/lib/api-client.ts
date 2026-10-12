@@ -7,54 +7,52 @@
  */
 import { resolveApiPath } from '@/lib/api-config';
 
-// ── Token management — Dual-layer (HttpOnly cookies + Bearer token) ──────
+// ── Session marker — httpOnly cookie is the ONLY credential ─────────────────
+// Authentication is carried exclusively by the httpOnly NextAuth / admin cookies
+// (sent via `credentials: 'include'`). Nothing token-like is written to
+// sessionStorage or localStorage, so XSS cannot exfiltrate a bearer token.
+// The values below live only in memory for the lifetime of the tab and are
+// used purely as a "session already synced" hint by callers.
+
+let inMemoryAccessMarker: string | null = null;
+let inMemoryRefreshMarker: string | null = null;
+
+const LEGACY_STORAGE_KEYS = [
+  'has_enterprise_session',
+  'enterprise_access_token',
+  'enterprise_refresh_token',
+];
+
+function purgeLegacyStorage(): void {
+  if (typeof window === 'undefined') return;
+  for (const key of LEGACY_STORAGE_KEYS) {
+    try { window.sessionStorage?.removeItem(key); } catch { /* ignore */ }
+    try { window.localStorage?.removeItem(key); } catch { /* ignore */ }
+  }
+}
 
 export function getEnterpriseAccessToken(): string | null {
   if (typeof window === 'undefined') return null;
-  try {
-    return (
-      sessionStorage.getItem('enterprise_access_token') ||
-      sessionStorage.getItem('has_enterprise_session')
-    );
-  } catch {
-    return null;
-  }
+  return inMemoryAccessMarker;
 }
 
 export function getEnterpriseRefreshToken(): string | null {
   if (typeof window === 'undefined') return null;
-  try {
-    return sessionStorage.getItem('enterprise_refresh_token');
-  } catch {
-    return null;
-  }
+  return inMemoryRefreshMarker;
 }
 
 export function setEnterpriseTokens(accessToken: string, refreshToken: string): void {
   if (typeof window === 'undefined') return;
-  try {
-    sessionStorage.setItem('has_enterprise_session', 'present');
-    if (accessToken) {
-      sessionStorage.setItem('enterprise_access_token', accessToken);
-    }
-    if (refreshToken) {
-      sessionStorage.setItem('enterprise_refresh_token', refreshToken);
-    }
-    // H4: Prohibit tokens from being persisted to localStorage (protect against XSS persistence)
-    localStorage.removeItem('enterprise_access_token');
-    localStorage.removeItem('enterprise_refresh_token');
-  } catch { /* ignore */ }
+  inMemoryAccessMarker = accessToken || null;
+  inMemoryRefreshMarker = refreshToken || null;
+  // Clean up anything persisted by older builds.
+  purgeLegacyStorage();
 }
 
 export function clearEnterpriseTokens(): void {
-  if (typeof window === 'undefined') return;
-  try {
-    sessionStorage.removeItem('has_enterprise_session');
-    sessionStorage.removeItem('enterprise_access_token');
-    sessionStorage.removeItem('enterprise_refresh_token');
-    localStorage.removeItem('enterprise_access_token');
-    localStorage.removeItem('enterprise_refresh_token');
-  } catch { /* ignore */ }
+  inMemoryAccessMarker = null;
+  inMemoryRefreshMarker = null;
+  purgeLegacyStorage();
 }
 
 function unwrapResponseBody<T>(body: unknown): T {
@@ -105,11 +103,7 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
     }
   }
 
-  // Auto-inject Enterprise Bearer session token if available
-  const bearer = getEnterpriseAccessToken();
-  if (bearer && !headers.has('authorization') && bearer.includes('direct_session_')) {
-    headers.set('authorization', `Bearer ${bearer}`);
-  }
+  // Auth: httpOnly cookies only (no Authorization header injected from JS storage).
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30_000);

@@ -19,7 +19,7 @@ FAHAD ALI INTERIOR — COMPLETE WEBSITE & SYSTEM SITEMAP
   (Plus custom bespoke orders for any architectural room dimensions)
 
 - Product Details [/product/[id]]: High-res images, 100% Solid Sheesham specs, custom dimensions, wood stain swatches, Add to Cart.
-- Cart & Basket [/cart]: Items review, quantity update, coupon code "LUXURY10" application, instant total calculation.
+- Cart & Basket [/cart]: Items review, quantity update, active privilege coupon code application, instant total calculation.
 - Checkout [/checkout]: White-glove delivery address, Cash on Delivery (COD) / Bank Transfer, order placement.
 - Order History & Tracking [/orders]: Order tracking status by Order ID (e.g. FAI-123456), estimated delivery days (3-5 days in-stock, 10-14 days custom).
 - About Us [/about]: Brand story, 30-day kiln seasoning process, 8-12% moisture control, artisan craftsmanship.
@@ -36,7 +36,7 @@ FAHAD ALI INTERIOR — COMPLETE WEBSITE & SYSTEM SITEMAP
 - Wood Stains: Royal Dark Walnut, Natural Sheesham, Satin Ebony.
 
 3. DISCOUNTS & LOGISTICS:
-- Coupon Code: "LUXURY10" (Instant 10% OFF on orders over PKR 100,000).
+- Coupon Code: Mention ONLY the active promotional coupon code provided in LIVE DATABASE CATALOG / ACTIVE PROMO context (if any active promo is present in database).
 - Delivery: FREE White-Glove Nationwide Shipping & Installation on orders over PKR 100,000.
 - Timeline: In-stock items (3 to 5 business days), Custom bespoke items (10 to 14 business days).
 

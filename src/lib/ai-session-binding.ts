@@ -1,47 +1,86 @@
 import crypto from 'crypto';
 
-/**
- * AI Chat Session Cryptographic Binding
- *
- * Ensures:
- * 1. AI chat session IDs are generated server-side with crypto.randomUUID().
- * 2. Session IDs are cryptographically signed and stored in httpOnly cookies.
- * 3. History and chat access requires proof of session ownership (cookie signature or user ID).
- */
-
 export const AI_SESSION_COOKIE_NAME = 'fai_ai_session';
 
-function getSessionSecret(): string {
-  return process.env.NEXTAUTH_SECRET || process.env.ADMIN_TOKEN_SECRET || 'fai_ai_chat_session_secret_fallback_32_chars';
+let ephemeralDevAiSecret: string | null = null;
+
+/**
+ * Retrieve dedicated secret for AI session binding.
+ * In production, AI_SESSION_SECRET is required and must be separate from NEXTAUTH_SECRET.
+ */
+export function getAiSessionSecret(): string {
+  const aiSecret = process.env.AI_SESSION_SECRET?.trim();
+  const nextAuthSecret = process.env.NEXTAUTH_SECRET?.trim();
+
+  if (process.env.NODE_ENV === 'production') {
+    if (!aiSecret || aiSecret.length < 16) {
+      throw new Error(
+        'CRITICAL: AI_SESSION_SECRET environment variable (min 16 chars) is required in production.'
+      );
+    }
+    if (nextAuthSecret && aiSecret === nextAuthSecret) {
+      throw new Error(
+        'CRITICAL: AI_SESSION_SECRET must be separate from NEXTAUTH_SECRET in production.'
+      );
+    }
+    return aiSecret;
+  }
+
+  if (aiSecret && aiSecret.length >= 16) {
+    return aiSecret;
+  }
+  if (!ephemeralDevAiSecret) {
+    ephemeralDevAiSecret = crypto.randomBytes(32).toString('hex');
+  }
+  return ephemeralDevAiSecret;
 }
 
-/** Signs a sessionId with HMAC-SHA256. */
+// Validate at startup in production runtime (excluding static build phase when SKIP_ENV_VALIDATION is set)
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.SKIP_ENV_VALIDATION !== 'true' &&
+  process.env.NEXT_PHASE !== 'phase-production-build'
+) {
+  getAiSessionSecret();
+}
+
+/**
+ * Signs an AI chat sessionId using HMAC-SHA256 so anonymous users cannot
+ * enumerate or hijack other users' chat sessions.
+ * Format: `<sessionId>.<hmacHex>`
+ */
 export function signAiSessionId(sessionId: string): string {
-  const secret = getSessionSecret();
-  const signature = crypto.createHmac('sha256', secret).update(sessionId).digest('hex');
-  return `${sessionId}.${signature}`;
+  const sig = crypto
+    .createHmac('sha256', getAiSessionSecret())
+    .update(sessionId)
+    .digest('hex');
+  return `${sessionId}.${sig}`;
 }
 
-/** Verifies an AI session cookie value and extracts the validated sessionId. */
-export function verifyAiSessionCookie(cookieValue: string | null | undefined): string | null {
-  if (!cookieValue || !cookieValue.includes('.')) return null;
+/**
+ * Verifies a signed AI session cookie and returns the sessionId if valid, or null.
+ */
+export function verifyAiSessionCookie(cookieValue: string | undefined | null): string | null {
+  if (!cookieValue) return null;
+  const lastDot = cookieValue.lastIndexOf('.');
+  if (lastDot === -1) return null;
 
-  const dotIdx = cookieValue.indexOf('.');
-  const sessionId = cookieValue.slice(0, dotIdx);
-  const signature = cookieValue.slice(dotIdx + 1);
+  const sessionId = cookieValue.slice(0, lastDot);
+  const sig = cookieValue.slice(lastDot + 1);
+  if (!sessionId || !sig) return null;
 
-  if (!sessionId || !signature) return null;
-
-  const secret = getSessionSecret();
-  const expectedSig = crypto.createHmac('sha256', secret).update(sessionId).digest('hex');
-
-  const providedBuf = Buffer.from(signature, 'hex');
-  const expectedBuf = Buffer.from(expectedSig, 'hex');
-
-  if (providedBuf.length !== expectedBuf.length) return null;
+  const expectedSig = crypto
+    .createHmac('sha256', getAiSessionSecret())
+    .update(sessionId)
+    .digest('hex');
 
   try {
-    return crypto.timingSafeEqual(providedBuf, expectedBuf) ? sessionId : null;
+    const a = Buffer.from(sig, 'hex');
+    const b = Buffer.from(expectedSig, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return null;
+    }
+    return sessionId;
   } catch {
     return null;
   }

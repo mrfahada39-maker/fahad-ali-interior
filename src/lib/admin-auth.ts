@@ -1,49 +1,124 @@
-import crypto from 'crypto';
-import type { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { db } from '@/lib/db';
+import { Redis } from '@upstash/redis';
+import crypto from 'crypto';
+
+/** Maximum lifetime for signed admin bearer tokens (7 days in ms) */
+export const ADMIN_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
- * Shared, cryptographically verified admin authentication.
- *
- * Replaces the weak `cookie.includes('fai_token_')` checks, which accepted ANY
- * forged cookie value. A request is only treated as admin when:
- *   - it carries an HMAC-signed `fai_token_<userId>_<timestamp>_<sig>` token
- *     (Authorization header, x-enterprise-token header, or fai_admin_token
- *     cookie) that is unexpired and matches NEXTAUTH_SECRET, AND the user
- *     still exists, is not soft-deleted, and has an ADMIN/SUPER_ADMIN role; OR
- *   - it carries a valid NextAuth JWT whose role is ADMIN/SUPER_ADMIN.
+ * L1 cache + Upstash Redis (with TTL = ADMIN_TOKEN_MAX_AGE_MS) + Database persistence
+ * for revoked admin token signatures across Vercel serverless instances.
  */
-
-export interface VerifiedAdmin {
-  id: string;
-  email?: string;
-  role: string;
-}
-
-/** Admin tokens are issued with a 24h cookie lifetime; enforce the same on verify. */
-export const ADMIN_TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
-
-const TOKEN_PATTERN = /fai_token_(.+)_(\d+)_([a-f0-9]{64})/;
-
 const revokedAdminSignatures = new Set<string>();
 
-export function getAdminTokenSecret(): string {
-  const adminSecret = process.env.ADMIN_TOKEN_SECRET;
-  if (adminSecret && adminSecret.length >= 32) return adminSecret;
-  if (process.env.NODE_ENV === 'production' && !adminSecret) {
-    throw new Error('ADMIN_TOKEN_SECRET environment variable (min 32 chars) is required in production.');
+let redisInstance: Redis | null = null;
+function getRevocationRedis(): Redis | null {
+  if (redisInstance) return redisInstance;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (url && token && url.startsWith('https://')) {
+    redisInstance = new Redis({ url, token });
+    return redisInstance;
   }
-  return adminSecret || process.env.NEXTAUTH_SECRET || 'fai_default_admin_token_secret_min_32_chars_fallback';
+  return null;
 }
 
-export function revokeAdminToken(raw: string | null | undefined): boolean {
-  if (!raw) return false;
-  const clean = raw.replace(/^Bearer\s+/i, '').trim();
-  const match = clean.match(TOKEN_PATTERN);
-  if (!match) return false;
-  const [, , , signature] = match;
+let ephemeralDevAdminSecret: string | null = null;
+
+/**
+ * Retrieve dedicated signing secret for admin tokens.
+ * In production, ADMIN_TOKEN_SECRET is mandatory and must be distinct from NEXTAUTH_SECRET.
+ */
+export function getAdminTokenSecret(): string {
+  const adminSecret = process.env.ADMIN_TOKEN_SECRET?.trim();
+  const nextAuthSecret = process.env.NEXTAUTH_SECRET?.trim();
+
+  if (process.env.NODE_ENV === 'production') {
+    if (!adminSecret || adminSecret.length < 16) {
+      throw new Error(
+        'CRITICAL: ADMIN_TOKEN_SECRET environment variable (min 16 chars) is required in production.'
+      );
+    }
+    if (nextAuthSecret && adminSecret === nextAuthSecret) {
+      throw new Error(
+        'CRITICAL: ADMIN_TOKEN_SECRET must be separate from NEXTAUTH_SECRET in production.'
+      );
+    }
+    return adminSecret;
+  }
+
+  if (adminSecret && adminSecret.length >= 16) {
+    return adminSecret;
+  }
+  if (!ephemeralDevAdminSecret) {
+    ephemeralDevAdminSecret = crypto.randomBytes(32).toString('hex');
+  }
+  return ephemeralDevAdminSecret;
+}
+
+// Validate at startup in production runtime (excluding static build phase when SKIP_ENV_VALIDATION is set)
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.SKIP_ENV_VALIDATION !== 'true' &&
+  process.env.NEXT_PHASE !== 'phase-production-build'
+) {
+  getAdminTokenSecret();
+}
+
+export function extractTokenSignature(rawToken: string): string | null {
+  const clean = rawToken.replace(/^Bearer\s+/i, '').trim();
+  if (!clean.startsWith('fai_token_')) return null;
+  const body = clean.slice('fai_token_'.length);
+  const lastUnderscore = body.lastIndexOf('_');
+  if (lastUnderscore === -1) return null;
+  const signature = body.slice(lastUnderscore + 1);
+  return signature || null;
+}
+
+async function persistRevokedSignature(signature: string): Promise<void> {
+  const redis = getRevocationRedis();
+  const ttlSeconds = Math.ceil(ADMIN_TOKEN_MAX_AGE_MS / 1000);
+  await Promise.allSettled([
+    redis
+      ? redis.set(`revoked_admin_sig:${signature}`, '1', { ex: ttlSeconds })
+      : Promise.resolve(null),
+    db.auditLog
+      ?.create?.({
+        data: {
+          action: 'ADMIN_TOKEN_REVOKED',
+          entity: 'AdminToken',
+          entityId: signature,
+          metadata: {
+            revokedAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + ADMIN_TOKEN_MAX_AGE_MS).toISOString(),
+          },
+        },
+      })
+      ?.catch?.(() => null),
+  ]);
+}
+
+/**
+ * Revoke a signed admin token (synchronous L1 update + background Redis/DB persistence).
+ */
+export function revokeAdminToken(rawToken: string): boolean {
+  const signature = extractTokenSignature(rawToken);
+  if (!signature) return false;
   revokedAdminSignatures.add(signature);
+  void persistRevokedSignature(signature);
+  return true;
+}
+
+/**
+ * Async revocation that awaits Upstash Redis (with TTL = token lifetime) and DB persistence.
+ */
+export async function revokeAdminTokenAsync(rawToken: string): Promise<boolean> {
+  const signature = extractTokenSignature(rawToken);
+  if (!signature) return false;
+  revokedAdminSignatures.add(signature);
+  await persistRevokedSignature(signature);
   return true;
 }
 
@@ -51,84 +126,133 @@ export function isTokenRevoked(signature: string): boolean {
   return revokedAdminSignatures.has(signature);
 }
 
-export function isAdminRole(role: unknown): boolean {
-  const r = String(role ?? '').toUpperCase();
-  return r === 'ADMIN' || r === 'SUPER_ADMIN';
-}
+/**
+ * Check token revocation across L1 cache, Upstash Redis, and PostgreSQL AuditLog table.
+ */
+export async function isTokenRevokedAsync(signature: string): Promise<boolean> {
+  if (revokedAdminSignatures.has(signature)) return true;
 
-/** Verifies the HMAC signature + expiry of a raw token string. Returns the user id or null. */
-export function verifySignedTokenUserId(raw: string | null | undefined, now = Date.now()): string | null {
-  if (!raw || !raw.includes('fai_token_')) return null;
-
-  const clean = raw.replace(/^Bearer\s+/i, '').trim();
-  const match = clean.match(TOKEN_PATTERN);
-  if (!match) return null;
-
-  const [, userId, timestampStr, signature] = match;
-  if (isTokenRevoked(signature)) return null;
-
-  const secret = getAdminTokenSecret();
-  if (!secret || secret.length < 32) return null;
-
-  const timestamp = parseInt(timestampStr, 10);
-  if (Number.isNaN(timestamp)) return null;
-
-  const age = now - timestamp;
-  if (age < 0 || age >= ADMIN_TOKEN_MAX_AGE_MS) return null;
-
-  const expectedSig = crypto.createHmac('sha256', secret).update(`${userId}:${timestamp}`).digest('hex');
-
-  const provided = Buffer.from(signature, 'hex');
-  const expected = Buffer.from(expectedSig, 'hex');
-  // timingSafeEqual throws on length mismatch, so guard first.
-  if (provided.length !== expected.length) return null;
+  const redis = getRevocationRedis();
+  if (redis) {
+    try {
+      const val = await redis.get(`revoked_admin_sig:${signature}`);
+      if (val) {
+        revokedAdminSignatures.add(signature);
+        return true;
+      }
+    } catch {
+      // Fall back to DB check if Redis is unreachable
+    }
+  }
 
   try {
-    return crypto.timingSafeEqual(provided, expected) ? userId : null;
+    const record = await db.auditLog?.findFirst?.({
+      where: {
+        action: 'ADMIN_TOKEN_REVOKED',
+        entity: 'AdminToken',
+        entityId: signature,
+      },
+      select: { id: true },
+    });
+    if (record) {
+      revokedAdminSignatures.add(signature);
+      return true;
+    }
+  } catch {
+    // Ignore DB lookup errors in unit tests with partial mocks
+  }
+
+  return false;
+}
+
+/**
+ * Parse and cryptographically verify an HMAC-signed token of format:
+ * `fai_token_<userId>_<timestamp>_<hmacHex>`
+ * Rejects unsigned, forged, expired, or revoked tokens.
+ */
+export function verifySignedTokenUserId(
+  rawToken: string,
+  nowMs: number = Date.now()
+): string | null {
+  const clean = rawToken.replace(/^Bearer\s+/i, '').trim();
+  if (!clean.startsWith('fai_token_')) return null;
+
+  const body = clean.slice('fai_token_'.length);
+  const lastUnderscore = body.lastIndexOf('_');
+  if (lastUnderscore === -1) return null;
+
+  const signature = body.slice(lastUnderscore + 1);
+  const rest = body.slice(0, lastUnderscore);
+  const secondLastUnderscore = rest.lastIndexOf('_');
+  if (secondLastUnderscore === -1) return null;
+
+  const timestampStr = rest.slice(secondLastUnderscore + 1);
+  const userId = rest.slice(0, secondLastUnderscore);
+  if (!userId || !timestampStr || !signature) return null;
+
+  if (revokedAdminSignatures.has(signature)) {
+    return null;
+  }
+
+  const issuedAt = Number(timestampStr);
+  if (!Number.isFinite(issuedAt) || issuedAt <= 0) return null;
+  if (nowMs - issuedAt > ADMIN_TOKEN_MAX_AGE_MS || issuedAt > nowMs + 60_000) {
+    return null;
+  }
+
+  const secret = getAdminTokenSecret();
+  const expectedSig = crypto
+    .createHmac('sha256', secret)
+    .update(`${userId}:${timestampStr}`)
+    .digest('hex');
+
+  try {
+    const sigBuf = Buffer.from(signature, 'hex');
+    const expBuf = Buffer.from(expectedSig, 'hex');
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+    return userId;
   } catch {
     return null;
   }
 }
 
-/** Returns the verified admin behind this request, or null if the request is not an authenticated admin. */
-export async function getVerifiedAdmin(req: NextRequest): Promise<VerifiedAdmin | null> {
-  // 1. HMAC-signed admin token (header or cookie)
-  const raw =
-    req.headers.get('authorization') ||
-    req.headers.get('x-enterprise-token') ||
-    req.cookies.get('fai_admin_token')?.value;
+export async function getVerifiedAdmin(req: NextRequest) {
+  let userId: string | undefined;
 
-  const userId = verifySignedTokenUserId(raw);
-  if (userId) {
-    try {
-      const dbUser = await db.user.findUnique({
-        where: { id: userId },
-        select: { id: true, email: true, role: true, deletedAt: true },
-      });
-      if (dbUser && !dbUser.deletedAt && isAdminRole(dbUser.role)) {
-        return { id: dbUser.id, email: dbUser.email ?? undefined, role: String(dbUser.role).toUpperCase() };
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET }).catch(() => null);
+  if (token?.id) {
+    userId = token.id as string;
+  }
+
+  if (!userId) {
+    const raw =
+      req.headers.get('authorization') ||
+      req.headers.get('x-enterprise-token') ||
+      req.cookies.get('fai_admin_token')?.value;
+    if (raw) {
+      const signature = extractTokenSignature(raw);
+      if (signature && (await isTokenRevokedAsync(signature))) {
+        return null;
       }
-    } catch {
-      // fall through to NextAuth check
+      const verifiedId = verifySignedTokenUserId(raw);
+      if (verifiedId) userId = verifiedId;
     }
   }
 
-  // 2. NextAuth session JWT
-  try {
-    const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
-    const token =
-      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
-      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
-    if (token && isAdminRole(token.role)) {
-      return {
-        id: String(token.id ?? ''),
-        email: typeof token.email === 'string' ? token.email : undefined,
-        role: String(token.role).toUpperCase(),
-      };
-    }
-  } catch {
-    // not authenticated
-  }
+  if (!userId) return null;
 
-  return null;
+  const user = await db.user
+    .findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, role: true, deletedAt: true },
+    })
+    .catch(() => null);
+
+  if (!user || user.deletedAt) return null;
+  const role = String(user.role || '').toUpperCase();
+  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') return null;
+
+  return user;
 }

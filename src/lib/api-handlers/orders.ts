@@ -4,6 +4,17 @@ import { sendOrderConfirmationEmail } from '@/lib/email';
 import { safeApiErrorResponse } from '@/lib/api-error';
 import { createOrderSchema, updateOrderStatusSchema } from '@/lib/validations/api-schemas';
 import {
+  evaluateCoupon,
+  findActivePromo,
+  findCouponByCode,
+  normalizeCouponCode,
+} from '@/lib/coupons';
+import {
+  generateGuestOrderToken,
+  verifyGuestOrderToken,
+  sanitizeOrderForGuest,
+} from '@/lib/guest-order';
+import {
   ApiDispatchContext,
   DbOrderItemRecord,
   DbOrderRecord,
@@ -112,6 +123,44 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       }
       return NextResponse.json({ success: true });
     }
+  }
+
+  // 2.5 GET /coupons/active or /v1/coupons/active (Active promotional coupon lookup)
+  if (
+    method === 'GET' &&
+    (normalizedSegment === 'coupons/active' ||
+      segment === 'coupons/active' ||
+      segment === 'v1/coupons/active')
+  ) {
+    const activeCoupon = await findActivePromo();
+    return NextResponse.json({ activeCoupon });
+  }
+
+  // 2.6 POST /coupons/validate or /orders/validate-coupon (Server-side coupon validation)
+  if (
+    method === 'POST' &&
+    (normalizedSegment === 'coupons/validate' ||
+      normalizedSegment === 'orders/validate-coupon' ||
+      segment === 'coupons/validate' ||
+      segment === 'v1/coupons/validate' ||
+      segment === 'orders/validate-coupon' ||
+      segment === 'v1/orders/validate-coupon')
+  ) {
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const code = normalizeCouponCode(body.code || body.couponCode || body.coupon);
+    if (!code) {
+      return NextResponse.json(
+        { valid: false, error: 'Please enter a coupon code.' },
+        { status: 400 }
+      );
+    }
+
+    const subtotal = body.subtotal !== undefined ? Number(body.subtotal) || 0 : undefined;
+    const result = evaluateCoupon(await findCouponByCode(code), subtotal);
+    if (!result.valid) {
+      return NextResponse.json({ valid: false, error: result.error }, { status: result.status });
+    }
+    return NextResponse.json(result);
   }
 
   // 2.92 POST /orders or /v1/orders (Create Order / Checkout)
@@ -432,12 +481,19 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       gst,
       discount,
       totalAmount,
+      couponCode: appliedCoupon?.code || null,
     }).catch((err) => console.error('[SMTP BACKGROUND ERROR]', err));
+
+    const guestTrackingToken = newOrder.shippingEmail
+      ? generateGuestOrderToken(newOrder.id, newOrder.shippingEmail)
+      : undefined;
 
     return NextResponse.json({
       success: true,
+      guestTrackingToken,
       order: {
         ...newOrder,
+        guestTrackingToken,
         totalAmount: Number(newOrder.totalAmount),
         subtotal: Number(newOrder.subtotal),
         gst: Number(newOrder.gst),
@@ -447,16 +503,89 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
     });
   }
 
-  // 2.3 GET /orders/:id or /v1/orders/:id
-  if (method === 'GET' && (segment.startsWith('orders/') || segment.startsWith('v1/orders/'))) {
+  // 2.25 POST or GET /orders/track (Guest or authenticated order tracking lookup)
+  if (
+    normalizedSegment === 'orders/track' ||
+    segment === 'orders/track' ||
+    segment === 'v1/orders/track'
+  ) {
+    let orderId = '';
+    let email = '';
+    let token = '';
+
+    if (method === 'POST') {
+      const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+      orderId = String(body.orderId || body.id || '').trim();
+      email = String(body.email || body.shippingEmail || '').trim().toLowerCase();
+      token = String(body.token || body.guestToken || '').trim();
+    } else if (method === 'GET') {
+      const searchParams = req.nextUrl.searchParams;
+      orderId = String(searchParams.get('orderId') || searchParams.get('id') || '').trim();
+      email = String(searchParams.get('email') || '').trim().toLowerCase();
+      token = String(searchParams.get('token') || searchParams.get('guestToken') || '').trim();
+    } else {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+
+    const cleanOrderId = decodeURIComponent(orderId).replace(/^[#\s]+/, '').trim();
+    if (!cleanOrderId) {
+      return NextResponse.json({ error: 'Order ID is required for tracking.' }, { status: 400 });
+    }
+
+    const order = (await db.order.findFirst({
+      where: {
+        OR: [
+          { id: cleanOrderId },
+          { id: { endsWith: cleanOrderId, mode: 'insensitive' } },
+          { id: { equals: cleanOrderId, mode: 'insensitive' } },
+        ],
+        deletedAt: null,
+      },
+      include: {
+        items: true,
+      },
+    })) as DbOrderRecord | null;
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
     const user = await getUserFromSessionOrToken(req);
-    if (!user?.id) {
+    const isAdmin = requireAdmin(user);
+    const isOwner = Boolean(user?.id && order.userId === user.id);
+    const orderEmail = (order.shippingEmail || '').trim().toLowerCase();
+    const isEmailMatch = Boolean(email && orderEmail && email === orderEmail);
+    const isTokenMatch = Boolean(
+      token &&
+        orderEmail &&
+        (verifyGuestOrderToken(order.id, orderEmail, token) ||
+          verifyGuestOrderToken(cleanOrderId, orderEmail, token))
+    );
+
+    if (!isAdmin && !isOwner && !isEmailMatch && !isTokenMatch) {
       return NextResponse.json(
-        { error: 'Unauthorized. Please sign in to view this order.' },
-        { status: 401 }
+        { error: 'Forbidden. Order verification failed. Please enter the email address used at checkout.' },
+        { status: 403 }
       );
     }
 
+    const sanitized = sanitizeOrderForGuest(order);
+    return NextResponse.json({
+      success: true,
+      order: sanitized,
+      data: sanitized,
+      ...sanitized,
+    });
+  }
+
+  // 2.3 GET /orders/:id or /v1/orders/:id
+  if (
+    method === 'GET' &&
+    (segment.startsWith('orders/') || segment.startsWith('v1/orders/')) &&
+    segment !== 'orders/track' &&
+    segment !== 'v1/orders/track' &&
+    normalizedSegment !== 'orders/track'
+  ) {
     const rawOrderId = segment.split('/').pop() || '';
     const orderId = decodeURIComponent(rawOrderId).replace(/^[#\s]+/, '').trim();
     const order = (await db.order.findFirst({
@@ -478,12 +607,52 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
+    const user = await getUserFromSessionOrToken(req);
     const isAdmin = requireAdmin(user);
-    if (!isAdmin && order.userId !== user.id) {
-      return NextResponse.json(
-        { error: 'Forbidden. Access denied to this order.' },
-        { status: 403 }
-      );
+    const isOwner = Boolean(user?.id && order.userId === user.id);
+
+    // Guest verification fallback
+    const searchParams = req.nextUrl.searchParams;
+    const guestEmail = (searchParams.get('email') || '').trim().toLowerCase();
+    const guestToken = (searchParams.get('token') || searchParams.get('guestToken') || '').trim();
+    const orderEmail = (order.shippingEmail || '').trim().toLowerCase();
+    const isEmailMatch = Boolean(guestEmail && orderEmail && guestEmail === orderEmail);
+    const isTokenMatch = Boolean(
+      guestToken &&
+        orderEmail &&
+        (verifyGuestOrderToken(order.id, orderEmail, guestToken) ||
+          verifyGuestOrderToken(orderId, orderEmail, guestToken))
+    );
+
+    if (!isAdmin && !isOwner) {
+      if (!isEmailMatch && !isTokenMatch) {
+        if (guestEmail || guestToken) {
+          return NextResponse.json(
+            { error: 'Forbidden. Invalid order verification details.' },
+            { status: 403 }
+          );
+        }
+        if (!user?.id) {
+          return NextResponse.json(
+            { error: 'Unauthorized. Please sign in or provide guest email/token to view this order.' },
+            { status: 401 }
+          );
+        }
+        return NextResponse.json(
+          { error: 'Forbidden. Access denied to this order.' },
+          { status: 403 }
+        );
+      }
+
+      // Guest access confirmed: return strictly sanitized order without sensitive user details
+      const sanitized = sanitizeOrderForGuest(order);
+      return NextResponse.json({
+        success: true,
+        order: sanitized,
+        data: sanitized,
+        ...sanitized,
+        isGuestTrack: true,
+      });
     }
 
     const formattedOrder = {

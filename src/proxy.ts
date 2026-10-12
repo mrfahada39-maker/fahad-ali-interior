@@ -48,12 +48,42 @@ function isLocalHost(request: NextRequest): boolean {
   return host.startsWith('localhost') || host.startsWith('127.0.0.1');
 }
 
-function buildContentSecurityPolicy(nonce: string, isProduction: boolean, httpsOnly: boolean): string {
+function resolveAllowedWebsocketHosts(request: NextRequest, isProduction: boolean): string {
+  const hosts = new Set<string>();
+  const requestHost = request.headers.get('host');
+  if (requestHost) {
+    hosts.add(`wss://${requestHost}`);
+    if (!isProduction && (requestHost.startsWith('localhost') || requestHost.startsWith('127.0.0.1'))) {
+      hosts.add(`ws://${requestHost}`);
+    }
+  }
+  const backendEnv = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.ENTERPRISE_API_ORIGIN;
+  if (backendEnv) {
+    try {
+      const parsed = new URL(backendEnv);
+      hosts.add(`wss://${parsed.host}`);
+    } catch {
+      // Ignore malformed env URL
+    }
+  }
+  if (hosts.size === 0) {
+    hosts.add('wss://fahad-ali-interior.vercel.app');
+  }
+  return Array.from(hosts).join(' ');
+}
+
+function buildContentSecurityPolicy(
+  request: NextRequest,
+  nonce: string,
+  isProduction: boolean,
+  httpsOnly: boolean
+): string {
   const scriptSrc = `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
   const styleDirectives = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "style-src-attr 'unsafe-inline'",
   ];
+  const wsHosts = resolveAllowedWebsocketHosts(request, isProduction);
 
   return [
     "default-src 'self'",
@@ -63,7 +93,7 @@ function buildContentSecurityPolicy(nonce: string, isProduction: boolean, httpsO
     "media-src 'self' data: blob: https://res.cloudinary.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "manifest-src 'self' data: blob:",
-    "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com https://res.cloudinary.com https://images.unsplash.com wss:",
+    `connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com https://res.cloudinary.com https://images.unsplash.com ${wsHosts}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -80,7 +110,7 @@ function applyPageSecurityHeaders(
   isProduction: boolean,
 ): NextResponse {
   const httpsOnly = isProduction && !isLocalHost(request);
-  const csp = buildContentSecurityPolicy(nonce, isProduction, httpsOnly);
+  const csp = buildContentSecurityPolicy(request, nonce, isProduction, httpsOnly);
   requestHeaders.set('Content-Security-Policy', csp);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });

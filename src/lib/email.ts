@@ -13,6 +13,7 @@ export interface OrderEmailData {
   gst: number;
   discount: number;
   totalAmount: number;
+  couponCode?: string | null;
 }
 
 // Pure Node.js TLS SMTP Sender - 0 External Dependencies, 100% Reliable across all Next.js/Vercel versions
@@ -298,7 +299,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                           <tr>
                             <td style="color: #7A6354; font-weight: 600; padding: 8px 0 2px;">Voucher Applied:</td>
                             <td style="text-align: right; font-weight: 800; color: #10B981; padding: 8px 0 2px; font-size: 12.5px;">
-                              ✓ FAHAD10 (Rs. ${order.discount.toLocaleString()} OFF)
+                              ✓ ${order.couponCode || 'Promo Voucher'} (Rs. ${order.discount.toLocaleString()} OFF)
                             </td>
                           </tr>
                           ` : ''}

@@ -859,9 +859,9 @@ export default function AiChatbotTab() {
 
             <div className="p-4 rounded-xl bg-[#FCFAF7] border border-[#E7DDD0] space-y-1.5">
               <span className="text-[10px] font-black uppercase text-[#8C6239] tracking-wider">Promo Discount</span>
-              <h4 className="font-bold text-sm text-[#1F1612]">Code: LUXURY10</h4>
+              <h4 className="font-bold text-sm text-[#1F1612]">Live DB Promo Vouchers</h4>
               <p className="text-stone-500 text-xs leading-relaxed">
-                10% Instant Discount on checkout for complete sets and custom items.
+                Dynamically promotes active database coupons on checkout for complete sets and custom items.
               </p>
               <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
                 <Check size={10} /> Active Promo
