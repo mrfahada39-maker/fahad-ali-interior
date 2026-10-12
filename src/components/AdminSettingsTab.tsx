@@ -74,10 +74,10 @@ export default function SettingsTab({
 
     return (
       <div key={key} className="space-y-1">
-        <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">
+        <label htmlFor="fai-adminsettingstab-field-1" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">
           {label}
         </label>
-        <input
+        <input id="fai-adminsettingstab-field-1" name="fai_adminsettingstab_field_1"
           type={options?.type || 'text'}
           value={valStr}
           onChange={(e) => setSiteSettings({ ...safeSettings, [key]: e.target.value })}
@@ -95,17 +95,17 @@ export default function SettingsTab({
     return (
       <div key={key} className="flex items-center justify-between gap-4 py-2 border-b border-neutral-100 last:border-0">
         <div>
-          <label className="text-[#1F1612] text-xs font-black block">{label}</label>
+          <label htmlFor="fai-adminsettingstab-field-2" className="text-[#1F1612] text-xs font-black block">{label}</label>
           <span className="text-[10px] text-stone-400 font-mono">{val}</span>
         </div>
         <div className="flex items-center gap-2">
-          <input
+          <input id="fai-adminsettingstab-field-2" name="fai_adminsettingstab_field_2"
             type="color"
             value={val}
             onChange={(e) => setSiteSettings({ ...safeSettings, [key]: e.target.value })}
             className="w-9 h-8 rounded-lg border border-[#E7DDD0] cursor-pointer bg-transparent"
           />
-          <input
+          <input id="fai-adminsettingstab-field-3" name="fai_adminsettingstab_field_3"
             value={val}
             onChange={(e) => setSiteSettings({ ...safeSettings, [key]: e.target.value })}
             className="w-20 bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] rounded-lg h-8 text-xs font-mono text-center font-bold"
@@ -421,8 +421,8 @@ export default function SettingsTab({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Admin Full Name</label>
-                  <input
+                  <label htmlFor="fai-adminsettingstab-field-4" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Admin Full Name</label>
+                  <input id="fai-adminsettingstab-field-4" name="fai_adminsettingstab_field_4"
                     value={safeAdmin.name ?? ''}
                     onChange={(e) => setAdminAccount({ ...safeAdmin, name: e.target.value })}
                     placeholder="Admin Full Name"
@@ -430,8 +430,8 @@ export default function SettingsTab({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Email Address</label>
-                  <input
+                  <label htmlFor="fai-adminsettingstab-field-5" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Email Address</label>
+                  <input id="fai-adminsettingstab-field-5" name="fai_adminsettingstab_field_5"
                     value={safeAdmin.email ?? ''}
                     onChange={(e) => setAdminAccount({ ...safeAdmin, email: e.target.value })}
                     placeholder="admin@fahadali.com"
@@ -439,8 +439,8 @@ export default function SettingsTab({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Phone Number</label>
-                  <input
+                  <label htmlFor="fai-adminsettingstab-field-6" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Phone Number</label>
+                  <input id="fai-adminsettingstab-field-6" name="fai_adminsettingstab_field_6"
                     value={safeAdmin.phone ?? ''}
                     onChange={(e) => setAdminAccount({ ...safeAdmin, phone: e.target.value })}
                     placeholder="+92 300 1234567"
@@ -470,9 +470,9 @@ export default function SettingsTab({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Current Password</label>
+                  <label htmlFor="fai-adminsettingstab-field-7" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Current Password</label>
                   <div className="relative">
-                    <input
+                    <input id="fai-adminsettingstab-field-7" name="fai_adminsettingstab_field_7"
                       type={safeShowPassword.current ? 'text' : 'password'}
                       value={safePasswordForm.current ?? ''}
                       onChange={(e) => setPasswordForm({ ...safePasswordForm, current: e.target.value })}
@@ -490,9 +490,9 @@ export default function SettingsTab({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">New Password</label>
+                  <label htmlFor="fai-adminsettingstab-field-8" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">New Password</label>
                   <div className="relative">
-                    <input
+                    <input id="fai-adminsettingstab-field-8" name="fai_adminsettingstab_field_8"
                       type={safeShowPassword.next ? 'text' : 'password'}
                       value={safePasswordForm.next ?? ''}
                       onChange={(e) => setPasswordForm({ ...safePasswordForm, next: e.target.value })}
@@ -510,9 +510,9 @@ export default function SettingsTab({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Confirm Password</label>
+                  <label htmlFor="fai-adminsettingstab-field-9" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Confirm Password</label>
                   <div className="relative">
-                    <input
+                    <input id="fai-adminsettingstab-field-9" name="fai_adminsettingstab_field_9"
                       type={safeShowPassword.confirm ? 'text' : 'password'}
                       value={safePasswordForm.confirm ?? ''}
                       onChange={(e) => setPasswordForm({ ...safePasswordForm, confirm: e.target.value })}
@@ -561,8 +561,8 @@ export default function SettingsTab({
 
             {/* Font Family Selector */}
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Global Typography Family</label>
-              <select
+              <label htmlFor="fai-adminsettingstab-field-10" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Global Typography Family</label>
+              <select id="fai-adminsettingstab-field-10" name="fai_adminsettingstab_field_10"
                 value={safeSettings.themeFontFamily || 'Outfit'}
                 onChange={(e) => setSiteSettings({ ...safeSettings, themeFontFamily: e.target.value })}
                 className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-black rounded-xl h-10 px-3 text-xs focus:border-[#B88E4B] outline-none"

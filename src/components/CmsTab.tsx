@@ -650,10 +650,10 @@ export default function CmsTab() {
                   {modalActiveTab === 'identity' && (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+                        <label htmlFor="fai-cmstab-field-2" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
                           Collection Title
                         </label>
-                        <input
+                        <input id="fai-cmstab-field-2" name="fai_cmstab_field_2"
                           placeholder="e.g. Royal Living Room Sofas"
                           value={categoryForm.name ?? ''}
                           onChange={(e) =>
@@ -670,7 +670,7 @@ export default function CmsTab() {
                       {/* Custom Badge Tag Section with Direct Input & Quick Pills */}
                       <div className="space-y-2 bg-[#FCFAF7] border border-[#E7DDD0] p-3 rounded-2xl">
                         <div className="flex items-center justify-between">
-                          <label className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+                          <label htmlFor="fai-cmstab-field-3" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                             <Tag size={12} className="text-[#B88E4B]" />
                             <span>Custom Badge Tag (Type Anything or Click Below)</span>
                           </label>
@@ -687,7 +687,7 @@ export default function CmsTab() {
 
                         {/* Custom Input */}
                         <div className="relative">
-                          <input
+                          <input id="fai-cmstab-field-3" name="fai_cmstab_field_3"
                             placeholder="Type custom badge e.g. 📺 Modern Media & LED Walls..."
                             value={categoryForm.badge ?? ''}
                             onChange={(e) => setCategoryForm({ ...categoryForm, badge: e.target.value })}
@@ -724,10 +724,10 @@ export default function CmsTab() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+                          <label htmlFor="fai-cmstab-field-4" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
                             Item Count Display Label
                           </label>
-                          <input
+                          <input id="fai-cmstab-field-4" name="fai_cmstab_field_4"
                             placeholder="e.g. 25 Masterpieces or 10 Items"
                             value={categoryForm.items ?? ''}
                             onChange={(e) => setCategoryForm({ ...categoryForm, items: e.target.value })}
@@ -743,7 +743,7 @@ export default function CmsTab() {
                               <p className="text-[9px] text-stone-500">Visible in catalog navbar</p>
                             </div>
                           </div>
-                          <input
+                          <input id="fai-cmstab-field-5" name="fai_cmstab_field_5"
                             type="checkbox"
                             checked={categoryForm.isActive}
                             onChange={(e) => setCategoryForm({ ...categoryForm, isActive: e.target.checked })}
@@ -758,10 +758,10 @@ export default function CmsTab() {
                   {modalActiveTab === 'media' && (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+                        <label htmlFor="fai-cmstab-field-6" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
                           Collection Cover Image URL
                         </label>
-                        <input
+                        <input id="fai-cmstab-field-6" name="fai_cmstab_field_6"
                           placeholder="https://images.unsplash.com/..."
                           value={categoryForm.image ?? ''}
                           onChange={(e) => setCategoryForm({ ...categoryForm, image: e.target.value })}
@@ -775,9 +775,9 @@ export default function CmsTab() {
 
                       {/* 1-Click Curated Presets Picker */}
                       <div>
-                        <label className="text-[10px] font-black text-[#8C6239] uppercase tracking-wider block mb-2 flex items-center gap-1">
+                        <span className="text-[10px] font-black text-[#8C6239] uppercase tracking-wider block mb-2 flex items-center gap-1">
                           <Sparkles size={11} className="text-[#B88E4B]" /> 1-Click Curated Luxury Presets
-                        </label>
+                        </span>
                         <div className="grid grid-cols-3 gap-2">
                           {PRESET_COLLECTION_IMAGES.map((preset) => (
                             <button
@@ -801,10 +801,10 @@ export default function CmsTab() {
                   {modalActiveTab === 'seo' && (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+                        <label htmlFor="fai-cmstab-field-7" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
                           Architectural Craftsmanship Description
                         </label>
-                        <textarea
+                        <textarea id="fai-cmstab-field-7" name="fai_cmstab_field_7"
                           placeholder="Describe the room ambiance, wood seasoning heritage, bespoke joinery, and styling suggestions..."
                           value={categoryForm.description ?? ''}
                           onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
@@ -814,12 +814,12 @@ export default function CmsTab() {
                       </div>
 
                       <div>
-                        <label className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+                        <label htmlFor="fai-cmstab-field-8" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
                           Storefront Destination URL Slug
                         </label>
                         <div className="flex items-center bg-[#FCFAF7] border border-[#E7DDD0] rounded-xl overflow-hidden h-10 px-3 shadow-2xs">
                           <span className="text-stone-400 font-mono text-xs select-none">/shop?category=</span>
-                          <input
+                          <input id="fai-cmstab-field-8" name="fai_cmstab_field_8"
                             placeholder="royal-living-room"
                             value={categoryForm.slug ?? ''}
                             onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}

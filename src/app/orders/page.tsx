@@ -41,7 +41,7 @@ function GuestTrackCard() {
             <label htmlFor="track-order-id" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1">
               Order ID / Number
             </label>
-            <input
+            <input name="fai_page_field_1"
               id="track-order-id"
               type="text"
               required
@@ -56,7 +56,7 @@ function GuestTrackCard() {
             <label htmlFor="track-order-email" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1">
               Checkout Email Address
             </label>
-            <input
+            <input name="fai_page_field_2"
               id="track-order-email"
               type="email"
               required

@@ -530,7 +530,7 @@ export default function AiChatbotTab() {
             <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
               <div className="relative w-full sm:w-64">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                <input
+                <input id="fai-aichatbottab-field-1" name="fai_aichatbottab_field_1"
                   type="text"
                   placeholder="Search questions or session ID..."
                   value={searchQuery}
@@ -790,7 +790,7 @@ export default function AiChatbotTab() {
 
           {/* Simulator Input Form */}
           <div className="flex gap-2">
-            <input
+            <input id="fai-aichatbottab-field-2" name="fai_aichatbottab_field_2"
               type="text"
               placeholder="Ask a test query (e.g. 'Sheesham sofa price kya hai?', 'Do you deliver to Islamabad?')..."
               value={simulatorInput}

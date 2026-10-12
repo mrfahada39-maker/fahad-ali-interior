@@ -749,7 +749,7 @@ export default function ProductPageClient({
               ) : (
                 <form onSubmit={handleSubmitProductReview} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#7A6048]">Artisanship Rating</label>
+                    <span className="text-xs font-bold text-[#7A6048]">Artisanship Rating</span>
                     <div className="flex items-center gap-1.5">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -769,8 +769,8 @@ export default function ProductPageClient({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[#7A6048]">Your Critique & Finishing Notes</label>
-                    <textarea
+                    <label htmlFor="fai-productpageclient-field-1" className="text-xs font-bold text-[#7A6048]">Your Critique & Finishing Notes</label>
+                    <textarea id="fai-productpageclient-field-1" name="fai_productpageclient_field_1"
                       value={reviewComment}
                       onChange={(e) => setReviewComment(e.target.value)}
                       placeholder="Comment on the rosewood timber grain, joints, cushioning, or delivery presentation..."

@@ -153,9 +153,9 @@ export function CheckoutSectionShipping({
               </div>
 
               <div>
-                <label className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
+                <span className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
                   Destination Country
-                </label>
+                </span>
                 <div className="w-full bg-gradient-to-r from-[#FAF5EE] to-[#F5E5CF] border border-[#B88E4B]/40 rounded-xl px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm text-[#1F1612] font-black flex items-center justify-between select-none shadow-2xs font-sans">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -169,7 +169,7 @@ export function CheckoutSectionShipping({
             {/* Save Address Checkbox */}
             <div className="pt-1 font-sans">
               <label className="flex items-center gap-2.5 cursor-pointer select-none bg-[#FAF7F2] border border-[#E7DDD0] rounded-xl p-3 hover:border-[#B88E4B]/50 transition-colors">
-                <input
+                <input id="fai-checkoutsectionshipping-field-5"
                   type="checkbox"
                   name="saveAddress"
                   checked={form.saveAddress}

@@ -400,8 +400,8 @@ export default function BlogTab({
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Article Title</label>
-                    <input
+                    <label htmlFor="fai-blogtab-field-2" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Article Title</label>
+                    <input id="fai-blogtab-field-2" name="fai_blogtab_field_2"
                       placeholder="e.g. The Timeless Elegance of Solid Sheesham..."
                       value={blogForm.title}
                       onChange={(e) =>
@@ -416,8 +416,8 @@ export default function BlogTab({
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">URL Slug</label>
-                    <input
+                    <label htmlFor="fai-blogtab-field-3" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">URL Slug</label>
+                    <input id="fai-blogtab-field-3" name="fai_blogtab_field_3"
                       placeholder="e.g. timeless-elegance-sheesham"
                       value={blogForm.slug}
                       onChange={(e) => setBlogForm({ ...blogForm, slug: e.target.value })}
@@ -428,8 +428,8 @@ export default function BlogTab({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Cover Image URL</label>
-                    <input
+                    <label htmlFor="fai-blogtab-field-4" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Cover Image URL</label>
+                    <input id="fai-blogtab-field-4" name="fai_blogtab_field_4"
                       placeholder="https://images.unsplash.com/..."
                       value={blogForm.image}
                       onChange={(e) => setBlogForm({ ...blogForm, image: e.target.value })}
@@ -438,8 +438,8 @@ export default function BlogTab({
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Tags (Comma Separated)</label>
-                    <input
+                    <label htmlFor="fai-blogtab-field-5" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Tags (Comma Separated)</label>
+                    <input id="fai-blogtab-field-5" name="fai_blogtab_field_5"
                       placeholder="Sheesham, Luxury Furniture, Interior Design"
                       value={blogForm.tags}
                       onChange={(e) => setBlogForm({ ...blogForm, tags: e.target.value })}
@@ -449,8 +449,8 @@ export default function BlogTab({
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Short Summary / Excerpt</label>
-                  <textarea
+                  <label htmlFor="fai-blogtab-field-6" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Short Summary / Excerpt</label>
+                  <textarea id="fai-blogtab-field-6" name="fai_blogtab_field_6"
                     placeholder="Brief 1-2 sentence overview of the article..."
                     value={blogForm.excerpt}
                     onChange={(e) => setBlogForm({ ...blogForm, excerpt: e.target.value })}
@@ -460,8 +460,8 @@ export default function BlogTab({
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Full Article Content (Markdown / HTML)</label>
-                  <textarea
+                  <label htmlFor="fai-blogtab-field-7" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Full Article Content (Markdown / HTML)</label>
+                  <textarea id="fai-blogtab-field-7" name="fai_blogtab_field_7"
                     placeholder="Write your story here..."
                     value={blogForm.content}
                     onChange={(e) => setBlogForm({ ...blogForm, content: e.target.value })}
@@ -471,7 +471,7 @@ export default function BlogTab({
                 </div>
 
                 <div className="flex items-center gap-2 pt-1">
-                  <input
+                  <input name="fai_blogtab_field_8"
                     type="checkbox"
                     id="isActiveCheck"
                     checked={blogForm.isActive}

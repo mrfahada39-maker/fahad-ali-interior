@@ -297,7 +297,7 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
               <label htmlFor="guest-tracking-email" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1">
                 Checkout Email Address
               </label>
-              <input
+              <input name="fai_orderdetailclient_field_1"
                 id="guest-tracking-email"
                 type="email"
                 required

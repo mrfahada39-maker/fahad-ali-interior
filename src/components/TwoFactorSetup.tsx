@@ -147,7 +147,7 @@ export default function TwoFactorSetup() {
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-theme-muted text-xs uppercase tracking-wider">Verification Code</label>
+            <span className="text-theme-muted text-xs uppercase tracking-wider">Verification Code</span>
             <Input
               value={token}
               onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}

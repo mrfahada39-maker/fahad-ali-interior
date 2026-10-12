@@ -199,7 +199,7 @@ export function CheckoutSectionSummary({
             </div>
 
             <div className="flex items-center gap-2 mb-3">
-              <input
+              <input name="fai_checkoutsectionsummary_field_1"
                 id="coupon-input-summary"
                 type="text"
                 value={couponCode}

@@ -87,7 +87,7 @@ export function DashboardReviewsTab({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[#7A6354]">Artisanship Rating</label>
+            <span className="text-xs font-bold text-[#7A6354]">Artisanship Rating</span>
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -103,7 +103,7 @@ export function DashboardReviewsTab({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[#7A6354]">Your Experience & Wood Finishing Notes</label>
+            <span className="text-xs font-bold text-[#7A6354]">Your Experience & Wood Finishing Notes</span>
             <Textarea
               value={reviewForm.comment}
               onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
@@ -115,14 +115,14 @@ export function DashboardReviewsTab({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#7A6354] flex items-center justify-between">
+            <span className="text-xs font-bold text-[#7A6354] flex items-center justify-between">
               <span>Attach Photo of Your Piece / Room (Optional)</span>
               {reviewUploading && (
                 <span className="text-[11px] text-[#B88E4B] flex items-center gap-1 font-semibold">
                   <UploadCloud size={12} className="animate-bounce" /> Uploading image...
                 </span>
               )}
-            </label>
+            </span>
 
             {reviewForm.image ? (
               <div className="relative inline-block border-2 border-[#B88E4B]/50 rounded-xl overflow-hidden shadow-sm group">
@@ -148,7 +148,7 @@ export function DashboardReviewsTab({
                 <span className="text-xs font-medium text-[#7A6354]">
                   {reviewUploading ? 'Uploading to royal vault...' : 'Click to select or capture piece photo'}
                 </span>
-                <input
+                <input id="fai-dashboardreviewsaddressestabs-field-2" name="fai_dashboardreviewsaddressestabs_field_2"
                   type="file"
                   accept="image/*"
                   onChange={handleReviewImageUpload}
@@ -325,9 +325,9 @@ export function DashboardAddressesTab({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                 <User size={12} className="text-[#B88E4B]" /> Recipient Full Name
-              </label>
+              </span>
               <Input
                 placeholder="e.g. Your Full Name"
                 value={addrForm.name}
@@ -338,9 +338,9 @@ export function DashboardAddressesTab({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                 <Phone size={12} className="text-[#B88E4B]" /> Contact Phone
-              </label>
+              </span>
               <Input
                 placeholder="e.g. 0300 1234567"
                 value={addrForm.phone}
@@ -351,9 +351,9 @@ export function DashboardAddressesTab({
             </div>
 
             <div className="sm:col-span-2 space-y-1">
-              <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                 <Home size={12} className="text-[#B88E4B]" /> Street Address / Villa / Estate / Phase
-              </label>
+              </span>
               <Input
                 placeholder="e.g. House / Villa, Street, Sector, Phase"
                 value={addrForm.address}
@@ -412,7 +412,7 @@ export function DashboardAddressesTab({
           </div>
 
           <div className="flex items-center gap-2 pt-2">
-            <input
+            <input name="fai_dashboardreviewsaddressestabs_field_5"
               type="checkbox"
               id="isDef"
               checked={addrForm.isDefault}

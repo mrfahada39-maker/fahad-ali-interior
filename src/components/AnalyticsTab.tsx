@@ -342,7 +342,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
               >
                 <div className="flex items-center gap-1.5">
                   <span className="text-[#8C6239] font-serif font-black text-[10.5px] uppercase tracking-wider">From:</span>
-                  <input
+                  <input id="fai-analyticstab-field-1" name="fai_analyticstab_field_1"
                     type="date"
                     value={customStartDate}
                     onChange={(e) => setCustomStartDate(e.target.value)}
@@ -352,7 +352,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
                 <span className="text-[#B88E4B] font-black text-xs">→</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[#8C6239] font-serif font-black text-[10.5px] uppercase tracking-wider">To:</span>
-                  <input
+                  <input id="fai-analyticstab-field-2" name="fai_analyticstab_field_2"
                     type="date"
                     value={customEndDate}
                     onChange={(e) => setCustomEndDate(e.target.value)}

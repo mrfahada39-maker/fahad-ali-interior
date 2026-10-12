@@ -301,9 +301,9 @@ export function CheckoutBankCardPanel({
         {/* 1. Bank Selector Dropdown with Search */}
         <div className="relative" ref={dropdownRef}>
           <div className="flex justify-between items-center mb-1">
-            <label className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider">
+            <span className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider">
               Select Pakistani Bank ({BANKS_LIST.length} Banks)
-            </label>
+            </span>
           </div>
           <button
             type="button"
@@ -366,9 +366,9 @@ export function CheckoutBankCardPanel({
 
         {/* 2. Card Type (Debit vs Credit) Switcher */}
         <div className="space-y-1">
-          <label className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+          <span className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
             Card Mode
-          </label>
+          </span>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"

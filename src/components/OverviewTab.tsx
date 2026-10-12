@@ -766,14 +766,14 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                 <span className="font-serif font-black uppercase text-[10px]">Custom Scope:</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <input
+                <input id="fai-overviewtab-field-1" name="fai_overviewtab_field_1"
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
                   className="bg-white border border-[#D9C4AC] rounded-full px-2.5 py-0.5 text-[10px] font-bold text-[#18110D] focus:outline-none focus:border-[#B88E4B] shadow-2xs cursor-pointer"
                 />
                 <span className="text-[#B88E4B] font-black text-xs">→</span>
-                <input
+                <input id="fai-overviewtab-field-2" name="fai_overviewtab_field_2"
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
@@ -1063,7 +1063,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                       className="h-[38px] flex items-center gap-2 bg-[#FAF5EE] border border-[#B88E4B]/60 rounded-full px-3 shadow-xs text-xs"
                     >
                       <span className="text-[#8C6239] font-serif font-black text-[10.5px] uppercase">From:</span>
-                      <input
+                      <input id="fai-overviewtab-field-3" name="fai_overviewtab_field_3"
                         type="date"
                         value={customStartDate}
                         onChange={(e) => setCustomStartDate(e.target.value)}
@@ -1071,7 +1071,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                       />
                       <span className="text-[#B88E4B] font-black text-xs">→</span>
                       <span className="text-[#8C6239] font-serif font-black text-[10.5px] uppercase">To:</span>
-                      <input
+                      <input id="fai-overviewtab-field-4" name="fai_overviewtab_field_4"
                         type="date"
                         value={customEndDate}
                         onChange={(e) => setCustomEndDate(e.target.value)}
@@ -1084,7 +1084,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                 {/* Instant Search Bar */}
                 <div className="relative w-full md:w-80">
                   <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B88E4B] pointer-events-none" />
-                  <input
+                  <input id="fai-overviewtab-field-5" name="fai_overviewtab_field_5"
                     type="text"
                     value={statementSearchQuery}
                     onChange={(e) => setStatementSearchQuery(e.target.value)}

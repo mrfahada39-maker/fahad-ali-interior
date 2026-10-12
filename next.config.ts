@@ -3,6 +3,7 @@ import path from 'path';
 import withSerwistInit from '@serwist/next';
 
 const isDev = process.env.NODE_ENV === 'development';
+process.env.SERWIST_SUPPRESS_TURBOPACK_WARNING = '1';
 
 // PWA — disabled in dev, active in production for 0-second offline-first caching via Serwist
 const withPWA = withSerwistInit({

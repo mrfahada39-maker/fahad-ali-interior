@@ -155,9 +155,9 @@ export function DashboardProfileTab({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+                <span className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                   <User size={12} className="text-[#B88E4B]" /> Full Legal Name
-                </label>
+                </span>
                 <Input
                   value={profileForm.name}
                   onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
@@ -167,9 +167,9 @@ export function DashboardProfileTab({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+                <span className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                   <Phone size={12} className="text-[#B88E4B]" /> Direct WhatsApp / Phone
-                </label>
+                </span>
                 <Input
                   value={profileForm.phone}
                   onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
@@ -180,9 +180,9 @@ export function DashboardProfileTab({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                 <Mail size={12} className="text-[#B88E4B]" /> Registered Email Address (Verified)
-              </label>
+              </span>
               <div className="relative">
                 <Input
                   value={session?.user?.email || profile?.email || ''}
@@ -196,9 +196,9 @@ export function DashboardProfileTab({
             </div>
 
             <div className="space-y-1.5 pt-1">
-              <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles size={12} className="text-[#B88E4B]" /> Signature Timber Polish Preference
-              </label>
+              </span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {['Royal Walnut', 'Natural Sheesham', 'Antique Teak', 'Turkish Gold Leaf'].map((polish) => (
                   <button
@@ -218,9 +218,9 @@ export function DashboardProfileTab({
             </div>
 
             <div className="space-y-1.5 pt-1">
-              <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                 <Layers size={12} className="text-[#B88E4B]" /> Preferred Fabric & Upholstery
-              </label>
+              </span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {['Turkish Champagne Velvet', 'Emerald Turkish Velvet', 'Italian Tan Leather', 'Royal Navy Velvet'].map((fabric) => (
                   <button
@@ -240,9 +240,9 @@ export function DashboardProfileTab({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                 <FileText size={12} className="text-[#B88E4B]" /> Architectural & Bespoke Styling Notes (Bio)
-              </label>
+              </span>
               <Textarea
                 value={profileForm.bio}
                 onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}

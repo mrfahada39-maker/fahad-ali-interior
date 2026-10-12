@@ -85,7 +85,7 @@ export function DashboardWishlistTab({
         </div>
 
         <div className="flex items-center gap-2">
-          <select
+          <select id="fai-dashboardwishlistconciergetabs-field-1" name="fai_dashboardwishlistconciergetabs_field_1"
             aria-label="Filter wishlist by category"
             value={wishlistCategoryFilter}
             onChange={(e) => setWishlistCategoryFilter(e.target.value)}

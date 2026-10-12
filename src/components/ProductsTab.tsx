@@ -364,7 +364,7 @@ export default function ProductsTab({
             {/* Core Details (3 Columns) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <label className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Product Name *</label>
+                <span className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Product Name *</span>
                 <Input
                   placeholder="e.g. Royal Maharaja Velvet 8-Seater Dining Set"
                   value={productForm.name}
@@ -373,7 +373,7 @@ export default function ProductsTab({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Price (PKR) *</label>
+                <span className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Price (PKR) *</span>
                 <Input
                   placeholder="e.g. 385000"
                   type="number"
@@ -383,7 +383,7 @@ export default function ProductsTab({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Compare-At Price (PKR Discount Anchor)</label>
+                <span className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Compare-At Price (PKR Discount Anchor)</span>
                 <Input
                   placeholder="e.g. 450000 (Original price before luxury discount)"
                   type="number"
@@ -397,8 +397,8 @@ export default function ProductsTab({
             {/* Category, Dimensions & Stock */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <label className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Category *</label>
-                <select
+                <label htmlFor="fai-productstab-field-1" className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Category *</label>
+                <select id="fai-productstab-field-1" name="fai_productstab_field_1"
                   value={productForm.category}
                   onChange={(e) => setProductForm({ ...productForm, category: e.target.value, image: defaultProductImage(e.target.value) })}
                   className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#221814] font-bold rounded-xl h-10 px-3 text-xs focus:border-[#B88E4B] outline-none"
@@ -410,7 +410,7 @@ export default function ProductsTab({
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Dimensions</label>
+                <span className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Dimensions</span>
                 <Input
                   placeholder="e.g. 280 x 90 x 75 cm"
                   value={productForm.dimensions}
@@ -419,7 +419,7 @@ export default function ProductsTab({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Stock Count *</label>
+                <span className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Stock Count *</span>
                 <Input
                   placeholder="e.g. 5"
                   type="number"
@@ -437,7 +437,7 @@ export default function ProductsTab({
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-stone-500 text-[9px] uppercase font-black tracking-wider">General Material</label>
+                  <span className="text-stone-500 text-[9px] uppercase font-black tracking-wider">General Material</span>
                   <Input
                     placeholder="e.g. Solid Sheesham Wood & Turkish Velvet"
                     value={productForm.material}
@@ -446,7 +446,7 @@ export default function ProductsTab({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Wood Type / Frame</label>
+                  <span className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Wood Type / Frame</span>
                   <Input
                     placeholder="e.g. Seasoned Solid Sheesham Wood"
                     value={productForm.woodType}
@@ -455,7 +455,7 @@ export default function ProductsTab({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Fabric / Upholstery</label>
+                  <span className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Fabric / Upholstery</span>
                   <Input
                     placeholder="e.g. Imported Premium Velvet"
                     value={productForm.upholstery}
@@ -464,7 +464,7 @@ export default function ProductsTab({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Polish / Finish</label>
+                  <span className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Polish / Finish</span>
                   <Input
                     placeholder="e.g. Antique Walnut Matte Polish"
                     value={productForm.finish}
@@ -473,7 +473,7 @@ export default function ProductsTab({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Production Lead Time</label>
+                  <span className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Production Lead Time</span>
                   <Input
                     placeholder="e.g. 15-20 Working Days"
                     value={productForm.leadTime}
@@ -482,7 +482,7 @@ export default function ProductsTab({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Warranty Guarantee</label>
+                  <label htmlFor="isPremium" className="text-stone-500 text-[9px] uppercase font-black tracking-wider">Warranty Guarantee</label>
                   <Input
                     placeholder="e.g. 10 Years Lifetime Wood Warranty"
                     value={productForm.warranty}
@@ -493,7 +493,7 @@ export default function ProductsTab({
               </div>
 
               <div className="flex items-center gap-2 pt-2 border-t border-neutral-200/70">
-                <input
+                <input name="fai_productstab_field_2"
                   type="checkbox"
                   checked={productForm.isPremium}
                   onChange={(e) => setProductForm({ ...productForm, isPremium: e.target.checked })}
@@ -509,9 +509,9 @@ export default function ProductsTab({
             {/* Cloudinary Media Uploads */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="md:col-span-2 space-y-2">
-                <label className="text-stone-600 text-[10px] uppercase font-black tracking-wider block">
+                <span className="text-stone-600 text-[10px] uppercase font-black tracking-wider block">
                   Product Primary High-Res Showcase Image *
-                </label>
+                </span>
                 <CloudinaryImageUpload
                   folder="products"
                   compact
@@ -530,9 +530,9 @@ export default function ProductsTab({
               </div>
 
               <div className="space-y-2">
-                <label className="text-stone-600 text-[10px] uppercase font-black tracking-wider block">
+                <span className="text-stone-600 text-[10px] uppercase font-black tracking-wider block">
                   Gallery Extra Angles
-                </label>
+                </span>
                 <CloudinaryImageUpload
                   folder="products"
                   compact
@@ -586,7 +586,7 @@ export default function ProductsTab({
 
             {/* Description */}
             <div className="space-y-1">
-              <label className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Product Heritage & Design Description</label>
+              <span className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Product Heritage & Design Description</span>
               <Textarea
                 placeholder="Describe the artisan hand-carving, solid Sheesham wood seasoning, comfort grade, and styling notes..."
                 value={productForm.description}
