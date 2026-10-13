@@ -2,6 +2,9 @@ import { defineConfig } from 'prisma/config';
 import fs from 'fs';
 import path from 'path';
 
+process.env.PRISMA_HIDE_UPDATE_MESSAGE = 'true';
+process.env.CHECKPOINT_DISABLE = '1';
+
 // Manually load environment variables from .env because prisma.config.ts disables auto-loading.
 try {
   const envPath = path.resolve(__dirname, '.env');
