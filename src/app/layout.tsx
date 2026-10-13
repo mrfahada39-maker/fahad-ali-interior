@@ -87,12 +87,14 @@ export const metadata: Metadata = {
     "luxury furniture", "Pakistan", "Lahore", "handcrafted",
     "Sheesham wood", "interior design", "beds", "sofas", "dining", "wardrobes",
   ],
-  // ── PWA manifest & icons ────────────────────────────────────────────────
+  // ── PWA manifest & icons (versioned icons enable 1-year immutable CDN caching) ──
   manifest: "/manifest.json",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
       { url: "/icon", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192.v1.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.v1.png", sizes: "512x512", type: "image/png" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
       { url: "/logo.svg", type: "image/svg+xml" },

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
@@ -98,7 +97,7 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Your email address has been successfully verified! You can now log in.',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[VERIFY EMAIL ERROR]', error);
     return NextResponse.json({ error: 'An unexpected error occurred. Please try again.' }, { status: 500 });
   }

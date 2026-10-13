@@ -1,21 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
-import {
-  Users, MessageSquare, Star,
-  Loader2, Trash2, CheckCircle, XCircle, DollarSign, TrendingUp, Box, Plus, Send, Sparkles,
-  Headphones, Mail, Inbox, Search, Filter, Lightbulb, MoreVertical, Smile, Paperclip, CheckCheck, Settings, LogOut, Clock, Database, User, Home
-} from 'lucide-react';
-import { Button } from '@/components/button';
-import { Input } from '@/components/input';
-import { Textarea } from '@/components/textarea';
-import { Badge } from '@/components/badge';
 import { toast } from 'sonner';
-import { apiFetch, apiFetchJsonWithStatus, clearEnterpriseTokens } from '@/lib/api-client';
-import { apiErrorMessage, ensureEnterpriseTokens } from '@/hooks/use-enterprise-auth-sync';
+import { apiFetch } from '@/lib/api-client';
 import { signOut } from 'next-auth/react';
 import { defaultProductImage } from '@/lib/images';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
@@ -40,8 +29,7 @@ import { AdminNavigationChrome } from '@/components/admin/AdminNavigationChrome'
 import { AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
 
 import { useSiteSettingsStore } from '@/store';
-import { DEFAULT_ADMIN_STATS, DEFAULT_ADMIN_ORDERS } from '@/lib/utils';
-import { formatPrice } from '@/lib/pakistan-localization';
+import { DEFAULT_ADMIN_STATS } from '@/lib/utils';
 
 
 function normalizeWhatsapp(value: string): string {
@@ -223,10 +211,6 @@ export default function AdminDashboard() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [selectedThreadIndex, setSelectedThreadIndex] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [isAuthed, setIsAuthed] = useState(true);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [dbProgress, setDbProgress] = useState(0);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showAddBlog, setShowAddBlog] = useState(false);
   const [productForm, setProductForm] = useState({
