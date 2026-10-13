@@ -74,3 +74,8 @@ Thumbs.db
 local-*
 test/
 prompt/
+
+# Serwist generated service worker (rebuilt on every build)
+/public/sw.js
+/public/sw.js.map
+/public/swe-worker-*.js
