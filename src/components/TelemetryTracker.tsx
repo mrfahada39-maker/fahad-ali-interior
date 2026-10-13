@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 'use client';
+import { logger } from '@/lib/logger';
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -176,7 +177,7 @@ export default function TelemetryTracker() {
         };
       } catch (err) {
         if (process.env.NODE_ENV === 'development') {
-          console.error('TelemetryTracker error:', err);
+          logger.error('TelemetryTracker error:', err);
         }
       }
     };

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendOrderConfirmationEmail } from '@/lib/email';
 import { safeApiErrorResponse } from '@/lib/api-error';
+import { logger } from '@/lib/logger';
 import { createOrderSchema, updateOrderStatusSchema } from '@/lib/validations/api-schemas';
 import {
   evaluateCoupon,
@@ -482,7 +483,21 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       discount,
       totalAmount,
       couponCode: appliedCoupon?.code || null,
-    }).catch((err) => console.error('[SMTP BACKGROUND ERROR]', err));
+    }).catch((err) => logger.error('[SMTP BACKGROUND ERROR]', err));
+
+    if (targetUserId) {
+      await db.notification
+        .create({
+          data: {
+            userId: targetUserId,
+            title: `Order #${newOrder.id.slice(-6).toUpperCase()} Placed`,
+            desc: `Your order of PKR ${Number(newOrder.totalAmount).toLocaleString()} has been received and is currently PENDING.`,
+            type: 'order',
+            isNew: true,
+          },
+        })
+        .catch(() => {});
+    }
 
     const guestTrackingToken = newOrder.shippingEmail
       ? generateGuestOrderToken(newOrder.id, newOrder.shippingEmail)
@@ -735,6 +750,25 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
         where: { id: rawBody.id },
         data: updateData,
       });
+
+      if (updated.userId && (updateData.status || updateData.paymentStatus)) {
+        const shortId = updated.id.slice(-6).toUpperCase();
+        const statusDesc = updateData.status
+          ? `Your order #${shortId} status is now ${updated.status}.`
+          : `Payment status for order #${shortId} is now ${updated.paymentStatus}.`;
+        await db.notification
+          .create({
+            data: {
+              userId: updated.userId,
+              title: `Order #${shortId} ${updateData.status ? String(updated.status) : 'Payment Updated'}`,
+              desc: statusDesc,
+              type: 'order',
+              isNew: true,
+            },
+          })
+          .catch(() => {});
+      }
+
       return NextResponse.json({
         success: true,
         ...updated,

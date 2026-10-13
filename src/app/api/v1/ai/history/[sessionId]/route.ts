@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { db } from '@/lib/db';
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       messages: formattedMessages,
     });
   } catch (err: any) {
-    console.error('[AI_HISTORY_ERROR]', err);
+    logger.error('[AI_HISTORY_ERROR]', err);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch chat history' },
       { status: 500 }

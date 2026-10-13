@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 'use client';
+import { logger } from '@/lib/logger';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -88,7 +89,7 @@ export default function CmsTab() {
       }
     } catch (e) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to load categories', e);
+        logger.error('Failed to load categories', e);
       }
     } finally {
       setLoadingCategories(false);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { animate } from 'framer-motion';
 
 interface AnimatedCounterProps {
   value: number;
@@ -24,45 +25,23 @@ export default function AnimatedCounter({
   useEffect(() => {
     if (!spanRef.current) return;
     const targetVal = Number(value) || 0;
-    const obj = { val: 0 };
-    let isCancelled = false;
-    let ctx: { revert: () => void } | null = null;
 
-    import('gsap')
-      .then((mod) => {
-        if (isCancelled || !spanRef.current) return;
-        const gsap = mod.default || mod.gsap;
-        ctx = gsap.context(() => {
-          gsap.to(obj, {
-            val: targetVal,
-            duration: duration,
-            ease: 'power2.out',
-            onUpdate: () => {
-              if (spanRef.current) {
-                const currentNum = obj.val;
-                const formatted =
-                  decimals > 0
-                    ? currentNum.toFixed(decimals)
-                    : new Intl.NumberFormat('en-PK').format(Math.floor(currentNum));
-                spanRef.current.textContent = `${prefix}${formatted}${suffix}`;
-              }
-            },
-          });
-        }, spanRef);
-      })
-      .catch(() => {
+    const controls = animate(0, targetVal, {
+      duration,
+      ease: 'easeOut',
+      onUpdate: (currentNum) => {
         if (spanRef.current) {
           const formatted =
             decimals > 0
-              ? targetVal.toFixed(decimals)
-              : new Intl.NumberFormat('en-PK').format(Math.floor(targetVal));
+              ? currentNum.toFixed(decimals)
+              : new Intl.NumberFormat('en-PK').format(Math.floor(currentNum));
           spanRef.current.textContent = `${prefix}${formatted}${suffix}`;
         }
-      });
+      },
+    });
 
     return () => {
-      isCancelled = true;
-      ctx?.revert();
+      controls.stop();
     };
   }, [value, prefix, suffix, decimals, duration]);
 

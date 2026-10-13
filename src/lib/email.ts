@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import tls from 'tls';
 
 export interface OrderEmailData {
@@ -40,7 +41,7 @@ function sendSmtpTls({
   text?: string;
 }): Promise<boolean> {
   if (!user || !pass) {
-    console.error('[SMTP ERROR] Cannot send email: SMTP_USER or SMTP_PASS environment variable is missing.');
+    logger.error('[SMTP ERROR] Cannot send email: SMTP_USER or SMTP_PASS environment variable is missing.');
     return Promise.resolve(false);
   }
   const tlsPort = (port === 587 && host.includes('gmail.com')) ? 465 : port;
@@ -72,7 +73,7 @@ function sendSmtpTls({
             const res = data.toString();
 
             if (res.startsWith('5') || res.startsWith('4')) {
-              console.error(`[SMTP ERROR RESPONSE] Step ${step} code: ${res.trim()}`);
+              logger.error(`[SMTP ERROR RESPONSE] Step ${step} code: ${res.trim()}`);
               send('QUIT');
               socket.end();
               finish(false);
@@ -149,7 +150,7 @@ function sendSmtpTls({
       );
 
       socket.on('error', (err) => {
-        console.error('[SMTP TLS ERROR]', err.message);
+        logger.error('[SMTP TLS ERROR]', err.message);
         finish(false);
       });
 
@@ -158,7 +159,7 @@ function sendSmtpTls({
         finish(false);
       });
     } catch (e: any) {
-      console.error('[SMTP CONNECT ERROR]', e.message);
+      logger.error('[SMTP CONNECT ERROR]', e.message);
       finish(false);
     }
   });
@@ -493,15 +494,15 @@ Concierge WhatsApp: +92 320 7006110
           text: plainText,
         }).then((sent) => {
           if (sent) {
-            console.log(`[SMTP SUCCESS] Customer confirmation email sent to ${order.customerEmail}`);
+            logger.info(`[SMTP SUCCESS] Customer confirmation email sent to ${order.customerEmail}`);
           } else {
-            console.error(`[SMTP FAILED] Customer confirmation email could not be delivered to ${order.customerEmail}`);
+            logger.error(`[SMTP FAILED] Customer confirmation email could not be delivered to ${order.customerEmail}`);
           }
           return sent;
         })
       );
     } else {
-      console.log(`[SMTP SKIP] Customer email '${order.customerEmail}' is skipped.`);
+      logger.info(`[SMTP SKIP] Customer email '${order.customerEmail}' is skipped.`);
     }
 
     // 2. Send New Order Alert to Admin
@@ -530,9 +531,9 @@ Concierge WhatsApp: +92 320 7006110
       `,
         }).then((sent) => {
           if (sent) {
-            console.log(`[SMTP SUCCESS] Admin order notification sent to ${user}`);
+            logger.info(`[SMTP SUCCESS] Admin order notification sent to ${user}`);
           } else {
-            console.error(`[SMTP FAILED] Admin order notification could not be delivered to ${user}`);
+            logger.error(`[SMTP FAILED] Admin order notification could not be delivered to ${user}`);
           }
           return sent;
         })
@@ -542,7 +543,7 @@ Concierge WhatsApp: +92 320 7006110
     await Promise.allSettled(promises);
     return { success: true };
   } catch (err: any) {
-    console.error('[SMTP ERROR]', err.message);
+    logger.error('[SMTP ERROR]', err.message);
     return { success: false, error: err.message };
   }
 }

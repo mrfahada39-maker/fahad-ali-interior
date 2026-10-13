@@ -1,10 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import AdminDashboard from '@/components/AdminDashboard';
+import { useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+const AdminDashboard = dynamic(() => import('@/components/AdminDashboard'), { ssr: false });
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -40,4 +41,3 @@ export default function AdminPage() {
 
   return <AdminDashboard />;
 }
-

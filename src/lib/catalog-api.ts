@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 /**
  * Storefront Product Data Layer (Direct PostgreSQL with in-memory caching)
  */
@@ -58,7 +59,7 @@ export async function getStorefrontCategories(): Promise<string[]> {
       return names;
     }
   } catch (err) {
-    console.error('Direct DB categories fetch error:', err);
+    logger.error('Direct DB categories fetch error:', err);
   }
 
   const fallback = [
@@ -115,7 +116,7 @@ export async function getStorefrontProducts(limit = 50): Promise<StorefrontProdu
     setCached(cacheKey, result, 60);
     return result;
   } catch (err) {
-    console.error('Direct DB product fetch error:', err);
+    logger.error('Direct DB product fetch error:', err);
     return [];
   }
 }
@@ -180,7 +181,7 @@ export async function getProductById(id: string): Promise<StorefrontProduct | nu
       return result;
     }
   } catch (err) {
-    console.error('Direct DB product detail error:', err);
+    logger.error('Direct DB product detail error:', err);
   }
 
   return null;

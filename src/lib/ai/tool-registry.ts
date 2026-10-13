@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
 
 export interface ToolDeclaration {
@@ -136,7 +137,7 @@ export class AiToolExecutor {
             orderBy: { isPremium: 'desc' },
           });
         } catch (e) {
-          console.warn('Prisma tool search fallback', e);
+          logger.warn('Prisma tool search fallback', { detail: String(e) });
         }
 
         return {
@@ -201,7 +202,7 @@ export class AiToolExecutor {
             include: { items: { include: { product: true } } },
           });
         } catch (e) {
-          console.warn('Prisma order search', e);
+          logger.warn('Prisma order search', { detail: String(e) });
         }
 
         if (order) {

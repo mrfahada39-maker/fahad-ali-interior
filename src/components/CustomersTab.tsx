@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 'use client';
+import { logger } from '@/lib/logger';
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -118,7 +119,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
       }
     } catch (e) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to load customers:', e);
+        logger.error('Failed to load customers:', e);
       }
     } finally {
       setLoading(false);

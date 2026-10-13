@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
@@ -156,7 +157,7 @@ export async function POST(req: NextRequest) {
 
     return res;
   } catch (error) {
-    console.error('[ADMIN_AUTH_LOGIN_ERROR]', error);
+    logger.error('[ADMIN_AUTH_LOGIN_ERROR]', error);
     return NextResponse.json({ error: 'Server authentication error' }, { status: 500 });
   }
 }

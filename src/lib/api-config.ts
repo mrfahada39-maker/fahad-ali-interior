@@ -14,7 +14,6 @@ const NEXTAUTH_ONLY_PREFIXES = [
   '/api/auth/callback',
   '/api/auth/error',
   '/api/auth/_log',
-  '/api/auth/check-2fa',
   '/api/auth/register',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
@@ -47,7 +46,6 @@ export function isV1ApiRoute(path: string): boolean {
   if (isNextAuthInternalRoute(normalized)) return false;
   return true;
 }
-export const isNestApiRoute = isV1ApiRoute;
 
 /** Map /api/foo → /api/v1/foo for Next.js direct API routes. */
 export function toV1ApiPath(path: string): string {
@@ -66,7 +64,6 @@ export function toV1ApiPath(path: string): string {
 
   return query ? `${mapped}?${query}` : mapped;
 }
-export const toNestApiPath = toV1ApiPath;
 
 /** Always same-origin `/api/v1/*`. */
 export function resolveApiPath(path: string): string {

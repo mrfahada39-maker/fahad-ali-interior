@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 
@@ -86,9 +87,7 @@ if (typeof setInterval !== 'undefined') {
 let loggedMissingUpstashError = false;
 
 if (process.env.NODE_ENV === 'production' && !isRateLimitConfigured()) {
-  console.error(
-    '[RateLimit FATAL] Upstash Redis configuration (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) is missing in production! Distributed rate limiting is required.'
-  );
+  logger.error('[RateLimit FATAL] Upstash Redis configuration (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) is missing in production! Distributed rate limiting is required.');
   loggedMissingUpstashError = true;
 }
 
@@ -133,7 +132,7 @@ export async function rateLimit(
       const missingMsg =
         'Upstash Redis rate limiter is not configured in production. Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in environment variables.';
       if (!loggedMissingUpstashError) {
-        console.error(`[RateLimit FATAL] ${missingMsg}`);
+        logger.error(`[RateLimit FATAL] ${missingMsg}`);
         loggedMissingUpstashError = true;
       }
       // Do not fall back to per-instance memory limits in production when unconfigured
@@ -159,7 +158,7 @@ export async function rateLimit(
       resetTime: result.reset,
     };
   } catch (err) {
-    console.error('[RateLimit] Upstash error:', err);
+    logger.error('[RateLimit] Upstash error:', err);
     // Strict fail-closed only for login
     if (name === 'login') {
       return {

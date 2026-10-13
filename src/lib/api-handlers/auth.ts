@@ -10,7 +10,6 @@ import { POST as handleForgotPassword } from '@/app/api/auth/forgot-password/rou
 import { POST as handleResetPassword } from '@/app/api/auth/reset-password/route';
 import { POST as handleVerifyEmail } from '@/app/api/auth/verify-email/route';
 import { POST as handleResendVerification } from '@/app/api/auth/resend-verification/route';
-import { GET as handleCheck2Fa } from '@/app/api/auth/check-2fa/route';
 import { ApiDispatchContext, getUserFromSessionOrToken, requireAdmin } from './shared';
 
 export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextResponse | null> {
@@ -63,16 +62,6 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
       segment === 'v1/register')
   ) {
     return handleRegister(req);
-  }
-
-  if (
-    normalizedSegment === 'auth/check-2fa' ||
-    normalizedSegment === 'check-2fa' ||
-    segment === 'auth/check-2fa' ||
-    segment === 'v1/auth/check-2fa' ||
-    segment === 'check-2fa'
-  ) {
-    return handleCheck2Fa(req);
   }
 
   // 2FA Status, Setup, Enable, Disable

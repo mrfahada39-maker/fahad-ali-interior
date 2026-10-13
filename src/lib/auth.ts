@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
@@ -9,6 +8,7 @@ import { sessionRole } from '@/lib/enums';
 import { shouldSkipEmailVerification } from '@/lib/utils';
 import { decryptTotpSecret, verifyBackupCode } from '@/lib/totp-crypto';
 import { runDummyBcryptCompare } from '@/lib/password-policy';
+import { logger } from '@/lib/logger';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isLocalAuth =
@@ -102,7 +102,8 @@ const providers: NextAuthOptions['providers'] = [
 
       // Enforce 2FA TOTP if user has it enabled
       if (user.totpEnabled) {
-        const totpCode = (credentials as Record<string, any>)?.totpCode?.toString().trim();
+        const rawTotp = (credentials as Record<string, unknown>)?.totpCode;
+        const totpCode = rawTotp ? String(rawTotp).trim() : '';
         if (!totpCode) {
           throw new Error('2FA_REQUIRED');
         }
@@ -195,7 +196,15 @@ export const authOptions: NextAuthOptions = {
         if (!user.email) return false;
 
         const emailLower = user.email.toLowerCase().trim();
-        let dbUser: any = null;
+        let dbUser: {
+          id: string;
+          email: string;
+          name: string;
+          role: import('@prisma/client').UserRole;
+          emailVerified: Date | null;
+          deletedAt?: Date | null;
+          lockedUntil?: Date | null;
+        } | null = null;
 
         for (let attempt = 1; attempt <= 3; attempt++) {
           try {
@@ -219,18 +228,24 @@ export const authOptions: NextAuthOptions = {
             }
             break;
           } catch (err) {
-            console.error(`Google OAuth DB sync attempt ${attempt} failed:`, err);
+            logger.error(`Google OAuth DB sync attempt ${attempt} failed`, err);
             if (attempt === 3) {
-              user.id = user.id || `google_${Date.now()}`;
-              (user as { role?: string }).role = 'CUSTOMER';
-              return true;
+              return false;
             }
             await new Promise((resolve) => setTimeout(resolve, 300));
           }
         }
 
+        if (
+          !dbUser ||
+          dbUser.deletedAt ||
+          (dbUser.lockedUntil && new Date(dbUser.lockedUntil) > new Date())
+        ) {
+          return false;
+        }
+
         const isAdminEmailFlag = isAdminEmail(emailLower);
-        if (isAdminEmailFlag && dbUser && dbUser.role !== 'ADMIN') {
+        if (isAdminEmailFlag && dbUser.role !== 'ADMIN') {
           await db.user.update({
             where: { id: dbUser.id },
             data: { role: 'ADMIN' },
@@ -238,16 +253,15 @@ export const authOptions: NextAuthOptions = {
           dbUser.role = 'ADMIN';
         }
 
-        if (dbUser) {
-          user.id = dbUser.id;
-          (user as { role?: string }).role = isAdminEmailFlag ? 'ADMIN' : sessionRole(dbUser.role);
-        }
+        user.id = dbUser.id;
+        (user as { role?: string }).role = isAdminEmailFlag ? 'ADMIN' : sessionRole(dbUser.role);
         return true;
       }
       return true;
     },
 
     async jwt({ token, user, trigger }) {
+      const extToken = token as Record<string, unknown>;
       if (user) {
         token.role = (user as { role?: string }).role;
         token.id = user.id;
@@ -255,7 +269,7 @@ export const authOptions: NextAuthOptions = {
 
       // H5: In the NextAuth jwt callback, re-check role, deletedAt and lockedUntil
       // from the DB at least every few minutes, so banned/deleted users lose access.
-      const lastCheck = typeof (token as any).lastCheckedAt === 'number' ? (token as any).lastCheckedAt : 0;
+      const lastCheck = typeof extToken.lastCheckedAt === 'number' ? extToken.lastCheckedAt : 0;
       const now = Date.now();
       if (token.id && (!lastCheck || now - lastCheck > 5 * 60 * 1000 || trigger === 'update')) {
         try {
@@ -264,12 +278,12 @@ export const authOptions: NextAuthOptions = {
             select: { role: true, deletedAt: true, lockedUntil: true },
           });
           if (!dbUser || dbUser.deletedAt || (dbUser.lockedUntil && new Date(dbUser.lockedUntil) > new Date())) {
-            (token as any).revoked = true;
-            (token as any).role = undefined;
+            extToken.revoked = true;
+            extToken.role = undefined;
             return token;
           }
           token.role = sessionRole(dbUser.role);
-          (token as any).lastCheckedAt = now;
+          extToken.lastCheckedAt = now;
         } catch {
           // Preserve existing token on transient DB network error
         }
@@ -277,8 +291,9 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if ((token as any)?.revoked) {
-        return {} as any;
+      const extToken = token as Record<string, unknown>;
+      if (extToken?.revoked) {
+        return { expires: '' };
       }
       if (session.user) {
         (session.user as { role?: string }).role = token.role as string;

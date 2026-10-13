@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter, Great_Vibes } from "next/font/google";
 import "./globals.css";
@@ -13,7 +14,7 @@ const getCachedSettings = unstable_cache(
     try {
       return await db.settings.findFirst();
     } catch (e) {
-      console.error('Failed to load site settings:', e);
+      logger.error('Failed to load site settings:', e);
       return null;
     }
   },

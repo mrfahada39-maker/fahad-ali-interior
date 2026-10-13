@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
@@ -152,7 +153,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Error in GET /api/v1/ai/admin/analytics:', error);
+    logger.error('Error in GET /api/v1/ai/admin/analytics:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to retrieve AI analytics' },
       { status: 500 }
@@ -200,7 +201,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: `Session ${sessionId} deleted successfully` });
   } catch (error: any) {
-    console.error('Error in DELETE /api/v1/ai/admin/analytics:', error);
+    logger.error('Error in DELETE /api/v1/ai/admin/analytics:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to delete chat session' },
       { status: 500 }

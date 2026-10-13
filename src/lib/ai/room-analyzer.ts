@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
 
 export interface RoomAnalysisResult {
@@ -28,7 +29,7 @@ export class RoomAnalyzer {
       });
     } catch (e) {
       if (process.env.NODE_ENV !== 'test') {
-        console.warn('RoomAnalyzer db product fetch error', e);
+        logger.warn('RoomAnalyzer db product fetch error', { detail: String(e) });
       }
     }
 
@@ -85,7 +86,7 @@ Notes from client: ${notes || 'None'}`;
           }
         }
       } catch (e) {
-        console.warn('Vision AI call warning', e);
+        logger.warn('Vision AI call warning', { detail: String(e) });
       }
     }
 

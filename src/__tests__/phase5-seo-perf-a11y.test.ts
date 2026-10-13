@@ -19,13 +19,13 @@ describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
     expect(productPageSrc).not.toContain('revalidate = 0');
   });
 
-  it('lazy-loads heavy client libraries (gsap in AnimatedCounter, Recharts tabs in AdminDashboard)', () => {
+  it('uses framer-motion in AnimatedCounter (no duplicate gsap dependency) and lazy-loads Recharts tabs in AdminDashboard', () => {
     const counterSrc = fs.readFileSync(
       path.join(rootDir, 'src/components/AnimatedCounter.tsx'),
       'utf8'
     );
-    expect(counterSrc).not.toMatch(/^import\s+gsap\s+from\s+['"]gsap['"]/m);
-    expect(counterSrc).toContain("import('gsap')");
+    expect(counterSrc).not.toContain('gsap');
+    expect(counterSrc).toContain("from 'framer-motion'");
 
     const adminSrc = fs.readFileSync(
       path.join(rootDir, 'src/components/AdminDashboard.tsx'),

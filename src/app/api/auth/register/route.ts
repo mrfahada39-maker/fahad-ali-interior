@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
           code,
         });
       } catch (err) {
-        console.error('Failed to send verification email upon registration:', err);
+        logger.error('Failed to send verification email upon registration:', err);
       }
     }
 
@@ -120,7 +121,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('[REGISTRATION_ERROR]', error);
+    logger.error('[REGISTRATION_ERROR]', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred during registration. Please try again.' },
       { status: 500 }

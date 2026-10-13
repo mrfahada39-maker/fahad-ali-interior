@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 
 import { useEffect } from 'react';
 import Link from 'next/link';
@@ -13,7 +14,7 @@ export default function Error({
   useEffect(() => {
     // Log application errors — dev only (production errors tracked via Vercel monitoring)
     if (process.env.NODE_ENV === 'development') {
-      console.error('Application error:', error);
+      logger.error('Application error:', error);
     }
   }, [error]);
 

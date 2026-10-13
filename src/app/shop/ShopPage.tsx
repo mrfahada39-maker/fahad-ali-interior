@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps, @typescript-eslint/no-explicit-any */
 'use client';
+import { logger } from '@/lib/logger';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -128,7 +129,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to submit inquiry:', err);
+        logger.error('Failed to submit inquiry:', err);
       }
     } finally {
       setInquirySubmitting(false);

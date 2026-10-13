@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { isNextAuthInternalRoute, toNestApiPath } from '@/lib/api-config';
+import { isNextAuthInternalRoute, toV1ApiPath } from '@/lib/api-config';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 function generateRequestId(): string {
@@ -218,7 +218,7 @@ export async function proxy(request: NextRequest) {
       !pathname.startsWith('/api/v1') &&
       !pathname.startsWith('/api/admin')
     ) {
-      const mapped = toNestApiPath(`${pathname}${request.nextUrl.search}`);
+      const mapped = toV1ApiPath(`${pathname}${request.nextUrl.search}`);
       const q = mapped.indexOf('?');
       const rewriteUrl = request.nextUrl.clone();
       rewriteUrl.pathname = q >= 0 ? mapped.slice(0, q) : mapped;

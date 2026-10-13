@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { unstable_cache } from 'next/cache';
 import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
@@ -108,7 +109,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     lastCacheTimestamp = now;
     return data;
   } catch (err) {
-    console.error('getHomePageData error:', err);
+    logger.error('getHomePageData error:', err);
     if (cachedHomeData) return cachedHomeData;
     return empty;
   }
@@ -296,7 +297,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       })),
     };
   } catch (err) {
-    console.error('fetchHomePageDataInternal direct DB query error:', err);
+    logger.error('fetchHomePageDataInternal direct DB query error:', err);
     return empty;
   }
 }

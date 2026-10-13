@@ -1,11 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { getToken } from 'next-auth/jwt';
-import crypto from 'crypto';
 import { db } from '@/lib/db';
-import { authOptions } from '@/lib/auth';
-import { OrderStatus, PaymentStatus } from '@prisma/client';
+import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client';
 import { moveToRecycleBin } from '@/lib/recycle-bin';
 
 import { getVerifiedAdmin } from '@/lib/admin-auth';
@@ -40,20 +35,20 @@ export async function GET(req: NextRequest) {
       take: 100,
     });
 
-    const formatted = orders.map((o: any) => ({
+    const formatted = (orders as Array<Record<string, unknown> & { items?: Array<Record<string, unknown>> }>).map((o) => ({
       ...o,
       discount: Number(o.discount),
       gst: Number(o.gst),
       totalAmount: Number(o.totalAmount),
       subtotal: Number(o.subtotal),
-      items: (o.items || []).map((it: any) => ({
+      items: (o.items || []).map((it) => ({
         ...it,
         price: Number(it.price),
       })),
     }));
 
     return NextResponse.json({ success: true, data: formatted, orders: formatted });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return safeApiErrorResponse(error, 'Failed to fetch orders', 500, req);
   }
 }
@@ -71,7 +66,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.OrderUpdateInput = {};
     if (body.status) {
       const rawStatus = String(body.status).trim().toUpperCase();
       const validStatuses: Record<string, OrderStatus> = {
@@ -111,6 +106,24 @@ export async function PUT(req: NextRequest) {
       data: updateData,
     });
 
+    if (updated.userId && (updateData.status || updateData.paymentStatus)) {
+      const shortId = updated.id.slice(-6).toUpperCase();
+      const statusDesc = updateData.status
+        ? `Your order #${shortId} status is now ${updated.status}.`
+        : `Payment status for order #${shortId} is now ${updated.paymentStatus}.`;
+      await db.notification
+        .create({
+          data: {
+            userId: updated.userId,
+            title: `Order #${shortId} ${updateData.status ? String(updated.status) : 'Payment Updated'}`,
+            desc: statusDesc,
+            type: 'order',
+            isNew: true,
+          },
+        })
+        .catch(() => {});
+    }
+
     return NextResponse.json({
       success: true,
       data: updated,
@@ -120,7 +133,7 @@ export async function PUT(req: NextRequest) {
       discount: Number(updated.discount),
       gst: Number(updated.gst),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return safeApiErrorResponse(error, 'Failed to update order', 500, req);
   }
 }
@@ -166,7 +179,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return safeApiErrorResponse(error, 'Failed to delete order', 500, req);
   }
 }

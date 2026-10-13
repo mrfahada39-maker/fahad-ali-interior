@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
@@ -162,7 +163,7 @@ export async function GET(req: NextRequest) {
         take: 50,
       });
     } catch (e) {
-      console.error("DB logs query failed:", e);
+      logger.error("DB logs query failed:", e);
     }
 
     // Merge global sessions map and database logs
@@ -288,7 +289,7 @@ export async function GET(req: NextRequest) {
       sourcesBreakdown: sourceMap,
     });
   } catch (error) {
-    console.error('Telemetry GET error:', error);
+    logger.error('Telemetry GET error:', error);
     return NextResponse.json({
       activeVisitorsCount: 0,
       topLocation: 'No Active Users',

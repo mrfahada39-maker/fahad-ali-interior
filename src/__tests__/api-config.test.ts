@@ -1,8 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
 import {
   resolveApiPath,
-  toNestApiPath,
-  isNestApiRoute,
+  toV1ApiPath,
+  isV1ApiRoute,
   isNextAuthInternalRoute,
   isNextJsOnlyApiRoute,
 } from '@/lib/api-config';
@@ -19,7 +19,6 @@ describe('resolveApiPath', () => {
   it('keeps /api/auth/register on internal NextAuth router', () => {
     expect(resolveApiPath('/api/auth/register')).toBe('/api/auth/register');
   });
-
 
   it('does not double-prefix already prefixed /api/v1/ paths', () => {
     expect(resolveApiPath('/api/v1/products')).toBe('/api/v1/products');
@@ -89,28 +88,28 @@ describe('isNextAuthInternalRoute', () => {
   });
 });
 
-describe('isNestApiRoute', () => {
-  it('returns true for api routes that go to Nest', () => {
-    expect(isNestApiRoute('/api/products')).toBe(true);
-    expect(isNestApiRoute('/api/payments/webhook')).toBe(true);
+describe('isV1ApiRoute', () => {
+  it('returns true for api routes that go to v1 handlers', () => {
+    expect(isV1ApiRoute('/api/products')).toBe(true);
+    expect(isV1ApiRoute('/api/payments/webhook')).toBe(true);
   });
 
   it('returns false for NextAuth routes', () => {
-    expect(isNestApiRoute('/api/auth/session')).toBe(false);
+    expect(isV1ApiRoute('/api/auth/session')).toBe(false);
   });
 
   it('returns false for non-api paths', () => {
-    expect(isNestApiRoute('/about')).toBe(false);
+    expect(isV1ApiRoute('/about')).toBe(false);
   });
 });
 
-describe('toNestApiPath', () => {
+describe('toV1ApiPath', () => {
   it('maps generic /api/foo to /api/v1/foo', () => {
-    expect(toNestApiPath('/api/orders')).toBe('/api/v1/orders');
+    expect(toV1ApiPath('/api/orders')).toBe('/api/v1/orders');
   });
 
   it('handles nested paths correctly', () => {
-    expect(toNestApiPath('/api/products/category/electronics')).toBe(
+    expect(toV1ApiPath('/api/products/category/electronics')).toBe(
       '/api/v1/products/category/electronics',
     );
   });

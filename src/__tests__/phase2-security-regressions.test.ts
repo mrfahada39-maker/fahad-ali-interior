@@ -72,7 +72,6 @@ import {
 } from '@/lib/ai-session-binding';
 import { getEnterpriseAccessToken, setEnterpriseTokens } from '@/lib/api-client';
 import { POST as forgotPasswordHandler } from '@/app/api/auth/forgot-password/route';
-import { GET as check2FaHandler } from '@/app/api/auth/check-2fa/route';
 import { GET as aiHistoryHandler } from '@/app/api/v1/ai/history/[sessionId]/route';
 import { POST as adminLogoutHandler } from '@/app/api/admin/auth/logout/route';
 import { proxy } from '@/proxy';
@@ -228,16 +227,12 @@ describe('Phase 2 Security & Quality Regressions', () => {
       expect(invalid).toBeNull();
     });
 
-    it('/api/auth/check-2fa returns generic response without revealing 2FA status to prevent enumeration', async () => {
-      const req = new NextRequest('http://localhost:3000/api/auth/check-2fa?email=admin@fahadali.pk', {
-        method: 'GET',
-      });
-
-      const res = await check2FaHandler(req);
-      expect(res.status).toBe(200);
-      const data = await res.json();
-      expect(data.requires2fa).toBe(false);
-      expect(data.message).toBeDefined();
+    it('removes dead /api/auth/check-2fa stub to eliminate email enumeration surface', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+      expect(
+        fs.existsSync(path.join(process.cwd(), 'src/app/api/auth/check-2fa/route.ts'))
+      ).toBe(false);
     });
   });
 

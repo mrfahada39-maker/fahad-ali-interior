@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 export interface LlmMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -56,7 +57,7 @@ export class MultiProviderLlm {
             }
           }
         } catch (e) {
-          console.warn(`Groq ${model} attempt error:`, e);
+          logger.warn(`Groq ${model} attempt error:`, { detail: String(e) });
         }
       }
     }
@@ -90,7 +91,7 @@ export class MultiProviderLlm {
             }
           }
         } catch (e) {
-          console.warn(`Gemini ${model} attempt error:`, e);
+          logger.warn(`Gemini ${model} attempt error:`, { detail: String(e) });
         }
       }
     }
@@ -123,7 +124,7 @@ export class MultiProviderLlm {
           }
         }
       } catch (e) {
-        console.warn('OpenAI attempt error:', e);
+        logger.warn('OpenAI attempt error:', { detail: String(e) });
       }
     }
 
@@ -146,7 +147,7 @@ export class MultiProviderLlm {
         }
       }
     } catch (e) {
-      console.warn('Direct LLM fallback error:', e);
+      logger.warn('Direct LLM fallback error:', { detail: String(e) });
     }
 
     return null;

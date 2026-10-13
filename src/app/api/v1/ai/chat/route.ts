@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { SecurityGuardrails } from '@/lib/guardrails';
@@ -308,7 +309,7 @@ export async function POST(request: NextRequest) {
       try {
         roomAnalysisResult = await RoomAnalyzer.analyzeRoomImage(roomImageBase64, sanitizedUserQuery);
       } catch (e) {
-        console.warn('Vision AI analysis warning', e);
+        logger.warn('Vision AI analysis warning', { detail: String(e) });
       }
     }
 
@@ -342,7 +343,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (e) {
-      console.warn('Session upsert / user message notice:', e);
+      logger.warn('Session upsert / user message notice:', { detail: String(e) });
     }
 
     // 4. Fetch past chat history (last 10)
@@ -354,7 +355,7 @@ export async function POST(request: NextRequest) {
         take: 10,
       });
     } catch (e) {
-      console.warn('History fetch notice:', e);
+      logger.warn('History fetch notice:', { detail: String(e) });
     }
 
     // 5. Fetch LIVE Store Products from Database (Fast cached fetch, no blocking indexer)
@@ -366,7 +367,7 @@ export async function POST(request: NextRequest) {
         take: 20,
       });
     } catch (e) {
-      console.warn('Prisma product fetch notice:', e);
+      logger.warn('Prisma product fetch notice:', { detail: String(e) });
     }
 
     // 6. Determine Agent Role & System Context
@@ -381,7 +382,7 @@ export async function POST(request: NextRequest) {
         orderBy: { order: 'asc' },
       });
     } catch (e) {
-      console.warn('Prisma category fetch notice:', e);
+      logger.warn('Prisma category fetch notice:', { detail: String(e) });
     }
 
     const categoriesMap: Record<string, number> = {};
@@ -475,7 +476,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
           });
         }
       } catch (e) {
-        console.warn('Hybrid search fallback notice:', e);
+        logger.warn('Hybrid search fallback notice:', { detail: String(e) });
       }
 
       // Fallback keyword search if hybrid search yielded no strong matches
@@ -569,7 +570,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
         data: { updatedAt: new Date() },
       }).catch(() => {});
     } catch (e) {
-      console.warn('Chat message save notice:', e);
+      logger.warn('Chat message save notice:', { detail: String(e) });
     }
 
     const res = NextResponse.json({
@@ -598,7 +599,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
 
     return res;
   } catch (err: any) {
-    console.error('Global Error in /api/v1/ai/chat route:', err);
+    logger.error('Global Error in /api/v1/ai/chat route:', err);
     return NextResponse.json({
       success: true,
       data: {

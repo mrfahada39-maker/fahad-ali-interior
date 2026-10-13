@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 export class SiteKnowledgeEngine {
   static getFullSiteKnowledge(): string {
     return `
@@ -72,7 +73,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
         }
       }
     } catch (e) {
-      console.warn('Gemini embedding failed, using fallback vector', e);
+      logger.warn('Gemini embedding failed, using fallback vector', { detail: String(e) });
     }
   }
 
@@ -97,7 +98,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
         }
       }
     } catch (e) {
-      console.warn('OpenAI embedding failed, using fallback vector', e);
+      logger.warn('OpenAI embedding failed, using fallback vector', { detail: String(e) });
     }
   }
 

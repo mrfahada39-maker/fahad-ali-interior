@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import crypto from 'crypto';
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest) {
       message: 'Your password has been successfully updated! You can now log in.',
     });
   } catch (error: any) {
-    console.error('[RESET PASSWORD ERROR]', error);
+    logger.error('[RESET PASSWORD ERROR]', error);
     return NextResponse.json({ error: 'An unexpected error occurred. Please try again.' }, { status: 500 });
   }
 }

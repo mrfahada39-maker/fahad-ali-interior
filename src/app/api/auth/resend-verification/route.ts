@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import crypto from 'crypto';
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
       message: 'A new verification email with link and code has been sent!',
     });
   } catch (error: any) {
-    console.error('[RESEND VERIFICATION ERROR]', error);
+    logger.error('[RESEND VERIFICATION ERROR]', error);
     return NextResponse.json({ error: 'An unexpected error occurred. Please try again.' }, { status: 500 });
   }
 }

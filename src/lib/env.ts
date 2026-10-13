@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 const requiredEnvVars = [
   'DATABASE_URL',
   'NEXTAUTH_SECRET',
@@ -71,11 +72,11 @@ export function validateEnv(): { valid: boolean; errors: string[]; warnings: str
 export function logEnvStatus(): void {
   const { valid, errors, warnings } = validateEnv();
   if (!valid) {
-    console.error('Environment validation failed:');
-    errors.forEach((e) => console.error(`  - ${e}`));
+    logger.error('Environment validation failed:');
+    errors.forEach((e) => logger.error(`  - ${e}`));
   }
   if (warnings.length > 0) {
-    console.warn('Environment warnings:');
-    warnings.forEach((w) => console.warn(`  - ${w}`));
+    logger.warn('Environment warnings:');
+    warnings.forEach((w) => logger.warn(`  - ${w}`));
   }
 }

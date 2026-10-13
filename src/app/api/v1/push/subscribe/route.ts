@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getServerSession } from 'next-auth';
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
       subscriptionId: subscription.id,
     });
   } catch (error) {
-    console.error('[PUSH_SUBSCRIBE_ERROR]', error);
+    logger.error('[PUSH_SUBSCRIBE_ERROR]', error);
     return NextResponse.json({ error: 'Failed to register push subscription' }, { status: 500 });
   }
 }

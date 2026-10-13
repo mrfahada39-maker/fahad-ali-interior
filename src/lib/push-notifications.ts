@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+import { logger } from '@/lib/logger';
 import webPush from 'web-push';
 import { db } from '@/lib/db';
 
@@ -11,7 +12,7 @@ try {
   webPush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
   isConfigured = true;
 } catch (err) {
-  console.warn('[PUSH_NOTIFICATIONS_CONFIG_WARNING]', err);
+  logger.warn('[PUSH_NOTIFICATIONS_CONFIG_WARNING]', { detail: String(err) });
 }
 
 export interface PushNotificationPayload {

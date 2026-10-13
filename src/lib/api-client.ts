@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * API Client — Fahad Ali Interior
  *
@@ -7,6 +6,7 @@
  * which protects against XSS token theft.
  */
 import { resolveApiPath } from '@/lib/api-config';
+import { logger } from '@/lib/logger';
 
 // ── Session marker — httpOnly cookie is the ONLY credential ─────────────────
 // Authentication is carried exclusively by the httpOnly NextAuth / admin cookies
@@ -69,8 +69,6 @@ function unwrapResponseBody<T>(body: unknown): T {
   return body as T;
 }
 
-const unwrapNestBody = unwrapResponseBody;
-
 // ── CSRF Token retrieval ──────────────────────────────────────────────────
 
 function getCsrfToken(): string | null {
@@ -89,7 +87,7 @@ function getCsrfToken(): string | null {
 
 // ── Core fetch ────────────────────────────────────────────────────────────────
 
-/** Client fetch — all business APIs use /api/v1 (NestJS proxy). */
+/** Client fetch — all business APIs use /api/v1. */
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const url     = resolveApiPath(path);
   const headers = new Headers(init?.headers);
@@ -135,7 +133,7 @@ export async function apiFetchJson<T>(path: string, init?: RequestInit): Promise
     if (!res.ok) {
       if (process.env.NODE_ENV === 'development') {
         const text = await res.text().catch(() => '');
-        console.warn(`[apiFetchJson] ${res.status} ${path}: ${text.slice(0, 200)}`);
+        logger.warn(`[apiFetchJson] ${res.status} ${path}: ${text.slice(0, 200)}`);
       }
       return null;
     }
@@ -147,7 +145,7 @@ export async function apiFetchJson<T>(path: string, init?: RequestInit): Promise
     return body as T;
   } catch (err) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(`[apiFetchJson] network error ${path}:`, err);
+      logger.warn(`[apiFetchJson] network error ${path}`, { error: String(err) });
     }
     return null;
   }
@@ -174,4 +172,3 @@ export async function apiFetchJsonWithStatus<T = unknown>(
   }
   return { ok: res.ok, status: res.status, data };
 }
-

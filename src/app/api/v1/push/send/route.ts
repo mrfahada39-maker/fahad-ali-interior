@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { broadcastPushNotification, sendPushNotification } from '@/lib/push-notifications';
 import { db } from '@/lib/db';
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     const result = await broadcastPushNotification(payload);
     return NextResponse.json({ success: true, target: 'broadcast', ...result });
   } catch (error) {
-    console.error('[PUSH_SEND_ERROR]', error);
+    logger.error('[PUSH_SEND_ERROR]', error);
     return NextResponse.json({ error: 'Failed to send push notifications' }, { status: 500 });
   }
 }

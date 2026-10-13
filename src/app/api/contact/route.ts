@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
       message: 'Your bespoke VIP inquiry has been recorded successfully.',
     });
   } catch (error) {
-    console.error('Failed to process contact inquiry:', error);
+    logger.error('Failed to process contact inquiry:', error);
     return NextResponse.json({ success: false, error: 'Failed to process inquiry' }, { status: 500 });
   }
 }

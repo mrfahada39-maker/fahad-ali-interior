@@ -89,7 +89,7 @@ const nextConfig: NextConfig = {
   experimental: {
     staleTimes: {
       dynamic: 30, // 30 seconds for dynamic pages (fresh cart, price, and stock updates)
-      static: 86400, // 24 hours for static pages (instant sub-0ms page switches)
+      static: 600, // 10 minutes (5-30 min window) for static pages
     },
     optimizePackageImports: [
       'lucide-react',
@@ -97,7 +97,6 @@ const nextConfig: NextConfig = {
       'recharts',
       'recharts/es6',
       'sonner',
-      'gsap',
       'zustand',
       'clsx',
       'tailwind-merge',
@@ -203,22 +202,30 @@ const nextConfig: NextConfig = {
         source:  '/api/v1/products',
         headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
-      // Ultra-Fast Asset Delivery — 1 year immutable CDN & browser caching
+      // Revalidated caching for unversioned static assets; 1-year immutable only for versioned filenames (.v1, .v2, etc.)
       {
         source:  '/icons/(.*)',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
       },
       {
         source:  '/images/(.*)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
+      {
+        source:  '/icons/:name*.v:ver.:ext',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source:  '/images/:name*.v:ver.:ext',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
         source:  '/favicon.ico',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
       },
       {
         source:  '/logo.svg',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
       },
       {
         source:  '/manifest.json',

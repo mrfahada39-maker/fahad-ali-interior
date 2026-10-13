@@ -46,7 +46,7 @@ describe('Phase 4: Code Quality, Modularization & Validation Schemas', () => {
     expect(authHandlerContent).toContain("@/app/api/auth/reset-password/route");
     expect(authHandlerContent).toContain("@/app/api/auth/verify-email/route");
     expect(authHandlerContent).toContain("@/app/api/auth/resend-verification/route");
-    expect(authHandlerContent).toContain("@/app/api/auth/check-2fa/route");
+    expect(authHandlerContent).not.toContain("@/app/api/auth/check-2fa/route");
   });
 
   it('extracts modular components and hooks from Checkout, AdminDashboard, and UserDashboard', () => {

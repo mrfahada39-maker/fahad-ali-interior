@@ -298,12 +298,17 @@ export async function handleCustomerRoutes(ctx: ApiDispatchContext): Promise<Nex
     return NextResponse.json({ notifications, unreadCount });
   }
 
-  // 15. POST /users/notifications/read or /customers/notifications/read
+  // 15. PATCH or POST /user/notifications or /users/notifications/read
   if (
-    method === 'POST' &&
-    (normalizedSegment === 'users/notifications/read' ||
+    (method === 'POST' || method === 'PATCH') &&
+    (normalizedSegment === 'user/notifications' ||
+      normalizedSegment === 'users/notifications' ||
+      normalizedSegment === 'customers/notifications' ||
+      normalizedSegment === 'users/notifications/read' ||
       normalizedSegment === 'user/notifications/read' ||
       normalizedSegment === 'customers/notifications/read' ||
+      segment === 'user/notifications' ||
+      segment === 'v1/user/notifications' ||
       segment === 'users/notifications/read' ||
       segment === 'v1/users/notifications/read' ||
       segment === 'customers/notifications/read' ||
@@ -311,12 +316,25 @@ export async function handleCustomerRoutes(ctx: ApiDispatchContext): Promise<Nex
   ) {
     const user = await getUserFromSessionOrToken(req);
     if (!user?.id) return NextResponse.json({ success: true });
-    await db.notification
-      .updateMany({
-        where: { userId: user.id, isNew: true },
-        data: { isNew: false },
-      })
-      .catch(() => {});
+    const body = (await req.json().catch(() => ({}))) as {
+      notificationId?: string;
+      all?: boolean;
+    };
+    if (body.notificationId) {
+      await db.notification
+        .updateMany({
+          where: { id: body.notificationId, userId: user.id },
+          data: { isNew: false },
+        })
+        .catch(() => {});
+    } else {
+      await db.notification
+        .updateMany({
+          where: { userId: user.id, isNew: true },
+          data: { isNew: false },
+        })
+        .catch(() => {});
+    }
     return NextResponse.json({ success: true });
   }
 

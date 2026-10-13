@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
@@ -12,7 +13,7 @@ export function safeApiErrorResponse(
   request?: Request
 ): NextResponse {
   const requestId = request?.headers?.get('x-request-id') || crypto.randomUUID();
-  console.error(`[API_ERROR][req:${requestId}] ${genericMessage}:`, error);
+  logger.error(`[API_ERROR][req:${requestId}] ${genericMessage}:`, error);
   return NextResponse.json(
     {
       error: genericMessage,

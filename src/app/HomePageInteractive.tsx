@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
+import { logger } from '@/lib/logger';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -95,7 +96,7 @@ export default function HomePageInteractive({
           if (data.reviews && Array.isArray(data.reviews)) setReviewsList(data.reviews);
         }
       } catch (err) {
-        console.error('Failed to load home bundle:', err);
+        logger.error('Failed to load home bundle:', err);
       }
     };
     loadHomeBundle();

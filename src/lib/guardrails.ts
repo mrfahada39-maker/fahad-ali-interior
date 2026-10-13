@@ -8,6 +8,7 @@
  * 3. Output sanitization & confidential token leak prevention
  * 4. Price & financial integrity validation
  */
+import { logger } from '@/lib/logger';
 
 import { recordAuditLog } from '@/lib/db-utils';
 
@@ -104,7 +105,7 @@ export class SecurityGuardrails {
           const mentionedPrice = parseFloat(match[1].replace(/,/g, ''));
           if (Math.abs(mentionedPrice - product.price) > 100) {
             if (process.env.NODE_ENV === 'development') {
-              console.warn(`Price mismatch detected for ${product.name}: mentioned ${mentionedPrice}, actual ${product.price}`);
+              logger.warn(`Price mismatch detected for ${product.name}: mentioned ${mentionedPrice}, actual ${product.price}`);
             }
             return false;
           }

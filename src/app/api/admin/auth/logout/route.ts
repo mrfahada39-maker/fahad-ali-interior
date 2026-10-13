@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { revokeAdminTokenAsync } from '@/lib/admin-auth';
 
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     return res;
   } catch (error) {
-    console.error('[ADMIN_AUTH_LOGOUT_ERROR]', error);
+    logger.error('[ADMIN_AUTH_LOGOUT_ERROR]', error);
     return NextResponse.json({ error: 'Server logout error' }, { status: 500 });
   }
 }
