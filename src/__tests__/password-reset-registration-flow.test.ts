@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterAll, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { POST as forgotPasswordPOST } from '@/app/api/auth/forgot-password/route';
@@ -53,9 +53,21 @@ jest.mock('@/lib/rate-limit', () => ({
 }));
 
 describe('Auth Security & Flows: Password Reset OTP & Multi-Account Registration/Login', () => {
+  const originalEnv = { ...process.env };
+
   beforeEach(() => {
     jest.clearAllMocks();
     jest.setTimeout(20000);
+    process.env = {
+      ...originalEnv,
+      SKIP_EMAIL_VERIFICATION: 'false',
+      SMTP_USER: 'admin@fahadali.pk',
+      SMTP_PASS: 'app-password-test',
+    };
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
   });
 
   // ── 1. Password Reset & OTP Delivery ───────────────────────────────────────
