@@ -886,7 +886,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                 <BarChart
                   data={orderStatusData}
                   margin={{ top: 22, right: 10, left: -20, bottom: 10 }}
-                  onClick={(state) => {
+                  onClick={(state: any) => {
                     if (state && state.activePayload && state.activePayload.length) {
                       setActiveTab('orders');
                     }
