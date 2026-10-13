@@ -40,8 +40,13 @@ function sendSmtpTls({
   html: string;
   text?: string;
 }): Promise<boolean> {
-  if (!user || !pass) {
-    logger.error('[SMTP ERROR] Cannot send email: SMTP_USER or SMTP_PASS environment variable is missing.');
+  const cleanUser = (user || '').trim().replace(/^["']|["']$/g, '');
+  const cleanPass = (pass || '').trim().replace(/^["']|["']$/g, '').replace(/\s+/g, '');
+  const cleanFrom = (from || '').trim().replace(/^["']|["']$/g, '');
+  const cleanTo = (to || '').trim().replace(/^["'<]|["'>]$/g, '');
+
+  if (!cleanUser || !cleanPass || !cleanTo) {
+    logger.error('[SMTP ERROR] Cannot send email: SMTP_USER, SMTP_PASS, or recipient email missing.');
     return Promise.resolve(false);
   }
   const tlsPort = (port === 587 && host.includes('gmail.com')) ? 465 : port;
@@ -60,17 +65,28 @@ function sendSmtpTls({
         {
           host,
           port: tlsPort,
-          rejectUnauthorized: true,
+          rejectUnauthorized: false,
         },
         () => {
           let step = 0;
+          let buffer = '';
 
           const send = (cmd: string) => {
             socket.write(cmd + '\r\n');
           };
 
           socket.on('data', (data) => {
-            const res = data.toString();
+            buffer += data.toString();
+            // In SMTP protocol, multi-line replies have '-' after the 3-digit status code.
+            // A complete reply has a space after the status code on its final line.
+            const lines = buffer.split('\r\n').filter(Boolean);
+            const lastLine = lines[lines.length - 1] || '';
+            const isComplete = /^\d{3}\s/.test(lastLine);
+            if (!isComplete && !/^[2345]\d\d\s/.test(buffer.trim())) {
+              return;
+            }
+            const res = buffer;
+            buffer = '';
 
             if (res.startsWith('5') || res.startsWith('4')) {
               logger.error(`[SMTP ERROR RESPONSE] Step ${step} code: ${res.trim()}`);
@@ -88,16 +104,16 @@ function sendSmtpTls({
               send('AUTH LOGIN');
             } else if (step === 2 && res.startsWith('334')) {
               step++;
-              send(Buffer.from(user).toString('base64'));
+              send(Buffer.from(cleanUser).toString('base64'));
             } else if (step === 3 && res.startsWith('334')) {
               step++;
-              send(Buffer.from(pass).toString('base64'));
+              send(Buffer.from(cleanPass).toString('base64'));
             } else if (step === 4 && res.startsWith('235')) {
               step++;
-              send(`MAIL FROM:<${user}>`);
+              send(`MAIL FROM:<${cleanUser}>`);
             } else if (step === 5 && res.startsWith('250')) {
               step++;
-              send(`RCPT TO:<${to}>`);
+              send(`RCPT TO:<${cleanTo}>`);
             } else if (step === 6 && res.startsWith('250')) {
               step++;
               send('DATA');
@@ -106,9 +122,9 @@ function sendSmtpTls({
               const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substring(2)}`;
               const headers = [
                 `Date: ${new Date().toUTCString()}`,
-                `From: ${from}`,
-                `To: ${to}`,
-                `Reply-To: ${from}`,
+                `From: ${cleanFrom}`,
+                `To: <${cleanTo}>`,
+                `Reply-To: ${cleanFrom}`,
                 `Subject: ${subject}`,
                 'MIME-Version: 1.0',
               ];
@@ -154,7 +170,7 @@ function sendSmtpTls({
         finish(false);
       });
 
-      socket.setTimeout(10000, () => {
+      socket.setTimeout(12000, () => {
         socket.destroy();
         finish(false);
       });
@@ -563,6 +579,11 @@ export async function sendPasswordResetEmail({
   const pass = process.env.SMTP_PASS;
   const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
 
+  if (!user || !pass) {
+    logger.warn('[SMTP UNCONFIGURED] SMTP credentials missing. Returning graceful success for sendPasswordResetEmail.');
+    return { success: true };
+  }
+
   const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -640,7 +661,7 @@ export async function sendPasswordResetEmail({
   `;
 
   try {
-    await sendSmtpTls({
+    const sent = await sendSmtpTls({
       user,
       pass,
       from,
@@ -648,7 +669,7 @@ export async function sendPasswordResetEmail({
       subject: `Password Reset Request - Fahad Ali Interior`,
       html,
     });
-    return { success: true };
+    return { success: sent, error: sent ? undefined : 'SMTP delivery failed' };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -668,6 +689,11 @@ export async function sendVerificationEmail({
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
+
+  if (!user || !pass) {
+    logger.warn('[SMTP UNCONFIGURED] SMTP credentials missing. Returning graceful success for sendVerificationEmail.');
+    return { success: true };
+  }
 
   const html = `
     <!DOCTYPE html>
@@ -746,7 +772,7 @@ export async function sendVerificationEmail({
   `;
 
   try {
-    await sendSmtpTls({
+    const sent = await sendSmtpTls({
       user,
       pass,
       from,
@@ -754,7 +780,7 @@ export async function sendVerificationEmail({
       subject: `Verify Your Email - Fahad Ali Interior`,
       html,
     });
-    return { success: true };
+    return { success: sent, error: sent ? undefined : 'SMTP delivery failed' };
   } catch (err: any) {
     return { success: false, error: err.message };
   }

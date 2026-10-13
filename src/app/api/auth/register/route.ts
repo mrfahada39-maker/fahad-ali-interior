@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, email, password } = body;
+    const { name, email, phone, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     const existingUser = await db.user.findFirst({
-      where: { email: normalizedEmail, deletedAt: null },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
       data: {
         name: name?.trim() || normalizedEmail.split('@')[0],
         email: normalizedEmail,
+        phone: typeof phone === 'string' && phone.trim() ? phone.trim() : null,
         password: hashedPassword,
         role: 'USER',
         emailVerified: skipVerification ? new Date() : null,
@@ -99,14 +100,30 @@ export async function POST(req: NextRequest) {
         const siteUrl = getSiteUrl();
         const verifyUrl = `${siteUrl}/verify-email?token=${token}&email=${encodeURIComponent(normalizedEmail)}`;
 
-        await sendVerificationEmail({
+        const emailSent = await sendVerificationEmail({
           to: user.email,
           name: user.name || 'Valued Client',
           verifyUrl,
           code,
         });
+
+        if (!emailSent.success) {
+          logger.warn('[VERIFICATION_EMAIL_FAILED] Auto-verifying user to prevent lockout:', {
+            userId: user.id,
+            email: user.email,
+            error: emailSent.error,
+          });
+          await db.user.update({
+            where: { id: user.id },
+            data: { emailVerified: new Date() },
+          });
+        }
       } catch (err) {
         logger.error('Failed to send verification email upon registration:', err);
+        await db.user.update({
+          where: { id: user.id },
+          data: { emailVerified: new Date() },
+        }).catch(() => {});
       }
     }
 

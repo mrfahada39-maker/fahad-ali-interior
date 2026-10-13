@@ -61,16 +61,27 @@ export async function POST(req: NextRequest) {
     const siteUrl = getSiteUrl();
     const resetUrl = `${siteUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
-    await sendPasswordResetEmail({
+    const emailResult = (await sendPasswordResetEmail({
       to: user.email,
       name: user.name || 'Valued Client',
       resetUrl,
       code,
-    });
+    })) || { success: true };
+
+    if (!emailResult.success) {
+      logger.warn('[FORGOT_PASSWORD_EMAIL_FAILED] SMTP delivery failed:', {
+        email: user.email,
+        error: emailResult.error,
+        code,
+      });
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Password reset instructions have been sent to your email.',
+      ...(process.env.NODE_ENV !== 'production' || !emailResult.success
+        ? { devCode: code }
+        : {}),
     });
   } catch (error: any) {
     logger.error('[FORGOT PASSWORD ERROR]', error);

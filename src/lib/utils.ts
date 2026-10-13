@@ -21,10 +21,13 @@ export function getSiteUrl(): string {
   return raw.replace(/\/$/, '');
 }
 
-/** True when local/dev may skip verified-email checks (see SKIP_EMAIL_VERIFICATION + NEXTAUTH_URL). */
+/** True when local/dev or explicitly configured to skip verified-email checks. */
 export function shouldSkipEmailVerification(): boolean {
-  if (process.env.SKIP_EMAIL_VERIFICATION !== 'true') return false;
-  if (process.env.NODE_ENV !== 'production') return true;
+  if (process.env.SKIP_EMAIL_VERIFICATION === 'true') return true;
+  if (process.env.NODE_ENV !== 'production') {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return true;
+    return process.env.SKIP_EMAIL_VERIFICATION !== 'false';
+  }
   const url = process.env.NEXTAUTH_URL ?? '';
   return url.includes('localhost') || url.includes('127.0.0.1');
 }

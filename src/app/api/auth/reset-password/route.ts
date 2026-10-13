@@ -54,6 +54,10 @@ export async function POST(req: NextRequest) {
       });
 
       if (existingUser) {
+        if (existingUser.deletedAt) {
+          await runDummyBcryptCompare(password);
+          return NextResponse.json({ error: 'Invalid or expired password reset link/code. Please request a new one.' }, { status: 400 });
+        }
         if (existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date()) {
           await runDummyBcryptCompare(password);
           return NextResponse.json({ error: 'Invalid or expired password reset link/code. Please request a new one.' }, { status: 400 });
@@ -62,7 +66,11 @@ export async function POST(req: NextRequest) {
         const resetRecord = await db.passwordResetToken.findFirst({
           where: {
             userId: existingUser.id,
-            tokenHash: { endsWith: cleanCode },
+            OR: [
+              { tokenHash: { endsWith: cleanCode } },
+              { tokenHash: { endsWith: `:${cleanCode}` } },
+              { tokenHash: cleanCode },
+            ],
             expiresAt: { gt: new Date() },
           },
           orderBy: { createdAt: 'desc' },
