@@ -10,6 +10,7 @@ import { NextRequest } from 'next/server';
 
 jest.mock('@/lib/admin-auth', () => ({
   getVerifiedAdmin: jest.fn(),
+  getVerifiedUser: jest.fn(),
   verifySignedTokenUserId: jest.fn(),
   isAdminRole: jest.fn((r: unknown) => String(r).toUpperCase() === 'ADMIN' || String(r).toUpperCase() === 'SUPER_ADMIN'),
 }));

@@ -1,13 +1,8 @@
 import { NextRequest } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { getServerSession } from 'next-auth';
-import { getToken } from 'next-auth/jwt';
-import crypto from 'crypto';
-import { authOptions } from '@/lib/auth';
-import { db } from '@/lib/db';
 import { clearCatalogMemoryCache } from '@/lib/catalog-api';
 import { invalidateHomePageDataCache } from '@/lib/home-page-data';
-import { getAdminTokenSecret } from '@/lib/admin-auth';
+import { getVerifiedUser, getVerifiedAdmin, type VerifiedUser } from '@/lib/admin-auth';
 
 export interface SessionUser {
   id?: string;
@@ -159,87 +154,22 @@ export const fallbackCategories = [
 ];
 
 export async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser | null> {
-  const adminCookie = req.cookies.get('fai_admin_token')?.value;
-  const authHeader = req.headers.get('authorization') || req.headers.get('x-enterprise-token') || adminCookie;
-  if (authHeader && authHeader.includes('fai_token_')) {
-    const cleanToken = authHeader.replace(/^Bearer\s+/i, '').trim();
-    const match = cleanToken.match(/fai_token_(.+)_(\d+)_([a-f0-9]+)/);
-    if (match) {
-      const [, userId, timestampStr, signature] = match;
-      const timestamp = parseInt(timestampStr, 10);
-      const maxAgeMs = 24 * 60 * 60 * 1000;
-      if (!isNaN(timestamp) && Date.now() - timestamp < maxAgeMs) {
-        const adminSecret = getAdminTokenSecret();
-        const nextAuthSecret = process.env.NEXTAUTH_SECRET || '';
-        const candidateSigs: string[] = [];
-        if (adminSecret) {
-          candidateSigs.push(
-            crypto.createHmac('sha256', adminSecret).update(`${userId}:${timestamp}:ADMIN`).digest('hex'),
-            crypto.createHmac('sha256', adminSecret).update(`${userId}:${timestamp}`).digest('hex')
-          );
-        }
-        if (nextAuthSecret && nextAuthSecret.length >= 32) {
-          candidateSigs.push(
-            crypto.createHmac('sha256', nextAuthSecret).update(`${userId}:${timestamp}`).digest('hex'),
-            crypto.createHmac('sha256', nextAuthSecret).update(`${userId}:${timestamp}:ADMIN`).digest('hex')
-          );
-        }
-        try {
-          const sigBuf = Buffer.from(signature, 'hex');
-          const isValidSig = candidateSigs.some((expected) => {
-            const expBuf = Buffer.from(expected, 'hex');
-            return sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
-          });
-          if (isValidSig) {
-            const dbUser = await db.user.findUnique({
-              where: { id: userId },
-              select: { id: true, email: true, role: true, deletedAt: true },
-            });
-            if (dbUser && !dbUser.deletedAt) {
-              return {
-                id: dbUser.id,
-                email: dbUser.email,
-                role: String(dbUser.role).toUpperCase(),
-              };
-            }
-          }
-        } catch {}
-      }
-    }
-  }
-
-  try {
-    const isHttps = req.url.startsWith('https://') || process.env.NODE_ENV === 'production';
-    const token =
-      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: isHttps })) ||
-      (await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: false }));
-    if (token) {
-      return {
-        id: token.id as string,
-        email: token.email as string,
-        role: String(token.role ?? '').toUpperCase(),
-      };
-    }
-  } catch {}
-
-  try {
-    const session = await getServerSession(authOptions);
-    if (session?.user) {
-      const sUser = session.user as SessionUser;
-      return {
-        id: sUser.id,
-        email: session.user.email || undefined,
-        role: String(sUser.role ?? '').toUpperCase(),
-      };
-    }
-  } catch {}
-
-  return null;
+  const verifier =
+    typeof getVerifiedUser === 'function'
+      ? getVerifiedUser
+      : (getVerifiedAdmin as unknown as (r: NextRequest, opts?: { allowAnyRole?: boolean }) => Promise<VerifiedUser | null>);
+  const verified = verifier ? await verifier(req, { allowAnyRole: true }) : null;
+  if (!verified) return null;
+  return {
+    id: verified.id,
+    email: verified.email,
+    role: verified.role,
+  };
 }
 
 export function requireAdmin(user: SessionUser | null): boolean {
   if (!user?.role) return false;
-  const r = user.role.toUpperCase();
+  const r = String(user.role).toUpperCase();
   return r === 'ADMIN' || r === 'SUPER_ADMIN';
 }
 

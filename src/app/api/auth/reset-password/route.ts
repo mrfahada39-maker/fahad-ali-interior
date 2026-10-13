@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { validatePasswordStrength, runDummyBcryptCompare } from '@/lib/password-policy';
+import { revokeAllUserTokensAsync } from '@/lib/admin-auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -109,6 +110,7 @@ export async function POST(req: NextRequest) {
 
     // Invalidate all active user sessions and refresh tokens to prevent session hijacking
     await Promise.all([
+      revokeAllUserTokensAsync(user.id).catch(() => {}),
       Promise.resolve(db.session?.deleteMany?.({ where: { userId: user.id } })).catch(() => {}),
       Promise.resolve(db.refreshToken?.deleteMany?.({ where: { userId: user.id } })).catch(() => {}),
       Promise.resolve(db.passwordResetToken?.deleteMany?.({ where: { userId: user.id } })).catch(() => {}),

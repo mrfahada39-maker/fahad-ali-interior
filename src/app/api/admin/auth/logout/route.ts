@@ -1,6 +1,11 @@
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
-import { revokeAdminTokenAsync } from '@/lib/admin-auth';
+import {
+  revokeAdminTokenAsync,
+  revokeAllUserTokensAsync,
+  parseAdminToken,
+  getVerifiedUser,
+} from '@/lib/admin-auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,6 +16,15 @@ export async function POST(req: NextRequest) {
 
     if (raw) {
       await revokeAdminTokenAsync(raw);
+      const parsed = parseAdminToken(raw);
+      if (parsed?.userId) {
+        await revokeAllUserTokensAsync(parsed.userId);
+      }
+    } else {
+      const user = await getVerifiedUser(req).catch(() => null);
+      if (user?.id) {
+        await revokeAllUserTokensAsync(user.id);
+      }
     }
 
     const res = NextResponse.json({

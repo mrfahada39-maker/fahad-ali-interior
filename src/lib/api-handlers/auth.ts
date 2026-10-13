@@ -23,6 +23,7 @@ import { POST as handleForgotPassword } from '@/app/api/auth/forgot-password/rou
 import { POST as handleResetPassword } from '@/app/api/auth/reset-password/route';
 import { POST as handleVerifyEmail } from '@/app/api/auth/verify-email/route';
 import { POST as handleResendVerification } from '@/app/api/auth/resend-verification/route';
+import { revokeAllUserTokensAsync } from '@/lib/admin-auth';
 import { ApiDispatchContext, getUserFromSessionOrToken, requireAdmin } from './shared';
 
 export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextResponse | null> {
@@ -219,6 +220,8 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
       },
     });
 
+    await revokeAllUserTokensAsync(dbUser.id);
+
     return NextResponse.json({ enabled: true, backupCodes });
   }
 
@@ -302,6 +305,8 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
       },
     });
 
+    await revokeAllUserTokensAsync(dbUser.id);
+
     await recordAuditLog({
       userId: dbUser.id,
       action: '2FA_DISABLED',
@@ -326,6 +331,12 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
       segment === 'v1/admin/account')
   ) {
     const user = await getUserFromSessionOrToken(req);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Authentication required.' },
+        { status: 401 }
+      );
+    }
     if (!requireAdmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden. Executive admin credentials required.' },
@@ -333,18 +344,19 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
       );
     }
     const body = await req.json().catch(() => ({}));
-    const admin = await db.user.findFirst({
-      where: { role: 'ADMIN', deletedAt: null },
+    const admin = await db.user.findUnique({
+      where: { id: user.id },
     });
-    if (admin) {
-      await db.user.update({
-        where: { id: admin.id },
-        data: {
-          name: body.name || admin.name,
-          phone: body.phone !== undefined ? body.phone : admin.phone,
-        },
-      });
+    if (!admin || admin.deletedAt) {
+      return NextResponse.json({ error: 'Admin account not found' }, { status: 404 });
     }
+    await db.user.update({
+      where: { id: admin.id },
+      data: {
+        name: body.name || admin.name,
+        phone: body.phone !== undefined ? body.phone : admin.phone,
+      },
+    });
     return NextResponse.json({ success: true, message: 'Admin account updated successfully' });
   }
 
@@ -356,6 +368,12 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
       segment === 'v1/admin/password')
   ) {
     const user = await getUserFromSessionOrToken(req);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Authentication required.' },
+        { status: 401 }
+      );
+    }
     if (!requireAdmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden. Executive admin credentials required.' },
@@ -367,14 +385,17 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
     const currentPassword = parsed.success ? parsed.data.currentPassword : rawBody.currentPassword;
     const newPassword = parsed.success ? parsed.data.newPassword : rawBody.newPassword;
 
+    if (!currentPassword) {
+      return NextResponse.json({ error: 'Current password is required' }, { status: 400 });
+    }
     const pwCheck = validatePasswordStrength(newPassword);
     if (!pwCheck.valid) {
       return NextResponse.json({ error: pwCheck.error }, { status: 400 });
     }
-    const admin = await db.user.findFirst({
-      where: { role: 'ADMIN', deletedAt: null },
+    const admin = await db.user.findUnique({
+      where: { id: user.id },
     });
-    if (!admin || !admin.password) {
+    if (!admin || !admin.password || admin.deletedAt) {
       return NextResponse.json({ error: 'Admin account not found' }, { status: 404 });
     }
     const isValid = await bcrypt.compare(currentPassword, admin.password);
@@ -386,6 +407,7 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
       where: { id: admin.id },
       data: { password: hashed },
     });
+    await revokeAllUserTokensAsync(admin.id);
     return NextResponse.json({ success: true, message: 'Admin password updated successfully' });
   }
 
