@@ -12,11 +12,11 @@ export async function POST(req: NextRequest) {
     const ip = getClientIp(req);
     const rl = await rateLimit(`resend_verify:${ip}`, 'register');
     if (!rl.allowed) {
- NextResponse.json(
-{ error: rl.error ||  },
-{ status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
-);
-}
+      return NextResponse.json(
+        { error: rl.error || 'Too many verification requests. Please wait a minute and try again.' },
+        { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+      );
+    }
 
     const body = await req.json().catch(() => ({}));
     const email = (body.email || '').trim().toLowerCase();
