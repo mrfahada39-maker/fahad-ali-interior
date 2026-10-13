@@ -159,7 +159,10 @@ export async function proxy(request: NextRequest) {
       if (pathname.includes('/auth/callback/credentials')) {
         const rl = await rateLimit(`login:${ip}`, 'login');
         if (!rl.allowed) {
-          return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
+          return NextResponse.json(
+            { error: rl.error || 'Too many login attempts. Please try again later.' },
+            { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+          );
         }
       }
       if (isUnsafeMethod(request.method) && !isSameOriginRequest(request)) {
@@ -175,16 +178,36 @@ export async function proxy(request: NextRequest) {
     // Rate limiting on sensitive API routes (brute-force and spam prevention)
     if (pathname.includes('/auth/login') || pathname.includes('/auth/signin')) {
       const rl = await rateLimit(`login:${ip}`, 'login');
-      if (!rl.allowed) return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Too many login attempts. Please try again later.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
     } else if (pathname.includes('/auth/register') || pathname.includes('/auth/signup')) {
       const rl = await rateLimit(`register:${ip}`, 'register');
-      if (!rl.allowed) return NextResponse.json({ error: 'Too many registration attempts. Please try again later.' }, { status: 429 });
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Too many registration attempts. Please try again later.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
     } else if (pathname.includes('/uploads')) {
       const rl = await rateLimit(`upload:${ip}`, 'upload');
-      if (!rl.allowed) return NextResponse.json({ error: 'Upload rate limit exceeded. Please wait.' }, { status: 429 });
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Upload rate limit exceeded. Please wait.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
     } else if (pathname.includes('/inquiries') || pathname.includes('/contact')) {
       const rl = await rateLimit(`inquiry:${ip}`, 'inquiry');
-      if (!rl.allowed) return NextResponse.json({ error: 'Too many inquiries submitted.' }, { status: 429 });
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Too many inquiries submitted.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
     }
 
     if (isUnsafeMethod(request.method) && !isSameOriginRequest(request)) {

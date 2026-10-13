@@ -15,11 +15,11 @@ export async function POST(req: NextRequest) {
     const ip = getClientIp(req);
     const rl = await rateLimit(`register:${ip}`, 'register');
     if (!rl.allowed) {
-      return NextResponse.json(
-        { error: 'Too many registration attempts. Please wait a minute and try again.' },
-        { status: 429 }
-      );
-    }
+ NextResponse.json(
+{ error: rl.error ||  },
+{ status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+);
+}
 
     const body = await req.json();
     const { name, email, password } = body;

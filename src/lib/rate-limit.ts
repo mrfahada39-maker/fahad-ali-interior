@@ -113,19 +113,27 @@ function checkShortLivedFallback(
   return { allowed: false, remaining: 0, resetTime: bucket.resetAt };
 }
 
+export interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  resetTime: number;
+  reason?: 'UNCONFIGURED' | 'RATE_LIMITED' | 'UPSTASH_ERROR';
+  error?: string;
+}
+
 export async function rateLimit(
   identifier: string,
   name: LimitName,
-): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
+): Promise<RateLimitResult> {
   const config = RATE_LIMITS[name];
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (!isRateLimitConfigured()) {
     if (isProduction) {
+      const missingMsg =
+        'Upstash Redis rate limiter is not configured in production. Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in environment variables.';
       if (!loggedMissingUpstashError) {
-        console.error(
-          '[RateLimit FATAL] Upstash Redis configuration (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) is missing in production! Per-instance memory limits are disabled.'
-        );
+        console.error(`[RateLimit FATAL] ${missingMsg}`);
         loggedMissingUpstashError = true;
       }
       // Do not fall back to per-instance memory limits in production when unconfigured
@@ -133,6 +141,8 @@ export async function rateLimit(
         allowed: false,
         remaining: 0,
         resetTime: Date.now() + config.windowMs,
+        reason: 'UNCONFIGURED',
+        error: missingMsg,
       };
     }
 

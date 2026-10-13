@@ -12,8 +12,8 @@ async function handleCheck2Fa(req: NextRequest) {
   const rl = await rateLimit(`check_2fa:${ip}`, 'login');
   if (!rl.allowed) {
     return NextResponse.json(
-      { error: 'Too many requests. Please wait a minute and try again.' },
-      { status: 429 }
+      { error: rl.error || 'Too many requests. Please wait a minute and try again.' },
+      { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
     );
   }
 

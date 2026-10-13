@@ -13,7 +13,10 @@ export async function POST(req: NextRequest) {
     const ip = getClientIp(req);
     const rl = await rateLimit(`admin_login:${ip}`, 'login');
     if (!rl.allowed) {
-      return NextResponse.json({ error: 'Too many login attempts. Please wait a minute and try again.' }, { status: 429 });
+      return NextResponse.json(
+        { error: rl.error || 'Too many login attempts. Please wait a minute and try again.' },
+        { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+      );
     }
 
     const body = await req.json().catch(() => null);

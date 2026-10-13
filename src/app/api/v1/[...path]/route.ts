@@ -46,11 +46,11 @@ async function handleApiV1Request(
     ) {
       const rl = await rateLimit(`orders:${ip}`, 'api');
       if (!rl.allowed) {
-        return NextResponse.json(
-          { error: 'Too many requests. Please wait and try again.' },
-          { status: 429 }
-        );
-      }
+ NextResponse.json(
+{ error: rl.error ||  },
+{ status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+);
+}
     }
 
     if (
@@ -64,11 +64,11 @@ async function handleApiV1Request(
     ) {
       const rl = await rateLimit(`contact:${ip}`, 'inquiry');
       if (!rl.allowed) {
-        return NextResponse.json(
-          { error: 'Too many requests. Please wait a minute and try again.' },
-          { status: 429 }
-        );
-      }
+ NextResponse.json(
+{ error: rl.error ||  },
+{ status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+);
+}
     }
 
     // Executive RBAC guard on all /admin/* paths (except public GET category reads)
