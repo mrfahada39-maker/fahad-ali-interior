@@ -154,3 +154,15 @@ export const adminPasswordChangeSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z.string().min(1, 'New password is required'),
 });
+
+export const enable2FaSchema = z.object({
+  token: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Verification token must be exactly 6 digits'),
+});
+
+export const disable2FaSchema = z.object({
+  password: z.string().min(1, 'Current password is required'),
+  token: z.string().trim().min(1, '2FA code or backup code is required'),
+});

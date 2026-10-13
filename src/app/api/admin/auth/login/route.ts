@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
         }
 
         try {
-          const check = verifySync({ token: totpCode, secret: plainSecret });
+          const check = verifySync({ token: totpCode, secret: plainSecret, epochTolerance: 30 });
           if (!check || !check.valid) {
             await recordFailed2Fa();
             return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });

@@ -140,7 +140,7 @@ const providers: NextAuthOptions['providers'] = [
           }
 
           try {
-            const check = verifySync({ token: totpCode, secret: plainSecret });
+            const check = verifySync({ token: totpCode, secret: plainSecret, epochTolerance: 30 });
             if (!check || !check.valid) {
               await recordFailed2Fa();
               throw new Error('INVALID_2FA_CODE');

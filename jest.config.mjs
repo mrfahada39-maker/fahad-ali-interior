@@ -13,8 +13,9 @@ const config = {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
   transform: {
-    "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }],
+    "^.+\\.[tj]sx?$": ["ts-jest", { tsconfig: "tsconfig.json" }],
   },
+  transformIgnorePatterns: ["node_modules/(?!(@scure|@noble|otplib)/)"],
 };
 
 export default config;

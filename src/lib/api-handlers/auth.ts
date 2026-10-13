@@ -1,10 +1,23 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { generateSecret, generateURI, verifySync } from 'otplib';
+import QRCode from 'qrcode';
 import { db } from '@/lib/db';
-import { encryptTotpSecret, hashBackupCode } from '@/lib/totp-crypto';
+import {
+  decryptTotpSecret,
+  encryptTotpSecret,
+  hashBackupCode,
+  verifyBackupCode,
+} from '@/lib/totp-crypto';
+import { rateLimit } from '@/lib/rate-limit';
+import { recordAuditLog } from '@/lib/db-utils';
 import { validatePasswordStrength } from '@/lib/password-policy';
-import { adminPasswordChangeSchema } from '@/lib/validations/api-schemas';
+import {
+  adminPasswordChangeSchema,
+  enable2FaSchema,
+  disable2FaSchema,
+} from '@/lib/validations/api-schemas';
 import { POST as handleRegister } from '@/app/api/auth/register/route';
 import { POST as handleForgotPassword } from '@/app/api/auth/forgot-password/route';
 import { POST as handleResetPassword } from '@/app/api/auth/reset-password/route';
@@ -13,7 +26,7 @@ import { POST as handleResendVerification } from '@/app/api/auth/resend-verifica
 import { ApiDispatchContext, getUserFromSessionOrToken, requireAdmin } from './shared';
 
 export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextResponse | null> {
-  const { method, segment, normalizedSegment, req } = ctx;
+  const { method, segment, normalizedSegment, req, ip } = ctx;
 
   // Delegate canonical auth routes so each exists in one place
   if (
@@ -65,54 +78,243 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
   }
 
   // 2FA Status, Setup, Enable, Disable
-  if (segment.includes('auth/2fa/status')) {
+  const is2faStatus =
+    normalizedSegment === 'auth/2fa/status' ||
+    segment === 'auth/2fa/status' ||
+    segment === 'v1/auth/2fa/status';
+
+  const is2faSetup =
+    normalizedSegment === 'auth/2fa/setup' ||
+    segment === 'auth/2fa/setup' ||
+    segment === 'v1/auth/2fa/setup';
+
+  const is2faEnable =
+    normalizedSegment === 'auth/2fa/enable' ||
+    segment === 'auth/2fa/enable' ||
+    segment === 'v1/auth/2fa/enable';
+
+  const is2faDisable =
+    normalizedSegment === 'auth/2fa/disable' ||
+    segment === 'auth/2fa/disable' ||
+    segment === 'v1/auth/2fa/disable';
+
+  if (is2faStatus) {
+    if (method !== 'GET') {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    }
     const user = await getUserFromSessionOrToken(req);
-    if (!user) return NextResponse.json({ enabled: false });
-    const u = await db.user.findFirst({ where: { id: user.id } }).catch(() => null);
+    if (!user?.id) return NextResponse.json({ enabled: false });
+    const u = await db.user.findUnique({
+      where: { id: user.id },
+      select: { totpEnabled: true },
+    }).catch(() => null);
     return NextResponse.json({ enabled: Boolean(u?.totpEnabled) });
   }
 
-  if (segment.includes('auth/2fa/setup')) {
+  if (is2faSetup) {
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    }
     const user = await getUserFromSessionOrToken(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const randomSecret = crypto.randomBytes(16).toString('hex').toUpperCase();
-    await db.user
-      .update({
-        where: { id: user.id },
-        data: { totpSecret: encryptTotpSecret(randomSecret) },
-      })
-      .catch(() => {});
-    const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-      `otpauth://totp/FahadAliInterior:${user.email}?secret=${randomSecret}&issuer=FahadAliInterior`
-    )}`;
-    return NextResponse.json({ qrCode, manualKey: randomSecret });
+    if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const rl = await rateLimit(`2fa_setup:${user.id || ip}`, 'login');
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: rl.error || 'Too many requests. Please wait a minute and try again.' },
+        { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+      );
+    }
+
+    const dbUser = await db.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, email: true, totpEnabled: true },
+    });
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    if (dbUser.totpEnabled) {
+      return NextResponse.json({ error: '2FA is already enabled' }, { status: 409 });
+    }
+
+    const secret = generateSecret();
+    const otpauthUri = generateURI({
+      secret,
+      label: dbUser.email,
+      issuer: 'Fahad Ali Interior',
+    });
+    const qrCode = await QRCode.toDataURL(otpauthUri);
+
+    await db.user.update({
+      where: { id: dbUser.id },
+      data: {
+        totpSecret: encryptTotpSecret(secret),
+        totpEnabled: false,
+      },
+    });
+
+    return NextResponse.json({ qrCode, manualKey: secret });
   }
 
-  if (segment.includes('auth/2fa/enable')) {
+  if (is2faEnable) {
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    }
     const user = await getUserFromSessionOrToken(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const rl = await rateLimit(`2fa_enable:${user.id || ip}`, 'login');
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: rl.error || 'Too many attempts. Please wait a minute and try again.' },
+        { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+      );
+    }
+
+    const rawBody = await req.json().catch(() => null);
+    const parsed = enable2FaSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'A 6-digit verification code is required' },
+        { status: 400 }
+      );
+    }
+    const { token } = parsed.data;
+
+    const dbUser = await db.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, totpSecret: true, totpEnabled: true },
+    });
+    if (!dbUser || !dbUser.totpSecret) {
+      return NextResponse.json({ error: '2FA setup must be initiated first' }, { status: 400 });
+    }
+
+    const plainSecret = decryptTotpSecret(dbUser.totpSecret);
+    if (!plainSecret) {
+      return NextResponse.json({ error: 'Invalid 2FA secret' }, { status: 400 });
+    }
+
+    let isValid = false;
+    try {
+      const check = verifySync({ token, secret: plainSecret, epochTolerance: 30 });
+      isValid = Boolean(check && check.valid);
+    } catch {
+      isValid = false;
+    }
+
+    if (!isValid) {
+      return NextResponse.json({ error: 'Invalid verification code' }, { status: 400 });
+    }
+
     const backupCodes = Array.from({ length: 8 }, () =>
       crypto.randomBytes(4).toString('hex').toUpperCase()
     );
     const hashedBackupCodes = backupCodes.map((code) => hashBackupCode(code));
-    await db.user
-      .update({
-        where: { id: user.id },
-        data: { totpEnabled: true, backupCodes: hashedBackupCodes },
-      })
-      .catch(() => {});
+
+    await db.user.update({
+      where: { id: dbUser.id },
+      data: {
+        totpEnabled: true,
+        backupCodes: hashedBackupCodes,
+      },
+    });
+
     return NextResponse.json({ enabled: true, backupCodes });
   }
 
-  if (segment.includes('auth/2fa/disable')) {
+  if (is2faDisable) {
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    }
     const user = await getUserFromSessionOrToken(req);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    await db.user
-      .update({
-        where: { id: user.id },
-        data: { totpEnabled: false, totpSecret: null, backupCodes: [] },
-      })
-      .catch(() => {});
+    if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const rl = await rateLimit(`2fa_disable:${user.id || ip}`, 'login');
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: rl.error || 'Too many attempts. Please wait a minute and try again.' },
+        { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+      );
+    }
+
+    const rawBody = await req.json().catch(() => null);
+    const parsed = disable2FaSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Current password and 2FA code are required' },
+        { status: 400 }
+      );
+    }
+    const { password, token } = parsed.data;
+
+    const dbUser = await db.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        totpSecret: true,
+        totpEnabled: true,
+        backupCodes: true,
+      },
+    });
+    if (!dbUser || !dbUser.totpEnabled) {
+      return NextResponse.json({ error: '2FA is not enabled' }, { status: 400 });
+    }
+    if (!dbUser.password) {
+      return NextResponse.json(
+        { error: 'Account password required to disable 2FA' },
+        { status: 400 }
+      );
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, dbUser.password);
+    if (!isPasswordValid) {
+      return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });
+    }
+
+    let codeValid = false;
+    const matchedBackup = verifyBackupCode(token, dbUser.backupCodes || []);
+    if (matchedBackup) {
+      codeValid = true;
+    } else if (dbUser.totpSecret) {
+      const plainSecret = decryptTotpSecret(dbUser.totpSecret);
+      if (plainSecret) {
+        try {
+          const check = verifySync({ token, secret: plainSecret, epochTolerance: 30 });
+          codeValid = Boolean(check && check.valid);
+        } catch {
+          codeValid = false;
+        }
+      }
+    }
+
+    if (!codeValid) {
+      return NextResponse.json({ error: 'Invalid 2FA code or backup code' }, { status: 400 });
+    }
+
+    await db.user.update({
+      where: { id: dbUser.id },
+      data: {
+        totpEnabled: false,
+        totpSecret: null,
+        backupCodes: [],
+      },
+    });
+
+    await recordAuditLog({
+      userId: dbUser.id,
+      action: '2FA_DISABLED',
+      entity: 'User',
+      entityId: dbUser.id,
+      ip,
+      userAgent: req.headers.get('user-agent'),
+      metadata: {
+        email: dbUser.email,
+        disabledAt: new Date().toISOString(),
+      },
+    });
+
     return NextResponse.json({ disabled: true });
   }
 
