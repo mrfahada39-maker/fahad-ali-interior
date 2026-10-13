@@ -19,17 +19,24 @@ let requestIdStorage: RequestIdStorage = {
   getStore: () => undefined,
 };
 
+// AsyncLocalStorage is only available in the Node.js runtime. It is resolved at
+// runtime via process.getBuiltinModule (not a static require) so that bundlers
+// never try to resolve 'async_hooks' for the browser/edge bundles. In those
+// environments we silently keep the no-op fallback above.
 try {
-  const { AsyncLocalStorage } = require('async_hooks');
-  if (AsyncLocalStorage) {
-    const als = new AsyncLocalStorage();
+  const nodeProcess = (globalThis as { process?: { getBuiltinModule?: (id: string) => unknown } }).process;
+  const asyncHooks = nodeProcess?.getBuiltinModule?.('node:async_hooks') as
+    | { AsyncLocalStorage?: new () => { run<T>(id: string, fn: () => T): T; getStore(): unknown } }
+    | undefined;
+  if (asyncHooks?.AsyncLocalStorage) {
+    const als = new asyncHooks.AsyncLocalStorage();
     requestIdStorage = {
       run: <T>(id: string, fn: () => T) => als.run(id, fn),
       getStore: () => als.getStore() as string | undefined,
     };
   }
 } catch {
-  // Edge runtime — use noop fallback
+  // Edge/browser runtime — use noop fallback
 }
 
 export function runWithRequestId<T>(id: string, fn: () => T): T {
