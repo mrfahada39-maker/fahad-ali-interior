@@ -72,8 +72,13 @@ function ResetPasswordContent() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!password || password.length < 8) {
-      toast.error('Password must be at least 8 characters long.');
+    if (!password || password.length < 10) {
+      toast.error('Password must be at least 10 characters long.');
+      return;
+    }
+
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      toast.error('Password must contain both letters and numbers.');
       return;
     }
 
@@ -228,7 +233,7 @@ function ResetPasswordContent() {
 
           <div>
             <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-[#7A6354]">
-              New Password (Min 8 Characters)
+              New Password (Min 10 Characters, Letters & Numbers)
             </Label>
             <div className="relative mt-1.5">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9E8A78]" size={16} />
@@ -236,8 +241,8 @@ function ResetPasswordContent() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 required
-                minLength={8}
-                placeholder="••••••••"
+                minLength={10}
+                placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10 pr-10 h-11 bg-[#FAF7F2] border-[#E2D9CD] focus:border-[#B88E4B] text-[#221814] rounded-xl text-sm"
@@ -262,8 +267,8 @@ function ResetPasswordContent() {
                 id="confirmPassword"
                 type={showPassword ? 'text' : 'password'}
                 required
-                minLength={8}
-                placeholder="••••••••"
+                minLength={10}
+                placeholder="••••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="pl-10 pr-10 h-11 bg-[#FAF7F2] border-[#E2D9CD] focus:border-[#B88E4B] text-[#221814] rounded-xl text-sm"
