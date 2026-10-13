@@ -18,13 +18,16 @@ export interface OrderEmailData {
   couponCode?: string | null;
 }
 
+const FALLBACK_SMTP_USER = 'mrfahada39@gmail.com';
+const FALLBACK_SMTP_PASS = 'naqxyqlglbvegztw';
+
 // Pure Node.js TLS SMTP Sender - 0 External Dependencies, 100% Reliable across all Next.js/Vercel versions
 function sendSmtpTls({
   host = process.env.SMTP_HOST || 'smtp.gmail.com',
   port = Number(process.env.SMTP_PORT) || 465,
-  user = process.env.SMTP_USER,
-  pass = process.env.SMTP_PASS,
-  from = process.env.SMTP_FROM || (process.env.SMTP_USER ? `Fahad Ali Interior <${process.env.SMTP_USER}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>'),
+  user = process.env.SMTP_USER || (process.env.NODE_ENV !== 'test' ? FALLBACK_SMTP_USER : undefined),
+  pass = process.env.SMTP_PASS || (process.env.NODE_ENV !== 'test' ? FALLBACK_SMTP_PASS : undefined),
+  from = process.env.SMTP_FROM || `Fahad Ali Interior <${user || FALLBACK_SMTP_USER}>`,
   to,
   subject,
   html,
@@ -578,9 +581,10 @@ export async function sendPasswordResetEmail({
   resetUrl: string;
   code?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
+  const isTest = process.env.NODE_ENV === 'test';
+  const user = process.env.SMTP_USER || (!isTest ? FALLBACK_SMTP_USER : undefined);
+  const pass = process.env.SMTP_PASS || (!isTest ? FALLBACK_SMTP_PASS : undefined);
+  const from = process.env.SMTP_FROM || `Fahad Ali Interior <${user || FALLBACK_SMTP_USER}>`;
 
   if (!user || !pass) {
     logger.warn('[SMTP UNCONFIGURED] SMTP credentials missing. Returning graceful success for sendPasswordResetEmail.');
@@ -705,9 +709,10 @@ export async function sendVerificationEmail({
   verifyUrl: string;
   code?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
+  const isTest = process.env.NODE_ENV === 'test';
+  const user = process.env.SMTP_USER || (!isTest ? FALLBACK_SMTP_USER : undefined);
+  const pass = process.env.SMTP_PASS || (!isTest ? FALLBACK_SMTP_PASS : undefined);
+  const from = process.env.SMTP_FROM || `Fahad Ali Interior <${user || FALLBACK_SMTP_USER}>`;
 
   if (!user || !pass) {
     logger.warn('[SMTP UNCONFIGURED] SMTP credentials missing. Returning graceful success for sendVerificationEmail.');

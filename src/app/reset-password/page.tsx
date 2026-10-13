@@ -46,7 +46,12 @@ function ResetPasswordContent() {
 
     setLoading(true);
     try {
-      const { ok, data } = await apiFetchJsonWithStatus<{ success?: boolean; error?: string; message?: string }>(
+      const { ok, data } = await apiFetchJsonWithStatus<{
+        success?: boolean;
+        error?: string;
+        message?: string;
+        devCode?: string;
+      }>(
         '/api/auth/forgot-password',
         {
           method: 'POST',
@@ -56,7 +61,12 @@ function ResetPasswordContent() {
       );
 
       if (ok) {
-        toast.success(data?.message || 'Reset code sent to your email!');
+        if (data?.devCode) {
+          setCode(data.devCode);
+          toast.success(`Verification code: ${data.devCode}`);
+        } else {
+          toast.success(data?.message || 'Reset code sent to your email!');
+        }
         setStep('RESET');
       } else {
         toast.error(data?.error || 'Failed to send reset code.');
