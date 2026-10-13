@@ -129,6 +129,9 @@ function sendSmtpTls({
                 'MIME-Version: 1.0',
               ];
 
+              const normalizedHtml = html.replace(/\r?\n/g, '\r\n');
+              const normalizedText = (text || '').replace(/\r?\n/g, '\r\n');
+
               let body = '';
               if (text) {
                 headers.push(`Content-Type: multipart/alternative; boundary="${boundary}"`);
@@ -137,20 +140,20 @@ function sendSmtpTls({
                   'Content-Type: text/plain; charset=UTF-8',
                   'Content-Transfer-Encoding: 7bit',
                   '',
-                  text,
+                  normalizedText,
                   '',
                   `--${boundary}`,
                   'Content-Type: text/html; charset=UTF-8',
                   'Content-Transfer-Encoding: 8bit',
                   '',
-                  html,
+                  normalizedHtml,
                   '',
                   `--${boundary}--`,
                 ].join('\r\n');
               } else {
                 headers.push('Content-Type: text/html; charset=UTF-8');
                 headers.push('Content-Transfer-Encoding: 8bit');
-                body = html;
+                body = normalizedHtml;
               }
 
               const msg = headers.join('\r\n') + '\r\n\r\n' + body + '\r\n.';
@@ -660,14 +663,30 @@ export async function sendPasswordResetEmail({
     </html>
   `;
 
+  const plainText = `FAHAD ALI & INTERIOR - PASSWORD RESET
+
+Assalam-o-Alaikum ${name},
+
+We received a request to reset your password for your Fahad Ali Interior VIP account.
+
+Your 6-Digit Verification Code is: ${code || ''}
+
+Reset Link: ${resetUrl}
+
+This security link will expire in 60 minutes. If you did not request this, please disregard this email.
+
+Lahore Flagship Showroom & Atelier, Pakistan.
+`;
+
   try {
     const sent = await sendSmtpTls({
       user,
       pass,
       from,
       to,
-      subject: `Password Reset Request - Fahad Ali Interior`,
+      subject: code ? `Your 6-Digit Password Reset Code is ${code} - Fahad Ali Interior` : `Password Reset Request - Fahad Ali Interior`,
       html,
+      text: plainText,
     });
     return { success: sent, error: sent ? undefined : 'SMTP delivery failed' };
   } catch (err: any) {
@@ -771,14 +790,28 @@ export async function sendVerificationEmail({
     </html>
   `;
 
+  const plainText = `FAHAD ALI & INTERIOR - EMAIL VERIFICATION
+
+Assalam-o-Alaikum ${name},
+
+Welcome to Fahad Ali Interior! Please verify your email to unlock exclusive VIP concierge services.
+
+${code ? `Your Verification Code is: ${code}\n\n` : ''}Verification Link: ${verifyUrl}
+
+This security link will expire in 24 hours. If you did not create this account, please disregard this email.
+
+Lahore Flagship Showroom & Atelier, Pakistan.
+`;
+
   try {
     const sent = await sendSmtpTls({
       user,
       pass,
       from,
       to,
-      subject: `Verify Your Email - Fahad Ali Interior`,
+      subject: code ? `Your Verification Code is ${code} - Fahad Ali Interior` : `Verify Your Email - Fahad Ali Interior`,
       html,
+      text: plainText,
     });
     return { success: sent, error: sent ? undefined : 'SMTP delivery failed' };
   } catch (err: any) {
