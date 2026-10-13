@@ -199,7 +199,7 @@ export const authOptions: NextAuthOptions = {
         let dbUser: {
           id: string;
           email: string;
-          name: string;
+          name: string | null;
           role: import('@prisma/client').UserRole;
           emailVerified: Date | null;
           deletedAt?: Date | null;

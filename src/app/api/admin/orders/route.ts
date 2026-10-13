@@ -112,7 +112,7 @@ export async function PUT(req: NextRequest) {
         ? `Your order #${shortId} status is now ${updated.status}.`
         : `Payment status for order #${shortId} is now ${updated.paymentStatus}.`;
       await db.notification
-        .create({
+        ?.create({
           data: {
             userId: updated.userId,
             title: `Order #${shortId} ${updateData.status ? String(updated.status) : 'Payment Updated'}`,
@@ -121,7 +121,7 @@ export async function PUT(req: NextRequest) {
             isNew: true,
           },
         })
-        .catch(() => {});
+        ?.catch(() => {});
     }
 
     return NextResponse.json({

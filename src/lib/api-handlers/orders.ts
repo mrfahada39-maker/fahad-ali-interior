@@ -487,7 +487,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
 
     if (targetUserId) {
       await db.notification
-        .create({
+        ?.create({
           data: {
             userId: targetUserId,
             title: `Order #${newOrder.id.slice(-6).toUpperCase()} Placed`,
@@ -496,7 +496,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
             isNew: true,
           },
         })
-        .catch(() => {});
+        ?.catch(() => {});
     }
 
     const guestTrackingToken = newOrder.shippingEmail
@@ -757,7 +757,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
           ? `Your order #${shortId} status is now ${updated.status}.`
           : `Payment status for order #${shortId} is now ${updated.paymentStatus}.`;
         await db.notification
-          .create({
+          ?.create({
             data: {
               userId: updated.userId,
               title: `Order #${shortId} ${updateData.status ? String(updated.status) : 'Payment Updated'}`,
@@ -766,7 +766,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
               isNew: true,
             },
           })
-          .catch(() => {});
+          ?.catch(() => {});
       }
 
       return NextResponse.json({
