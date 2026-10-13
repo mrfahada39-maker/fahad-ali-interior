@@ -53,9 +53,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@prisma/client', 'bcryptjs', 'sharp', 'nodemailer'],
   productionBrowserSourceMaps: false,
   compiler: {
-    // Strip all console.* calls in production — errors guarded by dev checks in code
-    // API route errors still go to server logs (not browser console)
-    removeConsole: process.env.NODE_ENV === 'production' ? true : false,
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
   },
 
   outputFileTracingExcludes: {
