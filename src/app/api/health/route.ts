@@ -4,12 +4,12 @@ import { getVerifiedAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req?: NextRequest) {
+export async function GET(req: NextRequest) {
   const dbHealth = await checkDatabaseHealth();
   const isHealthy = dbHealth.ok;
   const statusCode = isHealthy ? 200 : 503;
 
-  const admin = req ? await getVerifiedAdmin(req).catch(() => null) : null;
+  const admin = await getVerifiedAdmin(req).catch(() => null);
 
   if (!admin) {
     return NextResponse.json(
