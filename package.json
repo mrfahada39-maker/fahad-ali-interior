@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo -p 3000",
-    "build": "next build && node scripts/prune-build.js",
+    "build": "next build --webpack && node scripts/prune-build.js",
     "start": "next start -p 3000",
     "test:e2e": "playwright test",
     "test:e2e:report": "npm run test:e2e && node scripts/convert-playwright-results.js",
