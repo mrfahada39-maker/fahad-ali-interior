@@ -139,7 +139,6 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
   metadataBase: new URL(siteUrl),
-  alternates: { canonical: "/" },
   robots: { index: true, follow: true },
 };
 

@@ -1,9 +1,16 @@
+import { Metadata } from 'next';
 import StoreShell from '@/components/StoreShell';
 import HomePageInteractive from './HomePageInteractive';
 import { getHomePageData } from '@/lib/home-page-data';
 
 // Next.js ISR (Incremental Static Regeneration) — edge cached for 0ms TTFB
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/',
+  },
+};
 
 export default async function HomePage() {
   // Fetch homepage bundle data on the server with in-memory caching

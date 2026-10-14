@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: 'Shop — Luxury Furniture Collection',
   description:
     'Browse our collection of handcrafted luxury furniture. Premium beds, sofas, dining sets, and wardrobes crafted in Pakistan.',
+  alternates: {
+    canonical: '/shop',
+  },
   openGraph: {
     title: 'Shop | Fahad Ali Interior',
     description: 'Handcrafted luxury furniture collection — Beds, Sofas, Dining, Wardrobes.',

@@ -4,10 +4,16 @@ import Link from 'next/link';
 import { getHomePageData } from '@/lib/home-page-data';
 import { resolveImageUrl, LOCAL_IMAGES } from '@/lib/images';
 
+import type { Metadata } from 'next';
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Categories | Fahad Ali Interior',
+  description: 'Explore bespoke solid Sheesham luxury furniture collections by category.',
+  alternates: {
+    canonical: '/shop/categories',
+  },
 };
 
 const fallbackCategories = [

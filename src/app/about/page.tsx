@@ -9,6 +9,9 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: 'About Us — Lahore Heritage Craftsmanship',
   description: 'Learn about Fahad Ali Interior: handcrafted solid Sheesham luxury furniture, generational woodworking masters, and bespoke royal craftsmanship from Lahore, Pakistan.',
+  alternates: {
+    canonical: '/about',
+  },
 };
 
 export default function AboutPage() {

@@ -11,13 +11,13 @@ export class MultiProviderLlm {
   ): Promise<{ text: string; provider: string } | null> {
     const enrichedSystemPrompt = `${systemPrompt}
 
-## UNIVERSAL SUPER-INTELLIGENT AI IDENTITY (ChatGPT / Claude / DeepSeek / Groq Level):
-- You are a world-class, super-intelligent AI endowed with comprehensive universal knowledge across ALL domains (Science, Technology, History, Mathematics, Medicine, Coding, Literature, World Geopolitics, Art, Philosophy, Daily Life Advice, Poetry, etc.).
-- You are ALSO the Executive AI Ambassador for **FAHAD ALI INTERIOR** (Lahore, Pakistan).
+## COMPREHENSIVE AI INTELLIGENCE & COMMUNICATION EXCELLENCE (ChatGPT / Gemini / Groq Level):
+- You are a world-class, super-intelligent AI endowed with comprehensive universal knowledge across ALL domains (Interior Architecture, Fine Woodworking, Furniture Design, Color Theory, Room Acoustics, Materials, Pricing, and Worldwide General Knowledge).
+- You are ALSO the Senior Executive AI Concierge & Ambassador for **FAHAD ALI INTERIOR** (Chiniot & Lahore, Pakistan).
 - You speak fluent, natural, respectful **Roman Urdu, Urdu script, English, and any language the user speaks**.
-- **UNIVERSAL CAPABILITY:** You can answer ANY question about anything in the world with high intelligence, nuance, and clarity.
-- **FURNITURE & STORE CONTEXT:** When the user asks about furniture, interior design, prices, materials, or room decoration, you seamlessly use your specialized knowledge of 100% Solid Seasoned Sheesham Wood (8-12% moisture kiln-dried, lifetime anti-termite guarantee), room layouts, custom sizing, and any active promo voucher listed in the system context.
-- Always deliver clear, helpful, well-structured answers with markdown bolding and bullet points. Never refuse to answer legitimate general knowledge queries!`;
+- **COMPREHENSIVE ANSWERS:** Deliver full, articulate, deeply helpful answers like ChatGPT and Gemini. Provide structured markdown headings (###), comparison tables for products/prices, and bullet points. Never provide cut-off, lazy, or truncated one-sentence answers!
+- **FURNITURE & STORE CONTEXT:** When answering furniture or interior queries, seamlessly use your deep knowledge of 100% Solid Seasoned Sheesham Wood (8–12% moisture kiln-dried, official 10-year anti-termite guarantee), room layouts, custom dimensions, and any active promo vouchers.
+- **GENERAL QUERIES:** Answer any question with high intelligence, clarity, and precision. Never refuse legitimate general knowledge queries!`;
 
     const groqKey = process.env.GROQ_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY;
@@ -44,8 +44,8 @@ export class MultiProviderLlm {
             body: JSON.stringify({
               model,
               messages: formattedMessages,
-              temperature: 0.6,
-              max_tokens: 380,
+              temperature: 0.7,
+              max_tokens: 3000,
             }),
           });
 
@@ -79,7 +79,7 @@ export class MultiProviderLlm {
             body: JSON.stringify({
               contents,
               systemInstruction: { parts: [{ text: enrichedSystemPrompt }] },
-              generationConfig: { temperature: 0.7, maxOutputTokens: 800 },
+              generationConfig: { temperature: 0.7, maxOutputTokens: 3000 },
             }),
           });
 
@@ -112,7 +112,7 @@ export class MultiProviderLlm {
             model,
             messages: formattedMessages,
             temperature: 0.7,
-            max_tokens: 800,
+            max_tokens: 2500,
           }),
         });
 

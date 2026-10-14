@@ -7,6 +7,9 @@ import { Scale, Crown, ShieldCheck, Truck, RotateCcw, CheckCircle2, Phone, Arrow
 export const metadata: Metadata = {
   title: 'Terms of Sale & Royal Warranty | Fahad Ali Interior',
   description: 'Official terms of sale, 10-year anti-termite guarantee, white-glove nationwide delivery, and bespoke custom furniture protocols.',
+  alternates: {
+    canonical: '/terms',
+  },
 };
 
 export default function TermsPage() {

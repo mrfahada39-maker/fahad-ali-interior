@@ -7,6 +7,9 @@ import { ShieldCheck, Lock, EyeOff, FileText, CheckCircle2, Phone, Mail, ArrowRi
 export const metadata: Metadata = {
   title: 'Privacy & Data Governance | Fahad Ali Interior',
   description: 'Enterprise privacy and encryption protocols protecting your furniture orders, design blueprints, and payment verifications.',
+  alternates: {
+    canonical: '/privacy',
+  },
 };
 
 export default function PrivacyPage() {

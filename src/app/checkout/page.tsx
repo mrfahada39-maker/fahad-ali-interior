@@ -1,5 +1,18 @@
-﻿import StoreShell from '@/components/StoreShell';
+import type { Metadata } from 'next';
+import StoreShell from '@/components/StoreShell';
 import dynamic from 'next/dynamic';
+
+export const metadata: Metadata = {
+  title: 'Secure Checkout | Fahad Ali Interior',
+  description: 'Complete your luxury furniture acquisition with secure bank cards, COD, Raast, or installment options.',
+  alternates: {
+    canonical: '/checkout',
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 const Checkout = dynamic(() => import('@/components/Checkout'), {
   loading: () => (

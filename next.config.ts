@@ -53,7 +53,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@prisma/client', 'bcryptjs', 'sharp', 'nodemailer'],
   productionBrowserSourceMaps: false,
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+    removeConsole: { exclude: ['error', 'warn'] },
   },
 
   outputFileTracingExcludes: {

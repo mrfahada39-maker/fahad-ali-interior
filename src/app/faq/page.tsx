@@ -7,6 +7,9 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: 'FAQ — Frequently Asked Questions',
   description: 'Find answers to common questions about our luxury furniture, delivery, payment options, customization, and warranty policies.',
+  alternates: {
+    canonical: '/faq',
+  },
   openGraph: {
     title: 'FAQ | Fahad Ali Interior',
     description: 'Frequently asked questions about luxury furniture, delivery, and services.',

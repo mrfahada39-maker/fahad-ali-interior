@@ -7,6 +7,9 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: 'Contact Us',
   description: 'Connect with Fahad Ali Interior for custom furniture inquiries, bespoke royal commissions, and flagship atelier showroom appointments.',
+  alternates: {
+    canonical: '/contact',
+  },
   openGraph: {
     title: 'Contact Us | Fahad Ali Interior',
     description: 'Direct VIP concierge, phone line, WhatsApp, and showroom consultation for luxury solid sheesham furniture.',

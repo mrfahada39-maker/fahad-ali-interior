@@ -1,10 +1,14 @@
-﻿import { Metadata } from 'next';
+import { Metadata } from 'next';
 import OrderDetailClient from './OrderDetailClient';
 import StoreShell from '@/components/StoreShell';
 
 export const metadata: Metadata = {
   title: 'Order Details | Fahad Ali Interior',
   description: 'View your order details and tracking information.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {

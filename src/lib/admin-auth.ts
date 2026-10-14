@@ -6,8 +6,8 @@ import { db } from '@/lib/db';
 import { Redis } from '@upstash/redis';
 import crypto from 'crypto';
 
-/** Maximum lifetime for signed admin bearer tokens (7 days in ms) */
-export const ADMIN_TOKEN_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+/** Maximum lifetime for signed admin bearer tokens (24 hours in ms - hardened security baseline) */
+export const ADMIN_TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 /**
  * L1 cache + Upstash Redis (with TTL = ADMIN_TOKEN_MAX_AGE_MS) + Database persistence

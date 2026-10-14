@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
   RATE_LIMITS,
   isRateLimitConfigured,
@@ -45,6 +45,16 @@ describe('Rate Limiting & Anti-Brute-Force Guard', () => {
     it('extracts IP from x-real-ip header if forwarded-for is absent', () => {
       const req = new Request('https://fahad-ali.com/api/test', {
         headers: { 'x-real-ip': '198.51.100.42' },
+      });
+      expect(getClientIp(req)).toBe('198.51.100.42');
+    });
+
+    it('prioritizes trusted x-real-ip over spoofed x-forwarded-for to prevent IP evasion', () => {
+      const req = new Request('https://fahad-ali.com/api/test', {
+        headers: {
+          'x-forwarded-for': '1.2.3.4, 5.6.7.8',
+          'x-real-ip': '198.51.100.42',
+        },
       });
       expect(getClientIp(req)).toBe('198.51.100.42');
     });

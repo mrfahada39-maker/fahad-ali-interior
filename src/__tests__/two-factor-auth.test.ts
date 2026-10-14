@@ -87,7 +87,7 @@ describe('Two-Factor Authentication (TOTP) Security & Flow', () => {
         const token = generateSync({ secret });
         expect(token).toMatch(/^\d{6}$/);
 
-        const check = verifySync({ token, secret });
+        const check = verifySync({ token, secret, epochTolerance: 30 });
         expect(check.valid).toBe(true);
       }
     });

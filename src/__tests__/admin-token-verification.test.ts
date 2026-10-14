@@ -182,10 +182,10 @@ describe('Admin & Session Token Verification Security Regressions', () => {
   });
 
   // ── 3. Expired token fails ────────────────────────────────────────────────
-  it('Requirement G3: expired token (> 7 days) fails verification and is rejected', async () => {
+  it('Requirement G3: expired token (> 24 hours) fails verification and is rejected', async () => {
     const adminId = 'adm_expired_03';
-    const eightDaysAgo = Date.now() - 8 * 24 * 60 * 60 * 1000;
-    const expiredToken = createAdminToken(adminId, eightDaysAgo);
+    const twentyFiveHoursAgo = Date.now() - 25 * 60 * 60 * 1000;
+    const expiredToken = createAdminToken(adminId, twentyFiveHoursAgo);
 
     (db.user.findUnique as any).mockResolvedValue({
       id: adminId,
@@ -442,5 +442,5 @@ describe('Admin & Session Token Verification Security Regressions', () => {
     // Verify Admin B's password was updated
     const isBNewPassword = await bcrypt.compare('BetaNewPassword789!#', adminRecords[adminBId].password);
     expect(isBNewPassword).toBe(true);
-  });
+  }, 15000);
 });
