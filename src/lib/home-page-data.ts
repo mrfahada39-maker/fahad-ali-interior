@@ -250,7 +250,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       },
       user: {
         name: r.user?.name || r.customerName || 'Verified Patron',
-        image: r.user?.image || undefined,
+        image: (r.user as any)?.avatar || (r.user as any)?.image || undefined,
       },
     }));
 

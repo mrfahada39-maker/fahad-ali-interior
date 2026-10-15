@@ -204,7 +204,8 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
     const uniqueReviews = reviews.filter((r) => {
       const nameKey = (r.customerName || r.user?.name || 'Verified Patron').trim().toLowerCase();
       const commentKey = (r.comment || '').trim().toLowerCase();
-      const dedupKey = `${nameKey}::${commentKey}`;
+      const prodKey = ((r.product as any)?.id || r.product?.name || "").trim().toLowerCase();
+      const dedupKey = `${nameKey}::${prodKey}::${commentKey}`;
       if (seenKeys.has(dedupKey)) return false;
       seenKeys.add(dedupKey);
       return true;
@@ -214,12 +215,16 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
       const theme = THEME_PRESETS[idx % THEME_PRESETS.length];
       const ratingNum = Math.min(5, Math.max(1, Math.round(Number(r.rating) || 5)));
       const clientName = r.customerName || r.user?.name || 'Verified Patron';
+      const initial = (clientName.trim().charAt(0) || 'V').toUpperCase();
+      const userCustomAvatar = (r.user as any)?.avatar || r.user?.image;
       const fallbackRoom = 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg';
       const distinctAvatar = DISTINCT_FALLBACK_AVATARS[idx % DISTINCT_FALLBACK_AVATARS.length];
 
       return {
         id: r.id || `real-rev-${idx}`,
         name: clientName,
+        initial,
+        hasCustomAvatar: Boolean(userCustomAvatar),
         location: 'Verified Client, Pakistan',
         projectType: r.product?.name ? `${r.product.name} Order` : 'Handcrafted Bespoke Furniture',
         text: r.comment && r.comment.trim() ? r.comment.trim() : 'Masterpiece solid sheesham wood craftsmanship. Outstanding luxury comfort and detailing.',
@@ -396,19 +401,25 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
 
                 {/* Reviewer Profile */}
                 <div className="flex items-center gap-3 pt-1">
-                  <div className="relative w-12 h-12 min-w-[48px] min-h-[48px] rounded-full overflow-hidden border-2 border-amber-300/80 shrink-0 shadow-[0_2px_10px_rgba(184,142,75,0.2)]">
-                    <Image 
-                      src={imgErrors[currentItem.id] ? currentItem.fallbackAvatar : currentItem.avatar} 
-                      alt={currentItem.name} 
-                      width={48}
-                      height={48}
-                      unoptimized
-                      loading="lazy"
-                      decoding="async"
-                      style={{ aspectRatio: '1/1' }}
-                      className="object-cover w-full h-full aspect-square" 
-                      onError={() => setImgErrors(prev => ({ ...prev, [currentItem.id]: true }))}
-                    />
+                  <div className="relative w-12 h-12 min-w-[48px] min-h-[48px] rounded-full overflow-hidden border-2 border-amber-300/80 shrink-0 shadow-[0_2px_10px_rgba(184,142,75,0.2)] flex items-center justify-center">
+                    {currentItem.hasCustomAvatar && !imgErrors[currentItem.id] ? (
+                      <Image 
+                        src={currentItem.avatar} 
+                        alt={currentItem.name} 
+                        width={48}
+                        height={48}
+                        unoptimized
+                        loading="lazy"
+                        decoding="async"
+                        style={{ aspectRatio: '1/1' }}
+                        className="object-cover w-full h-full aspect-square" 
+                        onError={() => setImgErrors(prev => ({ ...prev, [currentItem.id]: true }))}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[#B88E4B] via-[#A68254] to-[#996515] text-white flex items-center justify-center font-serif font-black text-base shadow-inner select-none">
+                        {currentItem.initial}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col">
                     <h3 className="font-bold text-[14.5px] text-[#1F1612] leading-tight">
@@ -612,19 +623,25 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                           <div>
                             <div className="w-8 h-[2px] bg-[#B88E4B] rounded-full my-1.5 group-hover:w-12 transition-all duration-300" />
                             <div className="flex items-center gap-2.5">
-                              <div className="relative w-9 h-9 min-w-[36px] min-h-[36px] rounded-full overflow-hidden border-2 border-amber-300/80 shrink-0 shadow-[0_2px_8px_rgba(184,142,75,0.2)] group-hover:scale-105 group-hover:border-[#B88E4B] transition-all duration-300">
-                                <Image 
-                                  src={imgErrors[item.id] ? item.fallbackAvatar : item.avatar} 
-                                  alt={item.name} 
-                                  width={36}
-                                  height={36}
-                                  unoptimized
-                                  loading="lazy"
-                                  decoding="async"
-                                  style={{ aspectRatio: '1/1' }}
-                                  className="object-cover w-full h-full aspect-square" 
-                                  onError={() => setImgErrors(prev => ({ ...prev, [item.id]: true }))}
-                                />
+                              <div className="relative w-9 h-9 min-w-[36px] min-h-[36px] rounded-full overflow-hidden border-2 border-amber-300/80 shrink-0 shadow-[0_2px_8px_rgba(184,142,75,0.2)] group-hover:scale-105 group-hover:border-[#B88E4B] transition-all duration-300 flex items-center justify-center">
+                                {item.hasCustomAvatar && !imgErrors[item.id] ? (
+                                  <Image 
+                                    src={item.avatar} 
+                                    alt={item.name} 
+                                    width={36}
+                                    height={36}
+                                    unoptimized
+                                    loading="lazy"
+                                    decoding="async"
+                                    style={{ aspectRatio: '1/1' }}
+                                    className="object-cover w-full h-full aspect-square" 
+                                    onError={() => setImgErrors(prev => ({ ...prev, [item.id]: true }))}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-[#B88E4B] via-[#A68254] to-[#996515] text-white flex items-center justify-center font-serif font-black text-xs shadow-inner select-none">
+                                    {item.initial}
+                                  </div>
+                                )}
                               </div>
                               <div className="flex flex-col">
                                 <h3 className="font-bold text-[13px] lg:text-[14px] text-[#1F1612] leading-tight">
