@@ -78,9 +78,11 @@ function buildContentSecurityPolicy(
   isProduction: boolean,
   httpsOnly: boolean
 ): string {
-  const evalDirective = process.env.NODE_ENV === 'test' ? '' : " 'unsafe-eval'";
-  const scriptSrc = `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${evalDirective} 'unsafe-inline' https: https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
-  const scriptSrcElem = `script-src-elem 'self' 'unsafe-inline' 'nonce-${nonce}' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
+  const isTest = process.env.NODE_ENV === 'test';
+  const scriptSrc = isTest
+    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`
+    : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https: https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
+
   const styleDirectives = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "style-src-attr 'unsafe-inline'",
@@ -90,7 +92,6 @@ function buildContentSecurityPolicy(
   return [
     "default-src 'self'",
     scriptSrc,
-    scriptSrcElem,
     ...styleDirectives,
     "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://va.vercel-scripts.com",
     "media-src 'self' data: blob: https://res.cloudinary.com",
