@@ -8,7 +8,9 @@ import { BUSINESS_CONTACT } from '@/lib/contact-config';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import NotificationBell from '@/components/NotificationBell';
+import dynamic from 'next/dynamic';
+
+const NotificationBell = dynamic(() => import('@/components/NotificationBell'), { ssr: false });
 
 interface NavbarProps {
   onSearchOpen: () => void;

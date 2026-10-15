@@ -6,7 +6,9 @@ import { ReactNode, useState, useEffect, useRef } from 'react';
 import { useSiteSettingsStore, useClientCacheStore, type SiteSettings } from '@/store';
 import TelemetryTracker from '@/components/TelemetryTracker';
 
-import { Toaster } from 'sonner';
+import dynamic from 'next/dynamic';
+
+const Toaster = dynamic(() => import('sonner').then((m) => m.Toaster), { ssr: false });
 
 import NetworkWatcher from '@/components/NetworkWatcher';
 

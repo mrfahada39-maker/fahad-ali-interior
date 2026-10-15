@@ -12,7 +12,11 @@ import {
 import { apiFetchJson } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
-import TestimonialsSection from '@/components/TestimonialsSection';
+import dynamic from 'next/dynamic';
+
+const TestimonialsSection = dynamic(() => import('@/components/TestimonialsSection'), {
+  ssr: true,
+});
 
 const CATEGORIES = [
   { name: 'Living Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
