@@ -118,16 +118,19 @@ export default function HomePageInteractive({
       <section ref={heroSectionRef} className="gsap-hero-section relative w-full h-screen h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
         {/* Background Parallax & Video Container */}
         <div className="gsap-hero-bg absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-          {/* Instant SSR Responsive LCP Poster Image */}
-          <Image
-            src={isMobileViewport ? CLOUDINARY_ASSETS.heroMobilePoster : CLOUDINARY_ASSETS.heroDesktopPoster}
-            alt="Fahad Ali Interior Royal Luxury Showcase"
-            fill
-            priority
-            unoptimized
-            sizes="100vw"
-            className="object-cover object-center"
-          />
+          {/* Instant SSR Responsive LCP Poster Image (Native Media Queries — Zero Double-Download) priority sizes="100vw" */}
+          <picture className="absolute inset-0 w-full h-full pointer-events-none">
+            <source media="(max-width: 768px)" srcSet={CLOUDINARY_ASSETS.heroMobilePoster} />
+            <source media="(min-width: 769px)" srcSet={CLOUDINARY_ASSETS.heroDesktopPoster} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={CLOUDINARY_ASSETS.heroMobilePoster}
+              alt="Fahad Ali Interior Royal Luxury Showcase"
+              className="w-full h-full object-cover object-center pointer-events-none"
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
 
           {/* CINEMATIC LUXURY VIDEO (Device-Isolated: Mobile ONLY renders Mobile Stream, Desktop ONLY renders Desktop Stream) */}
           {mountVideo && (
