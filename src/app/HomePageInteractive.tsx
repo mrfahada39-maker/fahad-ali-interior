@@ -15,13 +15,13 @@ import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
 import TestimonialsSection from '@/components/TestimonialsSection';
 
 const CATEGORIES = [
-  { name: 'Living Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
-  { name: 'Bedroom', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
-  { name: 'Dining Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
-  { name: 'Coffee Chairs', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg' },
-  { name: 'Center Tables', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
-  { name: 'Luxury Showcase', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg' },
-  { name: 'Luxury Wardrobes', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
+  { name: 'Living Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
+  { name: 'Bedroom', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
+  { name: 'Dining Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
+  { name: 'Coffee Chairs', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg' },
+  { name: 'Center Tables', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
+  { name: 'Luxury Showcase', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg' },
+  { name: 'Luxury Wardrobes', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
 ];
 
 const REVIEWS: any[] = [];
@@ -118,18 +118,20 @@ export default function HomePageInteractive({
       <section ref={heroSectionRef} className="gsap-hero-section relative w-full h-screen h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
         {/* Background Parallax & Video Container */}
         <div className="gsap-hero-bg absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-          {/* Instant SSR Responsive LCP Poster Image */}
-          <Image
-            src={isMobileViewport ? CLOUDINARY_ASSETS.heroMobilePoster : CLOUDINARY_ASSETS.heroDesktopPoster}
-            alt="Fahad Ali Interior Royal Luxury Showcase"
-            fill
-            priority
-            unoptimized
-            sizes="100vw"
-            className="object-cover object-center"
-          />
+          {/* Instant SSR Responsive LCP Poster Image (Native Media Queries — Zero Double-Download) */}
+          <picture className="absolute inset-0 w-full h-full pointer-events-none">
+            <source media="(max-width: 768px)" srcSet={CLOUDINARY_ASSETS.heroMobilePoster} />
+            <source media="(min-width: 769px)" srcSet={CLOUDINARY_ASSETS.heroDesktopPoster} />
+            <img
+              src={CLOUDINARY_ASSETS.heroDesktopPoster}
+              alt="Fahad Ali Interior Royal Luxury Showcase"
+              className="w-full h-full object-cover object-center pointer-events-none"
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
 
-          {/* CINEMATIC LUXURY VIDEO (Single Responsive Hardware Accelerated Stream) */}
+          {/* CINEMATIC LUXURY VIDEO (Device-Isolated: Mobile ONLY renders Mobile Stream, Desktop ONLY renders Desktop Stream) */}
           {mountVideo && (
             <video
               ref={heroVideoRef}
@@ -139,7 +141,7 @@ export default function HomePageInteractive({
               playsInline
               crossOrigin="anonymous"
               poster={isMobileViewport ? CLOUDINARY_ASSETS.heroMobilePoster : CLOUDINARY_ASSETS.heroDesktopPoster}
-              preload={isMobileViewport ? 'none' : 'metadata'}
+              preload="metadata"
               disablePictureInPicture
               disableRemotePlayback
               onLoadedData={(e) => { e.currentTarget.play().catch(() => {}); setVideoLoaded(true); }}
@@ -149,8 +151,11 @@ export default function HomePageInteractive({
               style={{ willChange: 'opacity', transform: 'translateZ(0)' }}
               className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1] transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             >
-              <source media="(max-width: 768px)" src={CLOUDINARY_ASSETS.heroMobileVideo} type="video/mp4" />
-              <source media="(min-width: 769px)" src={CLOUDINARY_ASSETS.heroDesktopVideo} type="video/mp4" />
+              {/* Single Isolated Source — Desktop never loads mobile, Mobile never loads desktop */}
+              <source 
+                src={isMobileViewport ? CLOUDINARY_ASSETS.heroMobileVideo : CLOUDINARY_ASSETS.heroDesktopVideo} 
+                type="video/mp4" 
+              />
               <track kind="captions" srcLang="en" label="English" default />
             </video>
           )}
@@ -245,7 +250,7 @@ export default function HomePageInteractive({
                 {/* Background Image Wrap */}
                 <div className="gsap-cat-img-wrap absolute inset-0 overflow-hidden">
                   <Image 
-                    src={resolveImageUrl(cat.image, cat.name, 550)} 
+                    src={resolveImageUrl(cat.image, cat.name, 450, 'good')} 
                     alt={cat.name} 
                     width={550}
                     height={440}

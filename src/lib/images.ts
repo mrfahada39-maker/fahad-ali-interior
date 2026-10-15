@@ -31,18 +31,18 @@ const CATEGORY_MAP: Record<string, string> = {
 /**
  * Automatically optimize any Cloudinary URL to ultra-sharp AVIF/WebP format with max visual clarity.
  */
-export function compressCloudinaryUrl(url: string, width = 1200): string {
+export function compressCloudinaryUrl(url: string, width = 1200, quality = 'best'): string {
   if (!url || typeof url !== 'string') return url;
   if (!url.includes('res.cloudinary.com')) return url;
   if (url.includes('/f_auto') || url.includes('/q_auto')) return url;
 
-  // Transform /image/upload/... — q_auto:best delivers pristine sharpness without compression banding
+  // Transform /image/upload/... — q_auto delivers pristine sharpness without compression banding
   return url.replace(
     /\/image\/upload\/(v\d+\/)?/,
-    `/image/upload/f_auto,q_auto:best,dpr_auto,c_limit,w_${width}/$1`
+    `/image/upload/f_auto,q_auto:${quality},dpr_auto,c_limit,w_${width}/$1`
   ).replace(
     /\/video\/upload\/(v\d+\/)?/,
-    `/video/upload/f_mp4,vc_h264:high:3.1,q_auto:best,ac_none,w_720,br_600k,fps_30/$1`
+    `/video/upload/f_mp4,vc_h264:high:3.1,q_auto:${quality},ac_none,w_720,br_600k,fps_30/$1`
   );
 }
 
@@ -69,7 +69,8 @@ export function optimizeUnsplashUrl(url: string, width = 1200): string {
 export function resolveImageUrl(
   image: string | null | undefined,
   category?: string | null,
-  width = 1200
+  width = 1200,
+  quality = 'best'
 ): string {
   if (!image || typeof image !== 'string' || image.trim() === '') {
     return (category && CATEGORY_MAP[category]) ? CATEGORY_MAP[category] : LOCAL_IMAGES.sofa;
@@ -82,7 +83,7 @@ export function resolveImageUrl(
 
   if (image.startsWith('http://') || image.startsWith('https://')) {
     if (image.includes('res.cloudinary.com')) {
-      return compressCloudinaryUrl(image, width);
+      return compressCloudinaryUrl(image, width, quality);
     }
     if (image.includes('images.unsplash.com')) {
       return optimizeUnsplashUrl(image, width);
