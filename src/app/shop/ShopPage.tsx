@@ -3,6 +3,7 @@
 import { logger } from '@/lib/logger';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -61,7 +62,9 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
   const safeInitial = initialCategory === 'Custom Furniture Solutions' ? [] : defaultPool;
   const [products, setProducts] = useState<StorefrontProduct[]>(safeInitial);
   const [loading, setLoading] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(initialCategory || 'All');
+  const searchParamsHook = useSearchParams();
+  const urlCategory = searchParamsHook?.get('category') || undefined;
+  const [activeCategory, setActiveCategory] = useState(initialCategory || urlCategory || 'All');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('');

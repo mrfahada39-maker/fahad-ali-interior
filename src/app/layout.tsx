@@ -151,6 +151,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+      <head>
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+      </head>
       <body
         suppressHydrationWarning
         className={`${playfair.variable} ${inter.variable} ${greatVibes.variable} antialiased bg-theme-bg text-theme-dark`}

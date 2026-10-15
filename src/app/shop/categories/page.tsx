@@ -6,8 +6,8 @@ import { resolveImageUrl, LOCAL_IMAGES } from '@/lib/images';
 
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// Next.js ISR (Incremental Static Regeneration) — Edge cached on Vercel for instant sub-50ms TTFB
+export const revalidate = 300;
 export const metadata: Metadata = {
   title: 'Categories | Fahad Ali Interior',
   description: 'Explore bespoke solid Sheesham luxury furniture collections by category.',
