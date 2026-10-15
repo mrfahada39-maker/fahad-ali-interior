@@ -58,18 +58,21 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
 
-      // Mount secondary widgets on first user engagement or idle
-      const events = ['scroll', 'touchstart', 'mousemove', 'keydown'] as const;
+      // Mount secondary widgets during true idle periods (never hijack active touch scroll)
+      let idleTimer: ReturnType<typeof setTimeout> | null = null;
       const onFirstInteraction = () => {
-        enableInteractive();
-        events.forEach((ev) => window.removeEventListener(ev, onFirstInteraction));
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(enableInteractive, 1500);
       };
+      const events = ['scroll', 'touchstart'] as const;
       events.forEach((ev) => window.addEventListener(ev, onFirstInteraction, { passive: true, once: true }));
 
       if ('requestIdleCallback' in window) {
-        window.requestIdleCallback(enableInteractive, { timeout: 2000 });
+        window.requestIdleCallback(() => {
+          setTimeout(enableInteractive, 1000);
+        }, { timeout: 4000 });
       } else {
-        setTimeout(enableInteractive, 1200);
+        setTimeout(enableInteractive, 3000);
       }
       try {
         const params = new URLSearchParams(window.location.search);

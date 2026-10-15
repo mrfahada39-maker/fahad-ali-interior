@@ -48,12 +48,17 @@ export default function HomePageInteractive({
   const [mountVideo, setMountVideo] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
-  // ── Defer heavy video stream until after initial page load paint ──
+  // ── Defer heavy video stream until after initial page load paint with smart hardware/network check ──
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setIsMobileViewport(window.innerWidth <= 768);
+      const conn = (navigator as any)?.connection;
+      const isSlowConn = conn?.saveData || conn?.effectiveType === '2g' || conn?.effectiveType === '3g';
+      if (isSlowConn) {
+        return; // Keep ultra-crisp AVIF poster active (zero battery/network drain on slow 3G/2G)
+      }
     }
-    const t = setTimeout(() => setMountVideo(true), 250);
+    const t = setTimeout(() => setMountVideo(true), 350);
     return () => clearTimeout(t);
   }, []);
 
@@ -88,6 +93,10 @@ export default function HomePageInteractive({
   }, []);
 
   useEffect(() => {
+    // Zero-network overhead: Skip client-side re-fetching when server already provided bundle
+    if (initialCategories && initialCategories.length > 0 && initialReviews && initialReviews.length > 0) {
+      return;
+    }
     const loadHomeBundle = async () => {
       try {
         const data = await apiFetchJson<any>('/api/public/home-bundle');
@@ -100,7 +109,7 @@ export default function HomePageInteractive({
       }
     };
     loadHomeBundle();
-  }, []);
+  }, [initialCategories, initialReviews]);
 
   return (
     <div className="contents">

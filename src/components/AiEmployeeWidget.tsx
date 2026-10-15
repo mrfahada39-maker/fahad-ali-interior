@@ -7,7 +7,11 @@ import {
   Sparkles, X, Send, Camera, Mic, MicOff, ShoppingBag, PhoneCall, Crown, Calculator, Layers, ShieldCheck
 } from 'lucide-react';
 import { useCartStore } from '@/store';
-import { VoiceAiModal } from './VoiceAiModal';
+import dynamic from 'next/dynamic';
+const VoiceAiModal = dynamic(
+  () => import('./VoiceAiModal').then((m) => m.VoiceAiModal),
+  { ssr: false }
+);
 import { resolveImageUrl } from '@/lib/images';
 
 interface Message {
@@ -659,11 +663,13 @@ export function AiEmployeeWidget() {
       )}
 
       {/* Voice AI Modal */}
-      <VoiceAiModal
-        isOpen={voiceModalOpen}
-        onClose={() => setVoiceModalOpen(false)}
-        onTranscript={(text) => handleSendMessage(text)}
-      />
+      {voiceModalOpen && (
+        <VoiceAiModal
+          isOpen={voiceModalOpen}
+          onClose={() => setVoiceModalOpen(false)}
+          onTranscript={(text) => handleSendMessage(text)}
+        />
+      )}
     </>
   );
 }
