@@ -100,33 +100,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Try to safely persist in DB without blocking or crashing if DB is unavailable
-    try {
-      await db.auditLog.create({
-        data: {
-          action: 'TELEMETRY_PING',
-          entity: 'LIVE_SESSION',
-          entityId: sessionId,
-          ip,
-          userAgent: `${device} (${browser})`,
-          metadata: {
-            city: loc.city,
-            country: loc.country === 'PK' ? 'Pakistan' : loc.country,
-            pageTitle,
-            pathname,
-            trafficSource,
-            status,
-            device,
-            browser,
-            firstSeen: session.firstSeen,
-            lastActive: now,
-          },
-        },
-      });
-    } catch (e) {
-      // Ignore DB write error
-    }
-
+    // Active sessions are tracked in high-speed memory and Redis; no heavy DB logging needed
     return NextResponse.json({ success: true, activeCount: activeSessionsMap.size });
   } catch (error) {
     return NextResponse.json({ success: true }, { status: 200 });
