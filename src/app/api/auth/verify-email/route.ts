@@ -36,39 +36,44 @@ export async function POST(req: NextRequest) {
 
     // Method 2: 6-digit code verification
     if (!user && email && code) {
-      const cleanEmail = email.trim().toLowerCase();
-      const cleanCode = String(code).trim();
+      const cleanEmail = String(email).trim().toLowerCase();
+      const cleanCode = String(code).trim().replace(/\D/g, '');
 
-      const existingUser = await db.user.findUnique({
-        where: { email: cleanEmail },
-      });
-
-      if (existingUser) {
-        if (existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date()) {
-          await runDummyBcryptCompare(cleanEmail);
-          return NextResponse.json({ error: 'Invalid or expired verification link/code. Please request a new one.' }, { status: 400 });
-        }
-
-        const verifyRecord = await db.emailVerificationToken.findFirst({
-          where: {
-            userId: existingUser.id,
-            tokenHash: { endsWith: cleanCode },
-            expiresAt: { gt: new Date() },
-          },
+      if (/^\d{6}$/.test(cleanCode)) {
+        const existingUser = await db.user.findUnique({
+          where: { email: cleanEmail },
         });
 
-        if (verifyRecord) {
-          user = existingUser;
-        } else {
-          const attempts = (existingUser.loginAttempts || 0) + 1;
-          const shouldLock = attempts >= 5;
-          await db.user.update({
-            where: { id: existingUser.id },
-            data: {
-              loginAttempts: attempts,
-              lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+        if (existingUser) {
+          if (existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date()) {
+            await runDummyBcryptCompare(cleanEmail);
+            return NextResponse.json({ error: 'Invalid or expired verification link/code. Please request a new one.' }, { status: 400 });
+          }
+
+          const verifyRecord = await db.emailVerificationToken.findFirst({
+            where: {
+              userId: existingUser.id,
+              OR: [
+                { tokenHash: { endsWith: `:${cleanCode}` } },
+                { tokenHash: cleanCode },
+              ],
+              expiresAt: { gt: new Date() },
             },
           });
+
+          if (verifyRecord) {
+            user = existingUser;
+          } else {
+            const attempts = (existingUser.loginAttempts || 0) + 1;
+            const shouldLock = attempts >= 5;
+            await db.user.update({
+              where: { id: existingUser.id },
+              data: {
+                loginAttempts: attempts,
+                lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+              },
+            });
+          }
         }
       }
     }

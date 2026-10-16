@@ -78,10 +78,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Password reset instructions have been sent to your email.',
-      ...(process.env.NODE_ENV !== 'production' || !emailResult.success
-        ? { devCode: code }
-        : {}),
+      message: 'If an account exists with this email, a reset link and code have been sent.',
+      ...(process.env.NODE_ENV !== 'production' ? { devCode: code } : {}),
     });
   } catch (error: any) {
     logger.error('[FORGOT PASSWORD ERROR]', error);

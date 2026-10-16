@@ -382,12 +382,13 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
     }
     const rawBody = await req.json().catch(() => ({}));
     const parsed = adminPasswordChangeSchema.safeParse(rawBody);
-    const currentPassword = parsed.success ? parsed.data.currentPassword : rawBody.currentPassword;
-    const newPassword = parsed.success ? parsed.data.newPassword : rawBody.newPassword;
-
-    if (!currentPassword) {
-      return NextResponse.json({ error: 'Current password is required' }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Current password and new password are required' },
+        { status: 400 }
+      );
     }
+    const { currentPassword, newPassword } = parsed.data;
     const pwCheck = validatePasswordStrength(newPassword);
     if (!pwCheck.valid) {
       return NextResponse.json({ error: pwCheck.error }, { status: 400 });

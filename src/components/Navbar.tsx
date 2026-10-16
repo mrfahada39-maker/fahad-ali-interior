@@ -9,6 +9,7 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { useWishlistDrawerStore } from '@/components/WishlistDrawer';
 
 const NotificationBell = dynamic(() => import('@/components/NotificationBell'), { ssr: false });
 
@@ -70,6 +71,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   const leftLinks = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Collections', href: '/shop/categories', icon: Armchair },
+    { label: 'About', href: '/about', icon: Sparkles },
     { label: 'Contact Us', href: '/contact', icon: PhoneCall },
   ];
 
@@ -85,7 +87,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         suppressHydrationWarning
         className={`w-full transition-all duration-500 border-b ${
           isSolid 
-            ? "bg-[#FCFAF7]/95 backdrop-blur-xl text-[#221814] border-[#E7DDD0] shadow-[0_4px_25px_rgba(44,30,24,0.04)]" 
+            ? "bg-[#FCFAF7]/98 md:backdrop-blur-xl text-[#221814] border-[#E7DDD0] shadow-[0_4px_25px_rgba(44,30,24,0.04)]" 
             : "bg-gradient-to-b from-black/80 via-black/45 to-transparent text-white border-white/10"
         }`}
       >
@@ -171,6 +173,16 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                   <span className="hidden xl:inline">Alerts</span>
                 </button>
               )}
+
+              {/* Wishlist */}
+              <button
+                onClick={() => useWishlistDrawerStore.getState().openDrawer()}
+                className="hidden sm:flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-opacity hover:opacity-75 cursor-pointer whitespace-nowrap"
+                aria-label="Wishlist"
+              >
+                <Heart size={16} strokeWidth={1.7} />
+                <span className="hidden xl:inline">Wishlist</span>
+              </button>
 
               {/* 3. Account / Profile */}
               <Link
@@ -306,6 +318,22 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
           </Link>
 
+          {/* ABOUT */}
+          <Link
+            href="/about"
+            prefetch={true}
+            onClick={() => setMobileOpen(false)}
+            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
+          >
+            <div className="flex items-center gap-3.5">
+              <Sparkles size={20} strokeWidth={1.5} className="text-[#8A5A2B] group-hover:scale-125 group-hover:rotate-6 group-hover:text-[#C9A96E] transition-all duration-300" />
+              <span className="font-serif text-xs font-semibold tracking-widest uppercase text-[#2C1E18] group-hover:text-[#8A5A2B] transition-colors duration-300">
+                ABOUT
+              </span>
+            </div>
+            <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
+          </Link>
+
           {/* 5. CONTACT US */}
           <Link
             href="/contact"
@@ -323,12 +351,12 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           </Link>
 
           {/* 6. WISHLIST */}
-          <Link
-            href={mounted && session?.user ? '/dashboard?tab=wishlist' : '/?auth=login'}
-            prefetch={true}
+          <button
+
+
             onClick={(e) => {
               setMobileOpen(false);
-              if (!session?.user) { e.preventDefault(); onAuthOpen(); }
+              useWishlistDrawerStore.getState().openDrawer();
             }}
             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
           >
@@ -339,7 +367,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               </span>
             </div>
             <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
-          </Link>
+          </button>
 
           {/* 7. NOTIFICATION (with Live Unread Badge) */}
           <Link
@@ -474,7 +502,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       <nav 
         suppressHydrationWarning
         aria-label="Mobile Navigation Bar"
-        className="fixed bottom-0 left-0 right-0 w-full z-40 lg:hidden bg-[#0D0704]/96 backdrop-blur-3xl border-t border-[#D4AF37]/50 text-white shadow-[0_-12px_45px_rgba(0,0,0,0.9),0_0_30px_rgba(212,175,55,0.15)] px-1 pt-1.5 pb-2 h-[66px] sm:h-[70px] flex items-center justify-around select-none overflow-visible before:absolute before:inset-x-0 before:top-0 before:h-[1.5px] before:bg-gradient-to-r before:from-transparent before:via-[#FFEAA0] before:to-transparent before:animate-pulse"
+        className="fixed bottom-0 left-0 right-0 w-full z-40 lg:hidden bg-[#0D0704] border-t border-[#D4AF37]/50 text-white shadow-[0_-12px_45px_rgba(0,0,0,0.9),0_0_30px_rgba(212,175,55,0.15)] px-1 pt-1.5 pb-2 h-[66px] sm:h-[70px] flex items-center justify-around select-none overflow-visible before:absolute before:inset-x-0 before:top-0 before:h-[1.5px] before:bg-gradient-to-r before:from-transparent before:via-[#FFEAA0] before:to-transparent"
       >
         {/* 1. Shop */}
         <Link

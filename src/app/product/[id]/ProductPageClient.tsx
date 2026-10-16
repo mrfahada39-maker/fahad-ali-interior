@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Star, Minus, Plus, Truck, ShieldCheck, Heart,
   Sparkles, CheckCircle2, ShoppingBag,
@@ -26,6 +27,7 @@ export default function ProductPageClient({
   initialProduct: StorefrontProduct | null;
   productId?: string;
 }) {
+  const router = useRouter();
   const getCached = useClientCacheStore((s) => s.getProduct);
   const setCached = useClientCacheStore((s) => s.setProduct);
 
@@ -69,16 +71,16 @@ export default function ProductPageClient({
     );
   }
   const mainImage = resolveImageUrl(product.image, product.category, 1600);
-  const allImages = [
+  const allImages = Array.from(new Set([
     mainImage,
     ...(product.images && product.images.length > 0
       ? product.images.map((img) => resolveImageUrl(img, product.category, 1600))
       : [
           resolveImageUrl(null, product.category, 1600),
-          LOCAL_IMAGES.dining,
-          LOCAL_IMAGES.bed,
+          resolveImageUrl(null, product.category, 1600),
+          mainImage,
         ])
-  ];
+  ]));
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -408,13 +410,17 @@ export default function ProductPageClient({
               </div>
 
               {/* Instant Buy Now Button */}
-              <Link
-                href="/checkout"
+              <button
+                type="button"
+                onClick={() => {
+                  handleAddToCart();
+                  router.push('/checkout');
+                }}
                 className="w-full h-12 bg-white border-2 border-[#E7DDD0] hover:border-[#B88E4B] hover:bg-[#FAF5EE] text-[#221814] text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-2xs flex items-center justify-center gap-2"
               >
                 <span>Experience Instant Checkout</span>
                 <ArrowRight size={14} />
-              </Link>
+              </button>
 
               {/* Direct Artisan WhatsApp Concierge */}
               <a
@@ -740,7 +746,7 @@ export default function ProductPageClient({
                     Please sign in to your patron account to verify your commission and submit a critique.
                   </p>
                   <Link
-                    href={`/signin?callbackUrl=/product/${product.id}`}
+                    href={`/?auth=login&next=/product/${product.id}`}
                     className="inline-block px-5 py-2.5 rounded-xl bg-[#221814] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#B88E4B] transition-all"
                   >
                     Sign In to Continue

@@ -47,17 +47,15 @@ export default function ContactPageClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      const data = await res.json();
-      if (data?.success) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.success) {
         setIsSubmitted(true);
         toast.success('Your message has been sent to our atelier team!');
       } else {
-        setIsSubmitted(true);
-        toast.success('Your message has been received!');
+        toast.error(data?.error || 'Unable to submit your inquiry. Please check your details and try again.');
       }
     } catch {
-      setIsSubmitted(true);
-      toast.success('Your message has been received! We will contact you shortly.');
+      toast.error('Network error while sending message. Please try again or reach us directly on WhatsApp.');
     } finally {
       setIsSubmitting(false);
     }

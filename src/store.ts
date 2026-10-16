@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // ----------------------------------------------------
@@ -30,9 +30,19 @@ export interface PriceValidationResult {
   discrepancies: Array<{ id: string; clientPrice: number; databasePrice: number }>;
 }
 
+export interface CartAppliedCoupon {
+  code: string;
+  discountAmount?: number;
+  discountType?: string;
+  discount?: number;
+  percent?: number;
+  fixed?: number;
+}
+
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
+  appliedCoupon: CartAppliedCoupon | null;
   validatedPrices: PriceValidationResult | null;
   isValidating: boolean;
   openCart: () => void;
@@ -42,8 +52,10 @@ interface CartStore {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  setAppliedCoupon: (coupon: CartAppliedCoupon | null) => void;
   getSubtotal: () => number;
   getGST: () => number;
+  getDiscount: () => number;
   getTotal: () => number;
   getItemCount: () => number;
   validatePrices: () => Promise<PriceValidationResult>;
@@ -55,6 +67,7 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      appliedCoupon: null,
       validatedPrices: null,
       isValidating: false,
 
@@ -94,18 +107,33 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      clearCart: () => set({ items: [], validatedPrices: null }),
+      clearCart: () => set({ items: [], appliedCoupon: null, validatedPrices: null }),
+
+      setAppliedCoupon: (coupon) => set({ appliedCoupon: coupon }),
 
       getSubtotal: () => {
         return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
       },
 
       getGST: () => {
-        return get().getSubtotal() * 0.17;
+        // Catalog prices are GST-inclusive across Pakistan
+        return Math.round(get().getSubtotal() * 0.17);
+      },
+
+      getDiscount: () => {
+        const subtotal = get().getSubtotal();
+        const coupon = get().appliedCoupon;
+        if (!coupon || subtotal <= 0) return 0;
+        if (coupon.percent || coupon.discountType === 'PERCENTAGE') {
+          const pct = Number(coupon.percent ?? coupon.discount ?? 0);
+          return Math.round((subtotal * pct) / 100);
+        }
+        const fixed = Number(coupon.fixed ?? coupon.discount ?? coupon.discountAmount ?? 0);
+        return Math.min(subtotal, fixed);
       },
 
       getTotal: () => {
-        return get().getSubtotal() + get().getGST();
+        return Math.max(0, get().getSubtotal() + get().getGST() - get().getDiscount());
       },
 
       getItemCount: () => {
@@ -158,7 +186,7 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'fahad-ali-cart',
-      partialize: (state) => ({ items: state.items }),
+      partialize: (state) => ({ items: state.items, appliedCoupon: state.appliedCoupon }),
     }
   )
 );
@@ -315,6 +343,12 @@ export type SiteSettings = {
   socialWhatsapp?: string | null;
   foundedYear?: string | null;
   currency?: string | null;
+  bankName?: string | null;
+  accountTitle?: string | null;
+  accountNumber?: string | null;
+  iban?: string | null;
+  jazzcashNumber?: string | null;
+  easypaisaNumber?: string | null;
   themeFontFamily?: string | null;
   themeBgColor?: string | null;
   themeSurfaceColor?: string | null;

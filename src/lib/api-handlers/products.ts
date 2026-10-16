@@ -42,7 +42,23 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
       return NextResponse.json({ error: 'Unauthorized. Sign in to upload images.' }, { status: 401 });
     }
 
-    const folder = req.nextUrl.searchParams.get('folder') || 'fahad-ali-interior/products';
+    const rawFolder = req.nextUrl.searchParams.get('folder') || 'fahad-ali-interior/products';
+    const sanitizedFolder = rawFolder.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\/+/g, '/').slice(0, 80) || 'fahad-ali-interior/products';
+    const isClientAllowedFolder =
+      sanitizedFolder.endsWith('/receipts') ||
+      sanitizedFolder.endsWith('/avatars') ||
+      sanitizedFolder.endsWith('/reviews') ||
+      sanitizedFolder === 'receipts' ||
+      sanitizedFolder === 'avatars' ||
+      sanitizedFolder === 'reviews';
+
+    if (!requireAdmin(user) && !isClientAllowedFolder) {
+      return NextResponse.json(
+        { error: 'Forbidden. Admin privileges required to upload catalog assets.' },
+        { status: 403 }
+      );
+    }
+    const folder = sanitizedFolder;
     const formData = await req.formData().catch(() => null);
     const file = (formData?.get('file') || formData?.get('image')) as File | null;
     if (!file) {
@@ -615,14 +631,18 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
 
     try {
       await db.$transaction([
-        db.orderItem.deleteMany({ where: { productId: id } }),
-        db.review.deleteMany({ where: { productId: id } }),
         db.wishlistItem.deleteMany({ where: { productId: id } }),
-        db.product.deleteMany({ where: { id } }),
+        db.product.updateMany({
+          where: { id },
+          data: { deletedAt: new Date() },
+        }),
       ]);
     } catch {
       try {
-        await db.product.deleteMany({ where: { id } });
+        await db.product.updateMany({
+          where: { id },
+          data: { deletedAt: new Date() },
+        });
       } catch {}
     }
 

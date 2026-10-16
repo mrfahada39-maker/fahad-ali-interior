@@ -72,7 +72,13 @@ export async function handleCustomerRoutes(ctx: ApiDispatchContext): Promise<Nex
       if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       const rawBody = await req.json().catch(() => ({}));
       const parsed = createAddressSchema.safeParse(rawBody);
-      const body = parsed.success ? parsed.data : rawBody;
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: parsed.error.issues[0]?.message || 'Invalid address payload' },
+          { status: 400 }
+        );
+      }
+      const body = parsed.data;
 
       if (body.isDefault) {
         await db.address
@@ -87,7 +93,7 @@ export async function handleCustomerRoutes(ctx: ApiDispatchContext): Promise<Nex
         data: {
           userId: user.id,
           name: body.name || user.email || 'Valued Client',
-          phone: body.phone || '+92 300 0000000',
+          phone: body.phone || '+92 320 7006110',
           address: body.address || '',
           city: body.city || 'Lahore',
           province: body.province || 'Punjab',
@@ -142,7 +148,13 @@ export async function handleCustomerRoutes(ctx: ApiDispatchContext): Promise<Nex
     if (method === 'PUT' || method === 'PATCH') {
       const rawBody = await req.json().catch(() => ({}));
       const parsed = updateProfileSchema.safeParse(rawBody);
-      const body = parsed.success ? parsed.data : rawBody;
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: parsed.error.issues[0]?.message || 'Invalid profile update payload' },
+          { status: 400 }
+        );
+      }
+      const body = parsed.data;
       const updated = await db.user.update({
         where: { id: user.id },
         data: {

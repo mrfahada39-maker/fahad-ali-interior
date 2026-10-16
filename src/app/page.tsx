@@ -23,6 +23,7 @@ export default async function HomePage() {
           initialBanners={homeData?.banners || []}
           initialCategories={homeData?.categories || []}
           initialReviews={homeData?.reviews || []}
+          initialProducts={homeData?.products || []}
         />
       </main>
     </StoreShell>

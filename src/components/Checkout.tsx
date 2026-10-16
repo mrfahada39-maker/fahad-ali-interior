@@ -65,19 +65,31 @@ export default function Checkout() {
     notes: '',
   });
 
+  // Cart Store Hook
+  const cartStoreAppliedCoupon = useCartStore((s) => s.appliedCoupon);
+  const setCartStoreAppliedCoupon = useCartStore((s) => s.setAppliedCoupon);
+
   // Coupon Engine
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; percent?: number; fixed?: number } | null>(null);
+  const [couponCode, setCouponCode] = useState(cartStoreAppliedCoupon?.code || '');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; percent?: number; fixed?: number } | null>(
+    cartStoreAppliedCoupon
+      ? {
+          code: cartStoreAppliedCoupon.code,
+          percent: cartStoreAppliedCoupon.percent || (cartStoreAppliedCoupon.discountType === 'PERCENTAGE' ? cartStoreAppliedCoupon.discount : undefined),
+          fixed: cartStoreAppliedCoupon.fixed || (cartStoreAppliedCoupon.discountType !== 'PERCENTAGE' ? cartStoreAppliedCoupon.discount : undefined),
+        }
+      : null
+  );
 
   // 3D Tilt State
   const [tiltStyle, setTiltStyle] = useState({ rotateX: 0, rotateY: 0, glareX: 50, glareY: 50 });
   const [isCardFlipped, setIsCardFlipped] = useState(false);
 
-  // Card Inputs
+  // Card Inputs (Clean, unpopulated for real customer entry)
   const [cardDetails, setCardDetails] = useState({
-    number: '4532 8891 7890 3456',
-    expiry: '12/28',
-    cvv: '439',
+    number: '',
+    expiry: '',
+    cvv: '',
   });
 
   // Digital Details for JazzCash / Easypaisa / Bank
@@ -243,10 +255,14 @@ export default function Checkout() {
         return;
       }
       if (data.discountType === 'PERCENTAGE') {
-        setAppliedCoupon({ code: data.code, percent: Number(data.discount) });
+        const c = { code: data.code, percent: Number(data.discount) };
+        setAppliedCoupon(c);
+        setCartStoreAppliedCoupon(c);
         toast.success(`✦ ${data.discount}% Discount (${data.code}) Applied!`);
       } else {
-        setAppliedCoupon({ code: data.code, fixed: Number(data.discount) });
+        const c = { code: data.code, fixed: Number(data.discount) };
+        setAppliedCoupon(c);
+        setCartStoreAppliedCoupon(c);
         toast.success(`✦ Rs. ${Number(data.discount).toLocaleString()} Voucher (${data.code}) Applied!`);
       }
     } catch {
@@ -287,6 +303,12 @@ export default function Checkout() {
       return;
     }
 
+    if (!isPhoneValid) {
+      toast.error('Please enter a valid Pakistani mobile number (e.g. 0320 7006110)');
+      setCurrentSection(2);
+      return;
+    }
+
     setPlacing(true);
 
     try {
@@ -315,6 +337,7 @@ export default function Checkout() {
           paymentMethod: backendPaymentMethod,
           selectedBank: selectedBank.name,
           couponCode: appliedCoupon?.code,
+          paymentScreenshot: digitalPaymentDetails.screenshotUrl || undefined,
           shippingName: form.name,
           shippingPhone: form.phone,
           shippingEmail: form.email,
@@ -361,9 +384,7 @@ export default function Checkout() {
         toast.error(errMsg);
       }
     } catch {
-      toast.success('Order placed successfully!');
-      clearCart();
-      router.push(`/orders/success?id=ORD-${Date.now().toString().slice(-6)}`);
+      toast.error('Network error while placing order. Please check your connection and try again.');
     } finally {
       setPlacing(false);
     }
@@ -487,7 +508,25 @@ export default function Checkout() {
               <button
                 key={sec.id}
                 type="button"
-                onClick={() => setCurrentSection(sec.id)}
+                onClick={() => {
+                  if (sec.id > currentSection) {
+                    if (currentSection === 1 && activeItems.length === 0) {
+                      toast.error('Your cart is empty');
+                      return;
+                    }
+                    if (currentSection <= 2 && (!form.name.trim() || !form.phone.trim())) {
+                      toast.error('Please enter Full Name and Phone Number first');
+                      setCurrentSection(2);
+                      return;
+                    }
+                    if (currentSection <= 3 && (!form.address.trim() || !form.city.trim())) {
+                      toast.error('Please enter complete Street Address and City first');
+                      setCurrentSection(3);
+                      return;
+                    }
+                  }
+                  setCurrentSection(sec.id);
+                }}
                 className={`relative flex items-center gap-2.5 p-2 sm:p-2.5 rounded-xl transition-all cursor-pointer text-left border ${
                   isActive
                     ? 'bg-gradient-to-r from-[#FAF5EE] to-white border-amber-400 shadow-xs text-[#221814]'

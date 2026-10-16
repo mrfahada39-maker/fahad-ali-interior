@@ -26,6 +26,7 @@ import {
   CheckoutBankCardPanel,
 } from '@/components/checkout/checkout-banks';
 import { RAAST_SBP_DETAILS, PAKISTAN_CITIES } from '@/lib/pakistan-localization';
+import { useSiteSettingsStore } from '@/store';
 import { CardDetails, DigitalPaymentDetails, CheckoutFormState } from './checkout-types';
 
 export interface CheckoutSectionPaymentProps {
@@ -105,6 +106,13 @@ export function CheckoutSectionPayment({
   formNotes,
   handleInputChange,
 }: CheckoutSectionPaymentProps) {
+  const siteSettings = useSiteSettingsStore((s) => s.settings);
+  const activeJazzcash = siteSettings?.jazzcashNumber || '0320 7006110';
+  const activeEasypaisa = siteSettings?.easypaisaNumber || '0320 7006110';
+  const activeBankName = siteSettings?.bankName || RAAST_SBP_DETAILS.bankName;
+  const activeAccountTitle = siteSettings?.accountTitle || RAAST_SBP_DETAILS.accountTitle;
+  const activeIban = siteSettings?.iban || RAAST_SBP_DETAILS.iban;
+  const activeRaastId = siteSettings?.contactPhone ? siteSettings.contactPhone.replace(/\D/g, '') : RAAST_SBP_DETAILS.raastId;
   return (
             <motion.div
               key="section-4"
@@ -340,7 +348,7 @@ export function CheckoutSectionPayment({
 
                           <div className="flex justify-between items-center border-b border-[#E7DDD0] pb-2">
                             <span className="text-stone-600 font-semibold">Official Account Title:</span>
-                            <span className="font-bold text-[#221814]">Fahad Ali Interior</span>
+                            <span className="font-bold text-[#221814]">{activeAccountTitle}</span>
                           </div>
 
                           {paymentMethod === 'bank' ? (
@@ -352,11 +360,11 @@ export function CheckoutSectionPayment({
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                   <span className="font-mono font-black text-[#1F1612] text-xs sm:text-sm bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
-                                    {RAAST_SBP_DETAILS.raastId}
+                                    {activeRaastId}
                                   </span>
                                   <button
                                     type="button"
-                                    onClick={() => copyToClipboard(RAAST_SBP_DETAILS.raastId, 'Raast ID')}
+                                    onClick={() => copyToClipboard(activeRaastId, 'Raast ID')}
                                     className="text-[#B88E4B] hover:text-[#8C6239] bg-white border border-[#E2D9CD] hover:border-[#B88E4B] p-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
                                     title="Copy Raast ID"
                                   >
@@ -367,15 +375,15 @@ export function CheckoutSectionPayment({
                               <div className="flex justify-between items-center">
                                 <div>
                                   <span className="text-stone-600 font-semibold block text-[11px]">Official IBAN:</span>
-                                  <span className="text-[9px] text-stone-500 font-medium">{RAAST_SBP_DETAILS.bankName}</span>
+                                  <span className="text-[9px] text-stone-500 font-medium">{activeBankName}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                   <span className="font-mono font-black text-[#1F1612] text-[11px] sm:text-xs bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
-                                    {RAAST_SBP_DETAILS.iban}
+                                    {activeIban}
                                   </span>
                                   <button
                                     type="button"
-                                    onClick={() => copyToClipboard(RAAST_SBP_DETAILS.iban, 'IBAN')}
+                                    onClick={() => copyToClipboard(activeIban, 'IBAN')}
                                     className="text-[#B88E4B] hover:text-[#8C6239] bg-white border border-[#E2D9CD] hover:border-[#B88E4B] p-1 rounded-lg cursor-pointer transition-colors shadow-2xs"
                                     title="Copy IBAN"
                                   >
@@ -393,13 +401,13 @@ export function CheckoutSectionPayment({
                               </span>
                               <div className="flex items-center gap-2">
                                 <span className="font-sans font-black text-[#1F1612] tracking-wider text-xs sm:text-sm bg-white border border-[#E2D9CD] px-2 py-0.5 rounded-lg shadow-2xs">
-                                  {paymentMethod === 'jazzcash' ? '0300 1234567' : '0345 1234567'}
+                                  {paymentMethod === 'jazzcash' ? activeJazzcash : activeEasypaisa}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() =>
                                     copyToClipboard(
-                                      paymentMethod === 'jazzcash' ? '03001234567' : '03451234567',
+                                      (paymentMethod === 'jazzcash' ? activeJazzcash : activeEasypaisa).replace(/\D/g, ''),
                                       'Account Number'
                                     )
                                   }
@@ -423,9 +431,34 @@ export function CheckoutSectionPayment({
                             type="text"
                             value={digitalPaymentDetails.transactionId}
                             onChange={(e) => setDigitalPaymentDetails((p) => ({ ...p, transactionId: e.target.value }))}
-                            placeholder="e.g. 8492019482 / Trx # 0300XXXXXXX"
+                            placeholder="e.g. 8492019482 / Trx # 0320XXXXXXX"
                             className="w-full bg-white border border-[#E2D9CD] focus:border-[#B88E4B] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-sans font-bold text-[#1F1612] outline-none shadow-2xs"
                           />
+                          <div className="pt-2">
+                            <label className="block text-[11px] font-black text-[#7A6354] uppercase tracking-wider mb-1">
+                              Payment Receipt / Screenshot (Optional)
+                            </label>
+                            <input
+                              type="file"
+                              ref={fileInputRef}
+                              onChange={handleFileUpload}
+                              accept="image/*"
+                              className="hidden"
+                            />
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-3.5 py-2 rounded-xl border border-amber-300/70 bg-[#FAF5EE] text-[#8C6239] hover:bg-[#B88E4B] hover:text-white font-serif font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                              >
+                                <Upload size={14} />
+                                <span>{digitalPaymentDetails.screenshotUrl ? 'Receipt Attached ✓' : 'Upload Receipt Screenshot'}</span>
+                              </button>
+                              {digitalPaymentDetails.screenshotUrl && (
+                                <span className="text-[10px] text-emerald-700 font-bold">Screenshot Attached</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -443,7 +476,7 @@ export function CheckoutSectionPayment({
                     <div className="space-y-2 text-xs text-stone-700">
                       <div className="flex justify-between items-center">
                         <span className="font-semibold text-stone-600">Client / Recipient:</span>
-                        <span className="font-bold text-[#1F1612] truncate max-w-[150px]">{form.name || 'Muhammad Fahad Ali'}</span>
+                        <span className="font-bold text-[#1F1612] truncate max-w-[150px]">{form.name || 'Valued Client'}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="font-semibold text-stone-600">Delivery Destination:</span>

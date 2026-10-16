@@ -663,6 +663,119 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
             )}
           </AnimatePresence>
 
+          {/* Mobile Filter Drawer */}
+          <AnimatePresence>
+            {showFilters && (
+              <div className="fixed inset-0 z-50 md:hidden">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowFilters(false)}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+                />
+                <motion.div
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                  className="fixed top-0 right-0 bottom-0 w-[85%] max-w-[340px] bg-[#FCFAF7] border-l border-amber-300/80 p-5 overflow-y-auto z-10 shadow-2xl flex flex-col justify-between"
+                >
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between border-b border-amber-200/60 pb-3">
+                      <h3 className="text-sm font-extrabold text-[#221814] uppercase tracking-wider flex items-center gap-1.5">
+                        <SlidersHorizontal size={15} className="text-[#B88E4B]" /> Filter Criteria
+                      </h3>
+                      <button 
+                        onClick={() => setShowFilters(false)} 
+                        className="w-8 h-8 rounded-full bg-[#FAF5EE] border border-amber-300/60 flex items-center justify-center text-[#221814] hover:bg-amber-100 transition-colors"
+                        aria-label="Close Filters"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    {/* Price Range Slider */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs font-bold text-theme-dark mb-2">
+                        <span>Max Price</span>
+                        <span className="text-theme-accent font-mono">
+                          Rs. {formatPrice(userAdjustedPrice ? priceRange[1] : maxCatalogPrice)}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        id="mobile-price-range-slider"
+                        name="mobileMaxPrice"
+                        min={0}
+                        max={maxCatalogPrice}
+                        step={10000}
+                        value={userAdjustedPrice ? priceRange[1] : maxCatalogPrice}
+                        onChange={e => {
+                          setUserAdjustedPrice(true);
+                          setPriceRange([priceRange[0], parseInt(e.target.value, 10)]);
+                        }}
+                        className="w-full accent-theme-accent cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[10px] text-theme-muted font-mono mt-1">
+                        <span>Rs. 0</span>
+                        <span>Rs. {formatPrice(maxCatalogPrice)}</span>
+                      </div>
+                    </div>
+
+                    {/* Materials Radio Pills */}
+                    <div>
+                      <h4 className="text-[11px] font-bold text-theme-dark uppercase tracking-wider mb-2.5">Wood & Material</h4>
+                      <div className="space-y-1.5">
+                        {materials.map(m => (
+                          <button
+                            key={m}
+                            onClick={() => setSelectedMaterial(m === selectedMaterial ? '' : m)}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                              selectedMaterial === m ? 'bg-[#B88E4B] text-white font-bold' : 'text-[#7A6048] hover:text-[#221814] hover:bg-[#FAF5EE]'
+                            }`}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Colors */}
+                    <div>
+                      <h4 className="text-[11px] font-bold text-theme-dark uppercase tracking-wider mb-2.5">Wood Finish Tone</h4>
+                      <div className="flex flex-wrap gap-2.5">
+                        {colors.map(c => (
+                          <button
+                            key={c.name}
+                            title={c.name}
+                            className="w-7 h-7 rounded-full ring-2 ring-offset-2 ring-transparent hover:ring-[#B88E4B] transition-all shadow-xs"
+                            style={{ backgroundColor: c.hex }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-amber-200/60 flex gap-3">
+                    <button
+                      onClick={clearFilters}
+                      className="flex-1 py-3 bg-[#FAF5EE] text-[#7A6048] text-xs font-bold rounded-xl border border-amber-300/60"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={() => setShowFilters(false)}
+                      className="flex-1 py-3 bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white text-xs font-bold rounded-xl shadow-md"
+                    >
+                      Apply Filters
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
           {/* Main Catalog Display Grid */}
           <div className="flex-1 min-w-0">
             {loading && products.length === 0 ? (

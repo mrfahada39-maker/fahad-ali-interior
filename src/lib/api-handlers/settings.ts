@@ -444,7 +444,13 @@ export async function handleSettingsAndBundleRoutes(
     }
     const rawBody = await req.json().catch(() => ({}));
     const parsed = updateSettingsSchema.safeParse(rawBody);
-    const body = parsed.success ? parsed.data : rawBody;
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid settings payload' },
+        { status: 400 }
+      );
+    }
+    const body = parsed.data;
     const existing = await db.settings.findFirst();
     let updated;
     if (existing) {
@@ -460,20 +466,32 @@ export async function handleSettingsAndBundleRoutes(
           socialWhatsapp: body.socialWhatsapp ?? existing.socialWhatsapp,
           foundedYear: body.foundedYear ?? existing.foundedYear,
           currency: body.currency ?? existing.currency,
+          bankName: body.bankName ?? existing.bankName,
+          accountTitle: body.accountTitle ?? existing.accountTitle,
+          accountNumber: body.accountNumber ?? existing.accountNumber,
+          iban: body.iban ?? existing.iban,
+          jazzcashNumber: body.jazzcashNumber ?? existing.jazzcashNumber,
+          easypaisaNumber: body.easypaisaNumber ?? existing.easypaisaNumber,
         },
       });
     } else {
       updated = await db.settings.create({
         data: {
           siteName: body.siteName || 'Fahad Ali Interior',
-          contactPhone: body.contactPhone || '',
-          adminEmail: body.adminEmail || '',
-          storeAddress: body.storeAddress || '',
+          contactPhone: body.contactPhone || BUSINESS_CONTACT.phone,
+          adminEmail: body.adminEmail || BUSINESS_CONTACT.adminEmail,
+          storeAddress: body.storeAddress || BUSINESS_CONTACT.address,
           socialInstagram: body.socialInstagram || '',
           socialFacebook: body.socialFacebook || '',
-          socialWhatsapp: body.socialWhatsapp || '',
+          socialWhatsapp: body.socialWhatsapp || BUSINESS_CONTACT.whatsapp,
           foundedYear: body.foundedYear || '2024',
           currency: body.currency || 'PKR',
+          bankName: body.bankName || 'Habib Bank Limited (HBL)',
+          accountTitle: body.accountTitle || 'FAHAD ALI INTERIOR',
+          accountNumber: body.accountNumber || '00427992104803',
+          iban: body.iban || 'PK36HABB0000427992104803',
+          jazzcashNumber: body.jazzcashNumber || '0320 7006110',
+          easypaisaNumber: body.easypaisaNumber || '0320 7006110',
         },
       });
     }

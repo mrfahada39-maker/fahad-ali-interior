@@ -148,6 +148,12 @@ export const updateSettingsSchema = z.object({
   socialWhatsapp: z.string().max(100).optional(),
   foundedYear: z.string().max(10).optional(),
   currency: z.string().max(10).optional(),
+  bankName: z.string().max(200).optional(),
+  accountTitle: z.string().max(200).optional(),
+  accountNumber: z.string().max(100).optional(),
+  iban: z.string().max(100).optional(),
+  jazzcashNumber: z.string().max(60).optional(),
+  easypaisaNumber: z.string().max(60).optional(),
 });
 
 export const adminPasswordChangeSchema = z.object({

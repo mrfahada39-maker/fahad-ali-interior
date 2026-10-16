@@ -102,6 +102,7 @@ export async function getStorefrontProducts(limit = 50): Promise<StorefrontProdu
         description: true,
         specs: true,
         createdAt: true,
+        updatedAt: true,
       },
       take: limit,
       orderBy: { createdAt: 'desc' },

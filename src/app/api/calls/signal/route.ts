@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
     // Verify admin identity if caller claims to be admin
     if (fromUserId === 'admin' || (Array.isArray(userAliases) && userAliases.includes('admin'))) {
       const isAdmin = Boolean(await getVerifiedAdmin(req));
-      if (!isAdmin && action !== 'status') {
+      if (!isAdmin) {
         return NextResponse.json({ error: 'Unauthorized: Admin authentication required.' }, { status: 403 });
       }
     }

@@ -543,15 +543,15 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
     }
 
     const cleanOrderId = decodeURIComponent(orderId).replace(/^[#\s]+/, '').trim();
-    if (!cleanOrderId) {
-      return NextResponse.json({ error: 'Order ID is required for tracking.' }, { status: 400 });
+    if (!cleanOrderId || cleanOrderId.length < 4) {
+      return NextResponse.json({ error: 'Valid Order ID (minimum 4 characters) is required for tracking.' }, { status: 400 });
     }
 
     const order = (await db.order.findFirst({
       where: {
         OR: [
           { id: cleanOrderId },
-          { id: { endsWith: cleanOrderId, mode: 'insensitive' } },
+          ...(cleanOrderId.length >= 6 ? [{ id: { endsWith: cleanOrderId, mode: 'insensitive' as const } }] : []),
           { id: { equals: cleanOrderId, mode: 'insensitive' } },
         ],
         deletedAt: null,
@@ -607,7 +607,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       where: {
         OR: [
           { id: orderId },
-          { id: { endsWith: orderId, mode: 'insensitive' } },
+          ...(orderId.length >= 6 ? [{ id: { endsWith: orderId, mode: 'insensitive' as const } }] : []),
           { id: { equals: orderId, mode: 'insensitive' } },
         ],
         deletedAt: null,

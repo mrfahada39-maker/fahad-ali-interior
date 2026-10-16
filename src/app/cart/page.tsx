@@ -9,22 +9,16 @@ import { useCartStore } from '@/store';
 import { resolveImageUrl } from '@/lib/images';
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, getSubtotal } = useCartStore();
+  const { items, updateQuantity, removeItem, getSubtotal, appliedCoupon, setAppliedCoupon } = useCartStore();
   const [coupon, setCoupon] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<{
-    code: string;
-    discountAmount: number;
-    discountType: string;
-    discount: number;
-  } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
 
   const subtotal = getSubtotal();
-  const shipping = subtotal > 0 ? 50 : 0;
+  const shipping = 0;
   const discount = appliedCoupon
-    ? appliedCoupon.discountType === 'PERCENTAGE'
-      ? Math.round((subtotal * appliedCoupon.discount) / 100)
-      : Math.min(subtotal, appliedCoupon.discount)
+    ? appliedCoupon.discountType === 'PERCENTAGE' || appliedCoupon.percent
+      ? Math.round((subtotal * Number(appliedCoupon.discount ?? appliedCoupon.percent ?? 0)) / 100)
+      : Math.min(subtotal, Number(appliedCoupon.discount ?? appliedCoupon.fixed ?? appliedCoupon.discountAmount ?? 0))
     : 0;
   const total = Math.max(0, subtotal + shipping - discount);
 
@@ -49,6 +43,8 @@ export default function CartPage() {
         discountAmount: Number(data.discountAmount || 0),
         discountType: data.discountType,
         discount: Number(data.discount),
+        percent: data.discountType === 'PERCENTAGE' ? Number(data.discount) : undefined,
+        fixed: data.discountType !== 'PERCENTAGE' ? Number(data.discount) : undefined,
       });
     } catch {
       setCouponError('Unable to validate coupon right now.');
@@ -124,6 +120,7 @@ export default function CartPage() {
                       <div className="flex items-center w-28 bg-white border border-amber-300/70 rounded-xl shadow-2xs">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          aria-label={`Decrease quantity of ${item.name}`}
                           className="flex-1 h-9 flex items-center justify-center text-[#221814] hover:bg-[#FAF5EE] transition-colors rounded-l-xl cursor-pointer"
                         >
                           <Minus size={13} />
@@ -133,6 +130,7 @@ export default function CartPage() {
                         </div>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          aria-label={`Increase quantity of ${item.name}`}
                           className="flex-1 h-9 flex items-center justify-center text-[#221814] hover:bg-[#FAF5EE] transition-colors rounded-r-xl cursor-pointer"
                         >
                           <Plus size={13} />
@@ -217,7 +215,7 @@ export default function CartPage() {
                     )}
                     <div className="flex justify-between mb-5 pb-5 border-b border-amber-200/60 text-sm relative z-10">
                       <span className="text-[#7A6048]">White-Glove Delivery</span>
-                      <span className="text-[#221814] font-bold font-sans">Rs. {(shipping ?? 0).toLocaleString()}</span>
+                      <span className="text-emerald-700 font-bold font-sans">COMPLIMENTARY</span>
                     </div>
                     <div className="flex justify-between mb-6 relative z-10">
                       <span className="text-[#221814] font-black text-base">Total Investment</span>

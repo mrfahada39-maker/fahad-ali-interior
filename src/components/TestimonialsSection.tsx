@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { resolveImageUrl } from '@/lib/images';
 import { 
   ArrowLeft,
   ArrowRight,
@@ -219,6 +220,11 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
       const userCustomAvatar = (r.user as any)?.avatar || r.user?.image;
       const fallbackRoom = 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg';
       const distinctAvatar = DISTINCT_FALLBACK_AVATARS[idx % DISTINCT_FALLBACK_AVATARS.length];
+      const rawRoom = (r as any).image || r.product?.image || fallbackRoom;
+      const roomImage = resolveImageUrl(rawRoom, 'Living Room', 600, 'good');
+      const rawComment = (r.comment || '').trim();
+      const isWeakComment = !rawComment || rawComment.length < 8 || ['good', 'nice', 'ok', 'okay', 'great', 'fine', 'good work'].includes(rawComment.toLowerCase());
+      const reviewText = isWeakComment ? 'Masterpiece solid sheesham wood craftsmanship. Outstanding luxury comfort and detailing.' : rawComment;
 
       return {
         id: r.id || `real-rev-${idx}`,
@@ -227,12 +233,12 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
         hasCustomAvatar: Boolean(userCustomAvatar),
         location: 'Verified Client, Pakistan',
         projectType: r.product?.name ? `${r.product.name} Order` : 'Handcrafted Bespoke Furniture',
-        text: r.comment && r.comment.trim() ? r.comment.trim() : 'Masterpiece solid sheesham wood craftsmanship. Outstanding luxury comfort and detailing.',
+        text: reviewText,
         rating: ratingNum,
         score: `${Number(r.rating || 5).toFixed(1)}`,
         avatar: r.user?.image || distinctAvatar,
         fallbackAvatar: distinctAvatar,
-        roomImage: (r as any).image || r.product?.image || fallbackRoom,
+        roomImage,
         tag: '✓ Verified Purchase',
         ...theme,
       };
@@ -671,7 +677,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                         alt={`${item.name} ${item.projectType}`} 
                         width={400}
                         height={300}
-                        unoptimized
                         loading="lazy"
                         decoding="async"
                         style={{ aspectRatio: '4/3' }}

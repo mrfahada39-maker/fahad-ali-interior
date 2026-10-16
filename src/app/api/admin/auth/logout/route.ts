@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   revokeAdminTokenAsync,
   revokeAllUserTokensAsync,
-  parseAdminToken,
+  verifySignedTokenUserId,
   getVerifiedUser,
 } from '@/lib/admin-auth';
 
@@ -15,10 +15,10 @@ export async function POST(req: NextRequest) {
       req.cookies.get('fai_admin_token')?.value;
 
     if (raw) {
+      const verifiedUserId = verifySignedTokenUserId(raw);
       await revokeAdminTokenAsync(raw);
-      const parsed = parseAdminToken(raw);
-      if (parsed?.userId) {
-        await revokeAllUserTokensAsync(parsed.userId);
+      if (verifiedUserId) {
+        await revokeAllUserTokensAsync(verifiedUserId);
       }
     } else {
       const user = await getVerifiedUser(req).catch(() => null);

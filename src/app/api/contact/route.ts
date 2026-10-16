@@ -50,10 +50,21 @@ export async function POST(req: NextRequest) {
     const { name, phone, email, projectType, message } = parseResult.data;
 
     const contactName = name.slice(0, 200);
-    const contactPhone = (phone || '+92 300 0000000').slice(0, 50);
+    const contactPhone = (phone || '').slice(0, 50);
     const contactEmail = (email || '').slice(0, 200);
     const contactMessage = (message || 'N/A').slice(0, 2000);
     const contactProject = (projectType || 'Custom Furniture').slice(0, 200);
+
+    // Save inquiry to db.inquiry so Admin InquiriesTab displays it
+    await db.inquiry
+      .create({
+        data: {
+          roomType: contactProject,
+          description: `Name: ${contactName} | Phone: ${contactPhone || 'N/A'} | Email: ${contactEmail || 'N/A'} | Message: ${contactMessage}`,
+          status: 'pending',
+        },
+      })
+      .catch(() => {});
 
     // Create an Admin Notification in DB
     const adminUser = await db.user.findFirst({

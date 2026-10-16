@@ -40,7 +40,13 @@ export async function handleMessageRoutes(ctx: ApiDispatchContext): Promise<Next
       if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       const rawBody = await req.json().catch(() => ({}));
       const parsed = createMessageSchema.safeParse(rawBody);
-      const body = parsed.success ? parsed.data : rawBody;
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: parsed.error.issues[0]?.message || 'Invalid message payload' },
+          { status: 400 }
+        );
+      }
+      const body = parsed.data;
       const text = body.audioUrl
         ? `[VOICE_NOTE]:${body.audioUrl}`
         : String(body.message || body.text || '').trim();
@@ -75,10 +81,37 @@ export async function handleMessageRoutes(ctx: ApiDispatchContext): Promise<Next
     if (method === 'POST') {
       const rawBody = await req.json().catch(() => ({}));
       const parsed = contactInquirySchema.safeParse(rawBody);
-      const body = parsed.success ? parsed.data : rawBody;
-      const contactName = body.name || 'VIP Client';
-      const contactPhone = body.phone || '+92 300 0000000';
-      const contactEmail = body.email || '';
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: parsed.error.issues[0]?.message || 'Invalid inquiry payload' },
+          { status: 400 }
+        );
+      }
+      const body = parsed.data;
+      const contactName = (body.name || 'VIP Client').trim();
+      const contactPhone = (body.phone || '').trim();
+      const contactEmail = (body.email || '').trim();
+      const projectType = (body.projectType || 'Custom Furniture').trim();
+      const messageText = (body.message || '').trim();
+
+      if (!contactPhone && !contactEmail) {
+        return NextResponse.json(
+          { error: 'Please provide a phone number or email address.' },
+          { status: 400 }
+        );
+      }
+
+      const user = await getUserFromSessionOrToken(req).catch(() => null);
+      await db.inquiry
+        .create({
+          data: {
+            userId: user?.id || null,
+            roomType: projectType,
+            description: `Name: ${contactName} | Phone: ${contactPhone || 'N/A'} | Email: ${contactEmail || 'N/A'} | Message: ${messageText || 'N/A'}`,
+            status: 'pending',
+          },
+        })
+        .catch(() => {});
 
       const adminUser = await db.user
         .findFirst({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } })
@@ -89,7 +122,7 @@ export async function handleMessageRoutes(ctx: ApiDispatchContext): Promise<Next
             data: {
               userId: adminUser.id,
               title: `New VIP Inquiry: ${contactName}`,
-              desc: `Email: ${contactEmail} | Phone: ${contactPhone} | Project: ${body.projectType || 'Custom Furniture'} | Note: ${body.message || 'N/A'}`,
+              desc: `Email: ${contactEmail} | Phone: ${contactPhone} | Project: ${projectType} | Note: ${messageText || 'N/A'}`,
               type: 'order',
               isNew: true,
             },
@@ -181,7 +214,13 @@ export async function handleMessageRoutes(ctx: ApiDispatchContext): Promise<Next
     if (method === 'POST') {
       const rawBody = await req.json().catch(() => ({}));
       const parsed = createMessageSchema.safeParse(rawBody);
-      const body = parsed.success ? parsed.data : rawBody;
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: parsed.error.issues[0]?.message || 'Invalid message payload' },
+          { status: 400 }
+        );
+      }
+      const body = parsed.data;
       const userId = body.userId || body.threadId;
       const audioUrl = body.audioUrl;
       const text = audioUrl
@@ -194,7 +233,7 @@ export async function handleMessageRoutes(ctx: ApiDispatchContext): Promise<Next
 
       const newMsg = await db.message.create({
         data: {
-          userId: userId || null,
+          userId: String(userId || 'anonymous'),
           text,
           sender: 'support',
         },

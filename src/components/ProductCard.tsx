@@ -99,34 +99,37 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
         className="group bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] rounded-[24px] p-4 shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_16px_40px_rgba(184,142,75,0.18)] transition-all duration-300 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden"
       >
         {/* Ambient Corner Radial Glow */}
-        <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-xl pointer-events-none bg-amber-500/10 opacity-70 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.18)_0%,transparent_70%)] opacity-70 group-hover:opacity-100 transition-opacity" />
 
-        <Link
-          href={`/product/${product.id}`}
-          prefetch={false}
-          onClick={handleProductClick}
-          onMouseEnter={primeProductCache}
-          onTouchStart={primeProductCache}
-          className="relative w-full sm:w-56 aspect-[4/3] rounded-[18px] overflow-hidden bg-[#FAF5EE] shrink-0 border border-amber-200/60"
-        >
-          <Image
-            src={imgSrc}
-            alt={product.name}
-            fill
-            loading="lazy"
-            decoding="async"
-            style={{ aspectRatio: '4/3' }}
-            className="object-cover transition-transform duration-700 group-hover:scale-106 aspect-[4/3]"
-            sizes="(max-width: 640px) 100vw, 224px"
-            onError={() => setImgError(true)}
-          />
+        <div className="relative w-full sm:w-56 aspect-[4/3] rounded-[18px] overflow-hidden bg-[#FAF5EE] shrink-0 border border-amber-200/60">
+          <Link
+            href={`/product/${product.id}`}
+            prefetch={false}
+            onClick={handleProductClick}
+            onMouseEnter={primeProductCache}
+            onTouchStart={primeProductCache}
+            className="block absolute inset-0 z-0"
+          >
+            <Image
+              src={imgSrc}
+              alt={product.name}
+              fill
+              loading="lazy"
+              decoding="async"
+              style={{ aspectRatio: '4/3' }}
+              className="object-cover transition-transform duration-700 group-hover:scale-106 aspect-[4/3]"
+              sizes="(max-width: 640px) 100vw, 224px"
+              onError={() => setImgError(true)}
+            />
+          </Link>
           <button
             onClick={handleWishlist}
-            className="absolute top-3 right-3 w-9 h-9 rounded-xl bg-white/95 backdrop-blur-sm hover:bg-white text-[#221814] border border-amber-300/60 shadow-[0_2px_8px_rgba(184,142,75,0.15)] flex items-center justify-center transition-all z-10 hover:scale-105"
+            className="absolute top-3 right-3 w-9 h-9 rounded-xl bg-white hover:bg-[#FAF5EE] text-[#221814] border border-amber-300/60 shadow-[0_2px_8px_rgba(184,142,75,0.15)] flex items-center justify-center transition-all z-10 hover:scale-105 cursor-pointer"
+            aria-label="Toggle Wishlist"
           >
             <Heart size={15} className={wishlisted ? 'fill-rose-500 text-rose-500' : 'text-[#221814]'} />
           </button>
-        </Link>
+        </div>
 
         <div className="flex-1 min-w-0 flex flex-col justify-between py-1 w-full relative z-10">
           <div>
@@ -136,7 +139,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
               </span>
               <div className="flex items-center gap-1 text-[11px] font-bold text-[#B88E4B]">
                 <Star size={12} className="fill-[#B88E4B] text-[#B88E4B]" />
-                <span>5.0</span>
+                <span>{product.avgRating ? Number(product.avgRating).toFixed(1) : '5.0'}</span>
               </div>
             </div>
             <Link
@@ -151,7 +154,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
               </h3>
             </Link>
             <p className="text-xs text-[#7A6048] line-clamp-2 mt-1 leading-relaxed font-serif italic">
-              {product.description || '100% Solid Seasoned Sheesham masterpiece crafted with traditional mortise & tenon joinery.'}
+              {product.description || (product.material ? `Handcrafted from premium ${product.material} with traditional mortise & tenon joinery.` : '100% Solid Seasoned Sheesham masterpiece crafted with traditional mortise & tenon joinery.')}
             </p>
           </div>
 
@@ -191,7 +194,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
       className="group relative bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] rounded-[24px] p-3.5 shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_20px_45px_rgba(184,142,75,0.18)] transition-all duration-300 flex flex-col justify-between overflow-hidden"
     >
       {/* Ambient Corner Radial Glow */}
-      <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full blur-xl pointer-events-none bg-amber-500/10 opacity-70 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.18)_0%,transparent_70%)] opacity-70 group-hover:opacity-100 transition-opacity" />
 
       <div className="relative aspect-[4/3] rounded-[18px] overflow-hidden bg-[#FAF5EE] mb-3.5 border border-amber-200/60">
         <Link
@@ -217,7 +220,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
 
         {/* Top Badges */}
         <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10 pointer-events-none">
-          <span className="text-[9px] font-black uppercase tracking-wider bg-[#FAF5EE]/95 backdrop-blur-md text-[#8C6239] border border-amber-300/60 px-3 py-0.5 rounded-full shadow-2xs">
+          <span className="text-[9px] font-black uppercase tracking-wider bg-[#FAF5EE] text-[#8C6239] border border-amber-300/60 px-3 py-0.5 rounded-full shadow-2xs">
             {product.category || 'Solid Wood'}
           </span>
         </div>
@@ -225,7 +228,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
         {/* Floating Wishlist Button */}
         <button
           onClick={handleWishlist}
-          className="absolute top-2.5 right-2.5 w-8.5 h-8.5 rounded-xl bg-white/95 backdrop-blur-sm hover:bg-white text-[#221814] border border-amber-300/60 shadow-[0_2px_8px_rgba(184,142,75,0.15)] flex items-center justify-center transition-all z-10 hover:scale-110 cursor-pointer"
+          className="absolute top-2.5 right-2.5 w-8.5 h-8.5 rounded-xl bg-white hover:bg-[#FAF5EE] text-[#221814] border border-amber-300/60 shadow-[0_2px_8px_rgba(184,142,75,0.15)] flex items-center justify-center transition-all z-10 hover:scale-110 cursor-pointer"
           aria-label="Toggle Wishlist"
         >
           <Heart
@@ -239,7 +242,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
           {onQuickView && (
             <button
               onClick={(e) => { e.preventDefault(); onQuickView(product); }}
-              className="flex-1 bg-white/95 backdrop-blur-md hover:bg-white text-[#221814] text-[10.5px] font-black uppercase tracking-wider py-2.5 rounded-xl shadow-md border border-amber-300/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              className="flex-1 bg-white hover:bg-[#FAF5EE] text-[#221814] text-[10.5px] font-black uppercase tracking-wider py-2.5 rounded-xl shadow-md border border-amber-300/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Eye size={13} /> Quick View
             </button>
@@ -268,7 +271,9 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
               {product.name}
             </h3>
           </Link>
-          <p className="text-xs text-[#7A6048] font-medium line-clamp-1 mt-0.5">100% Solid Handcrafted Sheesham</p>
+          <p className="text-xs text-[#7A6048] font-medium line-clamp-1 mt-0.5">
+            {product.material || '100% Solid Handcrafted Sheesham'}
+          </p>
         </div>
 
         <div className="flex items-center justify-between pt-3 mt-3 border-t border-amber-200/60">

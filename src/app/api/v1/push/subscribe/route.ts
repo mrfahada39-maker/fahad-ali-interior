@@ -16,11 +16,12 @@ export async function POST(req: NextRequest) {
 
     const endpoint = String(body.endpoint);
     const keys = body.keys;
-    const userId = (session?.user as any)?.id || body.userId;
+    const sessionUserId = (session?.user as any)?.id;
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID or authenticated session required to subscribe to push notifications' }, { status: 401 });
+    if (!sessionUserId) {
+      return NextResponse.json({ error: 'Authenticated session required to subscribe to push notifications' }, { status: 401 });
     }
+    const userId = String(sessionUserId);
 
     const subscription = await db.pushSubscription.upsert({
       where: { endpoint },

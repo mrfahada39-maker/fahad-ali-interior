@@ -40,7 +40,7 @@ function isSameOriginRequest(request: NextRequest): boolean {
   }
 }
 
-const protectedPages = ['/dashboard', '/checkout', '/cart'];
+const protectedPages = ['/dashboard'];
 const adminPages     = ['/admin'];
 
 function isLocalHost(request: NextRequest): boolean {

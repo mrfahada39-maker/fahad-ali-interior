@@ -12,6 +12,7 @@ import {
 import { apiFetchJson } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
+import ProductCard from '@/components/ProductCard';
 import dynamic from 'next/dynamic';
 
 const TestimonialsSection = dynamic(() => import('@/components/TestimonialsSection'), {
@@ -34,11 +35,13 @@ interface HomePageInteractiveProps {
   initialBanners?: any[];
   initialCategories?: any[];
   initialReviews?: any[];
+  initialProducts?: any[];
 }
 
 export default function HomePageInteractive({
   initialCategories = CATEGORIES,
   initialReviews = REVIEWS,
+  initialProducts = [],
 }: HomePageInteractiveProps) {
   const heroSectionRef = useRef<HTMLElement>(null);
   const heroVideoRef = useRef<HTMLVideoElement>(null);
@@ -47,6 +50,9 @@ export default function HomePageInteractive({
   );
   const [reviewsList, setReviewsList] = useState<any[]>(
     initialReviews && initialReviews.length > 0 ? initialReviews : []
+  );
+  const [productsList, setProductsList] = useState<any[]>(
+    initialProducts && initialProducts.length > 0 ? initialProducts : []
   );
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [mountVideo, setMountVideo] = useState(false);
@@ -98,7 +104,7 @@ export default function HomePageInteractive({
 
   useEffect(() => {
     // Zero-network overhead: Skip client-side re-fetching when server already provided bundle
-    if (initialCategories && initialCategories.length > 0 && initialReviews && initialReviews.length > 0) {
+    if (initialCategories && initialCategories.length > 0 && initialReviews && initialReviews.length > 0 && initialProducts && initialProducts.length > 0) {
       return;
     }
     const loadHomeBundle = async () => {
@@ -107,13 +113,14 @@ export default function HomePageInteractive({
         if (data) {
           if (data.categories && data.categories.length > 0) setCategoriesList(data.categories);
           if (data.reviews && Array.isArray(data.reviews)) setReviewsList(data.reviews);
+          if (data.products && Array.isArray(data.products) && productsList.length === 0) setProductsList(data.products);
         }
       } catch (err) {
         logger.error('Failed to load home bundle:', err);
       }
     };
     loadHomeBundle();
-  }, [initialCategories, initialReviews]);
+  }, [initialCategories, initialReviews, initialProducts, productsList.length]);
 
   return (
     <div className="contents">
@@ -126,7 +133,7 @@ export default function HomePageInteractive({
           <picture className="absolute inset-0 w-full h-full pointer-events-none">
             <source media="(max-width: 768px)" srcSet={CLOUDINARY_ASSETS.heroMobilePoster} />
             <source media="(min-width: 769px)" srcSet={CLOUDINARY_ASSETS.heroDesktopPoster} />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+
             <img
               src={CLOUDINARY_ASSETS.heroMobilePoster}
               alt="Fahad Ali Interior Royal Luxury Showcase"
@@ -203,7 +210,7 @@ export default function HomePageInteractive({
               <span className="text-sm">→</span>
             </Link>
             <Link
-              href="/shop"
+              href="/shop/categories"
               prefetch={true}
               className="gsap-hero-magnetic w-full sm:w-auto bg-white/10 backdrop-blur-md border border-[#E2D1BC]/60 text-[#F3E5AB] hover:bg-white/20 font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 flex items-center justify-center cursor-pointer will-change-transform active:scale-95 shadow-md"
             >
@@ -297,6 +304,47 @@ export default function HomePageInteractive({
           ))}
         </div>
       </section>
+
+      {/* ── FEATURED MASTERPIECES SECTION ── */}
+      {productsList.length > 0 && (
+        <section className="smooth-scroll-section w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 mb-16 relative z-10">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] shadow-xs mb-3.5">
+              <span className="text-[#B88E4B] text-sm font-bold">✦</span>
+              <span className="text-xs sm:text-[13px] font-black uppercase tracking-[0.25em] text-[#7A6354]">
+                BESPOKE HANDCRAFTED CREATIONS
+              </span>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-[#221814] tracking-tight leading-tight mb-2">
+              Featured <span className="font-serif italic font-normal text-[#C9A24D] mx-2 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">Masterpieces</span>
+            </h2>
+            <div className="flex items-center justify-center gap-3 my-3">
+              <div className="h-[1.5px] w-24 sm:w-32 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#B88E4B] shadow-[0_0_8px_#B88E4B]" />
+              <div className="h-[1.5px] w-24 sm:w-32 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
+            </div>
+            <p className="text-[#7A6048] text-sm sm:text-base md:text-lg max-w-xl mx-auto font-serif italic">
+              Exclusive 100% Solid Seasoned Sheesham pieces ready for complimentary nationwide delivery.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {productsList.slice(0, 8).map((product, idx) => (
+              <ProductCard key={product.id || idx} product={product} index={idx} />
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-2 bg-[#FAF5EE] hover:bg-[#F3E7D3] text-[#221814] border border-[#B88E4B]/50 hover:border-[#B88E4B] font-serif font-bold text-sm px-8 py-3.5 rounded-xl transition-all shadow-sm cursor-pointer"
+            >
+              <span>Explore Complete Collection</span>
+              <ChevronRight size={16} />
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION ── */}
       <TestimonialsSection reviews={reviewsList.length > 0 ? reviewsList : initialReviews} />

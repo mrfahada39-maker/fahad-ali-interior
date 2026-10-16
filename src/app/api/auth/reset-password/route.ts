@@ -46,35 +46,35 @@ export async function POST(req: NextRequest) {
 
     // Method 2: 6-digit code verification
     if (!user && email && code) {
-      const cleanEmail = email.trim().toLowerCase();
+      const cleanEmail = String(email).trim().toLowerCase();
       const cleanCode = String(code).trim().replace(/\D/g, '');
 
-      const existingUser = await db.user.findUnique({
-        where: { email: cleanEmail },
-      });
-
-      if (existingUser) {
-        if (existingUser.deletedAt) {
-          await runDummyBcryptCompare(password);
-          return NextResponse.json({ error: 'Invalid or expired password reset link/code. Please request a new one.' }, { status: 400 });
-        }
-        if (existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date()) {
-          await runDummyBcryptCompare(password);
-          return NextResponse.json({ error: 'Invalid or expired password reset link/code. Please request a new one.' }, { status: 400 });
-        }
-
-        const resetRecord = await db.passwordResetToken.findFirst({
-          where: {
-            userId: existingUser.id,
-            OR: [
-              { tokenHash: { endsWith: cleanCode } },
-              { tokenHash: { endsWith: `:${cleanCode}` } },
-              { tokenHash: cleanCode },
-            ],
-            expiresAt: { gt: new Date() },
-          },
-          orderBy: { createdAt: 'desc' },
+      if (/^\d{6}$/.test(cleanCode)) {
+        const existingUser = await db.user.findUnique({
+          where: { email: cleanEmail },
         });
+
+        if (existingUser) {
+          if (existingUser.deletedAt) {
+            await runDummyBcryptCompare(password);
+            return NextResponse.json({ error: 'Invalid or expired password reset link/code. Please request a new one.' }, { status: 400 });
+          }
+          if (existingUser.lockedUntil && new Date(existingUser.lockedUntil) > new Date()) {
+            await runDummyBcryptCompare(password);
+            return NextResponse.json({ error: 'Invalid or expired password reset link/code. Please request a new one.' }, { status: 400 });
+          }
+
+          const resetRecord = await db.passwordResetToken.findFirst({
+            where: {
+              userId: existingUser.id,
+              OR: [
+                { tokenHash: { endsWith: `:${cleanCode}` } },
+                { tokenHash: cleanCode },
+              ],
+              expiresAt: { gt: new Date() },
+            },
+            orderBy: { createdAt: 'desc' },
+          });
 
         if (resetRecord) {
           user = existingUser;
@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
             await db.passwordResetToken.deleteMany({ where: { userId: existingUser.id } }).catch(() => {});
           }
         }
+      }
       }
     }
 

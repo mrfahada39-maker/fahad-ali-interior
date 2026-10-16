@@ -18,6 +18,15 @@ export interface OrderEmailData {
   couponCode?: string | null;
 }
 
+function escapeHtml(val: unknown): string {
+  return String(val ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Pure Node.js TLS SMTP Sender - 0 External Dependencies, 100% Reliable across all Next.js/Vercel versions
 function sendSmtpTls({
   host = process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -40,10 +49,11 @@ function sendSmtpTls({
   html: string;
   text?: string;
 }): Promise<boolean> {
-  const cleanUser = (user || '').trim().replace(/^["']|["']$/g, '');
-  const cleanPass = (pass || '').trim().replace(/^["']|["']$/g, '').replace(/\s+/g, '');
-  const cleanFrom = (from || '').trim().replace(/^["']|["']$/g, '');
-  const cleanTo = (to || '').trim().replace(/^["'<]|["'>]$/g, '');
+  const cleanUser = (user || '').replace(/[\r\n]/g, '').trim().replace(/^["']|["']$/g, '');
+  const cleanPass = (pass || '').replace(/[\r\n]/g, '').trim().replace(/^["']|["']$/g, '').replace(/\s+/g, '');
+  const cleanFrom = (from || '').replace(/[\r\n]/g, '').trim().replace(/^["']|["']$/g, '');
+  const cleanTo = (to || '').replace(/[\r\n]/g, '').trim().replace(/^["'<]|["'>]$/g, '');
+  const cleanSubject = (subject || '').replace(/[\r\n]+/g, ' ').trim();
 
   if (!cleanUser || !cleanPass || !cleanTo) {
     logger.error('[SMTP ERROR] Cannot send email: SMTP_USER, SMTP_PASS, or recipient email missing.');
@@ -65,7 +75,7 @@ function sendSmtpTls({
         {
           host,
           port: tlsPort,
-          rejectUnauthorized: false,
+          rejectUnauthorized: process.env.SMTP_ALLOW_SELF_SIGNED === 'true' ? false : process.env.NODE_ENV === 'production',
         },
         () => {
           let step = 0;
@@ -125,7 +135,7 @@ function sendSmtpTls({
                 `From: ${cleanFrom}`,
                 `To: <${cleanTo}>`,
                 `Reply-To: ${cleanFrom}`,
-                `Subject: ${subject}`,
+                `Subject: ${cleanSubject}`,
                 'MIME-Version: 1.0',
               ];
 
@@ -194,19 +204,27 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
       (item) => `
       <tr style="border-bottom: 1px solid #EFE8DD;">
         <td style="padding: 14px 10px; vertical-align: middle;">
-          <div style="font-weight: 800; color: #1F1612; font-size: 14px; font-family: 'Playfair Display', Georgia, serif; letter-spacing: 0.2px;">${item.name}</div>
+          <div style="font-weight: 800; color: #1F1612; font-size: 14px; font-family: 'Playfair Display', Georgia, serif; letter-spacing: 0.2px;">${escapeHtml(item.name)}</div>
           <div style="color: #9C8272; font-size: 11px; margin-top: 3px; font-weight: 500;">🪵 100% Solid Kiln-Seasoned Sheesham • 10-Yr Warranty</div>
         </td>
         <td style="padding: 14px 10px; text-align: center; vertical-align: middle;">
-          <span style="display: inline-block; background: #F3ECE2; border: 1px solid #E2D6C5; color: #5C4538; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 12px;">× ${item.quantity}</span>
+          <span style="display: inline-block; background: #F3ECE2; border: 1px solid #E2D6C5; color: #5C4538; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 12px;">× ${Number(item.quantity) || 1}</span>
         </td>
         <td style="padding: 14px 10px; text-align: right; vertical-align: middle; color: #8C6239; font-weight: 800; font-size: 14.5px; font-family: 'Playfair Display', Georgia, serif;">
-          Rs. ${(item.price * item.quantity).toLocaleString()}
+          Rs. ${(Number(item.price) * (Number(item.quantity) || 1)).toLocaleString()}
         </td>
       </tr>
     `
     )
     .join('');
+
+  const safeOrderId = escapeHtml(order.orderId);
+  const safeCustomerName = escapeHtml(order.customerName);
+  const safePaymentMethod = escapeHtml(order.paymentMethod);
+  const safeShippingAddress = escapeHtml(order.shippingAddress);
+  const safeShippingCity = escapeHtml(order.shippingCity);
+  const safeCustomerPhone = escapeHtml(order.customerPhone);
+  const safeCouponCode = escapeHtml(order.couponCode || 'Promo Voucher');
 
   const emailHtml = `
     <!DOCTYPE html>
@@ -214,7 +232,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Order Confirmation #${order.orderId} - Fahad Ali Interior</title>
+      <title>Order Confirmation #${safeOrderId} - Fahad Ali Interior</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F6F3EE; margin: 0; padding: 28px 12px; color: #221814; -webkit-font-smoothing: antialiased;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -268,7 +286,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                   <!-- Customer Salutation -->
                   <div style="text-align: center; margin-bottom: 26px;">
                     <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 900; color: #221814; margin: 0 0 8px; letter-spacing: -0.3px;">
-                      Thank You, ${order.customerName}!
+                      Thank You, ${safeCustomerName}!
                     </h2>
                     <p style="margin: 0 auto; color: #6E594D; font-size: 13.5px; line-height: 1.65; max-width: 460px;">
                       Your bespoke solid wood commission has been officially confirmed and queued for artisan kiln-seasoned crafting in our atelier.
@@ -283,7 +301,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                           <tr>
                             <td style="color: #7A6354; font-weight: 600; width: 38%; padding: 6px 0;">Order Reference:</td>
                             <td style="text-align: right; padding: 6px 0;">
-                              <span style="background: #1F1612; color: #F8E7BE; font-weight: 800; font-family: monospace; font-size: 12.5px; padding: 3px 10px; border-radius: 6px; letter-spacing: 0.5px;">#${order.orderId}</span>
+                              <span style="background: #1F1612; color: #F8E7BE; font-weight: 800; font-family: monospace; font-size: 12.5px; padding: 3px 10px; border-radius: 6px; letter-spacing: 0.5px;">#${safeOrderId}</span>
                             </td>
                           </tr>
                           <tr>
@@ -292,7 +310,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                           <tr>
                             <td style="color: #7A6354; font-weight: 600; padding: 8px 0 6px;">Payment Protocol:</td>
                             <td style="text-align: right; font-weight: 800; color: #996515; text-transform: uppercase; font-size: 12.5px; padding: 8px 0 6px;">
-                              ${order.paymentMethod}
+                              ${safePaymentMethod}
                             </td>
                           </tr>
                           <tr>
@@ -301,7 +319,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                           <tr>
                             <td style="color: #7A6354; font-weight: 600; padding: 8px 0 6px; vertical-align: top;">Delivery Address:</td>
                             <td style="text-align: right; font-weight: 700; color: #1F1612; padding: 8px 0 6px;">
-                              ${order.shippingAddress}, ${order.shippingCity}
+                              ${safeShippingAddress}, ${safeShippingCity}
                             </td>
                           </tr>
                           <tr>
@@ -310,7 +328,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                           <tr>
                             <td style="color: #7A6354; font-weight: 600; padding: 8px 0 2px;">Customer Contact:</td>
                             <td style="text-align: right; font-weight: 700; color: #1F1612; padding: 8px 0 2px;">
-                              ${order.customerPhone}
+                              ${safeCustomerPhone}
                             </td>
                           </tr>
                           ${order.discount && order.discount > 0 ? `
@@ -320,7 +338,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                           <tr>
                             <td style="color: #7A6354; font-weight: 600; padding: 8px 0 2px;">Voucher Applied:</td>
                             <td style="text-align: right; font-weight: 800; color: #10B981; padding: 8px 0 2px; font-size: 12.5px;">
-                              ✓ ${order.couponCode || 'Promo Voucher'} (Rs. ${order.discount.toLocaleString()} OFF)
+                              ✓ ${safeCouponCode} (Rs. ${order.discount.toLocaleString()} OFF)
                             </td>
                           </tr>
                           ` : ''}
