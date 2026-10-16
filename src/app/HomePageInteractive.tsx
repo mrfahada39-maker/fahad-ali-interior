@@ -132,9 +132,9 @@ export default function HomePageInteractive({
     <div className="contents">
 
       {/* ── FULL SCREEN LUXURY HERO VIDEO SECTION (100SVH ON ALL MOBILE & DESKTOP) ── */}
-      <section ref={heroSectionRef} className="gsap-hero-section relative w-full h-screen h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
+      <section ref={heroSectionRef} className="gsap-hero-section relative w-full h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
         {/* Background Parallax & Video Container */}
-        <div className="gsap-hero-bg absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="gsap-hero-bg absolute inset-0 w-full h-full overflow-hidden pointer-events-none" style={{ width: '100%', height: '100%' }}>
           {/* Instant SSR Responsive LCP Poster Image (Native Media Queries — Zero Double-Download) priority sizes="100vw" */}
           <picture className="absolute inset-0 w-full h-full pointer-events-none">
             <source media="(max-width: 768px)" srcSet={CLOUDINARY_ASSETS.heroMobilePoster} />
@@ -143,6 +143,7 @@ export default function HomePageInteractive({
             <img
               src={CLOUDINARY_ASSETS.heroMobilePoster}
               alt="Fahad Ali Interior Royal Luxury Showcase"
+              style={{ objectFit: 'cover', objectPosition: 'center', width: '100%', height: '100%' }}
               className="w-full h-full object-cover object-center pointer-events-none"
               loading="eager"
               decoding="async"
@@ -167,10 +168,20 @@ export default function HomePageInteractive({
               onPlaying={() => setVideoLoaded(true)}
               onCanPlay={() => setVideoLoaded(true)}
               aria-label="Fahad Ali Interior Luxury Showcase Video"
-              style={{ willChange: 'opacity', transform: 'translateZ(0)' }}
+              style={{ objectFit: 'cover', objectPosition: 'center', width: '100%', height: '100%', willChange: 'opacity', transform: 'translateZ(0)' }}
               className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-[1] transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             >
-              {/* Single Isolated Source — Desktop never loads mobile, Mobile never loads desktop */}
+              {/* Native Media-Query Video Sources — Hardware Selected by OS Viewport */}
+              <source 
+                media="(max-width: 768px)"
+                src={CLOUDINARY_ASSETS.heroMobileVideo} 
+                type="video/mp4" 
+              />
+              <source 
+                media="(min-width: 769px)"
+                src={CLOUDINARY_ASSETS.heroDesktopVideo} 
+                type="video/mp4" 
+              />
               <source 
                 src={isMobileViewport ? CLOUDINARY_ASSETS.heroMobileVideo : CLOUDINARY_ASSETS.heroDesktopVideo} 
                 type="video/mp4" 
@@ -230,6 +241,9 @@ export default function HomePageInteractive({
         <div className="gsap-hero-chevron absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce pointer-events-none text-[#F3E5AB] drop-shadow-md">
           <ChevronDown size={28} />
         </div>
+
+        {/* Seamless Soft Blend Transition to Categories Section (Zero Black Gap) */}
+        <div className="absolute -bottom-1 inset-x-0 h-16 bg-gradient-to-t from-[#FCFAF7] via-[#FCFAF7]/30 to-transparent pointer-events-none z-10" />
       </section>
 
       {/* ── CATEGORIES SECTION (LOW-END PHONE OPTIMIZED JANK-FREE ENGINE) ── */}
