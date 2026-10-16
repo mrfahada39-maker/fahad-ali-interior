@@ -61,15 +61,21 @@ export default function HomePageInteractive({
   // ── Defer heavy video stream until after initial page load paint with smart hardware/network check ──
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsMobileViewport(window.innerWidth <= 768);
+      const checkViewport = () => setIsMobileViewport(window.innerWidth <= 768);
+      checkViewport();
+      window.addEventListener('resize', checkViewport, { passive: true });
+
       const conn = (navigator as any)?.connection;
       const isSlowConn = conn?.saveData || conn?.effectiveType === '2g' || conn?.effectiveType === '3g';
       if (isSlowConn) {
-        return; // Keep ultra-crisp AVIF poster active (zero battery/network drain on slow 3G/2G)
+        return () => window.removeEventListener('resize', checkViewport);
       }
+      const t = setTimeout(() => setMountVideo(true), 350);
+      return () => {
+        clearTimeout(t);
+        window.removeEventListener('resize', checkViewport);
+      };
     }
-    const t = setTimeout(() => setMountVideo(true), 350);
-    return () => clearTimeout(t);
   }, []);
 
   // ── Always start at top of home page on load / reload ──
@@ -146,6 +152,7 @@ export default function HomePageInteractive({
           {/* CINEMATIC LUXURY VIDEO (Device-Isolated: Mobile ONLY renders Mobile Stream, Desktop ONLY renders Desktop Stream) */}
           {mountVideo && (
             <video
+              key={isMobileViewport ? 'hero-mobile' : 'hero-desktop'}
               ref={heroVideoRef}
               autoPlay
               loop
@@ -173,44 +180,38 @@ export default function HomePageInteractive({
           )}
 
           {/* Subtle Crystal Clear Lightweight Vignette & Contrast Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-black/80 pointer-events-none z-[2]" />
-
-          {/* Top Navbar Shield: Solidifies top area so video text never bleeds through the navbar */}
-          <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#0D0704]/90 via-[#0D0704]/40 to-transparent pointer-events-none z-[2]" />
-
-          {/* Bottom Navigation Shield: Seamlessly blends hero section into the obsidian bottom bar without awkward void */}
-          <div className="absolute bottom-0 inset-x-0 h-36 bg-gradient-to-t from-[#0D0704]/95 via-[#0D0704]/50 to-transparent pointer-events-none z-[2]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/60 pointer-events-none z-[2]" />
 
           {/* Ambient Warm Center Glow — GPU Native Radial Gradient (Zero Lag on Low-End Chips) */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(201,169,110,0.18)_0%,transparent_65%)] pointer-events-none z-[2]" />
         </div>
 
         {/* Center Editorial Content Overlay */}
-        <div className="gsap-hero-content relative z-10 w-full max-w-5xl mx-auto px-5 sm:px-6 pt-20 sm:pt-32 pb-24 sm:pb-16 flex flex-col items-center justify-center text-center h-full">
+        <div className="gsap-hero-content relative z-10 w-full max-w-5xl mx-auto px-5 sm:px-6 pt-24 sm:pt-32 pb-12 flex flex-col items-center justify-center text-center h-full">
           
           {/* Top Sheesham Tagline */}
-          <span className="gsap-hero-tagline text-[10px] sm:text-xs font-semibold tracking-[0.25em] sm:tracking-[0.35em] uppercase text-[#F3E5AB] mb-2 sm:mb-4 drop-shadow-sm px-2">
+          <span className="gsap-hero-tagline text-[9px] min-[360px]:text-[10px] sm:text-xs font-semibold tracking-[0.25em] sm:tracking-[0.35em] uppercase text-[#F3E5AB] mb-2 sm:mb-4 drop-shadow-sm px-2">
             HANDCRAFTED SOLID SHEESHAM
           </span>
 
           {/* Main Editorial Headline */}
           <h1 
-            className="gsap-hero-title font-serif text-[clamp(1.4rem,4.5vw,4.5rem)] font-bold sm:font-normal tracking-wide sm:tracking-wider text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.9)] mb-3 sm:mb-5 uppercase leading-none whitespace-nowrap max-w-full px-1"
+            className="gsap-hero-title font-serif text-[clamp(1.3rem,4.2vw,4.5rem)] font-bold sm:font-normal tracking-wide sm:tracking-wider text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.9)] mb-3 sm:mb-5 uppercase leading-none whitespace-nowrap max-w-full px-1"
           >
             ROYAL LUXURY FURNITURE
           </h1>
 
           {/* Subtitle / Description */}
-          <p className="gsap-hero-subtitle text-xs sm:text-base md:text-xl lg:text-2xl font-serif italic text-[#E6DCCF] drop-shadow-md max-w-xs sm:max-w-3xl mb-7 sm:mb-10 font-light px-2">
+          <p className="gsap-hero-subtitle text-xs sm:text-base md:text-xl lg:text-2xl font-serif italic text-[#E6DCCF] drop-shadow-md max-w-xs sm:max-w-3xl mb-8 sm:mb-10 font-light px-2">
             Masterpieces Crafted for Royalty — Comfort Meets Timeless Elegance
           </p>
 
-          {/* Action Buttons (Redesigned with Image 2 24K Royal Gold Gradient & Obsidian Luxury Glass) */}
-          <div className="gsap-hero-cta flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto max-w-xs sm:max-w-none px-4 sm:px-0">
+          {/* Action Buttons (Original Styling Restored 100%) */}
+          <div className="gsap-hero-cta flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 w-full sm:w-auto max-w-xs sm:max-w-none px-4 sm:px-0">
             <Link
               href="/shop"
               prefetch={true}
-              className="gsap-hero-magnetic w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] hover:brightness-110 text-white border border-amber-200/40 font-serif font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 shadow-[0_8px_25px_rgba(184,142,75,0.4)] flex items-center justify-center gap-2.5 cursor-pointer will-change-transform active:scale-95"
+              className="gsap-hero-magnetic w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] hover:brightness-110 text-white border border-white/20 font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 shadow-xl flex items-center justify-center gap-3 cursor-pointer will-change-transform active:scale-95"
             >
               <span>EXPLORE COLLECTION</span>
               <span className="text-sm">→</span>
@@ -218,7 +219,7 @@ export default function HomePageInteractive({
             <Link
               href="/shop/categories"
               prefetch={true}
-              className="gsap-hero-magnetic w-full sm:w-auto bg-[#1C1410]/85 hover:bg-[#2C1E18] backdrop-blur-md border border-[#D4AF37]/50 text-[#F3E5AB] hover:text-white font-serif font-bold text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 flex items-center justify-center cursor-pointer will-change-transform active:scale-95 shadow-md"
+              className="gsap-hero-magnetic w-full sm:w-auto bg-white/10 backdrop-blur-md border border-[#E2D1BC]/60 text-[#F3E5AB] hover:bg-white/20 font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 flex items-center justify-center cursor-pointer will-change-transform active:scale-95 shadow-md"
             >
               VIEW CATALOG
             </Link>
@@ -226,7 +227,7 @@ export default function HomePageInteractive({
         </div>
 
         {/* Animated Down Chevron Scroll Indicator */}
-        <div className="gsap-hero-chevron absolute bottom-20 sm:bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce pointer-events-none text-[#F3E5AB] drop-shadow-md">
+        <div className="gsap-hero-chevron absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce pointer-events-none text-[#F3E5AB] drop-shadow-md">
           <ChevronDown size={28} />
         </div>
       </section>
