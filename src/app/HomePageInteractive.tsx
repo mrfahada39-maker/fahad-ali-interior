@@ -10,11 +10,7 @@ import {
 import { apiFetchJson } from '@/lib/api-client';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
 import ShopPage from '@/app/shop/ShopPage';
-import dynamic from 'next/dynamic';
-
-const TestimonialsSection = dynamic(() => import('@/components/TestimonialsSection'), {
-  ssr: false,
-});
+import TestimonialsSection from '@/components/TestimonialsSection';
 
 const CATEGORIES = [
   { name: 'Living Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
@@ -257,10 +253,8 @@ export default function HomePageInteractive({
         />
       </Suspense>
 
-      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION (Hydrated on scroll/interaction for 0ms initial TBT) ── */}
-      {mountVideo && (
-        <TestimonialsSection reviews={reviewsList.length > 0 ? reviewsList : initialReviews} />
-      )}
+      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION ── */}
+      <TestimonialsSection reviews={reviewsList.length > 0 ? reviewsList : initialReviews} />
 
     </div>
   );
