@@ -68,9 +68,25 @@ interface ShopPageProps {
   initialCategory?: string;
   initialCategories?: string[];
   embedded?: boolean;
+  titlePrefix?: string;
+  titleHighlight?: string;
+  subtitle?: string;
 }
 
-export default function ShopPage({ initialProducts = [], initialCategory, initialCategories, embedded = false }: ShopPageProps) {
+export default function ShopPage({
+  initialProducts = [],
+  initialCategory,
+  initialCategories,
+  embedded = false,
+  titlePrefix,
+  titleHighlight,
+  subtitle,
+}: ShopPageProps) {
+  const displayTitlePrefix = titlePrefix ?? (embedded ? 'Signature' : 'Handcrafted');
+  const displayTitleHighlight = titleHighlight ?? (embedded ? 'Categories' : 'Masterpieces');
+  const displaySubtitle = subtitle ?? (embedded 
+    ? '100% Solid Seasoned Sheesham masterworks handcrafted for luxury living.' 
+    : '100% Solid Seasoned Sheesham & Hardwood — traditional joinery tailored for luxury living.');
   const defaultPool = initialProducts;
   const searchParamsHook = useSearchParams();
   const urlCategory = searchParamsHook?.get('category') || undefined;
@@ -452,8 +468,16 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8 pt-2"
         >
+          {embedded && (
+            <div className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] shadow-xs mb-3.5">
+              <span className="text-[#B88E4B] text-sm font-bold">✦</span>
+              <span className="text-xs sm:text-[13px] font-black uppercase tracking-[0.25em] text-[#7A6354]">
+                HAUTE COUTURE COLLECTIONS
+              </span>
+            </div>
+          )}
           <HeadingTag className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-[#221814] tracking-tight leading-tight mb-2">
-            Handcrafted <span className="font-serif italic font-normal text-[#C9A24D] mx-2 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">Masterpieces</span>
+            {displayTitlePrefix} <span className="font-serif italic font-normal text-[#C9A24D] mx-2 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">{displayTitleHighlight}</span>
           </HeadingTag>
           <div className="flex items-center justify-center gap-3 my-2.5">
             <div className="h-[1.5px] w-20 sm:w-28 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
@@ -461,7 +485,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
             <div className="h-[1.5px] w-20 sm:w-28 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
           </div>
           <p className="text-[#7A6048] text-xs sm:text-sm md:text-base font-serif italic max-w-xl mx-auto">
-            100% Solid Seasoned Sheesham & Hardwood — traditional joinery tailored for luxury living.
+            {displaySubtitle}
           </p>
         </motion.div>
 

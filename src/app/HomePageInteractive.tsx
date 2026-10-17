@@ -244,10 +244,12 @@ export default function HomePageInteractive({
         <div className="absolute -bottom-1 inset-x-0 h-16 bg-gradient-to-t from-[#FCFAF7] via-[#FCFAF7]/30 to-transparent pointer-events-none z-10" />
       </section>
 
-      {/* ── HANDCRAFTED & MASTERPIECES SECTION (FULL INTERACTIVE CATALOG SHOWCASE) ── */}
+      {/* ── SIGNATURE & CATEGORIES (FULL INTERACTIVE CATALOG SHOWCASE) ── */}
       <Suspense fallback={<div className="min-h-[600px] bg-[#FCFAF7]" />}>
         <ShopPage
           embedded={true}
+          titlePrefix="Signature"
+          titleHighlight="Categories"
           initialProducts={productsList}
           initialCategories={['All', ...categoriesList.map((c: any) => c.name)]}
         />
