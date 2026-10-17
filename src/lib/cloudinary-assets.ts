@@ -12,7 +12,7 @@ export const CLOUDINARY_ASSETS = {
   heroMobileVideo: 'https://res.cloudinary.com/dfd8rzojj/video/upload/f_mp4,vc_h264:high:3.1,q_auto:good,ac_none,w_540,br_340k,fps_24/v1788030499/fahad-ali-interior/hero/mobile_hero_video.mp4',
   heroDesktopVideo: 'https://res.cloudinary.com/dfd8rzojj/video/upload/f_mp4,vc_h264:high:3.1,q_auto:good,ac_none,w_1080,br_580k,fps_24/v1788030503/fahad-ali-interior/hero/desktop_hero_video.mp4',
   
-  // Ultra-Light 6KB-12KB AVIF Video Posters (0.0s First Frame)
-  heroMobilePoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_540/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg',
-  heroDesktopPoster: 'https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_1080/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg',
+  // Ultra-Light 14KB-16KB Same-Origin AVIF Video Posters (0ms DNS/TLS Overhead)
+  heroMobilePoster: '/hero-mobile.avif',
+  heroDesktopPoster: '/hero-desktop.avif',
 } as const;

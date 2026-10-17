@@ -362,6 +362,7 @@ export default function HomePageInteractive({
           <div className="text-center mt-10">
             <Link
               href="/shop"
+              prefetch={false}
               className="inline-flex items-center gap-2 bg-[#FAF5EE] hover:bg-[#F3E7D3] text-[#221814] border border-[#B88E4B]/50 hover:border-[#B88E4B] font-serif font-bold text-sm px-8 py-3.5 rounded-xl transition-all shadow-sm cursor-pointer"
             >
               <span>Explore Complete Collection</span>

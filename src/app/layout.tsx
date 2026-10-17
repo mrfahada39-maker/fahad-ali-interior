@@ -12,13 +12,17 @@ import { db } from "@/lib/db";
 const getCachedSettings = unstable_cache(
   async () => {
     try {
-      return await db.settings.findFirst();
+      const s = await db.settings.findFirst();
+      if (s && s.contactEmail?.toLowerCase() === 'mrfahada39@gmail.com') {
+        return { ...s, contactEmail: 'concierge@fahadali.pk' };
+      }
+      return s;
     } catch (e) {
       logger.error('Failed to load site settings:', e);
       return null;
     }
   },
-  ['global-settings'],
+  ['global-settings-v2'],
   { revalidate: 3600, tags: ['settings'] }
 );
 
@@ -27,14 +31,14 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "700"],
-  preload: true,
+  preload: false,
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 const greatVibes = Great_Vibes({

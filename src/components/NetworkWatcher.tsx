@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
 import { WifiOff, Wifi, ArrowRight, X } from 'lucide-react';
 
 export default function NetworkWatcher() {
@@ -63,59 +62,52 @@ export default function NetworkWatcher() {
     };
   }, [isOffline]);
 
-  if (dismissed && !showRestored) return null;
+  if ((!isOffline || dismissed) && !showRestored) return null;
 
   return (
     <div className="fixed top-3 inset-x-0 z-50 flex justify-center pointer-events-none px-3 font-sans">
-      <AnimatePresence>
-        {isOffline && !dismissed && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.96 }}
-            className="pointer-events-auto bg-[#1C1610]/95 backdrop-blur-md border border-[#D4AF37]/50 text-white rounded-full px-4 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex items-center gap-3 text-xs"
-          >
-            <div className="w-6 h-6 rounded-full bg-[#B88E4B]/20 border border-[#B88E4B] flex items-center justify-center shrink-0">
-              <WifiOff size={13} className="text-[#F5D77F]" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-stone-200">
-                Offline Mode Active — Browsing Cached Showroom
-              </span>
-              <Link
-                href="/offline"
-                className="hidden sm:inline-flex items-center gap-1 text-[#F5D77F] font-bold hover:underline"
-              >
-                <span>Terminal</span>
-                <ArrowRight size={12} />
-              </Link>
-            </div>
-            <button
-              onClick={() => setDismissed(true)}
-              className="text-stone-400 hover:text-white p-0.5 ml-1 transition-colors cursor-pointer"
-              title="Dismiss notice"
-            >
-              <X size={14} />
-            </button>
-          </motion.div>
-        )}
-
-        {showRestored && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.96 }}
-            className="pointer-events-auto bg-[#062419]/95 backdrop-blur-md border border-emerald-400/50 text-white rounded-full px-4 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex items-center gap-2.5 text-xs"
-          >
-            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center shrink-0">
-              <Wifi size={13} className="text-emerald-300" />
-            </div>
-            <span className="font-semibold text-emerald-100">
-              ✦ Connection Restored — Live Atelier Synced
+      {isOffline && !dismissed && (
+        <div
+          className="pointer-events-auto bg-[#1C1610]/95 backdrop-blur-md border border-[#D4AF37]/50 text-white rounded-full px-4 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex items-center gap-3 text-xs transition-all duration-200"
+        >
+          <div className="w-6 h-6 rounded-full bg-[#B88E4B]/20 border border-[#B88E4B] flex items-center justify-center shrink-0">
+            <WifiOff size={13} className="text-[#F5D77F]" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-stone-200">
+              Offline Mode Active — Browsing Cached Showroom
             </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <Link
+              href="/offline"
+              prefetch={false}
+              className="hidden sm:inline-flex items-center gap-1 text-[#F5D77F] font-bold hover:underline"
+            >
+              <span>Terminal</span>
+              <ArrowRight size={12} />
+            </Link>
+          </div>
+          <button
+            onClick={() => setDismissed(true)}
+            className="text-stone-400 hover:text-white p-0.5 ml-1 transition-colors cursor-pointer"
+            title="Dismiss notice"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {showRestored && !isOffline && (
+        <div
+          className="pointer-events-auto bg-[#1C1610]/95 backdrop-blur-md border border-emerald-500/50 text-white rounded-full px-4 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex items-center gap-2.5 text-xs transition-all duration-200"
+        >
+          <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center shrink-0">
+            <Wifi size={12} className="text-emerald-300" />
+          </div>
+          <span className="font-semibold text-emerald-200">
+            Connection Restored — Live Sync Active
+          </span>
+        </div>
+      )}
     </div>
   );
 }

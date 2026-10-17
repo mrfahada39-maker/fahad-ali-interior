@@ -91,12 +91,18 @@ const empty: HomePageData = {
 
 let cachedHomeData: HomePageData | null = null;
 let lastCacheTimestamp = 0;
-const CACHE_LIFETIME = 30000; // 30s in-memory cache
+const CACHE_LIFETIME = 300000; // 5m in-memory cache
 
 export function invalidateHomePageDataCache() {
   cachedHomeData = null;
   lastCacheTimestamp = 0;
 }
+
+const getCachedHomePageDataNext = unstable_cache(
+  async () => fetchHomePageDataInternal(),
+  ['home-page-data-v2'],
+  { revalidate: 300, tags: ['home-data', 'products', 'categories', 'reviews', 'settings'] }
+);
 
 export async function getHomePageData(): Promise<HomePageData> {
   const now = Date.now();
@@ -104,7 +110,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     return cachedHomeData;
   }
   try {
-    const data = await fetchHomePageDataInternal();
+    const data = await getCachedHomePageDataNext();
     cachedHomeData = data;
     lastCacheTimestamp = now;
     return data;

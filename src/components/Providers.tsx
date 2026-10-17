@@ -3,14 +3,11 @@
 
 import { SessionProvider } from 'next-auth/react';
 import { ReactNode, useState, useEffect, useRef } from 'react';
-import { useSiteSettingsStore, useClientCacheStore, type SiteSettings } from '@/store';
-import TelemetryTracker from '@/components/TelemetryTracker';
-
 import dynamic from 'next/dynamic';
-
+import { useSiteSettingsStore, useClientCacheStore, type SiteSettings } from '@/store';
+const TelemetryTracker = dynamic(() => import('@/components/TelemetryTracker'), { ssr: false });
+const NetworkWatcher = dynamic(() => import('@/components/NetworkWatcher'), { ssr: false });
 const Toaster = dynamic(() => import('sonner').then((m) => m.Toaster), { ssr: false });
-
-import NetworkWatcher from '@/components/NetworkWatcher';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -109,8 +106,8 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
 
   return (
     <SessionProvider refetchOnWindowFocus={false}>
-      <TelemetryTracker />
-      <NetworkWatcher />
+      {interactive && <TelemetryTracker />}
+      {interactive && <NetworkWatcher />}
       {interactive && (
         <Toaster
           position="top-right"

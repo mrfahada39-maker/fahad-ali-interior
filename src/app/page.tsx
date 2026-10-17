@@ -21,14 +21,14 @@ export default async function HomePage() {
       <link
         rel="preload"
         as="image"
-        href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_540/v1788030499/fahad-ali-interior/hero/mobile_hero_video.jpg"
+        href="/hero-mobile.avif"
         media="(max-width: 768px)"
         fetchPriority="high"
       />
       <link
         rel="preload"
         as="image"
-        href="https://res.cloudinary.com/dfd8rzojj/video/upload/so_0,f_avif,q_auto:good,w_1080/v1788030503/fahad-ali-interior/hero/desktop_hero_video.jpg"
+        href="/hero-desktop.avif"
         media="(min-width: 769px)"
         fetchPriority="high"
       />

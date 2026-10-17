@@ -240,7 +240,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         {/* Top Header: Logo with Ornate Flourish & Circular Close Button */}
         <div className="flex items-start justify-between pt-1 pb-4">
           <div>
-            <Link href="/" onClick={() => setMobileOpen(false)} className="group flex flex-col">
+            <Link prefetch={false} href="/" onClick={() => setMobileOpen(false)} className="group flex flex-col">
               <span className="font-serif text-2xl sm:text-3xl font-normal tracking-wider uppercase text-[#1C1410]">
                 FAHAD ALI
               </span>
@@ -510,7 +510,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         className="fixed bottom-0 left-0 right-0 w-full z-40 lg:hidden bg-[#0D0704] border-t border-[#D4AF37]/50 text-white shadow-[0_-12px_45px_rgba(0,0,0,0.9),0_0_30px_rgba(212,175,55,0.15)] px-1 pt-1.5 pb-2 h-[66px] sm:h-[70px] flex items-center justify-around select-none overflow-visible before:absolute before:inset-x-0 before:top-0 before:h-[1.5px] before:bg-gradient-to-r before:from-transparent before:via-[#FFEAA0] before:to-transparent"
       >
         {/* 1. Shop */}
-        <Link
+        <Link prefetch={false}
           href="/shop"
           className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
             mounted && (pathname === '/shop' || pathname.startsWith('/product')) ? '-top-3.5' : 'py-1'
@@ -549,7 +549,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         </button>
 
         {/* 3. 👑 HOME (PROMINENT 24K GOLD JEWEL IN THE CENTER) */}
-        <Link
+        <Link prefetch={false}
           href="/"
           className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
             mounted && pathname === '/' ? '-top-3.5' : 'py-1'
@@ -595,7 +595,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         </button>
 
         {/* 5. Account */}
-        <Link
+        <Link prefetch={false}
           href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
           onClick={mounted && session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}
           className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
