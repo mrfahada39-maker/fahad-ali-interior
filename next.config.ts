@@ -87,6 +87,7 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
+    inlineCss: true,
     staleTimes: {
       dynamic: 30, // 30 seconds for dynamic pages (fresh cart, price, and stock updates)
       static: 600, // 10 minutes (5-30 min window) for static pages

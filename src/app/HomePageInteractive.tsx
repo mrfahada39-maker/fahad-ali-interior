@@ -147,10 +147,11 @@ export default function HomePageInteractive({
             <img
               src={CLOUDINARY_ASSETS.heroMobilePoster}
               alt="Fahad Ali Interior Royal Luxury Showcase"
+              fetchPriority="high"
               style={{ objectFit: 'cover', objectPosition: 'center', width: '100%', height: '100%' }}
               className="w-full h-full object-cover object-center pointer-events-none"
               loading="eager"
-              decoding="async"
+              decoding="sync"
             />
           </picture>
 
@@ -292,9 +293,8 @@ export default function HomePageInteractive({
                     width={550}
                     height={440}
                     unoptimized
-                    priority={i < 2}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    loading={i < 2 ? 'eager' : 'lazy'}
+                    loading="lazy"
                     decoding="async"
                     style={{ aspectRatio: '5/4' }}
                     className="gsap-cat-img w-full h-full object-cover aspect-[5/4] transition-transform duration-500 group-hover:scale-105" 
