@@ -13,16 +13,17 @@ const getCachedSettings = unstable_cache(
   async () => {
     try {
       const s = await db.settings.findFirst();
-      if (s && s.contactEmail?.toLowerCase() === 'mrfahada39@gmail.com') {
-        return { ...s, contactEmail: 'concierge@fahadali.pk' };
-      }
-      return s;
+      if (!s) return null;
+      return {
+        ...s,
+        adminEmail: s.adminEmail?.toLowerCase() === 'mrfahada39@gmail.com' ? 'concierge@fahadali.pk' : s.adminEmail,
+      };
     } catch (e) {
       logger.error('Failed to load site settings:', e);
       return null;
     }
   },
-  ['global-settings-v2'],
+  ['global-settings-v3'],
   { revalidate: 3600, tags: ['settings'] }
 );
 
