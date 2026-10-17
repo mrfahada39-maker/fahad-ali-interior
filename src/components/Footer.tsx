@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Instagram, 
   Facebook, 
@@ -15,7 +13,6 @@ import {
   ShoppingBag,
   Plus, 
   Minus,
-  Sparkles,
   ArrowRight
 } from 'lucide-react';
 
@@ -44,7 +41,7 @@ export default function Footer() {
 
   return (
     <footer 
-      className="w-full relative bg-[#F7F3ED] text-[#2C1E18] pt-8 sm:pt-11 pb-24 sm:pb-28 lg:pb-6 border-t border-[#E8DFC8]/60 overflow-hidden font-sans select-none" 
+      className="w-full relative bg-[#F7F3ED] text-[#2C1E18] pt-8 sm:pt-11 pb-24 sm:pb-28 lg:pb-6 border-t border-[#E8DFC8]/60 overflow-hidden font-sans" 
       data-testid="footer"
     >
 
@@ -74,10 +71,10 @@ export default function Footer() {
                 Fahad Ali Interior brings luxury, comfort, and timeless design together. Explore our exclusive furniture collections crafted for modern living.
               </p>
 
-              <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
+              <div className="transition-transform duration-200 hover:scale-[1.03] hover:-translate-y-0.5 active:scale-[0.97] w-fit">
                 <Link 
                   href="/shop"
-                  prefetch={true}
+                  prefetch={false}
                   className="relative group overflow-hidden inline-flex items-center gap-2 bg-[#5C3D2E] hover:bg-[#4A2F22] text-white text-xs sm:text-sm font-semibold px-5 py-3 rounded-xl transition-all duration-300 shadow-md mb-4 hover:shadow-lg w-fit cursor-pointer"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -85,26 +82,23 @@ export default function Footer() {
                   <span>Shop Collection</span>
                   <ArrowRight size={14} className="transition-transform group-hover:translate-x-1 duration-300" />
                 </Link>
-              </motion.div>
+              </div>
             </div>
 
-            {/* Animated Social Icons */}
+            {/* Social Icons */}
             <div className="flex items-center gap-2.5 pt-1.5">
               {[
                 { icon: Facebook, href: settings.socialFacebook || 'https://facebook.com/fahadaliinterior', label: 'Facebook' },
                 { icon: Instagram, href: settings.socialInstagram || 'https://instagram.com/fahadaliinterior', label: 'Instagram' },
                 { isPinterest: true, href: 'https://pinterest.com/fahadaliinterior', label: 'Pinterest' },
                 { icon: Youtube, href: 'https://youtube.com/@fahadaliinterior', label: 'YouTube' }
-              ].map((soc, i) => (
-                <motion.a 
+              ].map((soc) => (
+                <a 
                   key={soc.label}
-                  whileHover={{ scale: 1.15, y: -3 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                   href={soc.href} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white hover:border-[#2C1E18] transition-colors shadow-2xs" 
+                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white hover:border-[#2C1E18] hover:scale-110 hover:-translate-y-0.5 active:scale-95 transition-all shadow-2xs" 
                   aria-label={soc.label}
                 >
                   {soc.isPinterest ? (
@@ -112,7 +106,7 @@ export default function Footer() {
                   ) : soc.icon && (
                     <soc.icon size={16} />
                   )}
-                </motion.a>
+                </a>
               ))}
             </div>
           </div>
@@ -131,7 +125,7 @@ export default function Footer() {
                 <li key={item.label}>
                   <Link 
                     href={item.href} 
-                    prefetch={true}
+                    prefetch={false}
                     className="inline-block hover:text-[#B88E4B] hover:translate-x-1 transition-all duration-200"
                   >
                     {item.label}
@@ -156,7 +150,7 @@ export default function Footer() {
                 <li key={item.label}>
                   <Link 
                     href={item.href} 
-                    prefetch={true}
+                    prefetch={false}
                     className="inline-block hover:text-[#B88E4B] hover:translate-x-1 transition-all duration-200"
                   >
                     {item.label}
@@ -182,7 +176,7 @@ export default function Footer() {
                 <li key={item.label}>
                   <Link 
                     href={item.href} 
-                    prefetch={true}
+                    prefetch={false}
                     className="inline-block hover:text-[#B88E4B] hover:translate-x-1 transition-all duration-200"
                   >
                     {item.label}
@@ -207,7 +201,7 @@ export default function Footer() {
                   <li key={item.label}>
                     <Link 
                       href={item.href} 
-                      prefetch={true}
+                      prefetch={false}
                       className="inline-block hover:text-[#B88E4B] hover:translate-x-1 transition-all duration-200"
                     >
                       {item.label}
@@ -246,7 +240,6 @@ export default function Footer() {
           
           {/* Top Brand Card (Centered & Larger Text) */}
           <div className="mb-6 pb-6 border-b border-[#2C1E18]/15 flex flex-col items-center text-center">
-            {/* Brand Name with Luxury Two-Tone Combination */}
             <h2 className="font-serif text-2xl sm:text-3xl font-black tracking-tight text-center mb-2 uppercase text-[#221814]">
               FAHAD ALI <span className="font-serif italic font-normal text-[#C9A24D] mx-1.5 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">INTERIOR</span>
             </h2>
@@ -262,17 +255,16 @@ export default function Footer() {
                 { icon: Instagram, href: settings.socialInstagram || 'https://instagram.com/fahadaliinterior', label: 'Instagram' },
                 { icon: Youtube, href: 'https://youtube.com/@fahadaliinterior', label: 'YouTube' }
               ].map((soc) => (
-                <motion.a 
+                <a 
                   key={soc.label}
-                  whileTap={{ scale: 0.92 }}
                   href={soc.href} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white transition-colors" 
+                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white active:scale-95 transition-all" 
                   aria-label={soc.label}
                 >
                   <soc.icon size={15} />
-                </motion.a>
+                </a>
               ))}
             </div>
           </div>
@@ -341,27 +333,19 @@ export default function Footer() {
                   {isOpen ? <Minus size={24} className="text-[#B88E4B]" /> : <Plus size={24} className="text-[#221814]" />}
                 </button>
 
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3, ease: 'easeOut' }}
-                      className="overflow-hidden"
-                    >
-                      <ul className="mt-6 space-y-3.5 text-base sm:text-lg text-[#5C483E] font-medium text-center flex flex-col items-center">
-                        {acc.links.map((link) => (
-                          <li key={link.label}>
-                            <Link href={link.href} prefetch={true} className="hover:text-[#B88E4B] transition-colors">
-                              {link.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {isOpen && (
+                  <div className="overflow-hidden transition-all duration-300">
+                    <ul className="mt-6 space-y-3.5 text-base sm:text-lg text-[#5C483E] font-medium text-center flex flex-col items-center">
+                      {acc.links.map((link) => (
+                        <li key={link.label}>
+                          <Link href={link.href} prefetch={false} className="hover:text-[#B88E4B] transition-colors">
+                            {link.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             );
           })}

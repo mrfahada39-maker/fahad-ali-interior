@@ -16,7 +16,7 @@ import ProductCard from '@/components/ProductCard';
 import dynamic from 'next/dynamic';
 
 const TestimonialsSection = dynamic(() => import('@/components/TestimonialsSection'), {
-  ssr: true,
+  ssr: false,
 });
 
 const CATEGORIES = [
@@ -225,7 +225,7 @@ export default function HomePageInteractive({
           <div className="gsap-hero-cta flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 w-full sm:w-auto max-w-xs sm:max-w-none px-4 sm:px-0">
             <Link
               href="/shop"
-              prefetch={true}
+              prefetch={false}
               className="gsap-hero-magnetic w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] hover:brightness-110 text-white border border-white/20 font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 shadow-xl flex items-center justify-center gap-3 cursor-pointer will-change-transform active:scale-95"
             >
               <span>EXPLORE COLLECTION</span>
@@ -233,7 +233,7 @@ export default function HomePageInteractive({
             </Link>
             <Link
               href="/shop/categories"
-              prefetch={true}
+              prefetch={false}
               className="gsap-hero-magnetic w-full sm:w-auto bg-white/10 backdrop-blur-md border border-[#E2D1BC]/60 text-[#F3E5AB] hover:bg-white/20 font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 flex items-center justify-center cursor-pointer will-change-transform active:scale-95 shadow-md"
             >
               VIEW CATALOG
@@ -371,8 +371,10 @@ export default function HomePageInteractive({
         </section>
       )}
 
-      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION ── */}
-      <TestimonialsSection reviews={reviewsList.length > 0 ? reviewsList : initialReviews} />
+      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION (Hydrated on scroll/interaction for 0ms initial TBT) ── */}
+      {mountVideo && (
+        <TestimonialsSection reviews={reviewsList.length > 0 ? reviewsList : initialReviews} />
+      )}
 
     </div>
   );

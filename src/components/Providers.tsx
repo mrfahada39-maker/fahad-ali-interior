@@ -108,7 +108,7 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
   }, [settings]);
 
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false}>
       <TelemetryTracker />
       <NetworkWatcher />
       {interactive && (

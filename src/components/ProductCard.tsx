@@ -2,14 +2,12 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Heart, Eye, ArrowUpRight, ShoppingBag, Sparkles, Star } from 'lucide-react';
 import { useWishlistStore, useCartStore, useClientCacheStore } from '@/store';
 import { useIsInWishlist } from '@/hooks/use-is-in-wishlist';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { apiFetch } from '@/lib/api-client';
 import { resolveImageUrl } from '@/lib/images';
 import { toast } from 'sonner';
@@ -38,7 +36,6 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, index = 0, onQuickView, layoutMode = 'grid3' }: ProductCardProps) {
   const router = useRouter();
-  const { data: session } = useSession();
   const toggleItem = useWishlistStore((s) => s.toggleItem);
   const wishlisted = useIsInWishlist(product.id);
   const addItem = useCartStore((s) => s.addItem);
@@ -68,7 +65,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
       image: product.image,
       category: product.category,
     });
-    if (session?.user) {
+    if (typeof document !== 'undefined' && document.cookie.includes('next-auth')) {
       apiFetch('/api/user/wishlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

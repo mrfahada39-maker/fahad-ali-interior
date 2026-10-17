@@ -102,7 +102,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                   <Link
                     key={link.href}
                     href={link.href}
-                    prefetch={true}
+                    prefetch={false}
                     className={`flex items-center gap-2 text-[14px] xl:text-[15px] font-medium tracking-wide whitespace-nowrap transition-all duration-300 ${
                       isActive 
                         ? 'underline underline-offset-8 opacity-100 text-[#B88E4B]' 
@@ -131,7 +131,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
             {/* CENTER SECTION: Logo (Original Font Weight + Two-Tone Color Combination) */}
             <div className="flex justify-center items-center w-2/4 lg:w-1/5 text-center">
-              <Link href="/" prefetch={true} className="group flex flex-col items-center">
+              <Link href="/" prefetch={false} className="group flex flex-col items-center">
                 <span className={`font-serif text-2xl min-[380px]:text-3xl sm:text-3xl lg:text-4xl font-normal tracking-wider uppercase transition-opacity group-hover:opacity-80 whitespace-nowrap drop-shadow-sm ${
                   isSolid ? 'text-[#221814]' : 'text-white'
                 }`}>
@@ -187,7 +187,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               {/* 3. Account / Profile */}
               <Link
                 href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
-                prefetch={true}
+                prefetch={false}
                 onClick={mounted && session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}
                 className="hidden sm:flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-opacity hover:opacity-75 whitespace-nowrap"
                 aria-label="Profile / Account"
@@ -223,6 +223,8 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       </header>
 
       {/* ── LUXURY CURVED MOBILE DRAWER (EXACT 100% REPLICA OF SCREENSHOT IMAGE) ── */}
+      {mobileOpen && (
+      <>
       <div
         onClick={() => setMobileOpen(false)}
         className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden transition-opacity duration-500 ${
@@ -270,7 +272,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* 1. HOME (Active Card with Gold Pill Bar & Hover Animation) */}
           <Link
             href="/"
-            prefetch={true}
+            prefetch={false}
             onClick={() => setMobileOpen(false)}
             className="relative w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-gradient-to-r from-[#F7F2EA] to-white border border-[#E6DCCF] shadow-sm hover:border-[#C9A96E] hover:shadow-[0_8px_25px_rgba(201,169,110,0.22)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group overflow-hidden"
           >
@@ -289,7 +291,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* 3. SHOP */}
           <Link
             href="/shop"
-            prefetch={true}
+            prefetch={false}
             onClick={() => setMobileOpen(false)}
             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
           >
@@ -305,7 +307,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* 4. COLLECTIONS */}
           <Link
             href="/shop/categories"
-            prefetch={true}
+            prefetch={false}
             onClick={() => setMobileOpen(false)}
             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
           >
@@ -321,7 +323,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* ABOUT */}
           <Link
             href="/about"
-            prefetch={true}
+            prefetch={false}
             onClick={() => setMobileOpen(false)}
             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
           >
@@ -337,7 +339,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* 5. CONTACT US */}
           <Link
             href="/contact"
-            prefetch={true}
+            prefetch={false}
             onClick={() => setMobileOpen(false)}
             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
           >
@@ -372,7 +374,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* 7. NOTIFICATION (with Live Unread Badge) */}
           <Link
             href={mounted && session?.user ? '/dashboard?tab=notifications' : '/?auth=login'}
-            prefetch={true}
+            prefetch={false}
             onClick={(e) => {
               setMobileOpen(false);
               if (!session?.user) { e.preventDefault(); onAuthOpen(); }
@@ -398,7 +400,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* 8. LOGIN / REGISTER */}
           <Link
             href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
-            prefetch={true}
+            prefetch={false}
             onClick={(e) => {
               setMobileOpen(false);
               if (!session?.user) { e.preventDefault(); onAuthOpen(); }
@@ -497,6 +499,9 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           </div>
         </div>
       </div>
+
+      </>
+      )}
 
       {/* ── 100% FLUSH BOTTOM NAVBAR (HAUTE COUTURE 24K ROYAL GOLD & OBSIDIAN GLASS) ── */}
       <nav 
