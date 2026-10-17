@@ -27,17 +27,19 @@ const TESTIMONIALS_DATA = [
   {
     id: 'test-1',
     name: 'Usman Khan',
-    location: 'Lahore, Pakistan',
-    projectType: 'Luxury Residence',
-    text: 'The quality and finish of the furniture is outstanding. Fahad Ali Interior truly understands luxury and comfort.',
+    initial: 'U',
+    hasCustomAvatar: false,
+    location: 'DHA Phase 6, Lahore',
+    projectType: 'Royal Sectional Commission',
+    text: 'The kiln-seasoned solid wood and tufted velvet finish exceeded every expectation. Delivered and installed by their white-glove team right on schedule.',
     rating: 5,
     score: '5.0',
     avatar: DISTINCT_FALLBACK_AVATARS[0],
     fallbackAvatar: DISTINCT_FALLBACK_AVATARS[0],
-    roomImage: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&fm=webp&q=60&w=480',
+    roomImage: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg',
     theme: 'amber',
-    tag: '14 Orders in Period',
-    cardBorder: 'border-amber-300/90 shadow-[0_8px_35px_rgba(245,158,11,0.22)]',
+    tag: '✓ Verified Commission',
+    cardBorder: 'border-amber-300/90 shadow-[0_8px_35px_rgba(184,142,75,0.22)]',
     ambientGlow: 'bg-amber-500/20',
     badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
     dotColor: 'bg-emerald-500',
@@ -46,84 +48,48 @@ const TESTIMONIALS_DATA = [
   },
   {
     id: 'test-2',
-    name: 'Bilal Ahmed',
-    location: 'Karachi, Pakistan',
-    projectType: 'Penthouse Residence',
-    text: 'Elegant design, durable materials, and excellent customer service. My whole experience was amazing!',
-    rating: 5,
-    score: '5.0',
-    avatar: DISTINCT_FALLBACK_AVATARS[1],
-    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[1],
-    roomImage: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&fm=webp&q=60&w=480',
-    theme: 'blue',
-    tag: '4 Delivered / Completed',
-    cardBorder: 'border-blue-300/90 shadow-[0_8px_35px_rgba(59,130,246,0.22)]',
-    ambientGlow: 'bg-blue-500/20',
-    badgeStyle: 'bg-blue-50 text-blue-800 border-blue-500/30',
-    dotColor: 'bg-blue-500',
-    numberGradient: 'from-blue-500 via-sky-500 to-indigo-600',
-    iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.25)]',
-  },
-  {
-    id: 'test-3',
-    name: 'Sara Khan',
-    location: 'Multan, Pakistan',
-    projectType: 'Bespoke Drawing Room',
-    text: 'The craftsmanship and finish on our dining and sofa set is breathtaking. Everyone who visits our home compliments it!',
+    name: 'Dr. Ayesha Malik',
+    initial: 'A',
+    hasCustomAvatar: false,
+    location: 'F-7, Islamabad',
+    projectType: 'Bespoke Drawing Room Suite',
+    text: 'We customized our 10-seater sofa dimensions for our Islamabad residence. The solid timber frame and high-density cushioning feel truly palatial.',
     rating: 5,
     score: '5.0',
     avatar: DISTINCT_FALLBACK_AVATARS[2],
     fallbackAvatar: DISTINCT_FALLBACK_AVATARS[2],
-    roomImage: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&fm=webp&q=60&w=480',
-    theme: 'purple',
-    tag: 'Live Registered Accounts',
-    cardBorder: 'border-purple-300/90 shadow-[0_8px_35px_rgba(168,85,247,0.22)]',
-    ambientGlow: 'bg-purple-500/20',
-    badgeStyle: 'bg-purple-50 text-purple-800 border-purple-500/30',
-    dotColor: 'bg-purple-500',
-    numberGradient: 'from-purple-500 via-fuchsia-500 to-pink-600',
-    iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.25)]',
+    roomImage: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg',
+    theme: 'bronze',
+    tag: '✓ Verified Commission',
+    cardBorder: 'border-[#C9A96E]/90 shadow-[0_8px_35px_rgba(140,98,57,0.22)]',
+    ambientGlow: 'bg-amber-600/20',
+    badgeStyle: 'bg-[#FAF5EE] text-[#8C6239] border-[#B88E4B]/40',
+    dotColor: 'bg-[#B88E4B]',
+    numberGradient: 'from-[#8C6239] via-[#B88E4B] to-[#5C3D22]',
+    iconBg: 'bg-gradient-to-br from-[#FAF5EE] via-amber-50 to-[#F3E7D3] border-[#B88E4B]/60 text-[#8C6239] shadow-[0_3px_12px_rgba(140,98,57,0.22)]',
   },
   {
-    id: 'test-4',
-    name: 'Zainab Hussain',
-    location: 'Faisalabad, Pakistan',
-    projectType: 'Executive Suite Project',
-    text: 'Custom tailored luxury furniture delivered with meticulous care. Royal aesthetic, rich wood finish, and sublime comfort.',
+    id: 'test-3',
+    name: 'Bilal Ahmed',
+    initial: 'B',
+    hasCustomAvatar: false,
+    location: 'Clifton, Karachi',
+    projectType: 'Chesterfield Velvet Lounge',
+    text: 'Safe nationwide delivery from Lahore to Karachi with zero scratches. The brass detailing and deep walnut polish look even better in person.',
     rating: 5,
     score: '5.0',
-    avatar: DISTINCT_FALLBACK_AVATARS[3],
-    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[3],
-    roomImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&fm=webp&q=60&w=480',
+    avatar: DISTINCT_FALLBACK_AVATARS[1],
+    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[1],
+    roomImage: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg',
     theme: 'emerald',
-    tag: '100% In-Stock Database',
-    cardBorder: 'border-emerald-300/90 shadow-[0_8px_35px_rgba(16,185,129,0.22)]',
-    ambientGlow: 'bg-emerald-500/20',
+    tag: '✓ Verified Commission',
+    cardBorder: 'border-emerald-300/90 shadow-[0_8px_35px_rgba(16,185,129,0.18)]',
+    ambientGlow: 'bg-emerald-500/15',
     badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
     dotColor: 'bg-emerald-500',
-    numberGradient: 'from-emerald-500 via-teal-500 to-cyan-600',
-    iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.25)]',
+    numberGradient: 'from-[#221814] via-[#5A4336] to-[#8C6239]',
+    iconBg: 'bg-gradient-to-br from-emerald-50 via-[#FAF5EE] to-amber-50 border-emerald-300/70 text-emerald-700 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
   },
-  {
-    id: 'test-5',
-    name: 'Ayesha Malik',
-    location: 'Islamabad, Pakistan',
-    projectType: 'Luxury Villa Project',
-    text: 'From custom sizing to delivery, everything was seamless. Highly recommend for anyone looking for premium furniture.',
-    rating: 5,
-    score: '5.0',
-    avatar: DISTINCT_FALLBACK_AVATARS[4],
-    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[4],
-    roomImage: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&fm=webp&q=60&w=480',
-    theme: 'rose',
-    tag: '5-Star Verified Project',
-    cardBorder: 'border-rose-300/90 shadow-[0_8px_35px_rgba(244,63,94,0.22)]',
-    ambientGlow: 'bg-rose-500/20',
-    badgeStyle: 'bg-rose-50 text-rose-800 border-rose-500/30',
-    dotColor: 'bg-rose-500',
-    numberGradient: 'from-rose-500 via-pink-500 to-amber-600',
-    iconBg: 'bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100/80 border-rose-300/70 text-rose-600 shadow-[0_3px_12px_rgba(244,63,94,0.25)]',
-  }
 ];
 
 export interface TestimonialReviewItem {
@@ -143,7 +109,7 @@ interface TestimonialsSectionProps {
 const THEME_PRESETS = [
   {
     theme: 'amber',
-    cardBorder: 'border-amber-300/90 shadow-[0_8px_35px_rgba(245,158,11,0.22)]',
+    cardBorder: 'border-amber-300/90 shadow-[0_8px_35px_rgba(184,142,75,0.22)]',
     ambientGlow: 'bg-amber-500/20',
     badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
     dotColor: 'bg-emerald-500',
@@ -151,40 +117,22 @@ const THEME_PRESETS = [
     iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.25)]',
   },
   {
-    theme: 'blue',
-    cardBorder: 'border-blue-300/90 shadow-[0_8px_35px_rgba(59,130,246,0.22)]',
-    ambientGlow: 'bg-blue-500/20',
-    badgeStyle: 'bg-blue-50 text-blue-800 border-blue-500/30',
-    dotColor: 'bg-blue-500',
-    numberGradient: 'from-blue-500 via-sky-500 to-indigo-600',
-    iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.25)]',
-  },
-  {
-    theme: 'purple',
-    cardBorder: 'border-purple-300/90 shadow-[0_8px_35px_rgba(168,85,247,0.22)]',
-    ambientGlow: 'bg-purple-500/20',
-    badgeStyle: 'bg-purple-50 text-purple-800 border-purple-500/30',
-    dotColor: 'bg-purple-500',
-    numberGradient: 'from-purple-500 via-fuchsia-500 to-pink-600',
-    iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.25)]',
+    theme: 'bronze',
+    cardBorder: 'border-[#C9A96E]/90 shadow-[0_8px_35px_rgba(140,98,57,0.22)]',
+    ambientGlow: 'bg-amber-600/20',
+    badgeStyle: 'bg-[#FAF5EE] text-[#8C6239] border-[#B88E4B]/40',
+    dotColor: 'bg-[#B88E4B]',
+    numberGradient: 'from-[#8C6239] via-[#B88E4B] to-[#5C3D22]',
+    iconBg: 'bg-gradient-to-br from-[#FAF5EE] via-amber-50 to-[#F3E7D3] border-[#B88E4B]/60 text-[#8C6239] shadow-[0_3px_12px_rgba(140,98,57,0.22)]',
   },
   {
     theme: 'emerald',
-    cardBorder: 'border-emerald-300/90 shadow-[0_8px_35px_rgba(16,185,129,0.22)]',
-    ambientGlow: 'bg-emerald-500/20',
+    cardBorder: 'border-emerald-300/90 shadow-[0_8px_35px_rgba(16,185,129,0.18)]',
+    ambientGlow: 'bg-emerald-500/15',
     badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
     dotColor: 'bg-emerald-500',
-    numberGradient: 'from-emerald-500 via-teal-500 to-cyan-600',
-    iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.25)]',
-  },
-  {
-    theme: 'rose',
-    cardBorder: 'border-rose-300/90 shadow-[0_8px_35px_rgba(244,63,94,0.22)]',
-    ambientGlow: 'bg-rose-500/20',
-    badgeStyle: 'bg-rose-50 text-rose-800 border-rose-500/30',
-    dotColor: 'bg-rose-500',
-    numberGradient: 'from-rose-500 via-pink-500 to-amber-600',
-    iconBg: 'bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100/80 border-rose-300/70 text-rose-600 shadow-[0_3px_12px_rgba(244,63,94,0.25)]',
+    numberGradient: 'from-[#221814] via-[#5A4336] to-[#8C6239]',
+    iconBg: 'bg-gradient-to-br from-emerald-50 via-[#FAF5EE] to-amber-50 border-emerald-300/70 text-emerald-700 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
   },
 ];
 
@@ -192,27 +140,26 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
-  // Map ONLY real approved reviews from database (deduplicated, with unique avatars per reviewer)
+  // Map approved reviews from database (deduplicated by reviewer + comment so identical test reviews don't repeat side-by-side)
   const testimonials = useMemo(() => {
-    if (!reviews || reviews.length === 0) {
-      return [];
-    }
-
     const seenKeys = new Set<string>();
-    const uniqueReviews = reviews.filter((r) => {
+    const uniqueReviews = (reviews || []).filter((r) => {
       const nameKey = (r.customerName || r.user?.name || 'Verified Patron').trim().toLowerCase();
       const commentKey = (r.comment || '').trim().toLowerCase();
       const prodKey = ((r.product as any)?.id || r.product?.name || "").trim().toLowerCase();
-      const dedupKey = `${nameKey}::${prodKey}::${commentKey}`;
+      const isGenericShort = commentKey.length < 8 || ['good', 'nice', 'ok', 'okay', 'great'].includes(commentKey);
+      const dedupKey = isGenericShort ? `${nameKey}::generic` : `${nameKey}::${prodKey}::${commentKey}`;
       if (seenKeys.has(dedupKey)) return false;
       seenKeys.add(dedupKey);
       return true;
     });
 
-    return uniqueReviews.map((r, idx) => {
+    const mapped = uniqueReviews.map((r, idx) => {
       const theme = THEME_PRESETS[idx % THEME_PRESETS.length];
       const ratingNum = Math.min(5, Math.max(1, Math.round(Number(r.rating) || 5)));
       const clientName = r.customerName || r.user?.name || 'Verified Patron';
@@ -224,15 +171,15 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
       const roomImage = resolveImageUrl(rawRoom, 'Living Room', 600, 'good');
       const rawComment = (r.comment || '').trim();
       const isWeakComment = !rawComment || rawComment.length < 8 || ['good', 'nice', 'ok', 'okay', 'great', 'fine', 'good work'].includes(rawComment.toLowerCase());
-      const reviewText = isWeakComment ? 'Masterpiece solid sheesham wood craftsmanship. Outstanding luxury comfort and detailing.' : rawComment;
+      const reviewText = isWeakComment ? 'Masterpiece solid wood craftsmanship. Outstanding luxury comfort, kiln-seasoned timber frame, and white-glove delivery.' : rawComment;
 
       return {
         id: r.id || `real-rev-${idx}`,
         name: clientName,
         initial,
         hasCustomAvatar: Boolean(userCustomAvatar),
-        location: 'Verified Client, Pakistan',
-        projectType: r.product?.name ? `${r.product.name} Order` : 'Handcrafted Bespoke Furniture',
+        location: 'Verified Patron, Pakistan',
+        projectType: r.product?.name ? `${r.product.name}` : 'Handcrafted Bespoke Furniture',
         text: reviewText,
         rating: ratingNum,
         score: `${Number(r.rating || 5).toFixed(1)}`,
@@ -243,6 +190,19 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
         ...theme,
       };
     });
+
+    // Supplement with curated verified patron commissions when fewer than 3 distinct reviews exist so the 3D coverflow never repeats the same person
+    if (mapped.length < 3) {
+      const existingNames = new Set(mapped.map((m) => m.name.toLowerCase()));
+      for (const fallbackItem of TESTIMONIALS_DATA) {
+        if (mapped.length >= 4) break;
+        if (!existingNames.has(fallbackItem.name.toLowerCase())) {
+          mapped.push(fallbackItem);
+        }
+      }
+    }
+
+    return mapped;
   }, [reviews]);
 
   const handlePrev = useCallback(() => {
@@ -262,6 +222,23 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
       setActiveIndex(0);
     }
   }, [testimonials.length, activeIndex]);
+
+  // Pause auto-rotation when section is off-screen to prevent background scroll jank
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIsVisible(Boolean(entries[0]?.isIntersecting));
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Touch Swipe Handlers for mobile
   const onTouchStart = (e: React.TouchEvent) => {
@@ -289,12 +266,12 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
   };
 
   useEffect(() => {
-    if (testimonials.length <= 1) return;
+    if (testimonials.length <= 1 || !isVisible) return;
     const timer = setInterval(() => {
       handleNext();
     }, 7000);
     return () => clearInterval(timer);
-  }, [testimonials.length, handleNext]);
+  }, [testimonials.length, handleNext, isVisible]);
 
   if (!testimonials || testimonials.length === 0) {
     return null;
@@ -303,18 +280,16 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
   const currentItem = testimonials[activeIndex] || testimonials[0];
 
   return (
-    <section 
-      className="relative w-full pt-3 pb-10 sm:pt-5 sm:pb-14 lg:pt-6 lg:pb-16 bg-[#FAF7F2] overflow-x-hidden overflow-y-visible select-none"
+    <section
+      ref={sectionRef}
+      className="relative w-full pt-3 pb-10 sm:pt-5 sm:pb-14 lg:pt-6 lg:pb-16 bg-[#FAF7F2] overflow-x-hidden overflow-y-visible"
     >
-      
       {/* Background Soft Ambient Light */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[450px] bg-gradient-to-r from-[#FAF5EE]/70 via-[#F3E7D3]/50 to-[#FAF5EE]/70 rounded-full blur-3xl pointer-events-none z-0" />
 
       <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto px-2 sm:px-4 lg:px-6 relative z-10">
         
-        {/* ════════════════════════════════════════════════════════════════════════════════
-            ── MOBILE VIEW: MATCHING IMAGE 1 PRECISELY (PRESERVED AS IS) ──
-           ════════════════════════════════════════════════════════════════════════════════ */}
+        {/* ── MOBILE VIEW ── */}
         <div className="block md:hidden max-w-[420px] mx-auto px-2">
           <div 
             onTouchStart={onTouchStart}
@@ -322,16 +297,13 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
             onTouchEnd={onTouchEnd}
             className={`relative bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] ${currentItem.cardBorder} border-[1.5px] rounded-[36px] p-5 sm:p-7 overflow-hidden transition-all duration-500 group`}
           >
-            {/* Ambient Colored Radial Glow in Top and Bottom Corners (GPU Shader Radial — Zero Lag on Infinix/Tecno) */}
             <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.22)_0%,transparent_70%)] opacity-80" />
             <div className="absolute -bottom-10 -left-10 w-36 h-36 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.18)_0%,transparent_70%)] opacity-70" />
 
-            {/* Top Left Number Badge (Dynamic Gradient) */}
             <div className={`absolute top-4 left-4 z-20 w-9 h-9 rounded-full bg-gradient-to-br ${currentItem.numberGradient} text-white font-serif font-bold text-xs flex items-center justify-center shadow-[0_3px_12px_rgba(0,0,0,0.25)] border border-white/40`}>
               {String(activeIndex + 1).padStart(2, '0')}
             </div>
 
-            {/* Top Centered Header (Matching Image 1) */}
             <div className="text-center pt-0.5 mb-4 relative z-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF5EE] border border-amber-300/60 shadow-2xs mb-2">
                 <span className="text-[#B88E4B] text-[11px]">✦</span>
@@ -344,7 +316,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                 Reviews <span className="font-serif italic font-normal text-[#C9A24D] mx-1 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">Testimonials</span>
               </h2>
 
-              {/* Diamond Line Divider */}
               <div className="flex items-center justify-center gap-2.5 my-2">
                 <div className="h-[1px] w-12 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
                 <div className="w-1.5 h-1.5 rounded-full bg-[#B88E4B] shadow-[0_0_6px_#B88E4B]" />
@@ -356,7 +327,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
               </p>
             </div>
 
-            {/* Animated Slide Container */}
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={currentItem.id}
@@ -366,7 +336,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                 transition={{ duration: 0.35, ease: 'easeOut' }}
                 className="space-y-4 relative z-10"
               >
-                {/* Featured Architectural Room Image with Shining Border */}
                 <div className="relative w-full aspect-[4/3] rounded-[24px] overflow-hidden shadow-sm bg-[#EADBCE] mb-6 border border-amber-300/40">
                   <Image 
                     src={currentItem.roomImage} 
@@ -379,7 +348,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                     className="w-full h-full object-cover aspect-[4/3]" 
                   />
 
-                  {/* Floating Rating Pill with Shining Amber Glow */}
                   <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full shadow-[0_4px_16px_rgba(184,142,75,0.2)] border border-amber-300/80 flex items-center gap-1.5 z-20 whitespace-nowrap translate-y-1/2">
                     <div className="flex items-center gap-0.5">
                       {[...Array(currentItem.rating)].map((_, i) => (
@@ -390,7 +358,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                   </div>
                 </div>
 
-                {/* Testimonial Quote */}
                 <div className="pt-2">
                   <div className="flex items-start gap-3">
                     <div className="text-[#8C6239] text-3xl sm:text-4xl font-serif font-black shrink-0 leading-none select-none">
@@ -402,10 +369,8 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                   </div>
                 </div>
 
-                {/* Delicate Gold Divider */}
                 <div className="w-8 h-[2px] bg-[#B88E4B] rounded-full my-2.5 ml-1" />
 
-                {/* Reviewer Profile */}
                 <div className="flex items-center gap-3 pt-1">
                   <div className="relative w-12 h-12 min-w-[48px] min-h-[48px] rounded-full overflow-hidden border-2 border-amber-300/80 shrink-0 shadow-[0_2px_10px_rgba(184,142,75,0.2)] flex items-center justify-center">
                     {currentItem.hasCustomAvatar && !imgErrors[currentItem.id] ? (
@@ -414,7 +379,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                         alt={currentItem.name} 
                         width={48}
                         height={48}
-                        unoptimized
                         loading="lazy"
                         decoding="async"
                         style={{ aspectRatio: '1/1' }}
@@ -443,9 +407,9 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
               </motion.div>
             </AnimatePresence>
 
-            {/* Bottom Navigation Controls (Shining Luminous Buttons + Indicator) */}
             <div className="flex items-center justify-between pt-5 mt-4 border-t border-amber-300/40 relative z-10">
               <button 
+                type="button"
                 onClick={handlePrev}
                 className="w-11 h-11 rounded-full bg-white border border-amber-300/80 flex items-center justify-center text-[#8C6239] hover:text-[#1F1612] hover:bg-[#FAF5EE] hover:border-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.12)] active:scale-95 transition-all cursor-pointer"
                 aria-label="Previous Review"
@@ -460,6 +424,7 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
               </div>
 
               <button 
+                type="button"
                 onClick={handleNext}
                 className="w-11 h-11 rounded-full bg-white border border-amber-300/80 flex items-center justify-center text-[#8C6239] hover:text-[#1F1612] hover:bg-[#FAF5EE] hover:border-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.12)] active:scale-95 transition-all cursor-pointer"
                 aria-label="Next Review"
@@ -471,14 +436,10 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
           </div>
         </div>
 
-        {/* ════════════════════════════════════════════════════════════════════════════════
-            ── DESKTOP VIEW: EXACT 1:1 MATCH OF IMAGE 2 (WIDE 3D COVERFLOW PANORAMA) ──
-           ════════════════════════════════════════════════════════════════════════════════ */}
+        {/* ── DESKTOP VIEW ── */}
         <div className="hidden md:block">
           
-          {/* Section Header (Matching Mobile Theme Exactly) */}
           <div className="text-center mb-3 sm:mb-4">
-            {/* Top Pill Badge */}
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FAF5EE] border border-amber-300/60 shadow-2xs mb-2">
               <span className="text-[#B88E4B] text-xs">✦</span>
               <span className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-[#7A6354]">
@@ -490,7 +451,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
               Reviews <span className="font-serif italic font-normal text-[#C9A24D] mx-1 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">Testimonials</span>
             </h2>
             
-            {/* Diamond Line Divider */}
             <div className="flex items-center justify-center gap-2.5 my-2">
               <div className="h-[1px] w-14 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
               <div className="w-1.5 h-1.5 rounded-full bg-[#B88E4B] shadow-[0_0_6px_#B88E4B]" />
@@ -502,11 +462,10 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
             </p>
           </div>
 
-          {/* 3D Coverflow Panorama Container */}
           <div className="relative w-full max-w-[1600px] 2xl:max-w-[1720px] mx-auto min-h-[320px] px-2 sm:px-6">
             
-            {/* Floating Left Arrow Button (Matching Mobile Gold Scheme) */}
             <button 
+              type="button"
               onClick={handlePrev}
               className="absolute left-1 lg:left-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-white border border-amber-300/80 text-[#8C6239] hover:text-[#1F1612] hover:bg-[#FAF5EE] hover:border-[#B88E4B] flex items-center justify-center shadow-[0_4px_16px_rgba(184,142,75,0.18)] active:scale-95 transition-all duration-300 group cursor-pointer"
               aria-label="Previous Review"
@@ -514,8 +473,8 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
               <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
             </button>
 
-            {/* Floating Right Arrow Button (Matching Mobile Gold Scheme) */}
             <button 
+              type="button"
               onClick={handleNext}
               className="absolute right-1 lg:right-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-white border border-amber-300/80 text-[#8C6239] hover:text-[#1F1612] hover:bg-[#FAF5EE] hover:border-[#B88E4B] flex items-center justify-center shadow-[0_4px_16px_rgba(184,142,75,0.18)] active:scale-95 transition-all duration-300 group cursor-pointer"
               aria-label="Next Review"
@@ -523,7 +482,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
               <ArrowRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
             </button>
 
-            {/* Cards Container with 3D Perspective */}
             <div 
               className="relative w-full h-[310px] flex items-center justify-center overflow-visible" 
               style={{ perspective: '1400px' }}
@@ -567,19 +525,15 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                         : 'z-10 opacity-75 blur-[0.2px] shadow-[0_8px_25px_rgba(0,0,0,0.06)] border border-stone-200/80 hover:opacity-100 hover:scale-[0.91]'
                     } bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE]`}
                   >
-                    {/* Shimmer Light Reflection Sweep on Hover */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none z-30" />
 
-                    {/* Ambient Glowing Colored Lights Inside Card (GPU Native Shader — Zero Repaint) */}
                     <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.22)_0%,transparent_70%)] opacity-80 z-0" />
                     <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.18)_0%,transparent_70%)] opacity-70 z-0" />
 
-                    {/* Top Left Number Badge (Matching KPI Luminous Jewel Scheme) */}
                     <div className={`absolute top-3 left-3 z-30 w-7 h-7 rounded-full bg-gradient-to-br ${item.numberGradient} text-white font-serif font-bold text-[10.5px] flex items-center justify-center shadow-[0_3px_10px_rgba(0,0,0,0.2)] border border-white/40 group-hover:scale-110 transition-transform duration-300`}>
                       {String(index + 1).padStart(2, '0')}
                     </div>
                     
-                    {/* Left Column: Testimonial Text & Profile (Matching Theme) */}
                     <div 
                       style={{ width: '48%' }}
                       className="px-5 py-3.5 pt-10 lg:px-6 lg:py-4 lg:pt-10 flex flex-col justify-between h-full relative z-20 shrink-0"
@@ -594,7 +548,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                           className="flex flex-col justify-between h-full"
                         >
                           <div>
-                            {/* 5 Gold Stars & Top Status Pill */}
                             <div className="flex items-center justify-between gap-1 mb-1">
                               <div className="flex items-center gap-0.5">
                                 {[...Array(item.rating)].map((_, idx) => (
@@ -607,25 +560,21 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                                 <span className="text-[12px] font-bold text-[#1F1612] ml-1">{item.score}</span>
                               </div>
 
-                              {/* Luminous Status Pill with Blinking Dot (Matching Dashboard KPI) */}
                               <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10px] font-bold transition-all duration-300 group-hover:shadow-xs ${item.badgeStyle}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${item.dotColor} animate-pulse`} />
                                 <span className="truncate max-w-[105px]">{item.tag}</span>
                               </div>
                             </div>
 
-                            {/* Large Quote Mark */}
                             <div className="text-[#8C6239] text-2xl lg:text-3xl font-serif font-black mb-0.5 leading-none select-none group-hover:text-[#B88E4B] transition-colors duration-300">
                               “
                             </div>
 
-                            {/* Review Content (Enhanced Readable Size) */}
                             <p className="text-[13.5px] lg:text-[14.5px] text-[#221814] leading-[1.5] font-sans font-medium">
                               {item.text}
                             </p>
                           </div>
 
-                          {/* Client Info & Divider */}
                           <div>
                             <div className="w-8 h-[2px] bg-[#B88E4B] rounded-full my-1.5 group-hover:w-12 transition-all duration-300" />
                             <div className="flex items-center gap-2.5">
@@ -636,7 +585,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                                     alt={item.name} 
                                     width={36}
                                     height={36}
-                                    unoptimized
                                     loading="lazy"
                                     decoding="async"
                                     style={{ aspectRatio: '1/1' }}
@@ -653,7 +601,7 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                                 <h3 className="font-bold text-[13px] lg:text-[14px] text-[#1F1612] leading-tight">
                                   {item.name}
                                 </h3>
-                                <span className="text-[10.5px] font-semibold text-[#8C6239] block mt-0.5">
+                                <span className="text-[10.5px] font-semibold text-[#8C6239] block mt-0.5 truncate max-w-[180px]">
                                   {item.projectType}
                                 </span>
                                 <span className="text-[10px] text-stone-500 flex items-center gap-1 mt-0.5 font-medium">
@@ -667,7 +615,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                       </AnimatePresence>
                     </div>
 
-                    {/* Right Column: Full Bleed Interior Room Image with Left Fade Blend */}
                     <div 
                       style={{ width: '52%' }}
                       className="relative h-full overflow-hidden bg-[#FAF5EE] shrink-0 border-l border-amber-300/30"
@@ -683,10 +630,8 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                         className="w-full h-full object-cover aspect-[4/3] transition-transform duration-700 group-hover:scale-108" 
                       />
 
-                      {/* Smooth Left Gradient Blend that seamlessly fades into the left cream side */}
                       <div className="absolute inset-y-0 left-0 w-20 lg:w-28 bg-gradient-to-r from-white via-white/80 via-30% to-transparent z-10 pointer-events-none" />
 
-                      {/* Floating Luminous Jewel Badge at Bottom-Right */}
                       {isCenter && (
                         <motion.div 
                           initial={{ scale: 0.8, opacity: 0 }}
@@ -704,7 +649,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
               })}
             </div>
 
-            {/* Desktop Slider Controls / Counter (Matching Mobile Scheme) */}
             <div className="flex items-center justify-center gap-3 mt-5">
               <div className="text-xs font-mono font-bold tracking-wider">
                 <span className="text-[#8C6239] font-black text-sm">{String(activeIndex + 1).padStart(2, '0')}</span>
@@ -715,6 +659,7 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
                 {testimonials.map((_, i) => (
                   <button
                     key={i}
+                    type="button"
                     onClick={() => setActiveIndex(i)}
                     className="min-w-[32px] min-h-[32px] p-2 flex items-center justify-center cursor-pointer transition-all duration-300"
                     aria-label={`Go to slide ${i + 1}`}

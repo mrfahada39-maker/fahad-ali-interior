@@ -78,13 +78,13 @@ const empty: HomePageData = {
   banners: [],
   settings: {
     siteName: 'Fahad Ali Interior',
-    contactPhone: '',
-    adminEmail: '',
-    storeAddress: '',
+    contactPhone: '+92 320 7006110',
+    adminEmail: 'info@fahadaliinterior.com',
+    storeAddress: 'Main Boulevard, Gulberg III, Lahore, Pakistan',
     socialInstagram: '',
     socialFacebook: '',
-    socialWhatsapp: '',
-    foundedYear: '',
+    socialWhatsapp: '923207006110',
+    foundedYear: '2016',
     currency: 'PKR',
   },
 };
@@ -152,7 +152,6 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
         select: {
           siteName: true,
           contactPhone: true,
-          adminEmail: true,
           storeAddress: true,
           socialInstagram: true,
           socialFacebook: true,
@@ -211,16 +210,37 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
         .replace(/\bProuduct\b/g, 'Product')
         .replace(/\bprouduct\b/gi, 'product')
         .replace(/\bcenter tables\b/gi, 'Center Tables')
+        .replace(/\bL-Shap\b(?!e)/gi, 'L-Shape')
         .trim();
     };
 
-    const formattedProducts = products.map((p: any) => ({
-      ...p,
-      name: normalizeCatalogText(p.name, p.name),
-      category: normalizeCatalogText(p.category, p.category),
-      description: normalizeCatalogText(p.description, p.description),
-      price: Number(p.price),
-    })) as unknown as StorefrontProduct[];
+    const inferFallbackDimensions = (name: string, category: string, dims?: string | null): string => {
+      if (dims && dims.trim().length > 0) return dims.trim();
+      const n = (name || '').toLowerCase();
+      const c = (category || '').toLowerCase();
+      if (n.includes('12-seater') || n.includes('u-shape')) return '11 ft × 9 ft × 34 in (Custom Sizing Available)';
+      if (n.includes('10-seater')) return '10.5 ft × 8.5 ft × 34 in (Custom Sizing Available)';
+      if (n.includes('l-shape') || n.includes('sectional') || n.includes('corner')) return '9 ft × 7 ft × 34 in (Custom Sizing Available)';
+      if (n.includes('6-seater') || n.includes('7-seater') || n.includes('sofa set')) return '3-Seater (7.2 ft) + 2-Seater (5.2 ft) + 1-Seater (3.2 ft)';
+      if (c.includes('bed') || n.includes('bed')) return 'King Size: 6.5 ft × 6 ft × 48 in Headboard';
+      if (c.includes('dining')) return 'Table: 7 ft × 3.5 ft × 30 in';
+      if (c.includes('table') || n.includes('table')) return '4 ft × 2.5 ft × 18 in';
+      if (c.includes('wardrobe')) return '8 ft (H) × 6 ft (W) × 24 in (D)';
+      return '8.5 ft × 6.5 ft × 34 in (Custom Sizing Available)';
+    };
+
+    const formattedProducts = products.map((p: any) => {
+      const cleanName = normalizeCatalogText(p.name, p.name);
+      const cleanCategory = normalizeCatalogText(p.category, p.category);
+      return {
+        ...p,
+        name: cleanName,
+        category: cleanCategory,
+        description: normalizeCatalogText(p.description, p.description),
+        dimensions: inferFallbackDimensions(cleanName, cleanCategory, p.dimensions),
+        price: Number(p.price),
+      };
+    }) as unknown as StorefrontProduct[];
 
     const formattedCategories = categories.map((c: any) => {
       const normalizedName = normalizeCatalogText(c.name, '');
@@ -234,7 +254,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
         description: normalizeCatalogText(c.description, 'Solid Sheesham Wood'),
         items: liveCount > 0 
           ? `${liveCount} ${liveCount === 1 ? 'Item' : 'Items'} Available` 
-          : (customItems || 'Collection Available'),
+          : (customItems || 'Bespoke Collection'),
       };
     });
 
@@ -274,13 +294,13 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       reviews: formattedReviews,
       settings: settings ? {
         siteName: settings.siteName || 'Fahad Ali Interior',
-        contactPhone: settings.contactPhone || '',
-        adminEmail: settings.adminEmail || '',
-        storeAddress: settings.storeAddress || '',
+        contactPhone: settings.contactPhone || '+92 320 7006110',
+        adminEmail: 'info@fahadaliinterior.com',
+        storeAddress: settings.storeAddress || 'Main Boulevard, Gulberg III, Lahore, Pakistan',
         socialInstagram: settings.socialInstagram || '',
         socialFacebook: settings.socialFacebook || '',
-        socialWhatsapp: settings.socialWhatsapp || '',
-        foundedYear: settings.foundedYear || '',
+        socialWhatsapp: settings.socialWhatsapp || '923207006110',
+        foundedYear: settings.foundedYear || '2016',
         currency: settings.currency || 'PKR',
       } : empty.settings,
       banners: banners.map((b: any) => ({
@@ -301,5 +321,3 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
     return empty;
   }
 }
-
-

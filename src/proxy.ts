@@ -208,6 +208,38 @@ export async function proxy(request: NextRequest) {
           { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
         );
       }
+    } else if (pathname.includes('/coupons')) {
+      const rl = await rateLimit(`coupon:${ip}`, 'coupon');
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Too many coupon attempts. Please wait a moment.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
+    } else if (pathname.includes('/orders/track')) {
+      const rl = await rateLimit(`track:${ip}`, 'coupon');
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Too many order tracking requests. Please wait a moment.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
+    } else if (pathname.includes('/reviews') && isUnsafeMethod(request.method)) {
+      const rl = await rateLimit(`review:${ip}`, 'inquiry');
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Too many review submissions. Please wait.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
+    } else if (pathname.includes('/calls/signal')) {
+      const rl = await rateLimit(`signal:${ip}`, 'api');
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Signaling rate limit exceeded.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
     }
 
     if (isUnsafeMethod(request.method) && !isSameOriginRequest(request)) {

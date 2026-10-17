@@ -309,6 +309,23 @@ export default function Checkout() {
       return;
     }
 
+    if (paymentMethod === 'jazzcash' || paymentMethod === 'easypaisa' || paymentMethod === 'bank') {
+      const hasTxId = digitalPaymentDetails.transactionId.trim().length >= 4;
+      const hasScreenshot = Boolean(digitalPaymentDetails.screenshotUrl);
+      if (!hasTxId && !hasScreenshot) {
+        toast.error('Please enter your Transaction / Reference ID or attach a payment screenshot to verify your transfer.');
+        return;
+      }
+    }
+
+    if (paymentMethod === 'card') {
+      const cleanCardNum = cardDetails.number.replace(/\s+/g, '');
+      if (cleanCardNum.length < 15 || cardDetails.expiry.length < 5 || cardDetails.cvv.length < 3) {
+        toast.error('Please enter valid 16-digit Card Number, Expiry (MM/YY), and CVV, or choose Cash on Delivery / Bank Transfer.');
+        return;
+      }
+    }
+
     setPlacing(true);
 
     try {
@@ -336,6 +353,7 @@ export default function Checkout() {
           items: itemsToOrder,
           paymentMethod: backendPaymentMethod,
           selectedBank: selectedBank.name,
+          transactionId: digitalPaymentDetails.transactionId || undefined,
           couponCode: appliedCoupon?.code,
           paymentScreenshot: digitalPaymentDetails.screenshotUrl || undefined,
           shippingName: form.name,
@@ -407,7 +425,7 @@ export default function Checkout() {
 
   if (activeItems.length === 0) {
     return (
-      <div className="w-full min-h-screen bg-[#FAF6F0] text-[#1F1612] font-sans pt-28 sm:pt-32 pb-28 sm:pb-32 lg:pb-16 px-4 sm:px-6 flex flex-col items-center justify-center select-none">
+      <div className="w-full min-h-screen bg-[#FAF6F0] text-[#1F1612] font-sans pt-28 sm:pt-32 pb-28 sm:pb-32 lg:pb-16 px-4 sm:px-6 flex flex-col items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -430,7 +448,7 @@ export default function Checkout() {
             Your Cart is Empty
           </h2>
           <p className="text-xs sm:text-sm text-[#5C483E] leading-relaxed mb-8 max-w-sm mx-auto font-medium">
-            Discover our timeless solid Sheesham masterpieces and add your preferred selections to proceed with white-glove checkout.
+            Discover our timeless solid wood masterpieces and add your preferred selections to proceed with white-glove checkout.
           </p>
 
           <Link
@@ -447,7 +465,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#FAF6F0] text-[#1F1612] font-sans pt-21 sm:pt-22 lg:pt-23 pb-28 sm:pb-32 lg:pb-8 px-3 sm:px-5 lg:px-6 flex flex-col justify-start select-none">
+    <div className="w-full min-h-screen bg-[#FAF6F0] text-[#1F1612] font-sans pt-21 sm:pt-22 lg:pt-23 pb-28 sm:pb-32 lg:pb-8 px-3 sm:px-5 lg:px-6 flex flex-col justify-start">
       <div className="w-full flex-1 flex flex-col gap-2 sm:gap-2.5">
 
         {/* ── 1. $100,000 LUXURY HEADER ── */}

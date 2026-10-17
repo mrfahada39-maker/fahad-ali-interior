@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <StoreShell>
-      <main className="min-h-screen bg-[#FDFBF7] font-sans pt-28 sm:pt-32 pb-28 sm:pb-32 lg:pb-16 px-4 sm:px-6 relative overflow-hidden select-none">
+      <main className="min-h-screen bg-[#FDFBF7] font-sans pt-28 sm:pt-32 pb-28 sm:pb-32 lg:pb-16 px-4 sm:px-6 relative overflow-hidden">
         {/* Ambient Glows */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full bg-gradient-to-b from-[#FFEAA0]/20 via-[#C9A96E]/10 to-transparent blur-3xl pointer-events-none" />
         <div className="absolute top-80 right-0 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
@@ -65,7 +65,7 @@ export default function TermsPage() {
               {
                 icon: Truck,
                 title: 'White-Glove Nationwide Delivery',
-                desc: 'Free white-glove transport, on-site unboxing, and master room assembly on orders above PKR 100,000.',
+                desc: 'Free delivery in major cities on orders above PKR 50,000, and complimentary nationwide white-glove room assembly above PKR 100,000.',
               },
               {
                 icon: RotateCcw,

@@ -153,8 +153,8 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
       toast.error('Passwords do not match');
       return;
     }
-    if (registerData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (registerData.password.length < 10 || !/[A-Za-z]/.test(registerData.password) || !/[0-9]/.test(registerData.password)) {
+      toast.error('Password must be at least 10 characters and include both letters and numbers');
       return;
     }
 
@@ -187,7 +187,12 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto bg-[#221814]/40 backdrop-blur-sm transition-all duration-300">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="VIP Authentication Portal"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto bg-[#221814]/40 backdrop-blur-sm transition-all duration-300"
+        >
           {/* Backdrop Click Dismiss */}
           <div
             className="fixed inset-0 -z-10"
@@ -221,6 +226,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                 onClick={onClose}
                 className="absolute right-0 top-1/2 -translate-y-1/2 w-8.5 h-8.5 rounded-full bg-white/80 hover:bg-white border border-[#E2D6C8] hover:border-[#B88E4B] text-[#7A6354] hover:text-[#221814] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                 title="Close"
+                aria-label="Close authentication modal"
               >
                 <X size={16} />
               </button>
@@ -381,6 +387,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9C8272] hover:text-[#221814] p-1 cursor-pointer transition-colors"
                             title={showPassword ? 'Hide password' : 'Show password'}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
                           >
                             {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                           </button>
@@ -480,7 +487,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                             type="tel"
                             value={registerData.phone}
                             onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
-                            placeholder="+92 300 1234567"
+                            placeholder="+92 320 7006110"
                             className="w-full bg-white border border-[#E2D6C8] focus:border-[#B88E4B] text-[#221814] placeholder:text-[#9C8272] rounded-xl pl-10 pr-4 h-10.5 sm:h-11 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-[#B88E4B]/15 transition-all shadow-2xs"
                           />
                         </div>
@@ -499,12 +506,22 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                               autoComplete="new-password"
                               type={showPassword ? 'text' : 'password'}
                               required
+                              minLength={10}
                               value={registerData.password}
                               onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                              placeholder="Min 6 chars"
-                              className="w-full bg-white border border-[#E2D6C8] focus:border-[#B88E4B] text-[#221814] placeholder:text-[#9C8272] rounded-xl px-3 h-10.5 sm:h-11 text-xs font-medium outline-none focus:ring-2 focus:ring-[#B88E4B]/15 transition-all shadow-2xs"
+                              placeholder="Min 10 chars (A-Z, 0-9)"
+                              className="w-full bg-white border border-[#E2D6C8] focus:border-[#B88E4B] text-[#221814] placeholder:text-[#9C8272] rounded-xl pl-3 pr-8 h-10.5 sm:h-11 text-xs font-medium outline-none focus:ring-2 focus:ring-[#B88E4B]/15 transition-all shadow-2xs"
                               data-testid="register-password"
                             />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9C8272] hover:text-[#221814] p-1 cursor-pointer transition-colors"
+                              title={showPassword ? 'Hide password' : 'Show password'}
+                              aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
                           </div>
                         </div>
 
@@ -519,12 +536,22 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                               autoComplete="new-password"
                               type={showConfirmPassword ? 'text' : 'password'}
                               required
+                              minLength={10}
                               value={registerData.confirmPassword}
                               onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                              placeholder="Confirm"
-                              className="w-full bg-white border border-[#E2D6C8] focus:border-[#B88E4B] text-[#221814] placeholder:text-[#9C8272] rounded-xl px-3 h-10.5 sm:h-11 text-xs font-medium outline-none focus:ring-2 focus:ring-[#B88E4B]/15 transition-all shadow-2xs"
+                              placeholder="Confirm password"
+                              className="w-full bg-white border border-[#E2D6C8] focus:border-[#B88E4B] text-[#221814] placeholder:text-[#9C8272] rounded-xl pl-3 pr-8 h-10.5 sm:h-11 text-xs font-medium outline-none focus:ring-2 focus:ring-[#B88E4B]/15 transition-all shadow-2xs"
                               data-testid="register-confirm-password"
                             />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9C8272] hover:text-[#221814] p-1 cursor-pointer transition-colors"
+                              title={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                              aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                            >
+                              {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
                           </div>
                         </div>
                       </div>

@@ -188,10 +188,25 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
       },
       orderBy: { createdAt: 'desc' },
     });
-    const formatted = (products as DbProductRecord[]).map((p: DbProductRecord) => ({
-      ...p,
-      price: Number(p.price),
-    }));
+    const formatted = (products as DbProductRecord[]).map((p: DbProductRecord) => {
+      const cleanName = String(p.name || '').replace(/\bL-Shap\b(?!e)/gi, 'L-Shape').trim();
+      const n = cleanName.toLowerCase();
+      const defaultDims = n.includes('12-seater') || n.includes('u-shape')
+        ? '11 ft × 9 ft × 34 in (Custom Sizing Available)'
+        : n.includes('10-seater')
+        ? '10.5 ft × 8.5 ft × 34 in (Custom Sizing Available)'
+        : n.includes('l-shape') || n.includes('sectional')
+        ? '9 ft × 7 ft × 34 in (Custom Sizing Available)'
+        : n.includes('6-seater')
+        ? '3-Seater (7.2 ft) + 2-Seater (5.2 ft) + 1-Seater (3.2 ft)'
+        : '8.5 ft × 6.5 ft × 34 in (Custom Sizing Available)';
+      return {
+        ...p,
+        name: cleanName,
+        dimensions: p.dimensions && String(p.dimensions).trim() ? p.dimensions : defaultDims,
+        price: Number(p.price),
+      };
+    });
     return NextResponse.json(
       { products: formatted },
       { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
@@ -247,11 +262,13 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
             ).toFixed(1)
           )
         : 5.0;
+    const cleanName = String(product.name || '').replace(/\bL-Shap\b(?!e)/gi, 'L-Shape').trim();
 
     return NextResponse.json(
       {
         product: {
           ...product,
+          name: cleanName,
           price: Number(product.price),
           reviewCount,
           avgRating,

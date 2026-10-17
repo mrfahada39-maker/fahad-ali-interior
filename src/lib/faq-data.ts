@@ -3,71 +3,71 @@ export const faqCategories = [
     title: 'Orders & Delivery',
     questions: [
       {
-        q: 'What are the delivery timelines?',
-        a: 'Standard delivery within Lahore takes 3-5 business days. Delivery to other major cities (Karachi, Islamabad, Rawalpindi, Faisalabad) takes 5-7 business days. Remote areas may take up to 10 business days. We provide real-time tracking for all orders.',
+        q: 'What are the delivery timelines across Pakistan?',
+        a: 'Standard ready-to-dispatch pieces are delivered within 3–5 business days in Lahore and 5–7 business days in major cities (Islamabad, Rawalpindi, Karachi, Faisalabad, Multan, Peshawar). Bespoke handcrafted sets take 7–14 business days depending on custom finish and upholstery selection. We provide real-time order tracking for every shipment.',
       },
       {
-        q: 'Do you charge for delivery?',
-        a: 'Delivery is free for orders above PKR 50,000 within major cities. For orders below this amount, a flat delivery fee of PKR 2,500 applies. Delivery to remote areas may incur an additional surcharge which we communicate before dispatch.',
+        q: 'Do you charge for delivery and room assembly?',
+        a: 'Delivery is free for orders above PKR 50,000 within Lahore and major cities, and orders above PKR 100,000 include complimentary nationwide White-Glove Room Assembly. For orders below PKR 50,000, a flat insured transit fee of PKR 2,500 applies.',
       },
       {
-        q: 'Can I track my order?',
-        a: 'Yes! Once your order is shipped, you will receive a tracking number via SMS and email. You can also track your order in real-time through your dashboard under "My Orders."',
+        q: 'Can I track my order live?',
+        a: 'Yes! Once your order is placed, you receive an order reference ID (e.g., FAI-XXXXXX). You can track its live status anytime via the Track Order page or your client dashboard under "My Orders."',
       },
       {
-        q: 'Can I cancel my order?',
-        a: 'Orders can be cancelled within 24 hours of placement if they have not yet been processed. After processing begins, cancellation may not be possible. Custom orders cannot be cancelled once production has started.',
-      },
-    ],
-  },
-  {
-    title: 'Payment',
-    questions: [
-      {
-        q: 'What payment methods do you accept?',
-        a: 'We accept Cash on Delivery (COD), JazzCash, Easypaisa, and Bank Transfer. For online payments, you can transfer the amount and upload a screenshot of the payment receipt through your order page.',
-      },
-      {
-        q: 'Is my payment secure?',
-        a: 'All payment processing follows industry-standard security practices. Bank details are only shared with authenticated users during checkout and are never exposed publicly. Payment screenshots are stored securely.',
-      },
-      {
-        q: 'Do you offer installment plans?',
-        a: 'We are working on introducing installment plans with partner banks. Currently, full payment is required at the time of order. Stay tuned for updates on our installment program.',
+        q: 'Can I modify or cancel my order?',
+        a: 'Standard orders can be modified or cancelled within 24 hours of placement before workshop dispatch. For custom-sized or bespoke upholstered pieces, adjustments can be made prior to timber cutting.',
       },
     ],
   },
   {
-    title: 'Products & Customization',
+    title: 'Payment & COD',
     questions: [
       {
-        q: 'Are your products customizable?',
-        a: 'Yes! Many of our products can be customized in terms of dimensions, fabric, finish, and color. Custom orders typically take 4-6 weeks. Contact us through the inquiry form or chat to discuss your requirements.',
+        q: 'What payment methods do you accept in Pakistan?',
+        a: 'We accept Cash on Delivery (COD), RAAST / Direct Bank Transfer (HBL), JazzCash, Easypaisa, and Visa/Mastercard Debit & Credit Cards. For online bank or mobile wallet transfers, you can enter your Transaction ID or attach your payment receipt directly at checkout.',
       },
       {
-        q: 'What materials do you use?',
-        a: 'We primarily use premium Pakistani woods including Sheesham, Rosewood, Deodar, and Teak. Upholstery options include Italian leather, premium fabric, silk, and velvet. All materials are sourced from certified suppliers.',
+        q: 'Is an advance deposit required for Cash on Delivery (COD)?',
+        a: 'Standard catalog orders qualify for Cash on Delivery. For custom-dimensioned or bespoke upholstered commissions, a 30% booking deposit is required to initiate kiln-dried timber carving, with the remaining 70% payable upon delivery.',
       },
       {
-        q: 'Do your products come with a warranty?',
-        a: 'Yes, all products come with a warranty ranging from 2-10 years depending on the item. Premium products typically carry longer warranties. Specific warranty details are listed on each product page.',
-      },
-      {
-        q: 'How do I care for my furniture?',
-        a: 'Each product comes with a detailed care guide. Generally, avoid direct sunlight, use coasters for drinks, dust regularly with a soft cloth, and apply wood polish every 3-6 months. Check our blog for detailed care guides.',
+        q: 'Are all prices inclusive of GST?',
+        a: 'Yes, all prices displayed across our catalog, cart, and checkout are 100% GST-inclusive in Pakistani Rupees (PKR) with zero hidden charges.',
       },
     ],
   },
   {
-    title: 'Returns & Refunds',
+    title: 'Materials, Craftsmanship & Warranty',
     questions: [
       {
-        q: 'What is your return policy?',
-        a: 'We accept returns within 7 days of delivery if the product arrives damaged or has manufacturing defects. Products must be in their original condition. Custom-made items are not eligible for returns unless defective.',
+        q: 'Can I customize dimensions, wood polish, or velvet fabric color?',
+        a: 'Yes! Every piece can be tailored to your room dimensions, polish tone (Natural Teak, Dark Walnut, Smoked Oak, Ebony, Mahogany), and upholstery (Royal Italian Velvet, Turkish Bouclé, Suede, or Leatherette). Contact our design concierge on WhatsApp (+92 320 7006110) or via the Custom Inquiry form.',
       },
       {
-        q: 'How do I initiate a return?',
-        a: 'Contact our support team through the chat feature or email us at the address listed on our contact page. Provide your order number and photos of the issue. We will arrange a pickup and process your refund within 5-7 business days.',
+        q: 'What wood and materials do you use?',
+        a: 'We craft our furniture from 100% solid kiln-dried Pakistani Sheesham (Rosewood), Chinioti Sheesham, and seasoned Walnut wood (8–12% moisture control), paired with high-density 10-year ortho-grade foam and premium imported upholstery.',
+      },
+      {
+        q: 'What does your 10-Year Warranty cover?',
+        a: 'Every solid wood frame crafted by Fahad Ali Interior is backed by our 10-Year Structural & Anti-Termite (Deemak) Guarantee. If any structural joint instability or termite issue occurs under normal indoor residential use, we repair or replace the component free of charge.',
+      },
+      {
+        q: 'How do I care for solid Sheesham wood furniture?',
+        a: 'Avoid prolonged direct sunlight and excessive moisture, use coasters for hot beverages, dust weekly with a dry microfiber cloth, and apply beeswax or natural wood conditioner every 6 months to preserve the rich grain luster.',
+      },
+    ],
+  },
+  {
+    title: 'Inspection, Returns & Support',
+    questions: [
+      {
+        q: 'What is your return and transit damage policy?',
+        a: 'We offer a 7-Day Inspection & Replacement Guarantee. Please inspect your furniture upon delivery; if any transit damage or manufacturing defect is found, we provide free on-site artisan rectification or full replacement within 7 days.',
+      },
+      {
+        q: 'How do I contact customer support or book a showroom consultation?',
+        a: 'You can reach our Lahore Design Studio directly at +92 320 7006110 (Phone & WhatsApp) or email concierge@fahadali.pk, Monday to Saturday from 10:00 AM to 10:00 PM PKT.',
       },
     ],
   },

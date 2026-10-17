@@ -22,15 +22,20 @@ export default function CartDrawer() {
   const getGST = useCartStore((s) => s.getGST);
   const getTotal = useCartStore((s) => s.getTotal);
   const clearCart = useCartStore((s) => s.clearCart);
+  const appliedCoupon = useCartStore((s) => s.appliedCoupon);
   const router = useRouter();
 
-  // Prefetch checkout route as soon as cart drawer opens
+  // Prefetch checkout route as soon as cart drawer opens & support Escape key close
   useEffect(() => {
-    if (isOpen) {
-      router.prefetch('/checkout');
-      router.prefetch('/shop');
-    }
-  }, [isOpen, router]);
+    if (!isOpen) return;
+    router.prefetch('/checkout');
+    router.prefetch('/shop');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeCart();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, router, closeCart]);
 
   const handleCheckout = () => {
     if (items.length === 0) {
@@ -42,12 +47,23 @@ export default function CartDrawer() {
   };
 
   const totalQuantity = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const subtotal = getSubtotal();
+  const discountAmount = appliedCoupon
+    ? appliedCoupon.percent || appliedCoupon.discountType === 'PERCENTAGE'
+      ? Math.round((subtotal * Number(appliedCoupon.percent ?? appliedCoupon.discount ?? 0)) / 100)
+      : Math.min(subtotal, Number(appliedCoupon.fixed ?? appliedCoupon.discount ?? 0))
+    : 0;
+  const grandTotal = Math.max(0, subtotal - discountAmount);
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center sm:justify-end p-3 sm:p-6 overflow-hidden">
-          
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Shopping Cart"
+          className="fixed inset-0 z-[99999] flex items-center justify-center sm:justify-end p-3 sm:p-6 overflow-hidden"
+        >
           {/* Subtle Luxury Frosted Glass Backdrop (Background Stays Visible) */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -87,6 +103,7 @@ export default function CartDrawer() {
 
               {/* Ornate Close Button */}
               <button
+                type="button"
                 onClick={closeCart}
                 className="w-8.5 h-8.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] text-[#8C6239] hover:bg-[#B88E4B] hover:text-white hover:border-[#B88E4B] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                 aria-label="Close cart"
@@ -103,7 +120,7 @@ export default function CartDrawer() {
                 </div>
                 <h3 className="font-serif font-black text-base text-[#221814]">Your Cart is Empty</h3>
                 <p className="text-stone-500 text-xs max-w-xs mt-1 leading-relaxed">
-                  Discover our timeless solid sheesham masterpieces and add your preferred selections to your bespoke order.
+                  Discover our timeless solid wood masterpieces and add your preferred selections to your bespoke order.
                 </p>
                 <Button
                   onClick={() => {
@@ -147,7 +164,7 @@ export default function CartDrawer() {
                               {item.name}
                             </h3>
                             <p className="text-[10px] font-bold text-[#8C6239] uppercase tracking-wider mt-0.5">
-                              100% Solid Sheesham
+                              100% Solid Seasoned Wood
                             </p>
                           </div>
                           <span className="font-serif font-black text-xs sm:text-sm text-[#B88E4B] shrink-0">
@@ -159,31 +176,37 @@ export default function CartDrawer() {
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100">
                           <div className="flex items-center gap-1 bg-[#FAF5EE] p-0.5 rounded-lg border border-[#E2D1BC]">
                             <button
+                              type="button"
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-5 h-5 rounded-md bg-white border border-[#E2D1BC] flex items-center justify-center text-[#8C6239] hover:bg-[#B88E4B] hover:text-white transition-colors cursor-pointer"
+                              className="w-7 h-7 rounded-md bg-white border border-[#E2D1BC] flex items-center justify-center text-[#8C6239] hover:bg-[#B88E4B] hover:text-white transition-colors cursor-pointer"
                               title="Decrease quantity"
+                              aria-label={`Decrease quantity of ${item.name}`}
                             >
-                              <Minus size={9} strokeWidth={2.5} />
+                              <Minus size={11} strokeWidth={2.5} />
                             </button>
-                            <span className="text-[#221814] text-xs font-black w-5 text-center font-serif">
+                            <span className="text-[#221814] text-xs font-black w-6 text-center font-serif">
                               {item.quantity}
                             </span>
                             <button
+                              type="button"
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-5 h-5 rounded-md bg-white border border-[#E2D1BC] flex items-center justify-center text-[#8C6239] hover:bg-[#B88E4B] hover:text-white transition-colors cursor-pointer"
+                              className="w-7 h-7 rounded-md bg-white border border-[#E2D1BC] flex items-center justify-center text-[#8C6239] hover:bg-[#B88E4B] hover:text-white transition-colors cursor-pointer"
                               title="Increase quantity"
+                              aria-label={`Increase quantity of ${item.name}`}
                             >
-                              <Plus size={9} strokeWidth={2.5} />
+                              <Plus size={11} strokeWidth={2.5} />
                             </button>
                           </div>
 
                           <button
+                            type="button"
                             onClick={() => {
                               removeItem(item.id);
                               toast.success(`${item.name} removed from cart`);
                             }}
-                            className="text-stone-400 hover:text-rose-600 transition-colors p-1 cursor-pointer flex items-center gap-1 text-[10px] font-semibold"
+                            className="text-stone-400 hover:text-rose-600 transition-colors p-1.5 cursor-pointer flex items-center gap-1 text-[10px] font-semibold"
                             title="Remove item"
+                            aria-label={`Remove ${item.name} from cart`}
                           >
                             <Trash2 size={13} />
                             <span className="hidden sm:inline">Remove</span>
@@ -199,19 +222,25 @@ export default function CartDrawer() {
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between text-stone-500 font-medium">
                       <span>Artisan Subtotal</span>
-                      <span className="text-[#221814] font-bold">Rs. {formatPricePk(getSubtotal())}</span>
+                      <span className="text-[#221814] font-bold">Rs. {formatPricePk(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-stone-500 font-medium">
-                      <span>Sales Tax & GST (17%)</span>
-                      <span className="text-[#221814] font-bold">Rs. {formatPricePk(Math.round(getGST()))}</span>
+                      <span>Sales Tax & GST (Inclusive)</span>
+                      <span className="text-emerald-700 font-bold">Rs. 0 (Included)</span>
                     </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-emerald-700 font-bold">
+                        <span>VIP Voucher ({appliedCoupon?.code})</span>
+                        <span>- Rs. {formatPricePk(discountAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-baseline pt-2 border-t border-[#E7DDD0]">
                       <div>
                         <span className="font-serif font-black text-sm text-[#221814]">Grand Total</span>
                         <p className="text-[9.5px] font-bold text-emerald-700">✓ Free White-Glove Dispatch</p>
                       </div>
                       <span className="font-serif font-black text-base sm:text-lg text-[#B88E4B]">
-                        Rs. {formatPricePk(Math.round(getTotal()))}
+                        Rs. {formatPricePk(grandTotal)}
                       </span>
                     </div>
                   </div>
@@ -219,18 +248,20 @@ export default function CartDrawer() {
                   {/* Actions */}
                   <div className="flex gap-2 pt-1">
                     <button
+                      type="button"
                       onClick={handleCheckout}
                       onMouseEnter={() => router.prefetch('/checkout')}
-                      onTouchStart={() => router.prefetch('/checkout')}
                       className="flex-1 bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] hover:brightness-110 text-white font-serif font-bold rounded-xl h-11 text-xs sm:text-sm shadow-[0_4px_20px_rgba(184,142,75,0.3)] flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-98"
                     >
                       <span>Proceed to Checkout</span>
                       <ArrowRight size={14} className="stroke-[2.2]" />
                     </button>
                     <button
+                      type="button"
                       onClick={clearCart}
                       className="border border-[#E2D1BC] text-stone-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 font-bold rounded-xl h-11 px-3 text-xs transition-all cursor-pointer"
                       title="Empty cart"
+                      aria-label="Clear all items from cart"
                     >
                       Clear
                     </button>

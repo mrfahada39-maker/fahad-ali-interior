@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [totpCode, setTotpCode] = useState('');
+  const [requires2FA, setRequires2FA] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -20,16 +22,26 @@ export default function AdminLoginPage() {
       toast.error('Please enter both email and password');
       return;
     }
+    if (requires2FA && totpCode.trim().length < 6) {
+      toast.error('Please enter your 6-digit authenticator code or 8-character backup code');
+      return;
+    }
     setLoading(true);
     try {
       const res = await signIn('credentials', {
         redirect: false,
         email: email.trim().toLowerCase(),
         password,
+        ...(requires2FA ? { totpCode: totpCode.trim() } : {}),
       });
 
       if (res?.error) {
-        toast.error(res.error || 'Invalid credentials');
+        if (res.error.includes('2FA_REQUIRED')) {
+          setRequires2FA(true);
+          toast.info('Please enter your 2FA verification code to continue');
+        } else {
+          toast.error(res.error || 'Invalid credentials');
+        }
       } else {
         toast.success('Authenticated to Executive Suite');
         router.push('/admin');
@@ -42,7 +54,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#221814] flex flex-col justify-between p-4 sm:p-6 relative select-none font-sans">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#221814] flex flex-col justify-between p-4 sm:p-6 relative font-sans">
       {/* Background Subtle Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -121,6 +133,30 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
+            {requires2FA && (
+              <div>
+                <label htmlFor="admin-totp" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1.5">
+                  Two-Factor Security Code (2FA)
+                </label>
+                <div className="relative">
+                  <ShieldCheck size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B88E4B]" />
+                  <input
+                    id="admin-totp"
+                    name="totpCode"
+                    autoComplete="one-time-code"
+                    type="text"
+                    maxLength={8}
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\s/g, '').slice(0, 8))}
+                    placeholder="6-digit TOTP or 8-char backup code"
+                    required
+                    autoFocus
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border-2 border-[#B88E4B] focus:outline-none text-xs font-mono font-bold tracking-widest shadow-2xs transition-colors"
+                  />
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -130,7 +166,7 @@ export default function AdminLoginPage() {
                 <span>Verifying Access...</span>
               ) : (
                 <>
-                  <span>Authenticate Session</span>
+                  <span>{requires2FA ? 'Verify 2FA & Enter' : 'Authenticate Session'}</span>
                   <ArrowRight size={14} />
                 </>
               )}

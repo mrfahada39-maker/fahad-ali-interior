@@ -41,6 +41,9 @@ export const createOrderSchema = z.object({
   province: z.string().optional(),
   notes: z.string().optional(),
   paymentMethod: z.string().optional(),
+  paymentScreenshot: z.string().max(15_000_000).nullish(),
+  selectedBank: z.string().trim().max(200).nullish(),
+  transactionId: z.string().trim().max(200).nullish(),
   couponCode: z.string().nullish(),
   coupon: z.string().nullish(),
 });

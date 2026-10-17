@@ -126,7 +126,7 @@ export function CheckoutSectionSummary({
                   <p className="text-[10px] text-[#8C6239] font-medium mb-1.5 flex items-center gap-1.5">
                     <span>10-Yr Guarantee</span>
                     <span>•</span>
-                    <span className="text-emerald-700 font-bold">100% Seasoned Sheesham</span>
+                    <span className="text-emerald-700 font-bold">100% Seasoned Hardwood</span>
                   </p>
 
                   <div className="flex items-center justify-between mt-1">
@@ -134,19 +134,23 @@ export function CheckoutSectionSummary({
                       <button
                         type="button"
                         onClick={() => handleItemQuantity(item.id, -1)}
-                        className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-stone-700 transition-colors"
+                        className="w-7 h-7 rounded flex items-center justify-center hover:bg-white text-stone-700 transition-colors cursor-pointer"
+                        aria-label={`Decrease quantity of ${item.name}`}
+                        title="Decrease quantity"
                       >
-                        <Minus size={10} />
+                        <Minus size={11} />
                       </button>
-                      <span className="text-xs font-mono font-bold w-4 text-center text-stone-900">
+                      <span className="text-xs font-mono font-bold w-5 text-center text-stone-900">
                         {item.quantity ?? 1}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleItemQuantity(item.id, 1)}
-                        className="w-5 h-5 rounded flex items-center justify-center hover:bg-white text-stone-700 transition-colors"
+                        className="w-7 h-7 rounded flex items-center justify-center hover:bg-white text-stone-700 transition-colors cursor-pointer"
+                        aria-label={`Increase quantity of ${item.name}`}
+                        title="Increase quantity"
                       >
-                        <Plus size={10} />
+                        <Plus size={11} />
                       </button>
                     </div>
 
@@ -157,10 +161,11 @@ export function CheckoutSectionSummary({
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
-                        className="p-1 rounded-md text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="p-1.5 rounded-md text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                         title="Remove item"
+                        aria-label={`Remove ${item.name} from order`}
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>

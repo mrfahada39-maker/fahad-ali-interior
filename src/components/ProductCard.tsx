@@ -45,7 +45,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
   const setCachedProduct = useClientCacheStore((s) => s.setProduct);
   const [imgError, setImgError] = useState(false);
 
-  // Instant Zero-Loading Prefetch: primes Next.js router chunks on hover/touch without triggering state re-renders
+  // Desktop-only hover prefetch: never trigger main-thread RSC fetches during mobile touch scrolling
   const primeProductCache = () => {
     if (product?.id) {
       router.prefetch(`/product/${product.id}`);
@@ -98,7 +98,6 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
         data-testid="product-card"
         className="group bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] rounded-[24px] p-4 shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_16px_40px_rgba(184,142,75,0.18)] transition-all duration-300 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden"
       >
-        {/* Ambient Corner Radial Glow */}
         <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.18)_0%,transparent_70%)] opacity-70 group-hover:opacity-100 transition-opacity" />
 
         <div className="relative w-full sm:w-56 aspect-[4/3] rounded-[18px] overflow-hidden bg-[#FAF5EE] shrink-0 border border-amber-200/60">
@@ -107,7 +106,6 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             prefetch={false}
             onClick={handleProductClick}
             onMouseEnter={primeProductCache}
-            onTouchStart={primeProductCache}
             className="block absolute inset-0 z-0"
           >
             <Image
@@ -123,6 +121,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             />
           </Link>
           <button
+            type="button"
             onClick={handleWishlist}
             className="absolute top-3 right-3 w-9 h-9 rounded-xl bg-white hover:bg-[#FAF5EE] text-[#221814] border border-amber-300/60 shadow-[0_2px_8px_rgba(184,142,75,0.15)] flex items-center justify-center transition-all z-10 hover:scale-105 cursor-pointer"
             aria-label="Toggle Wishlist"
@@ -135,7 +134,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-[9.5px] font-black uppercase tracking-wider text-[#8C6239] bg-[#FAF5EE] border border-amber-300/60 px-3 py-0.5 rounded-full shadow-2xs">
-                {product.category || 'Solid Sheesham'}
+                {product.category || 'Solid Wood'}
               </span>
               <div className="flex items-center gap-1 text-[11px] font-bold text-[#B88E4B]">
                 <Star size={12} className="fill-[#B88E4B] text-[#B88E4B]" />
@@ -147,14 +146,13 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
               prefetch={false}
               onClick={handleProductClick}
               onMouseEnter={primeProductCache}
-              onTouchStart={primeProductCache}
             >
               <h3 className="text-lg font-bold text-[#221814] group-hover:text-[#B88E4B] transition-colors font-serif">
                 {product.name}
               </h3>
             </Link>
             <p className="text-xs text-[#7A6048] line-clamp-2 mt-1 leading-relaxed font-serif italic">
-              {product.description || (product.material ? `Handcrafted from premium ${product.material} with traditional mortise & tenon joinery.` : '100% Solid Seasoned Sheesham masterpiece crafted with traditional mortise & tenon joinery.')}
+              {product.description || (product.material ? `Handcrafted from premium ${product.material} with traditional mortise & tenon joinery.` : '100% Solid Seasoned wood masterpiece crafted with traditional mortise & tenon joinery.')}
             </p>
           </div>
 
@@ -169,6 +167,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             <div className="flex items-center gap-2.5">
               {onQuickView && (
                 <button
+                  type="button"
                   onClick={() => onQuickView(product)}
                   className="px-3.5 py-2.5 rounded-xl bg-[#FCFAF7] border border-amber-300/60 hover:border-[#B88E4B] text-xs font-black text-[#221814] transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
                 >
@@ -176,6 +175,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
                 </button>
               )}
               <button
+                type="button"
                 onClick={handleAddToCart}
                 className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
@@ -193,7 +193,6 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
       data-testid="product-card"
       className="group relative bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] rounded-[24px] p-3.5 shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_20px_45px_rgba(184,142,75,0.18)] transition-all duration-300 flex flex-col justify-between overflow-hidden"
     >
-      {/* Ambient Corner Radial Glow */}
       <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.18)_0%,transparent_70%)] opacity-70 group-hover:opacity-100 transition-opacity" />
 
       <div className="relative aspect-[4/3] rounded-[18px] overflow-hidden bg-[#FAF5EE] mb-3.5 border border-amber-200/60">
@@ -202,7 +201,6 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
           prefetch={false}
           onClick={handleProductClick}
           onMouseEnter={primeProductCache}
-          onTouchStart={primeProductCache}
           className="block absolute inset-0 z-0"
         >
           <Image
@@ -227,6 +225,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
 
         {/* Floating Wishlist Button */}
         <button
+          type="button"
           onClick={handleWishlist}
           className="absolute top-2.5 right-2.5 w-8.5 h-8.5 rounded-xl bg-white hover:bg-[#FAF5EE] text-[#221814] border border-amber-300/60 shadow-[0_2px_8px_rgba(184,142,75,0.15)] flex items-center justify-center transition-all z-10 hover:scale-110 cursor-pointer"
           aria-label="Toggle Wishlist"
@@ -241,6 +240,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
         <div className="absolute inset-x-2.5 bottom-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 flex items-center gap-2 z-10">
           {onQuickView && (
             <button
+              type="button"
               onClick={(e) => { e.preventDefault(); onQuickView(product); }}
               className="flex-1 bg-white hover:bg-[#FAF5EE] text-[#221814] text-[10.5px] font-black uppercase tracking-wider py-2.5 rounded-xl shadow-md border border-amber-300/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
@@ -248,9 +248,11 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             </button>
           )}
           <button
+            type="button"
             onClick={handleAddToCart}
             className="p-2.5 bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white rounded-xl shadow-md transition-colors cursor-pointer active:scale-95"
             title="Add to Cart"
+            aria-label={`Add ${product.name} to cart`}
           >
             <ShoppingBag size={14} />
           </button>
@@ -264,7 +266,6 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             prefetch={false}
             onClick={handleProductClick}
             onMouseEnter={primeProductCache}
-            onTouchStart={primeProductCache}
             className="block"
           >
             <h3 className="text-[15px] sm:text-[16px] font-bold text-[#221814] group-hover:text-[#B88E4B] transition-colors font-serif leading-snug line-clamp-1">
@@ -272,7 +273,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
             </h3>
           </Link>
           <p className="text-xs text-[#7A6048] font-medium line-clamp-1 mt-0.5">
-            {product.material || '100% Solid Handcrafted Sheesham'}
+            {product.material || '100% Solid Seasoned Hardwood'}
           </p>
         </div>
 
@@ -285,6 +286,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
           </div>
 
           <button
+            type="button"
             onClick={handleAddToCart}
             className="bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
           >

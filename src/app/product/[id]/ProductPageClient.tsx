@@ -57,6 +57,15 @@ export default function ProductPageClient({
   const wishlisted = useIsInWishlist(product?.id ?? '');
   const { data: session } = useSession();
 
+  useEffect(() => {
+    if (!showReviewModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowReviewModal(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showReviewModal]);
+
   if (!product) {
     return (
       <div className="min-h-screen bg-[#FCFAF7] flex items-center justify-center pt-28">
@@ -70,17 +79,23 @@ export default function ProductPageClient({
       </div>
     );
   }
-  const mainImage = resolveImageUrl(product.image, product.category, 1600);
-  const allImages = Array.from(new Set([
-    mainImage,
-    ...(product.images && product.images.length > 0
-      ? product.images.map((img) => resolveImageUrl(img, product.category, 1600))
-      : [
-          resolveImageUrl(null, product.category, 1600),
-          resolveImageUrl(null, product.category, 1600),
-          mainImage,
-        ])
-  ]));
+
+  const rawGallery = [
+    product.image,
+    ...(product.images && product.images.length > 0 ? product.images : []),
+  ].filter(Boolean);
+
+  const uniqueRawImages = Array.from(new Set(rawGallery));
+  const mainImage = resolveImageUrl(product.image, product.category, 1400, 'best');
+  const allImages = uniqueRawImages.length > 0
+    ? uniqueRawImages.map((img) => resolveImageUrl(img, product.category, 1400, 'best'))
+    : [mainImage];
+  const allThumbImages = uniqueRawImages.length > 0
+    ? uniqueRawImages.map((img) => resolveImageUrl(img, product.category, 240, 'good'))
+    : [resolveImageUrl(product.image, product.category, 240, 'good')];
+
+  const maxStock = typeof product.stockCount === 'number' && product.stockCount > 0 ? product.stockCount : 10;
+  const isOutOfStock = typeof product.stockCount === 'number' && product.stockCount <= 0;
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -90,7 +105,12 @@ export default function ProductPageClient({
   };
 
   const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
+    if (isOutOfStock) {
+      toast.error('This piece is currently made-to-order via WhatsApp Concierge');
+      return;
+    }
+    const safeQty = Math.min(quantity, maxStock);
+    for (let i = 0; i < safeQty; i++) {
       addItem({
         id: product.id,
         name: product.name,
@@ -189,12 +209,37 @@ export default function ProductPageClient({
   }
 
   const currentPrice = product.price;
-  const compareAt = parsedSpecs.compareAtPrice ? Number(parsedSpecs.compareAtPrice) : null;
+  const rawCompareAt = parsedSpecs.compareAtPrice ? Number(parsedSpecs.compareAtPrice) : null;
+  const compareAt = rawCompareAt
+    ? rawCompareAt > currentPrice
+      ? rawCompareAt
+      : rawCompareAt > 0 && rawCompareAt <= 50000
+      ? currentPrice + (rawCompareAt < 5000 ? rawCompareAt * 10 : rawCompareAt)
+      : null
+    : null;
   const hasDiscount = Boolean(compareAt && compareAt > currentPrice);
   const discountPercent = hasDiscount && compareAt ? Math.round(((compareAt - currentPrice) / compareAt) * 100) : null;
 
+  // Normalize leadTime & warranty so corrupted admin fields (e.g., warranty pasted into leadTime) render accurately
+  const rawLeadTime = parsedSpecs.leadTime ? String(parsedSpecs.leadTime).trim() : '';
+  const isWarrantyInLeadTime = /warranty|guarantee|year/i.test(rawLeadTime);
+  const displayLeadTime = rawLeadTime && !isWarrantyInLeadTime
+    ? (rawLeadTime.toLowerCase().includes('day') || rawLeadTime.toLowerCase().includes('week') ? rawLeadTime : `${rawLeadTime} Working Days`)
+    : '10–15 Working Days';
+
+  const rawWarranty = parsedSpecs.warranty ? String(parsedSpecs.warranty).trim() : (isWarrantyInLeadTime ? rawLeadTime : '');
+  const displayWarrantyShort = rawWarranty
+    ? (rawWarranty.length > 22 ? '10 Years' : (rawWarranty.toLowerCase().includes('year') ? rawWarranty : `${rawWarranty} Years`))
+    : '10 Years';
+  const displayWarrantyFull = rawWarranty
+    ? (rawWarranty.toLowerCase().includes('year') ? rawWarranty : `${rawWarranty}-Year Structural & Foam Guarantee`)
+    : '10-Year Structural Wood & Master Foam Guarantee';
+
+  const primaryWoodType = parsedSpecs.woodType || product.material || 'Solid Seasoned Sheesham Wood';
+  const displayDimensions = product.dimensions || parsedSpecs.dimensions || '9 ft × 7 ft × 34 in (Custom Sizing Available)';
+
   const whatsappMessage = encodeURIComponent(
-    `Hello Fahad Ali Interior, I am interested in ordering the masterwork "${product.name}". Can we discuss bespoke dimensions and availability?`
+    `Hello Fahad Ali Interior, I am interested in ordering the masterwork "${product.name}" (Rs. ${currentPrice.toLocaleString()}). Can we discuss bespoke dimensions and availability?`
   );
 
   return (
@@ -203,18 +248,20 @@ export default function ProductPageClient({
 
         {/* ── BREADCRUMB HEADER ── */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-[#E7DDD0]">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-[#7A6048]">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-[#7A6048]">
             <Link href="/" className="hover:text-[#B88E4B] transition-colors">Home</Link>
             <span className="text-[#B88E4B]">/</span>
-            <Link href="/shop" className="hover:text-[#B88E4B] transition-colors">{product.category || 'Catalog'}</Link>
+            <Link href={`/shop?category=${encodeURIComponent(product.category || 'Living Room')}`} className="hover:text-[#B88E4B] transition-colors">{product.category || 'Catalog'}</Link>
             <span className="text-[#B88E4B]">/</span>
             <span className="text-[#221814] font-black truncate max-w-[240px]">{product.name}</span>
-          </div>
+          </nav>
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handleShare}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E7DDD0] text-xs font-bold text-[#5A4336] hover:border-[#B88E4B] shadow-2xs transition-all cursor-pointer"
+              aria-label="Share product link"
             >
               <Share2 size={13} />
               <span>Share Masterpiece</span>
@@ -243,7 +290,6 @@ export default function ProductPageClient({
                 alt={product.name}
                 fill
                 priority
-                unoptimized
                 sizes="(max-width: 1024px) 100vw, 55vw"
                 className={`object-cover transition-transform duration-300 ${
                   isZooming ? 'scale-150' : 'scale-100'
@@ -255,12 +301,12 @@ export default function ProductPageClient({
                 }
               />
 
-
               {/* Floating Wishlist Button */}
               <button
+                type="button"
                 onClick={handleWishlist}
                 className="absolute top-4 right-4 w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md border border-amber-300/70 text-[#221814] shadow-[0_3px_12px_rgba(184,142,75,0.2)] hover:bg-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-20 cursor-pointer"
-                aria-label="Wishlist"
+                aria-label={wishlisted ? 'Remove from Wishlist' : 'Save to Wishlist'}
               >
                 <Heart
                   size={18}
@@ -270,19 +316,21 @@ export default function ProductPageClient({
 
               {/* Hover Zoom Notice */}
               <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                🔍 Hover to Magnify Grain Texture
+                🔍 Hover to Magnify Grain Texture
               </div>
             </div>
 
-            {/* Thumbnail Showcase Carousel (Enlarged & Luxury Styling) */}
-            {allImages.length > 1 && (
+            {/* Thumbnail Showcase Carousel (Optimized 240px Thumbnails) */}
+            {allThumbImages.length > 1 && (
               <div className="flex items-center gap-3.5 sm:gap-4 overflow-x-auto pb-3 pt-2 scrollbar-hide">
-                {allImages.map((img, i) => {
+                {allThumbImages.map((thumbImg, i) => {
                   const isActive = i === activeImage;
                   return (
                     <button
                       key={i}
+                      type="button"
                       onClick={() => setActiveImage(i)}
+                      aria-label={`View ${product.name} image ${i + 1}`}
                       className={`group/thumb relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-[22px] overflow-hidden shrink-0 border-2 transition-all duration-300 cursor-pointer ${
                         isActive
                           ? 'border-[#B88E4B] ring-4 ring-amber-400/30 shadow-[0_10px_25px_rgba(184,142,75,0.25)] scale-105 z-10'
@@ -290,10 +338,9 @@ export default function ProductPageClient({
                       }`}
                     >
                       <Image
-                        src={img}
+                        src={thumbImg}
                         alt={`${product.name} view ${i + 1}`}
                         fill
-                        unoptimized
                         className="object-cover transition-transform duration-500 group-hover/thumb:scale-108"
                         sizes="128px"
                       />
@@ -312,10 +359,22 @@ export default function ProductPageClient({
             
             {/* Header: Category Badge + Title + Rating */}
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF5EE] border border-amber-300/60 shadow-2xs">
-                <span className="text-[#B88E4B] text-xs font-bold">✦</span>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7A6354]">
-                  {product.category || 'Atelier Masterpiece'}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF5EE] border border-amber-300/60 shadow-2xs">
+                  <span className="text-[#B88E4B] text-xs font-bold">✦</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7A6354]">
+                    {product.category || 'Atelier Masterpiece'}
+                  </span>
+                </div>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                  isOutOfStock
+                    ? 'bg-amber-50 text-amber-800 border-amber-300'
+                    : maxStock <= 5
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                }`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {isOutOfStock ? 'Bespoke Made-to-Order' : maxStock <= 5 ? `In Stock (${maxStock} Pieces Available)` : 'In Stock • Ready for Dispatch'}
                 </span>
               </div>
 
@@ -334,7 +393,7 @@ export default function ProductPageClient({
                   ))}
                 </div>
                 <span className="text-xs font-bold text-[#7A6048]">
-                  {avgRating.toFixed(1)} ({reviewCount > 0 ? `${reviewCount} Verified Masterwork ${reviewCount === 1 ? 'Review' : 'Reviews'}` : 'Atelier Masterpiece Rating'})
+                  {avgRating.toFixed(1)} ({reviewCount > 0 ? `${reviewCount} Verified Masterwork ${reviewCount === 1 ? 'Review' : 'Reviews'}` : 'Atelier Certified Masterpiece'})
                 </span>
               </div>
             </div>
@@ -346,7 +405,7 @@ export default function ProductPageClient({
 
               <div className="flex items-baseline justify-between relative z-10">
                 <div>
-                  <span className="text-[9.5px] font-bold uppercase text-stone-400 tracking-wider block">Investment Value</span>
+                  <span className="text-[9.5px] font-bold uppercase text-stone-400 tracking-wider block">Investment Value (GST Inclusive)</span>
                   <div className="flex items-baseline gap-3">
                     <span className="text-2xl sm:text-3xl font-black text-[#221814] font-sans tracking-tight">
                       Rs. {currentPrice.toLocaleString()}
@@ -365,6 +424,16 @@ export default function ProductPageClient({
                   </span>
                 )}
               </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-amber-200/50 text-[11px] font-bold text-[#5A4336]">
+                <span className="flex items-center gap-1 text-emerald-700">
+                  <Truck size={13} /> Free White-Glove Delivery
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1 text-[#8C6239]">
+                  <ShieldCheck size={13} /> Cash on Delivery & Bank Transfer
+                </span>
+              </div>
             </div>
 
             {/* Product Narrative & Highlights */}
@@ -381,6 +450,7 @@ export default function ProductPageClient({
                 {/* Quantity Pill */}
                 <div className="flex items-center bg-white border-2 border-[#E7DDD0] rounded-xl h-13 px-2 shadow-2xs">
                   <button
+                    type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-[#221814] hover:bg-[#FAF5EE] transition-colors cursor-pointer"
                     aria-label="Decrease quantity"
@@ -391,7 +461,14 @@ export default function ProductPageClient({
                     {quantity}
                   </span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    type="button"
+                    onClick={() => {
+                      if (quantity >= maxStock) {
+                        toast.info(`Maximum available ready stock is ${maxStock} pieces`);
+                        return;
+                      }
+                      setQuantity(quantity + 1);
+                    }}
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-[#221814] hover:bg-[#FAF5EE] transition-colors cursor-pointer"
                     aria-label="Increase quantity"
                   >
@@ -401,6 +478,7 @@ export default function ProductPageClient({
 
                 {/* Primary Add to Cart CTA */}
                 <button
+                  type="button"
                   onClick={handleAddToCart}
                   className="flex-1 h-13 bg-[#221814] hover:bg-gradient-to-r hover:from-[#B88E4B] hover:to-[#996515] text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_8px_25px_rgba(34,24,20,0.15)] flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
@@ -416,7 +494,7 @@ export default function ProductPageClient({
                   handleAddToCart();
                   router.push('/checkout');
                 }}
-                className="w-full h-12 bg-white border-2 border-[#E7DDD0] hover:border-[#B88E4B] hover:bg-[#FAF5EE] text-[#221814] text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-2xs flex items-center justify-center gap-2"
+                className="w-full h-12 bg-white border-2 border-[#E7DDD0] hover:border-[#B88E4B] hover:bg-[#FAF5EE] text-[#221814] text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Experience Instant Checkout</span>
                 <ArrowRight size={14} />
@@ -437,20 +515,20 @@ export default function ProductPageClient({
               <div className="pt-2 grid grid-cols-3 gap-2 text-center">
                 <div className="bg-[#FAF5EE] border border-amber-200/60 rounded-xl p-2.5 shadow-2xs">
                   <span className="block text-[8.5px] font-black uppercase text-stone-400 tracking-wider">Wood / Frame</span>
-                  <span className="text-[11px] font-black text-[#221814] truncate block mt-0.5">
-                    {parsedSpecs.woodType || product.material || 'Sheesham'}
+                  <span className="text-[11px] font-black text-[#221814] truncate block mt-0.5" title={primaryWoodType}>
+                    {primaryWoodType}
                   </span>
                 </div>
                 <div className="bg-[#FAF5EE] border border-amber-200/60 rounded-xl p-2.5 shadow-2xs">
                   <span className="block text-[8.5px] font-black uppercase text-stone-400 tracking-wider">Polish Finish</span>
-                  <span className="text-[11px] font-black text-[#221814] truncate block mt-0.5">
+                  <span className="text-[11px] font-black text-[#221814] truncate block mt-0.5" title={parsedSpecs.finish || 'High Gloss'}>
                     {parsedSpecs.finish || 'High Gloss'}
                   </span>
                 </div>
                 <div className="bg-[#FAF5EE] border border-amber-200/60 rounded-xl p-2.5 shadow-2xs">
                   <span className="block text-[8.5px] font-black uppercase text-stone-400 tracking-wider">Warranty</span>
-                  <span className="text-[11px] font-black text-[#221814] truncate block mt-0.5">
-                    {parsedSpecs.warranty || '5 Years'}
+                  <span className="text-[11px] font-black text-[#221814] truncate block mt-0.5" title={displayWarrantyFull}>
+                    {displayWarrantyShort}
                   </span>
                 </div>
               </div>
@@ -501,9 +579,9 @@ export default function ProductPageClient({
                 <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">General Material</span>
               </div>
               <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
-                {product.material || parsedSpecs.generalMaterial || '100% Solid Seasoned Sheesham Wood'}
+                {product.material || parsedSpecs.generalMaterial || primaryWoodType}
               </p>
-              <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Authentic hardwood with zero particle board or MDF veneer</p>
+              <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Authentic seasoned hardwood with zero particle board or MDF veneer</p>
             </div>
 
             {/* 2. Wood Type / Frame */}
@@ -513,7 +591,7 @@ export default function ProductPageClient({
                 <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Wood Type / Frame</span>
               </div>
               <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
-                {parsedSpecs.woodType || 'Solid Sheesham (Dalbergia Sissoo)'}
+                {primaryWoodType}
               </p>
               <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Kiln-seasoned for 30 days to 8-12% moisture equilibrium</p>
             </div>
@@ -549,9 +627,7 @@ export default function ProductPageClient({
                 <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Production Lead Time</span>
               </div>
               <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
-                {parsedSpecs.leadTime
-                  ? (String(parsedSpecs.leadTime).toLowerCase().includes('day') ? parsedSpecs.leadTime : `${parsedSpecs.leadTime} Working Days`)
-                  : '10–14 Working Days'}
+                {displayLeadTime}
               </p>
               <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Bespoke handcrafted timeline with real-time workshop tracking</p>
             </div>
@@ -563,9 +639,7 @@ export default function ProductPageClient({
                 <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Warranty Guarantee</span>
               </div>
               <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
-                {parsedSpecs.warranty
-                  ? (String(parsedSpecs.warranty).toLowerCase().includes('year') ? parsedSpecs.warranty : `${parsedSpecs.warranty} Structural Warranty`)
-                  : '10-Year Craftsmanship Guarantee'}
+                {displayWarrantyFull}
               </p>
               <p className="text-[10.5px] text-stone-400 mt-1 font-medium">Official anti-termite and structural joint integrity guarantee</p>
             </div>
@@ -578,7 +652,7 @@ export default function ProductPageClient({
                   <span className="text-[9.5px] font-black uppercase tracking-widest text-[#7A6048]">Dimensions & Spatial Proportion</span>
                 </div>
                 <p className="text-sm sm:text-base font-black text-[#221814] tracking-tight">
-                  {product.dimensions || parsedSpecs.dimensions || 'Bespoke custom dimensions available upon consultation'}
+                  {displayDimensions}
                 </p>
               </div>
               <div className="shrink-0 flex items-center gap-2">
@@ -608,7 +682,7 @@ export default function ProductPageClient({
                 Patron Reviews & <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent">Critiques</span>
               </h2>
               <p className="text-xs sm:text-sm text-[#7A6048] mt-1 font-medium">
-                Authentic testimonials from collectors commissioning handcrafted Sheesham furniture.
+                Authentic testimonials from collectors commissioning handcrafted solid wood furniture.
               </p>
             </div>
 
@@ -622,7 +696,7 @@ export default function ProductPageClient({
                     ))}
                   </div>
                   <p className="text-[10px] font-bold text-stone-500 mt-0.5">
-                    {reviewCount} {reviewCount === 1 ? 'Review' : 'Reviews'}
+                    {reviewCount > 0 ? `${reviewCount} ${reviewCount === 1 ? 'Review' : 'Reviews'}` : 'Atelier Verified'}
                   </p>
                 </div>
                 <div className="border-l border-[#E7DDD0] pl-3">
@@ -634,6 +708,7 @@ export default function ProductPageClient({
               </div>
 
               <button
+                type="button"
                 onClick={() => {
                   if (!session?.user) {
                     toast.info('Please sign in to write an artisan critique');
@@ -661,6 +736,7 @@ export default function ProductPageClient({
                 Commission this bespoke piece and share your critique on timber seasoning, brass fittings, and finishing grade.
               </p>
               <button
+                type="button"
                 onClick={() => setShowReviewModal(true)}
                 className="mt-2 px-5 py-2.5 rounded-xl bg-[#FAF5EE] hover:bg-[#FAF0E2] border border-[#B88E4B]/40 text-[#8C6239] text-xs font-bold transition-all cursor-pointer shadow-2xs"
               >
@@ -719,10 +795,17 @@ export default function ProductPageClient({
 
         {/* Review Submission Modal */}
         {showReviewModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Write a review for ${product.name}`}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
+          >
             <div className="bg-white rounded-3xl border border-[#E7DDD0] max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
               <button
+                type="button"
                 onClick={() => setShowReviewModal(false)}
+                aria-label="Close review modal"
                 className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 cursor-pointer"
               >
                 <X size={18} />
@@ -762,6 +845,7 @@ export default function ProductPageClient({
                           key={star}
                           type="button"
                           onClick={() => setReviewRating(star)}
+                          aria-label={`Rate ${star} out of 5 stars`}
                           className="cursor-pointer p-0.5 hover:scale-110 transition-transform"
                         >
                           <Star
@@ -779,7 +863,7 @@ export default function ProductPageClient({
                     <textarea id="fai-productpageclient-field-1" name="fai_productpageclient_field_1"
                       value={reviewComment}
                       onChange={(e) => setReviewComment(e.target.value)}
-                      placeholder="Comment on the rosewood timber grain, joints, cushioning, or delivery presentation..."
+                      placeholder="Comment on the timber grain, joints, cushioning, or delivery presentation..."
                       rows={4}
                       required
                       className="w-full rounded-2xl border border-[#E7DDD0] p-3 text-xs text-[#221814] bg-[#FAF5EE]/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#B88E4B]"

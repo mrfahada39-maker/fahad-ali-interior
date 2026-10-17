@@ -8,10 +8,15 @@ export default function BackToTop() {
 
   useEffect(() => {
     let ticking = false;
+    let lastVisible = false;
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          setVisible(window.scrollY > 380);
+          const nextVisible = window.scrollY > 380;
+          if (nextVisible !== lastVisible) {
+            lastVisible = nextVisible;
+            setVisible(nextVisible);
+          }
           ticking = false;
         });
         ticking = true;
@@ -33,6 +38,7 @@ export default function BackToTop() {
 
   return (
     <button
+      type="button"
       onClick={scrollToTop}
       aria-label="Back to top"
       className="fixed bottom-[126px] sm:bottom-[130px] right-4 sm:right-6 lg:bottom-24 lg:right-6 z-30 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] text-white shadow-[0_8px_25px_rgba(184,142,75,0.35)] hover:shadow-[0_12px_32px_rgba(184,142,75,0.5)] border-2 border-white/60 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer group"

@@ -330,24 +330,28 @@ export async function handleSettingsAndBundleRoutes(
         settings: settings
           ? {
               siteName: settings.siteName || 'Fahad Ali Interior',
-              contactPhone: settings.contactPhone || '',
-              adminEmail: settings.adminEmail || '',
-              storeAddress: settings.storeAddress || '',
+              contactPhone: settings.contactPhone || BUSINESS_CONTACT.phone,
+              adminEmail:
+                settings.adminEmail &&
+                settings.adminEmail.toLowerCase() !== 'mrfahada39@gmail.com'
+                  ? settings.adminEmail
+                  : BUSINESS_CONTACT.supportEmail,
+              storeAddress: settings.storeAddress || BUSINESS_CONTACT.address,
               socialInstagram: settings.socialInstagram || '',
               socialFacebook: settings.socialFacebook || '',
-              socialWhatsapp: settings.socialWhatsapp || '',
-              foundedYear: settings.foundedYear || '',
+              socialWhatsapp: settings.socialWhatsapp || BUSINESS_CONTACT.whatsapp,
+              foundedYear: settings.foundedYear || '2020',
               currency: settings.currency || 'PKR',
             }
           : {
               siteName: 'Fahad Ali Interior',
-              contactPhone: '',
-              adminEmail: '',
-              storeAddress: '',
+              contactPhone: BUSINESS_CONTACT.phone,
+              adminEmail: BUSINESS_CONTACT.supportEmail,
+              storeAddress: BUSINESS_CONTACT.address,
               socialInstagram: '',
               socialFacebook: '',
-              socialWhatsapp: '',
-              foundedYear: '',
+              socialWhatsapp: BUSINESS_CONTACT.whatsapp,
+              foundedYear: '2020',
               currency: 'PKR',
             },
         banners: [],
@@ -390,11 +394,12 @@ export async function handleSettingsAndBundleRoutes(
       segment === 'admin/settings' ||
       segment === 'v1/admin/settings')
   ) {
-    if (
+    const isAdminSettingsRoute =
       normalizedSegment === 'admin/settings' ||
       segment === 'admin/settings' ||
-      segment === 'v1/admin/settings'
-    ) {
+      segment === 'v1/admin/settings';
+
+    if (isAdminSettingsRoute) {
       const user = await getUserFromSessionOrToken(req);
       if (!requireAdmin(user)) {
         return NextResponse.json(
@@ -423,8 +428,24 @@ export async function handleSettingsAndBundleRoutes(
       themeMutedColor: '#8A8682',
       themeAccentColor: '#2C251F',
     };
-    return NextResponse.json(existing || defaultSettings, {
-      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
+    const resolvedSettings = existing
+      ? {
+          ...existing,
+          adminEmail: isAdminSettingsRoute
+            ? existing.adminEmail
+            : existing.adminEmail &&
+                existing.adminEmail.toLowerCase() !== 'mrfahada39@gmail.com'
+              ? existing.adminEmail
+              : BUSINESS_CONTACT.supportEmail,
+        }
+      : defaultSettings;
+
+    return NextResponse.json(resolvedSettings, {
+      headers: {
+        'Cache-Control': isAdminSettingsRoute
+          ? 'private, no-store, no-cache, must-revalidate'
+          : 'public, s-maxage=60, stale-while-revalidate=300',
+      },
     });
   }
 

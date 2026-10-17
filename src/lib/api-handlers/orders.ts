@@ -417,6 +417,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
             shippingProvince,
             shippingNotes,
             paymentMethod: validPaymentMethod,
+            paymentScreenshot: body.paymentScreenshot || null,
             couponCode: appliedCoupon?.code || null,
             subtotal,
             gst,

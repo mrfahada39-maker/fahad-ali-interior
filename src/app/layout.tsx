@@ -55,13 +55,47 @@ const organizationJsonLd = {
   logo: "https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039209/fahad-ali-interior/assets/fahad_ali_logo.svg",
   image: `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80`,
   description:
-    "Handcrafted luxury furniture from Lahore, Pakistan. Premium beds, sofas, dining sets, and wardrobes.",
+    "Handcrafted luxury furniture from Lahore, Pakistan. Premium 100% solid seasoned Sheesham wood beds, L-shape sofas, dining sets, and bespoke wardrobes with a 10-year structural and anti-termite guarantee.",
+  telephone: "+92-320-7006110",
+  email: "concierge@fahadali.pk",
+  priceRange: "PKR 35,000 - PKR 450,000",
+  currenciesAccepted: "PKR",
+  paymentAccepted: "Cash on Delivery (COD), RAAST Instant Bank Transfer, JazzCash, Easypaisa, Visa, Mastercard",
   address: {
     "@type": "PostalAddress",
+    streetAddress: "Main Boulevard, Gulberg III",
     addressLocality: "Lahore",
+    addressRegion: "Punjab",
+    postalCode: "54660",
     addressCountry: "PK",
   },
-  areaServed: "PK",
+  areaServed: [
+    { "@type": "City", name: "Lahore" },
+    { "@type": "City", name: "Islamabad" },
+    { "@type": "City", name: "Rawalpindi" },
+    { "@type": "City", name: "Karachi" },
+    { "@type": "City", name: "Faisalabad" },
+    { "@type": "City", name: "Multan" },
+    { "@type": "Country", name: "Pakistan" },
+  ],
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      opens: "10:00",
+      closes: "22:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Sunday",
+      opens: "14:00",
+      closes: "22:00",
+    },
+  ],
+  sameAs: [
+    "https://instagram.com/fahadaliinterior",
+    "https://facebook.com/fahadaliinterior",
+  ],
 };
 
 // Viewport config — theme-color for PWA browser chrome

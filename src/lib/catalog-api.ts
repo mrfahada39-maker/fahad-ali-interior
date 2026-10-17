@@ -36,7 +36,23 @@ function normalizeCatalogText(text: string | null | undefined, fallback = ''): s
     .replace(/\bProuduct\b/g, 'Product')
     .replace(/\bprouduct\b/gi, 'product')
     .replace(/\bcenter tables\b/gi, 'Center Tables')
+    .replace(/\bL-Shap\b(?!e)/gi, 'L-Shape')
     .trim();
+}
+
+function inferFallbackDimensions(name: string, category: string, dims?: string | null): string {
+  if (dims && dims.trim().length > 0) return dims.trim();
+  const n = (name || '').toLowerCase();
+  const c = (category || '').toLowerCase();
+  if (n.includes('12-seater') || n.includes('u-shape')) return '11 ft × 9 ft × 34 in (Custom Sizing Available)';
+  if (n.includes('10-seater')) return '10.5 ft × 8.5 ft × 34 in (Custom Sizing Available)';
+  if (n.includes('l-shape') || n.includes('sectional') || n.includes('corner')) return '9 ft × 7 ft × 34 in (Custom Sizing Available)';
+  if (n.includes('6-seater') || n.includes('7-seater') || n.includes('sofa set')) return '3-Seater (7.2 ft) + 2-Seater (5.2 ft) + 1-Seater (3.2 ft)';
+  if (c.includes('bed') || n.includes('bed')) return 'King Size: 6.5 ft × 6 ft × 48 in Headboard';
+  if (c.includes('dining')) return 'Table: 7 ft × 3.5 ft × 30 in';
+  if (c.includes('table') || n.includes('table')) return '4 ft × 2.5 ft × 18 in';
+  if (c.includes('wardrobe')) return '8 ft (H) × 6 ft (W) × 24 in (D)';
+  return '8.5 ft × 6.5 ft × 34 in (Custom Sizing Available)';
 }
 
 /** Server-side category list for storefront pages */
@@ -107,13 +123,18 @@ export async function getStorefrontProducts(limit = 50): Promise<StorefrontProdu
       take: limit,
       orderBy: { createdAt: 'desc' },
     });
-    const result = (products || []).map((p: any) => ({
-      ...p,
-      name: normalizeCatalogText(p.name, p.name),
-      category: normalizeCatalogText(p.category, p.category),
-      description: normalizeCatalogText(p.description, p.description),
-      price: Number(p.price),
-    })) as unknown as StorefrontProduct[];
+    const result = (products || []).map((p: any) => {
+      const cleanName = normalizeCatalogText(p.name, p.name);
+      const cleanCategory = normalizeCatalogText(p.category, p.category);
+      return {
+        ...p,
+        name: cleanName,
+        category: cleanCategory,
+        description: normalizeCatalogText(p.description, p.description),
+        dimensions: inferFallbackDimensions(cleanName, cleanCategory, p.dimensions),
+        price: Number(p.price),
+      };
+    }) as unknown as StorefrontProduct[];
     setCached(cacheKey, result, 60);
     return result;
   } catch (err) {
@@ -167,9 +188,15 @@ export async function getProductById(id: string): Promise<StorefrontProduct | nu
       const avgRating = reviewCount > 0
         ? Number((approvedReviews.reduce((sum: number, r: any) => sum + (Number(r.rating) || 5), 0) / reviewCount).toFixed(1))
         : 5.0;
+      const cleanName = normalizeCatalogText(p.name, p.name);
+      const cleanCategory = normalizeCatalogText(p.category, p.category);
 
       const result = {
         ...p,
+        name: cleanName,
+        category: cleanCategory,
+        description: normalizeCatalogText(p.description, p.description),
+        dimensions: inferFallbackDimensions(cleanName, cleanCategory, p.dimensions),
         price: Number(p.price),
         reviewCount,
         avgRating,

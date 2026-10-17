@@ -29,27 +29,39 @@ const DEFAULT_CATEGORIES = [
   'Center Tables',
   'Luxury Showcase',
   'Luxury Wardrobes',
+  'Custom Furniture Solutions',
 ];
 
-const materials = ['Sheesham Wood', 'Engineered Wood', 'Solid Wood', 'Metal', 'Upholstered', 'Glass', 'Marble', 'Leather', 'Cane'];
+const materials = ['Sheesham Wood', 'Kikar Wood', 'Solid Wood', 'Velvet', 'Upholstered', 'Walnut Finish', 'Leather'];
 
 const sortOptions = [
   { value: '', label: 'Featured Popularity' },
+  { value: 'bestsellers', label: 'Best Sellers' },
+  { value: 'newest', label: 'Newest Arrivals' },
   { value: 'price-asc', label: 'Price: Low to High' },
   { value: 'price-desc', label: 'Price: High to Low' },
   { value: 'rating', label: 'Highest Rated' },
 ];
 
-const sizes = ['Single', 'Double', 'Queen', 'King'];
-
 const colors = [
-  { name: 'Natural Brown', hex: '#8B6914' },
-  { name: 'Walnut', hex: '#3D2B1F' },
-  { name: 'White', hex: '#F5F5F0' },
-  { name: 'Grey', hex: '#8A8A8A' },
-  { name: 'Black', hex: '#2C1E18' },
-  { name: 'Teal', hex: '#2A6B7C' },
+  { name: 'Natural Brown', hex: '#8B6914', keywords: ['brown', 'natural', 'honey', 'caramel', 'camel', 'tan', 'sheesham'] },
+  { name: 'Walnut', hex: '#3D2B1F', keywords: ['walnut', 'dark', 'espresso', 'mahogany', 'chocolate', 'wood'] },
+  { name: 'Ivory & Cream', hex: '#F5F5F0', keywords: ['white', 'cream', 'ivory', 'beige', 'off-white', 'sand'] },
+  { name: 'Slate Grey', hex: '#8A8A8A', keywords: ['grey', 'gray', 'charcoal', 'silver', 'ash', 'slate'] },
+  { name: 'Obsidian Black', hex: '#2C1E18', keywords: ['black', 'ebony', 'obsidian', 'onyx', 'Chesterfield'] },
+  { name: 'Royal Teal & Blue', hex: '#2A6B7C', keywords: ['teal', 'blue', 'emerald', 'green', 'navy', 'velvet'] },
 ];
+
+function normalizeCategoryParam(raw?: string | null): string {
+  if (!raw) return 'All';
+  const trimmed = raw.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower === 'custom' || lower.includes('custom furniture')) return 'Custom Furniture Solutions';
+  if (lower === 'living') return 'Living Room';
+  if (lower === 'dining') return 'Dining Room';
+  if (lower === 'center tables') return 'Center Tables';
+  return trimmed;
+}
 
 interface ShopPageProps {
   initialProducts?: StorefrontProduct[];
@@ -59,17 +71,29 @@ interface ShopPageProps {
 
 export default function ShopPage({ initialProducts = [], initialCategory, initialCategories }: ShopPageProps) {
   const defaultPool = initialProducts;
-  const safeInitial = initialCategory === 'Custom Furniture Solutions' ? [] : defaultPool;
-  const [products, setProducts] = useState<StorefrontProduct[]>(safeInitial);
-  const [loading, setLoading] = useState(false);
   const searchParamsHook = useSearchParams();
   const urlCategory = searchParamsHook?.get('category') || undefined;
-  const [activeCategory, setActiveCategory] = useState(initialCategory || urlCategory || 'All');
+  const urlSort = searchParamsHook?.get('sort') || '';
+  const resolvedInitialCategory = normalizeCategoryParam(initialCategory || urlCategory || 'All');
+
+  const safeInitial = resolvedInitialCategory === 'Custom Furniture Solutions' ? [] : defaultPool;
+  const [products, setProducts] = useState<StorefrontProduct[]>(safeInitial);
+  const [loading, setLoading] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(resolvedInitialCategory);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('');
+  const [sortBy, setSortBy] = useState(urlSort);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (urlCategory) {
+      setActiveCategory(normalizeCategoryParam(urlCategory));
+    }
+    if (urlSort) {
+      setSortBy(urlSort);
+    }
+  }, [urlCategory, urlSort]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -98,6 +122,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
   const [userAdjustedPrice, setUserAdjustedPrice] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
   const [categoriesList, setCategoriesList] = useState<string[]>(
     initialCategories && initialCategories.length > 0 ? initialCategories : DEFAULT_CATEGORIES
   );
@@ -128,9 +153,11 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
       });
       if (res) {
         setInquirySuccess(true);
+        toast.success('Your bespoke inquiry has been received! Our Lahore atelier will contact you shortly.');
         setInquiryForm({ name: '', email: '', phone: '', roomType: 'Living Room', budget: '', message: '' });
       }
     } catch (err) {
+      toast.error('Unable to submit inquiry right now. Please message us on WhatsApp.');
       if (process.env.NODE_ENV === 'development') {
         logger.error('Failed to submit inquiry:', err);
       }
@@ -245,19 +272,14 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
 
   const setCachedProducts = useClientCacheStore((s) => s.setProducts);
 
-  // Initialize and seed products from initial props and cache
   useEffect(() => {
-    setProducts(safeInitial);
-    if (safeInitial.length > 0) {
-      setCachedProducts(safeInitial as unknown as CachedProduct[]);
+    if (defaultPool.length > 0) {
+      setProducts(defaultPool);
+      setCachedProducts(defaultPool as unknown as CachedProduct[]);
     }
-  }, [safeInitial, setCachedProducts]);
+  }, [defaultPool, setCachedProducts]);
 
   const fetchProducts = useCallback(async () => {
-    if (activeCategory === 'Custom Furniture Solutions') {
-      return;
-    }
-    // Zero-Loading: Never destroy existing UI with skeleton if products already exist
     if (products.length === 0) {
       setLoading(true);
     }
@@ -275,8 +297,8 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
         else if (Array.isArray(obj.data)) arr = obj.data as StorefrontProduct[];
         else if (Array.isArray(obj.items)) arr = obj.items as StorefrontProduct[];
       }
-      setProducts(arr);
       if (arr.length > 0) {
+        setProducts(arr);
         setCachedProducts(arr as unknown as CachedProduct[]);
       }
     } catch {
@@ -286,13 +308,11 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
     }
   }, [debouncedSearchQuery, sortBy, products.length, setCachedProducts]);
 
-  // Dynamic maximum catalog price (at least 5,000,000 PKR or higher if luxury products exist)
   const maxCatalogPrice = useMemo(() => {
     const highest = products.reduce((max, p) => Math.max(max, Number(p.price) || 0), 0);
     return Math.max(5000000, Math.ceil((highest || 500000) / 100000) * 100000);
   }, [products]);
 
-  // Initial and cross-tab synchronized product hydration
   useEffect(() => {
     fetchProducts();
 
@@ -316,19 +336,21 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
     setUserAdjustedPrice(false);
     setPriceRange([0, 10000000]);
     setSelectedMaterial('');
+    setSelectedColor('');
     window.history.pushState({}, '', '/shop');
   };
 
   const handleCategoryClick = (cat: string) => {
-    setActiveCategory(cat);
-    const url = cat === 'All' ? '/shop' : `/shop?category=${encodeURIComponent(cat)}`;
+    const norm = normalizeCategoryParam(cat);
+    setActiveCategory(norm);
+    const url = norm === 'All' ? '/shop' : `/shop?category=${encodeURIComponent(norm)}`;
     window.history.pushState({}, '', url);
   };
 
-  // Instant 0ms Client-Side Filtering (Category, Search, Price, Material, Sort)
+  // Client-Side Filtering (Category, Search, Price, Material, Wood Finish Tone, Sort)
   const filteredProducts = useMemo(() => {
     const list = products.filter((p) => {
-      // 1. Category filter (Robust smart matching)
+      // 1. Category filter
       if (activeCategory && activeCategory !== 'All' && activeCategory !== 'Custom Furniture Solutions') {
         const pCat = (p.category || '').toLowerCase().trim();
         const aCat = activeCategory.toLowerCase().trim();
@@ -342,10 +364,10 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
           (Boolean(pCat) && Boolean(aCat) && (pCat.includes(aCat) || aCat.includes(pCat))) ||
           (aCat.includes('bed') && pCat.includes('bed')) ||
           (aCat.includes('dining') && pCat.includes('dining')) ||
-          (aCat.includes('chair') && pCat.includes('chair')) ||
+          (aCat.includes('chair') && (pCat.includes('chair') || (p.name || '').toLowerCase().includes('lounge'))) ||
           (aCat.includes('table') && pCat.includes('table')) ||
           (aCat.includes('wardrobe') && (pCat.includes('wardrobe') || pCat.includes('closet'))) ||
-          ((aCat.includes('decor') || aCat.includes('lighting')) && (pCat.includes('decor') || pCat.includes('lighting') || pCat.includes('showcase'))) ||
+          ((aCat.includes('decor') || aCat.includes('lighting') || aCat.includes('showcase')) && (pCat.includes('decor') || pCat.includes('lighting') || pCat.includes('showcase'))) ||
           (!pCat && (p.name || '').toLowerCase().includes(aCat));
 
         if (!isMatch) return false;
@@ -361,43 +383,67 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
         if (!nameMatch && !catMatch && !descMatch && !woodMatch) return false;
       }
 
-      // 3. Price range filter (Only filters when user explicitly adjusts price)
+      // 3. Price range filter
       const priceOk = !userAdjustedPrice || (p.price >= priceRange[0] && p.price <= priceRange[1]);
       if (!priceOk) return false;
 
       // 4. Material filter
-      const matOk = !selectedMaterial || (p.material || '').toLowerCase().includes(selectedMaterial.toLowerCase());
-      if (!matOk) return false;
+      if (selectedMaterial) {
+        const mQuery = selectedMaterial.toLowerCase().replace(' wood', '').replace(' finish', '');
+        const fullText = `${p.material || ''} ${p.description || ''} ${typeof p.specs === 'string' ? p.specs : JSON.stringify(p.specs || '')}`.toLowerCase();
+        if (!fullText.includes(mQuery)) return false;
+      }
+
+      // 5. Wood Finish Tone (Color) filter
+      if (selectedColor) {
+        const colorObj = colors.find((c) => c.name === selectedColor);
+        if (colorObj) {
+          const fullText = `${p.name || ''} ${p.material || ''} ${p.description || ''} ${typeof p.specs === 'string' ? p.specs : JSON.stringify(p.specs || '')}`.toLowerCase();
+          const matchesColor = colorObj.keywords.some((kw) => fullText.includes(kw.toLowerCase()));
+          if (!matchesColor) return false;
+        }
+      }
 
       return true;
     });
 
-    // 5. Client-Side Sorting for instant response
+    // 6. Client-Side Sorting
     if (sortBy === 'price_asc' || sortBy === 'price-asc') {
       return [...list].sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price_desc' || sortBy === 'price-desc') {
       return [...list].sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'rating') {
+      return [...list].sort((a, b) => (Number(b.avgRating ?? 5) - Number(a.avgRating ?? 5)) || (b.price - a.price));
+    } else if (sortBy === 'bestsellers') {
+      return [...list].sort((a, b) => (Number(b.isPremium ? 1 : 0) - Number(a.isPremium ? 1 : 0)) || (b.price - a.price));
     } else if (sortBy === 'newest') {
       return [...list].reverse();
     }
     return list;
-  }, [products, activeCategory, debouncedSearchQuery, priceRange, userAdjustedPrice, selectedMaterial, sortBy]);
+  }, [products, activeCategory, debouncedSearchQuery, priceRange, userAdjustedPrice, selectedMaterial, selectedColor, sortBy]);
 
-  // Reset pagination when category, search, or filters change
   useEffect(() => {
     setDisplayLimit(18);
-  }, [activeCategory, debouncedSearchQuery, sortBy, priceRange, selectedMaterial]);
+  }, [activeCategory, debouncedSearchQuery, sortBy, priceRange, selectedMaterial, selectedColor]);
 
-  // Progressive slicing to keep DOM lightweight and scrolling silky smooth
   const visibleProducts = useMemo(() => {
     return filteredProducts.slice(0, displayLimit);
   }, [filteredProducts, displayLimit]);
+
+  const isBespokeCategoryOnly =
+    filteredProducts.length === 0 &&
+    activeCategory !== 'All' &&
+    activeCategory !== 'Custom Furniture Solutions' &&
+    !debouncedSearchQuery.trim() &&
+    !selectedMaterial &&
+    !selectedColor &&
+    !userAdjustedPrice;
 
   return (
     <div className="min-h-screen bg-[#FCFAF7] text-[#221814] pt-24 sm:pt-28">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
 
-        {/* Open Royal Editorial Header (Centered Luxury Styling) */}
+        {/* Open Royal Editorial Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -412,13 +458,12 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
             <div className="h-[1.5px] w-20 sm:w-28 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
           </div>
           <p className="text-[#7A6048] text-xs sm:text-sm md:text-base font-serif italic max-w-xl mx-auto">
-            100% Solid Seasoned Sheesham & Walnut wood — traditional joinery tailored for luxury living.
+            100% Solid Seasoned Sheesham & Hardwood — traditional joinery tailored for luxury living.
           </p>
         </motion.div>
 
-        {/* Search + Sort + View Layout Controls Bar with Luminous Border */}
+        {/* Search + Sort + View Layout Controls Bar */}
         <div className="flex flex-col lg:flex-row gap-3 mb-6 bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 p-3 sm:p-3.5 rounded-[24px] shadow-[0_4px_20px_rgba(184,142,75,0.08)] relative z-20">
-          {/* Ambient Corner Glow contained safely */}
           <div className="absolute inset-0 rounded-[24px] overflow-hidden pointer-events-none">
             <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-xl bg-amber-500/10 opacity-70" />
           </div>
@@ -426,6 +471,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
           {/* Search Input */}
           <div className="relative flex-1 z-10">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B88E4B]" />
+            <label htmlFor="shop-search-input" className="sr-only">Search furniture catalog</label>
             <input
               type="text"
               id="shop-search-input"
@@ -436,14 +482,19 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
               className="w-full pl-11 pr-8 py-2.5 text-xs sm:text-sm border border-amber-300/60 rounded-xl bg-white text-[#221814] font-medium focus:outline-none focus:border-[#B88E4B] transition-all placeholder:text-stone-400 shadow-2xs"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-[#221814] p-1 cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search query"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-[#221814] p-1 cursor-pointer"
+              >
                 <X size={14} />
               </button>
             )}
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0 flex-wrap relative z-30">
-            {/* Modern Premium Sort Dropdown */}
+            {/* Sort Dropdown */}
             <div className="relative z-50" ref={sortDropdownRef}>
               <button
                 type="button"
@@ -451,7 +502,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                 aria-haspopup="listbox"
                 aria-expanded={isSortOpen}
                 onClick={() => setIsSortOpen(!isSortOpen)}
-                className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-black rounded-xl border transition-all cursor-pointer shadow-2xs select-none ${
+                className={`flex items-center gap-2.5 px-4 py-2.5 text-xs font-black rounded-xl border transition-all cursor-pointer shadow-2xs ${
                   isSortOpen
                     ? 'border-[#B88E4B] bg-[#FAF5EE] text-[#221814] ring-2 ring-amber-300/40'
                     : 'border-amber-300/60 bg-white text-[#221814] hover:border-[#B88E4B] hover:bg-[#FAF5EE]'
@@ -509,6 +560,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
 
             {/* Filter Toggle */}
             <button
+              type="button"
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black border rounded-xl transition-all cursor-pointer shadow-2xs ${
                 showFilters ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white border-amber-300 shadow-sm' : 'bg-white text-[#221814] border-amber-300/60 hover:border-[#B88E4B] hover:bg-[#FAF5EE]'
@@ -516,7 +568,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
             >
               <SlidersHorizontal size={14} />
               <span>Filters</span>
-              {(selectedMaterial || userAdjustedPrice) && (
+              {(selectedMaterial || selectedColor || userAdjustedPrice) && (
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               )}
             </button>
@@ -524,31 +576,41 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
             {/* Layout Mode Switcher */}
             <div className="hidden sm:flex items-center bg-white border border-amber-300/60 rounded-xl p-1 gap-1 shadow-2xs">
               <button
+                type="button"
                 onClick={() => setLayoutMode('grid3')}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${layoutMode === 'grid3' ? 'bg-[#FAF5EE] text-[#B88E4B] shadow-2xs font-bold' : 'text-stone-400 hover:text-[#221814]'}`}
                 title="3-Column Grid"
+                aria-label="3-Column Grid View"
               >
                 <Grid size={15} />
               </button>
               <button
+                type="button"
                 onClick={() => setLayoutMode('grid4')}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${layoutMode === 'grid4' ? 'bg-[#FAF5EE] text-[#B88E4B] shadow-2xs font-bold' : 'text-stone-400 hover:text-[#221814]'}`}
                 title="4-Column Grid"
+                aria-label="4-Column Grid View"
               >
                 <LayoutGrid size={15} />
               </button>
               <button
+                type="button"
                 onClick={() => setLayoutMode('list')}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${layoutMode === 'list' ? 'bg-[#FAF5EE] text-[#B88E4B] shadow-2xs font-bold' : 'text-stone-400 hover:text-[#221814]'}`}
                 title="Wide List View"
+                aria-label="List View"
               >
                 <List size={15} />
               </button>
             </div>
 
             {/* Clear All Filters */}
-            {(activeCategory !== 'All' || searchQuery || sortBy || selectedMaterial || userAdjustedPrice) && (
-              <button onClick={clearFilters} className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-black text-rose-600 border border-rose-500/30 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 transition-all cursor-pointer">
+            {(activeCategory !== 'All' || searchQuery || sortBy || selectedMaterial || selectedColor || userAdjustedPrice) && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-black text-rose-600 border border-rose-500/30 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 transition-all cursor-pointer"
+              >
                 <RotateCcw size={13} />
                 <span>Reset</span>
               </button>
@@ -556,13 +618,14 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
           </div>
         </div>
 
-        {/* Luxury Category Pills with Luminous Borders */}
+        {/* Luxury Category Pills */}
         <div className="flex gap-2.5 overflow-x-auto pb-3 mb-8 scrollbar-hide">
           {categoriesList.map(cat => {
             const isActive = activeCategory === cat;
             return (
               <button
                 key={cat}
+                type="button"
                 onClick={() => handleCategoryClick(cat)}
                 className={`relative flex-shrink-0 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   isActive 
@@ -578,7 +641,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
 
         <div className="flex gap-8 items-start">
 
-          {/* Collapsible Sidebar Filters with Luminous Border */}
+          {/* Collapsible Sidebar Filters */}
           <AnimatePresence>
             {showFilters && (
               <motion.div
@@ -593,7 +656,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                     <h3 className="text-xs font-extrabold text-[#221814] uppercase tracking-wider flex items-center gap-1.5">
                       <SlidersHorizontal size={14} className="text-[#B88E4B]" /> Filter Criteria
                     </h3>
-                    <button onClick={clearFilters} className="text-[10px] text-[#B88E4B] font-bold hover:underline cursor-pointer">
+                    <button type="button" onClick={clearFilters} className="text-[10px] text-[#B88E4B] font-bold hover:underline cursor-pointer">
                       Reset
                     </button>
                   </div>
@@ -601,7 +664,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                   {/* Price Range Slider */}
                   <div>
                     <div className="flex justify-between items-center text-xs font-bold text-theme-dark mb-2">
-                      <span>Max Price</span>
+                      <label htmlFor="price-range-slider">Max Price</label>
                       <span className="text-theme-accent font-mono">
                         Rs. {formatPrice(userAdjustedPrice ? priceRange[1] : maxCatalogPrice)}
                       </span>
@@ -633,9 +696,10 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                       {materials.map(m => (
                         <button
                           key={m}
+                          type="button"
                           onClick={() => setSelectedMaterial(m === selectedMaterial ? '' : m)}
-                          className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                            selectedMaterial === m ? 'bg-theme-accent text-white font-bold' : 'text-theme-muted hover:text-theme-dark hover:bg-theme-bg'
+                          className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                            selectedMaterial === m ? 'bg-[#B88E4B] text-white font-bold' : 'text-theme-muted hover:text-theme-dark hover:bg-theme-bg'
                           }`}
                         >
                           {m}
@@ -646,16 +710,29 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
 
                   {/* Colors */}
                   <div>
-                    <h4 className="text-[11px] font-bold text-theme-dark uppercase tracking-wider mb-2.5">Wood Finish Tone</h4>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <h4 className="text-[11px] font-bold text-theme-dark uppercase tracking-wider">Wood Finish Tone</h4>
+                      {selectedColor && (
+                        <span className="text-[9.5px] font-bold text-[#B88E4B]">{selectedColor}</span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-2">
-                      {colors.map(c => (
-                        <button
-                          key={c.name}
-                          title={c.name}
-                          className="w-6 h-6 rounded-full ring-2 ring-offset-2 ring-transparent hover:ring-theme-accent transition-all shadow-xs"
-                          style={{ backgroundColor: c.hex }}
-                        />
-                      ))}
+                      {colors.map(c => {
+                        const isColorActive = selectedColor === c.name;
+                        return (
+                          <button
+                            key={c.name}
+                            type="button"
+                            title={c.name}
+                            aria-label={`Filter by ${c.name} finish`}
+                            onClick={() => setSelectedColor(isColorActive ? '' : c.name)}
+                            className={`w-7 h-7 rounded-full ring-2 ring-offset-2 transition-all shadow-xs cursor-pointer ${
+                              isColorActive ? 'ring-[#B88E4B] scale-110' : 'ring-transparent hover:ring-[#B88E4B]/60'
+                            }`}
+                            style={{ backgroundColor: c.hex }}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -666,7 +743,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
           {/* Mobile Filter Drawer */}
           <AnimatePresence>
             {showFilters && (
-              <div className="fixed inset-0 z-50 md:hidden">
+              <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Filter Criteria">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -687,6 +764,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                         <SlidersHorizontal size={15} className="text-[#B88E4B]" /> Filter Criteria
                       </h3>
                       <button 
+                        type="button"
                         onClick={() => setShowFilters(false)} 
                         className="w-8 h-8 rounded-full bg-[#FAF5EE] border border-amber-300/60 flex items-center justify-center text-[#221814] hover:bg-amber-100 transition-colors"
                         aria-label="Close Filters"
@@ -698,7 +776,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                     {/* Price Range Slider */}
                     <div>
                       <div className="flex justify-between items-center text-xs font-bold text-theme-dark mb-2">
-                        <span>Max Price</span>
+                        <label htmlFor="mobile-price-range-slider">Max Price</label>
                         <span className="text-theme-accent font-mono">
                           Rs. {formatPrice(userAdjustedPrice ? priceRange[1] : maxCatalogPrice)}
                         </span>
@@ -730,6 +808,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                         {materials.map(m => (
                           <button
                             key={m}
+                            type="button"
                             onClick={() => setSelectedMaterial(m === selectedMaterial ? '' : m)}
                             className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                               selectedMaterial === m ? 'bg-[#B88E4B] text-white font-bold' : 'text-[#7A6048] hover:text-[#221814] hover:bg-[#FAF5EE]'
@@ -743,28 +822,43 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
 
                     {/* Colors */}
                     <div>
-                      <h4 className="text-[11px] font-bold text-theme-dark uppercase tracking-wider mb-2.5">Wood Finish Tone</h4>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h4 className="text-[11px] font-bold text-theme-dark uppercase tracking-wider">Wood Finish Tone</h4>
+                        {selectedColor && (
+                          <span className="text-[10px] font-bold text-[#B88E4B]">{selectedColor}</span>
+                        )}
+                      </div>
                       <div className="flex flex-wrap gap-2.5">
-                        {colors.map(c => (
-                          <button
-                            key={c.name}
-                            title={c.name}
-                            className="w-7 h-7 rounded-full ring-2 ring-offset-2 ring-transparent hover:ring-[#B88E4B] transition-all shadow-xs"
-                            style={{ backgroundColor: c.hex }}
-                          />
-                        ))}
+                        {colors.map(c => {
+                          const isColorActive = selectedColor === c.name;
+                          return (
+                            <button
+                              key={c.name}
+                              type="button"
+                              title={c.name}
+                              aria-label={`Filter by ${c.name} finish`}
+                              onClick={() => setSelectedColor(isColorActive ? '' : c.name)}
+                              className={`w-7 h-7 rounded-full ring-2 ring-offset-2 transition-all shadow-xs ${
+                                isColorActive ? 'ring-[#B88E4B] scale-110' : 'ring-transparent hover:ring-[#B88E4B]'
+                              }`}
+                              style={{ backgroundColor: c.hex }}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
 
                   <div className="pt-6 border-t border-amber-200/60 flex gap-3">
                     <button
+                      type="button"
                       onClick={clearFilters}
                       className="flex-1 py-3 bg-[#FAF5EE] text-[#7A6048] text-xs font-bold rounded-xl border border-amber-300/60"
                     >
                       Reset
                     </button>
                     <button
+                      type="button"
                       onClick={() => setShowFilters(false)}
                       className="flex-1 py-3 bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white text-xs font-bold rounded-xl shadow-md"
                     >
@@ -809,12 +903,21 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
 
                   {/* Form & Configurator Box */}
                   <div className="bg-theme-surface border border-theme-border rounded-2xl p-6 sm:p-8 shadow-sm">
+                    {inquirySuccess && (
+                      <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold">
+                          <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                          <span>Your bespoke quotation request has been received! Our Lahore master artisans will reach out shortly.</span>
+                        </div>
+                        <button type="button" onClick={() => setInquirySuccess(false)} className="text-xs font-bold underline">Dismiss</button>
+                      </div>
+                    )}
                     <form onSubmit={handleCustomInquirySubmit} className="space-y-4">
                       <h3 className="text-xl font-bold text-theme-dark font-serif mb-4">Request a Bespoke Quotation</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label htmlFor="inquiry-full-name" className="text-xs font-bold text-theme-muted uppercase block mb-1">Full Name *</label>
-                          <input id="inquiry-full-name" name="fullName" required type="text" value={inquiryForm.name} onChange={e => setInquiryForm({ ...inquiryForm, name: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="Fahad Ali" />
+                          <input id="inquiry-full-name" name="fullName" required type="text" value={inquiryForm.name} onChange={e => setInquiryForm({ ...inquiryForm, name: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="Muhammad Fahad Ali" />
                         </div>
                         <div>
                           <label htmlFor="inquiry-email" className="text-xs font-bold text-theme-muted uppercase block mb-1">Email Address *</label>
@@ -823,24 +926,69 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                       </div>
                       <div>
                         <label htmlFor="inquiry-phone" className="text-xs font-bold text-theme-muted uppercase block mb-1">WhatsApp Phone</label>
-                        <input id="inquiry-phone" name="phone" type="text" value={inquiryForm.phone} onChange={e => setInquiryForm({ ...inquiryForm, phone: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="+92 300 0000000" />
+                        <input id="inquiry-phone" name="phone" type="text" value={inquiryForm.phone} onChange={e => setInquiryForm({ ...inquiryForm, phone: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark" placeholder="+92 320 7006110" />
                       </div>
                       <div>
                         <label htmlFor="inquiry-message" className="text-xs font-bold text-theme-muted uppercase block mb-1">Project Specifications</label>
                         <textarea id="inquiry-message" name="message" required rows={4} value={inquiryForm.message} onChange={e => setInquiryForm({ ...inquiryForm, message: e.target.value })} className="w-full p-3 text-xs bg-theme-bg border border-theme-border rounded-xl text-theme-dark font-mono" />
                       </div>
-                      <button type="submit" disabled={inquirySubmitting} className="w-full py-3.5 bg-theme-accent hover:bg-theme-dark text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md">
+                      <button type="submit" disabled={inquirySubmitting} className="w-full py-3.5 bg-theme-accent hover:bg-theme-dark text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md cursor-pointer">
                         {inquirySubmitting ? 'Sending Request...' : '✦ Submit Custom Design Inquiry'}
                       </button>
                     </form>
                   </div>
                 </motion.div>
+              ) : isBespokeCategoryOnly && products.length > 0 ? (
+                /* Smart Bespoke Category Banner + Featured Atelier Collection so no category link is ever a dead end */
+                <div className="space-y-8">
+                  <div className="bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 rounded-[26px] p-6 sm:p-8 shadow-[0_8px_30px_rgba(184,142,75,0.10)] flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                    <div className="space-y-1.5 max-w-xl">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FAF5EE] text-[#8C6239] border border-amber-300/60">
+                        <Sparkles size={11} className="text-[#B88E4B]" /> Bespoke {activeCategory} Atelier
+                      </span>
+                      <h2 className="font-serif text-xl sm:text-2xl font-black text-[#221814]">
+                        Custom {activeCategory} — Handcrafted to Your Exact Room Dimensions
+                      </h2>
+                      <p className="text-xs sm:text-sm text-[#7A6048] leading-relaxed">
+                        Our {activeCategory} commissions are crafted to order in kiln-seasoned solid Sheesham wood within 10–15 working days. Explore our ready-to-order flagship collection below or request custom sizing.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleCategoryClick('Custom Furniture Solutions')}
+                        className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white text-xs font-black uppercase tracking-wider shadow-sm hover:brightness-110 transition-all cursor-pointer"
+                      >
+                        ✦ Configure Custom {activeCategory}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="px-4 py-3 rounded-xl bg-white border border-amber-300/70 text-[#221814] text-xs font-bold hover:bg-[#FAF5EE] transition-all cursor-pointer"
+                      >
+                        View All Ready Pieces
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {products.slice(0, 9).map((product, idx) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        index={idx}
+                        layoutMode={layoutMode}
+                        onQuickView={(p) => setQuickViewProduct(p)}
+                      />
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <div className="text-center py-20 bg-theme-surface border border-theme-border/80 rounded-2xl shadow-xs">
                   <PackageSearch size={44} className="mx-auto text-theme-muted/40 mb-3" />
                   <p className="text-theme-dark font-bold text-base font-serif mb-1">No products match your criteria</p>
-                  <p className="text-theme-muted text-xs mb-6">Try searching another term or resetting your price filter.</p>
-                  <button onClick={clearFilters} className="px-6 py-2.5 bg-theme-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-theme-dark transition-colors shadow-sm">
+                  <p className="text-theme-muted text-xs mb-6">Try searching another term or resetting your filters.</p>
+                  <button type="button" onClick={clearFilters} className="px-6 py-2.5 bg-theme-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-theme-dark transition-colors shadow-sm cursor-pointer">
                     Reset Filters
                   </button>
                 </div>
@@ -893,7 +1041,12 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
       {/* Quick View Modal Backdrop */}
       <AnimatePresence>
         {quickViewProduct && (
-          <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-md flex items-center justify-center p-4 sm:p-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Quick view: ${quickViewProduct.name}`}
+            className="fixed inset-0 z-50 bg-black/65 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.94, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -901,17 +1054,16 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="bg-[#FCFAF7] border-2 border-[#E7DDD0] rounded-[28px] p-6 sm:p-8 max-w-3xl w-full shadow-[0_25px_60px_rgba(40,25,18,0.22)] relative overflow-hidden max-h-[90vh] overflow-y-auto"
             >
-              {/* Luxury Close Button */}
               <button
+                type="button"
                 onClick={() => setQuickViewProduct(null)}
                 className="absolute top-5 right-5 w-9 h-9 rounded-xl bg-white border border-[#E2D1BC] text-[#221814] shadow-2xs hover:bg-[#FAF5EE] hover:scale-105 active:scale-95 flex items-center justify-center transition-all z-20 cursor-pointer"
-                aria-label="Close"
+                aria-label="Close quick view"
               >
                 <X size={18} />
               </button>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center">
-                {/* Left Showcase Image Frame */}
                 <div className="relative aspect-[4/3] rounded-[20px] overflow-hidden bg-[#FAF5EE] border-2 border-[#E7DDD0] shadow-sm">
                   <Image
                     src={resolveImageUrl(quickViewProduct.image, quickViewProduct.category)}
@@ -922,12 +1074,11 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                   />
                   <div className="absolute top-3 left-3">
                     <span className="text-[9.5px] font-black uppercase tracking-wider text-[#8C6239] bg-[#FAF5EE]/95 backdrop-blur-md border border-[#E2D1BC] px-3 py-0.5 rounded-full shadow-2xs">
-                      {quickViewProduct.category || 'Solid Sheesham'}
+                      {quickViewProduct.category || 'Solid Wood'}
                     </span>
                   </div>
                 </div>
 
-                {/* Right Details Column */}
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#B88E4B] mb-1">
@@ -938,7 +1089,7 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                       {quickViewProduct.name}
                     </h3>
                     <div className="mt-2">
-                      <span className="text-[9.5px] font-bold uppercase text-stone-400 tracking-wider block">Price</span>
+                      <span className="text-[9.5px] font-bold uppercase text-stone-400 tracking-wider block">Price (GST Inclusive)</span>
                       <p className="text-2xl sm:text-3xl font-black text-[#221814] font-sans tracking-tight">
                         Rs. {formatPrice(quickViewProduct.price)}
                       </p>
@@ -946,10 +1097,9 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                   </div>
 
                   <p className="text-xs sm:text-sm text-[#7A6048] leading-relaxed font-serif italic">
-                    {quickViewProduct.description || '100% Solid Seasoned Sheesham masterpiece engineered with traditional mortise & tenon joinery for royal living.'}
+                    {quickViewProduct.description || '100% Solid Seasoned wood masterpiece engineered with traditional mortise & tenon joinery for royal living.'}
                   </p>
 
-                  {/* Trust Highlights */}
                   <div className="space-y-2 pt-3 border-t border-[#E7DDD0] text-xs">
                     <div className="flex items-center gap-2 text-[#8C6239] font-bold">
                       <ShieldCheck size={16} className="text-[#B88E4B] shrink-0" />
@@ -961,9 +1111,9 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex items-center gap-2.5 pt-2">
                     <button
+                      type="button"
                       onClick={() => {
                         addItem({
                           id: quickViewProduct.id,

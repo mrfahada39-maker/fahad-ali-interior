@@ -31,13 +31,13 @@ export default function Error({
         <div className="flex gap-4 justify-center">
           <button
             onClick={reset}
-            className="px-8 py-3 bg-theme-accent text-[#2C1E18] font-medium rounded-lg hover:bg-[#b8964f] transition-colors"
+            className="px-8 py-3 bg-theme-accent text-white font-semibold rounded-lg hover:bg-[#8C6239] transition-colors shadow-sm"
           >
             Try Again
           </button>
           <Link
             href="/"
-            className="px-8 py-3 border border-theme-accent text-theme-accent font-medium rounded-lg hover:bg-theme-accent/10 transition-colors"
+            className="px-8 py-3 border border-theme-accent text-theme-accent font-semibold rounded-lg hover:bg-theme-accent/10 transition-colors"
           >
             Go Home
           </Link>

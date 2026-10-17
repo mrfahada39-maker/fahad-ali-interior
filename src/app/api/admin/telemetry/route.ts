@@ -89,9 +89,6 @@ export async function POST(req: Request) {
       lastActive: now,
     };
 
-    // Save in global memory store
-    activeSessionsMap.set(sessionId, session);
-
     // Clean up stale sessions (> 40 seconds old)
     const cutoff = now - 40 * 1000;
     for (const [id, s] of activeSessionsMap.entries()) {
@@ -99,6 +96,18 @@ export async function POST(req: Request) {
         activeSessionsMap.delete(id);
       }
     }
+
+    // Cap in-memory map at 1,000 entries to prevent memory exhaustion under flood traffic
+    const MAX_ACTIVE_SESSIONS = 1000;
+    if (activeSessionsMap.size >= MAX_ACTIVE_SESSIONS && !activeSessionsMap.has(sessionId)) {
+      const oldestKey = activeSessionsMap.keys().next().value;
+      if (oldestKey) {
+        activeSessionsMap.delete(oldestKey);
+      }
+    }
+
+    // Save in global memory store
+    activeSessionsMap.set(sessionId, session);
 
     // Active sessions are tracked in high-speed memory and Redis; no heavy DB logging needed
     return NextResponse.json({ success: true, activeCount: activeSessionsMap.size });

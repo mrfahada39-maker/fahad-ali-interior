@@ -594,7 +594,7 @@ export function AiEmployeeWidget() {
           {roomImage && (
             <div className="px-3 py-1.5 bg-[#F4ECE1] border-t border-[#E5DDD0] flex items-center justify-between text-xs">
               <span className="text-[#8A5A2B] font-bold flex items-center gap-1.5">
-                🖼ï¸ Room Photo Attached (Vision AI Ready)
+                📸 Room Photo Attached (Vision AI Ready)
               </span>
               <button
                 onClick={() => setRoomImage(null)}
@@ -623,6 +623,7 @@ export function AiEmployeeWidget() {
                 onClick={() => cameraInputRef.current?.click()}
                 className="p-2 text-stone-500 hover:text-[#8A5A2B] rounded-xl hover:bg-[#F5ECE0] transition-colors cursor-pointer"
                 title="Upload Room Photo for Vision AI Analysis"
+                aria-label="Upload Room Photo for Vision AI Analysis"
               >
                 <Camera className="w-4.5 h-4.5" />
               </button>
@@ -653,6 +654,7 @@ export function AiEmployeeWidget() {
               <button
                 onClick={() => handleSendMessage()}
                 disabled={!inputMessage.trim()}
+                aria-label="Send message to AI Executive"
                 className="p-2 rounded-xl bg-[#8A5A2B] hover:bg-[#734820] text-white font-bold disabled:opacity-40 transition-all shadow-sm cursor-pointer"
               >
                 <Send className="w-4 h-4" />
