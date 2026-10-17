@@ -50,7 +50,7 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
   }, [isWishlistOpen, wishlistMounted]);
 
   useEffect(() => {
-    // Ultra-Fast TBT Optimization: Mount secondary floating widgets on first user interaction or after 5.5s quiet window
+    // Ultra-Fast TBT Optimization: Mount secondary floating widgets on first user interaction
     let activated = false;
     const enableInteractive = () => {
       if (!activated) {
@@ -59,14 +59,12 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       }
     };
 
-    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
-
     if (typeof window !== 'undefined') {
-      fallbackTimer = setTimeout(enableInteractive, 5500);
       window.addEventListener('pointerdown', enableInteractive, { once: true, passive: true });
       window.addEventListener('mousemove', enableInteractive, { once: true, passive: true });
       window.addEventListener('keydown', enableInteractive, { once: true, passive: true });
       window.addEventListener('touchstart', enableInteractive, { once: true, passive: true });
+      window.addEventListener('scroll', enableInteractive, { once: true, passive: true });
 
       try {
         const params = new URLSearchParams(window.location.search);
@@ -91,11 +89,11 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
     window.addEventListener('open-wishlist', triggerWishlist);
 
     return () => {
-      if (fallbackTimer) clearTimeout(fallbackTimer);
       window.removeEventListener('pointerdown', enableInteractive);
       window.removeEventListener('mousemove', enableInteractive);
       window.removeEventListener('keydown', enableInteractive);
       window.removeEventListener('touchstart', enableInteractive);
+      window.removeEventListener('scroll', enableInteractive);
       window.removeEventListener('open-auth', handler);
       window.removeEventListener('open-cart', triggerCart);
       window.removeEventListener('open-wishlist', triggerWishlist);

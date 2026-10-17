@@ -159,13 +159,20 @@ export default function TelemetryTracker() {
           }
         };
 
-        // Defer initial telemetry ping until 5.5s after mount so main thread stays 100% free during initial load
-        const initialTimer: NodeJS.Timeout = setTimeout(sendPing, 5500);
+        // Trigger initial telemetry ping on first user interaction so page load has zero background network/CPU contention
+        const onInteract = () => sendPing();
+        if (typeof window !== 'undefined') {
+          window.addEventListener('pointerdown', onInteract, { once: true, passive: true });
+          window.addEventListener('scroll', onInteract, { once: true, passive: true });
+        }
 
         // Send heartbeat every 45 seconds only when tab is active
         const interval = setInterval(sendPing, 45000);
         return () => {
-          if (initialTimer) clearTimeout(initialTimer);
+          if (typeof window !== 'undefined') {
+            window.removeEventListener('pointerdown', onInteract);
+            window.removeEventListener('scroll', onInteract);
+          }
           clearInterval(interval);
         };
       } catch (err) {

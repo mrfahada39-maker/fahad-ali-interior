@@ -58,45 +58,42 @@ export default function HomePageInteractive({
   const [mountVideo, setMountVideo] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
-  // ── Defer heavy video stream until after initial page load & TBT window with smart hardware/network check ──
+  // ── Defer heavy video stream until genuine user interaction so initial load has 0ms video TBT ──
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const checkViewport = () => setIsMobileViewport(window.innerWidth <= 768);
-      checkViewport();
-      window.addEventListener('resize', checkViewport, { passive: true });
+      const mobile = window.innerWidth <= 768;
+      if (mobile) setIsMobileViewport(true);
 
       const conn = (navigator as any)?.connection;
       const isSlowConn = conn?.saveData || conn?.effectiveType === '2g' || conn?.effectiveType === '3g';
-      const isAutomatedTest = /Lighthouse|GTmetrix|HeadlessChrome|PageSpeed/i.test(navigator.userAgent || '');
-      if (isSlowConn || isAutomatedTest) {
-        return () => window.removeEventListener('resize', checkViewport);
-      }
+      if (isSlowConn) return;
 
       let mounted = false;
       const triggerVideo = () => {
         if (!mounted) {
           mounted = true;
+          setIsMobileViewport(window.innerWidth <= 768);
           setMountVideo(true);
         }
       };
 
-      const t = setTimeout(triggerVideo, 2800);
       window.addEventListener('scroll', triggerVideo, { once: true, passive: true });
       window.addEventListener('pointermove', triggerVideo, { once: true, passive: true });
       window.addEventListener('touchstart', triggerVideo, { once: true, passive: true });
+      window.addEventListener('keydown', triggerVideo, { once: true, passive: true });
 
       return () => {
-        clearTimeout(t);
-        window.removeEventListener('resize', checkViewport);
         window.removeEventListener('scroll', triggerVideo);
         window.removeEventListener('pointermove', triggerVideo);
         window.removeEventListener('touchstart', triggerVideo);
+        window.removeEventListener('keydown', triggerVideo);
       };
     }
   }, []);
 
   // ── Smart Viewport Observer: Pause video when scrolled down to eliminate lag on Infinix/Tecno ──
   useEffect(() => {
+    if (!mountVideo) return;
     const el = heroSectionRef.current;
     if (!el || typeof window === 'undefined' || typeof window.IntersectionObserver === 'undefined') return;
 
@@ -113,11 +110,11 @@ export default function HomePageInteractive({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [mountVideo]);
 
   useEffect(() => {
-    // Zero-network overhead: Skip client-side re-fetching when server already provided bundle
-    if (initialCategories && initialCategories.length > 0 && initialReviews && initialReviews.length > 0 && initialProducts && initialProducts.length > 0) {
+    // Zero-network overhead: Skip client-side re-fetching when server already provided products or categories
+    if ((initialProducts && initialProducts.length > 0) || (initialCategories && initialCategories.length > 0)) {
       return;
     }
     const loadHomeBundle = async () => {

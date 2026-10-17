@@ -18,51 +18,41 @@ interface ProvidersProps {
 }
 
 export default function Providers({ children, initialSettings }: ProvidersProps) {
-  const [mounted, setMounted] = useState(false);
+  const [interactive, setInteractive] = useState(false);
   const setSiteSettings = useSiteSettingsStore((s) => s.setSettings);
   const settings = useSiteSettingsStore((s) => s.settings);
   const setCachedProducts = useClientCacheStore((s) => s.setProducts);
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     if (initialSettings && !hasInitialized.current) {
       hasInitialized.current = true;
       setSiteSettings(initialSettings);
     }
-
-    // Register Service Worker after initial load settles to avoid main-thread TBT during first 4 seconds
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      const swTimer = setTimeout(() => {
-        navigator.serviceWorker.register('/sw-push.js').catch(() => {});
-      }, 4500);
-      return () => clearTimeout(swTimer);
-    }
   }, [initialSettings, setSiteSettings]);
 
+  // Activate non-critical background services (Toaster, SW, product cache) on first user interaction
   useEffect(() => {
-    if (!initialSettings && !settings) {
-      const settingsTimer = setTimeout(() => {
+    if (typeof window === 'undefined') return;
+    let triggered = false;
+    const onFirstInteraction = () => {
+      if (triggered) return;
+      triggered = true;
+      setInteractive(true);
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw-push.js').catch(() => {});
+      }
+
+      if (!initialSettings && !useSiteSettingsStore.getState().settings) {
         fetch('/api/public/settings')
           .then((res) => res.json())
           .then((data) => {
             if (data && !data.error && (data.siteName || data.id)) setSiteSettings(data);
           })
           .catch(() => {});
-      }, 2000);
-      return () => clearTimeout(settingsTimer);
-    }
-  }, [initialSettings, settings, setSiteSettings]);
+      }
 
-  // Lightweight passive cache hydration (Triggered on first user interaction or after 6s quiet window)
-  useEffect(() => {
-    let hydrated = false;
-    const idlePreload = () => {
-      if (hydrated) return;
-      hydrated = true;
       fetch('/api/v1/products')
         .then((res) => res.json())
         .then((body) => {
@@ -74,17 +64,18 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
         .catch(() => {});
     };
 
-    if (typeof window !== 'undefined') {
-      const timer = setTimeout(idlePreload, 6000);
-      window.addEventListener('pointerdown', idlePreload, { once: true, passive: true });
-      window.addEventListener('keydown', idlePreload, { once: true, passive: true });
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('pointerdown', idlePreload);
-        window.removeEventListener('keydown', idlePreload);
-      };
-    }
-  }, [setCachedProducts]);
+    window.addEventListener('pointerdown', onFirstInteraction, { once: true, passive: true });
+    window.addEventListener('keydown', onFirstInteraction, { once: true, passive: true });
+    window.addEventListener('scroll', onFirstInteraction, { once: true, passive: true });
+    window.addEventListener('touchstart', onFirstInteraction, { once: true, passive: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+      window.removeEventListener('scroll', onFirstInteraction);
+      window.removeEventListener('touchstart', onFirstInteraction);
+    };
+  }, [initialSettings, setSiteSettings, setCachedProducts]);
 
   useEffect(() => {
     if (!settings) return;
@@ -120,7 +111,7 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
     <SessionProvider>
       <TelemetryTracker />
       <NetworkWatcher />
-      {mounted && (
+      {interactive && (
         <Toaster
           position="top-right"
           closeButton
