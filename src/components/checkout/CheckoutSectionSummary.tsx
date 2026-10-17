@@ -38,6 +38,7 @@ export interface CheckoutSectionSummaryProps {
   couponCode: string;
   setCouponCode: (code: string) => void;
   applyCoupon: () => void;
+  removeCoupon?: () => void;
   couponLoading: boolean;
   goToNextSection: () => void;
 }
@@ -55,6 +56,7 @@ export function CheckoutSectionSummary({
   couponCode,
   setCouponCode,
   applyCoupon,
+  removeCoupon,
   couponLoading,
   goToNextSection,
 }: CheckoutSectionSummaryProps) {
@@ -197,9 +199,21 @@ export function CheckoutSectionSummary({
                 Privilege Coupon Voucher
               </label>
               {appliedCoupon && (
-                <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <CheckCircle2 size={10} /> Applied
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle2 size={10} /> {appliedCoupon.code} Applied
+                  </span>
+                  {removeCoupon && (
+                    <button
+                      type="button"
+                      onClick={removeCoupon}
+                      className="text-[9.5px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                      title="Remove applied voucher"
+                    >
+                      Remove ×
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -213,14 +227,24 @@ export function CheckoutSectionSummary({
                 disabled={Boolean(appliedCoupon)}
                 className="flex-1 bg-white border border-[#DECDBB] focus:border-[#B88E4B] rounded-xl px-3 py-2 text-xs font-mono font-bold text-stone-900 outline-none uppercase placeholder:text-stone-400 disabled:opacity-60"
               />
-              <button
-                type="button"
-                onClick={applyCoupon}
-                disabled={couponLoading || Boolean(appliedCoupon)}
-                className="px-3.5 py-2 bg-gradient-to-r from-[#2A170D] to-[#1A0E07] hover:brightness-110 text-[#FFEAA0] font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50 cursor-pointer"
-              >
-                {couponLoading ? '...' : appliedCoupon ? 'Applied' : 'Apply'}
-              </button>
+              {appliedCoupon && removeCoupon ? (
+                <button
+                  type="button"
+                  onClick={removeCoupon}
+                  className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                >
+                  Change
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={applyCoupon}
+                  disabled={couponLoading || Boolean(appliedCoupon)}
+                  className="px-3.5 py-2 bg-gradient-to-r from-[#2A170D] to-[#1A0E07] hover:brightness-110 text-[#FFEAA0] font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {couponLoading ? '...' : appliedCoupon ? 'Applied' : 'Apply'}
+                </button>
+              )}
             </div>
 
             {/* Financial Summary Breakdown Rows */}

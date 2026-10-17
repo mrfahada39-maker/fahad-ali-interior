@@ -12,7 +12,7 @@ import {
   PAKISTAN_CITIES,
   PAKISTAN_PROVINCES,
 } from '@/lib/pakistan-localization';
-import { CheckoutFormState } from './checkout-types';
+import { CheckoutFormState, SavedAddressItem } from './checkout-types';
 
 export interface CheckoutSectionShippingProps {
   form: CheckoutFormState;
@@ -22,6 +22,8 @@ export interface CheckoutSectionShippingProps {
   grandTotal: number;
   setCurrentSection: (sec: 1 | 2 | 3 | 4) => void;
   goToNextSection: () => void;
+  savedAddresses?: SavedAddressItem[];
+  onSelectSavedAddress?: (addr: SavedAddressItem) => void;
 }
 
 export function CheckoutSectionShipping({
@@ -30,6 +32,8 @@ export function CheckoutSectionShipping({
   grandTotal,
   setCurrentSection,
   goToNextSection,
+  savedAddresses = [],
+  onSelectSavedAddress,
 }: CheckoutSectionShippingProps) {
   return (
     <motion.div
@@ -56,6 +60,42 @@ export function CheckoutSectionShipping({
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4.5 items-start">
           {/* Inputs (lg:col-span-7) */}
           <div className="lg:col-span-7 space-y-3.5">
+            {savedAddresses.length > 0 && onSelectSavedAddress && (
+              <div className="bg-[#FAF7F2] border border-[#E7DDD0] rounded-xl p-2.5 font-sans">
+                <div className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <span>Saved Atelier Addresses (1-Click Fill)</span>
+                  <span className="text-[9px] text-emerald-700 font-bold">{savedAddresses.length} Saved</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {savedAddresses.map((addr) => {
+                    const isSelected = form.address === addr.address && form.city === addr.city;
+                    return (
+                      <button
+                        key={addr.id}
+                        type="button"
+                        onClick={() => onSelectSavedAddress(addr)}
+                        className={`text-left px-2.5 py-1.5 rounded-lg border text-[11px] transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-white border-[#B88E4B] text-[#221814] font-bold shadow-2xs'
+                            : 'bg-white/70 border-[#E2D9CD] text-stone-700 hover:border-[#B88E4B]/60'
+                        }`}
+                      >
+                        <MapPin size={12} className="text-[#8C6239] shrink-0" />
+                        <span className="truncate max-w-[220px]">
+                          <strong>{addr.name}:</strong> {addr.address}, {addr.city}
+                        </span>
+                        {addr.isDefault && (
+                          <span className="text-[8.5px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-50 text-[#8C6239] border border-amber-200">
+                            Default
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Street Address */}
             <div>
               <label htmlFor="shipping-address-input" className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
@@ -166,8 +206,24 @@ export function CheckoutSectionShipping({
               </div>
             </div>
 
+            {/* Special Delivery / Polish Instructions Input */}
+            <div>
+              <label htmlFor="shipping-notes-input" className="block text-[11px] sm:text-xs font-black text-[#7A6354] uppercase tracking-wider mb-1.5 font-sans">
+                Special Delivery / Bespoke Polish Instructions (Optional)
+              </label>
+              <input
+                id="shipping-notes-input"
+                type="text"
+                name="notes"
+                value={form.notes}
+                onChange={handleInputChange}
+                placeholder="e.g. Deliver on 2nd floor, call before arrival, or preferred walnut polish tone"
+                className="w-full bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E2D9CD] focus:border-[#B88E4B] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-medium text-[#1F1612] placeholder:text-stone-400 outline-none transition-all shadow-2xs font-sans"
+              />
+            </div>
+
             {/* Save Address Checkbox */}
-            <div className="pt-1 font-sans">
+            <div className="pt-0.5 font-sans">
               <label className="flex items-center gap-2.5 cursor-pointer select-none bg-[#FAF7F2] border border-[#E7DDD0] rounded-xl p-3 hover:border-[#B88E4B]/50 transition-colors">
                 <input id="fai-checkoutsectionshipping-field-5"
                   type="checkbox"

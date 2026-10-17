@@ -486,6 +486,36 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       couponCode: appliedCoupon?.code || null,
     }).catch((err) => logger.error('[SMTP BACKGROUND ERROR]', err));
 
+    if (user?.id && shippingInfo?.saveAddress !== false && shippingAddress) {
+      const existingAddr = await db.address
+        ?.findFirst({
+          where: {
+            userId: user.id,
+            address: shippingAddress,
+            city: shippingCity,
+            deletedAt: null,
+          },
+        })
+        ?.catch(() => null);
+      if (!existingAddr) {
+        const count =
+          (await db.address?.count({ where: { userId: user.id, deletedAt: null } })?.catch(() => 0)) ?? 0;
+        await db.address
+          ?.create({
+            data: {
+              userId: user.id,
+              name: shippingName,
+              phone: shippingPhone,
+              address: shippingAddress,
+              city: shippingCity,
+              province: shippingProvince,
+              isDefault: count === 0,
+            },
+          })
+          ?.catch(() => null);
+      }
+    }
+
     if (targetUserId) {
       await db.notification
         ?.create({

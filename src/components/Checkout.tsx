@@ -34,6 +34,7 @@ import { CheckoutSectionSummary } from '@/components/checkout/CheckoutSectionSum
 import { CheckoutSectionCustomer } from '@/components/checkout/CheckoutSectionCustomer';
 import { CheckoutSectionShipping } from '@/components/checkout/CheckoutSectionShipping';
 import { CheckoutSectionPayment } from '@/components/checkout/CheckoutSectionPayment';
+import { SavedAddressItem } from '@/components/checkout/checkout-types';
 
 export default function Checkout() {
   const { items: cartStoreItems, clearCart, updateQuantity, removeItem } = useCartStore();
@@ -64,6 +65,7 @@ export default function Checkout() {
     saveAddress: true,
     notes: '',
   });
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddressItem[]>([]);
 
   // Cart Store Hook
   const cartStoreAppliedCoupon = useCartStore((s) => s.appliedCoupon);
@@ -114,7 +116,7 @@ export default function Checkout() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Pre-fill user data
+  // Pre-fill user data & saved addresses
   useEffect(() => {
     if (session?.user) {
       setForm((prev) => ({
@@ -122,8 +124,43 @@ export default function Checkout() {
         name: session.user?.name || prev.name,
         email: session.user?.email || prev.email,
       }));
+      let cancelled = false;
+      Promise.all([
+        fetch('/api/user/profile', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch('/api/user/addresses', { credentials: 'include' }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      ]).then(([profileData, addrList]) => {
+        if (cancelled) return;
+        const list = Array.isArray(addrList) ? (addrList as SavedAddressItem[]) : [];
+        setSavedAddresses(list);
+        const defaultAddr = list.find((a) => a.isDefault) || list[0];
+        setForm((prev) => ({
+          ...prev,
+          name: prev.name || profileData?.name || session.user?.name || '',
+          email: prev.email || profileData?.email || session.user?.email || '',
+          phone: prev.phone || profileData?.phone || defaultAddr?.phone || '',
+          address: prev.address || defaultAddr?.address || '',
+          city: defaultAddr?.city || prev.city,
+          province: defaultAddr?.province || prev.province,
+        }));
+      });
+      return () => {
+        cancelled = true;
+      };
     }
   }, [session]);
+
+  const handleSelectSavedAddress = (addr: SavedAddressItem) => {
+    const cityData = PAKISTAN_CITIES[addr.city];
+    setForm((prev) => ({
+      ...prev,
+      address: addr.address,
+      city: addr.city || prev.city,
+      province: addr.province || cityData?.province || prev.province,
+      postalCode: cityData?.postalCode || prev.postalCode,
+      phone: prev.phone || addr.phone || '',
+    }));
+    toast.success(`Selected "${addr.name}" delivery address`);
+  };
 
   // Sync province & postal code on city change
   useEffect(() => {
@@ -272,6 +309,13 @@ export default function Checkout() {
     }
   };
 
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCartStoreAppliedCoupon(null);
+    toast.success('Voucher removed');
+  };
+
   const goToNextSection = () => {
     if (currentSection === 1) {
       if (activeItems.length === 0) {
@@ -280,8 +324,12 @@ export default function Checkout() {
       }
       setCurrentSection(2);
     } else if (currentSection === 2) {
-      if (!form.name.trim() || !form.phone.trim()) {
-        toast.error('Please enter your Full Name and Phone Number');
+      if (!form.name.trim() || !form.phone.trim() || !form.email.trim() || !form.email.includes('@')) {
+        toast.error('Please enter your Full Name, valid Email Address, and Phone Number');
+        return;
+      }
+      if (!isPhoneValid) {
+        toast.error('Please enter a valid Pakistani mobile number (e.g. 0300 1234567)');
         return;
       }
       setCurrentSection(3);
@@ -297,8 +345,8 @@ export default function Checkout() {
   const handlePlaceOrder = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
-    if (!form.name.trim() || !form.phone.trim() || !form.address.trim()) {
-      toast.error('Please complete Full Name, Phone Number, and Shipping Address');
+    if (!form.name.trim() || !form.phone.trim() || !form.email.trim() || !form.email.includes('@') || !form.address.trim()) {
+      toast.error('Please complete Full Name, valid Email, Phone Number, and Shipping Address');
       setCurrentSection(2);
       return;
     }
@@ -532,12 +580,12 @@ export default function Checkout() {
                       toast.error('Your cart is empty');
                       return;
                     }
-                    if (currentSection <= 2 && (!form.name.trim() || !form.phone.trim())) {
-                      toast.error('Please enter Full Name and Phone Number first');
+                    if (currentSection <= 2 && (!form.name.trim() || !form.phone.trim() || !form.email.trim() || !form.email.includes('@'))) {
+                      toast.error('Please enter Full Name, valid Email, and Phone Number first');
                       setCurrentSection(2);
                       return;
                     }
-                    if (currentSection <= 3 && (!form.address.trim() || !form.city.trim())) {
+                    if (currentSection <= 3 && sec.id === 4 && (!form.address.trim() || !form.city.trim())) {
                       toast.error('Please enter complete Street Address and City first');
                       setCurrentSection(3);
                       return;
@@ -599,6 +647,7 @@ export default function Checkout() {
               couponCode={couponCode}
               setCouponCode={setCouponCode}
               applyCoupon={applyCoupon}
+              removeCoupon={removeCoupon}
               couponLoading={couponLoading}
               goToNextSection={goToNextSection}
             />
@@ -624,6 +673,8 @@ export default function Checkout() {
               grandTotal={grandTotal}
               setCurrentSection={setCurrentSection}
               goToNextSection={goToNextSection}
+              savedAddresses={savedAddresses}
+              onSelectSavedAddress={handleSelectSavedAddress}
             />
           )}
 

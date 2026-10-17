@@ -29,3 +29,14 @@ export interface CardDetails {
   expiry: string;
   cvv: string;
 }
+
+export interface SavedAddressItem {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  city: string;
+  province: string;
+  isDefault?: boolean;
+}
+
