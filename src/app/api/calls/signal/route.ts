@@ -54,9 +54,7 @@ function matchesSession(
     allAliases.includes(s.toUserId) ||
     allAliases.includes(s.toUserEmail || '') ||
     allAliases.includes(s.fromUserId) ||
-    allAliases.includes(s.fromUserEmail || '') ||
-    s.toUserId === 'client' ||
-    s.fromUserId === 'client'
+    allAliases.includes(s.fromUserEmail || '')
   );
 }
 
