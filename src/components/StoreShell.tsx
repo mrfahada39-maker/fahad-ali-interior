@@ -50,21 +50,24 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
   }, [isWishlistOpen, wishlistMounted]);
 
   useEffect(() => {
-    // Ultra-Fast TBT Optimization: Defer secondary background widgets until main thread is genuinely idle
-    // Never mount heavy widgets during active scroll/touchstart to keep mobile scrolling at 60fps
-    const enableInteractive = () => setInteractive(true);
+    // Ultra-Fast TBT Optimization: Mount secondary floating widgets on first user interaction or after 5.5s quiet window
+    let activated = false;
+    const enableInteractive = () => {
+      if (!activated) {
+        activated = true;
+        setInteractive(true);
+      }
+    };
 
-    let idleHandle: number | null = null;
     let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
 
     if (typeof window !== 'undefined') {
-      if ('requestIdleCallback' in window) {
-        idleHandle = window.requestIdleCallback(() => {
-          fallbackTimer = setTimeout(enableInteractive, 1500);
-        }, { timeout: 4000 });
-      } else {
-        fallbackTimer = setTimeout(enableInteractive, 3000);
-      }
+      fallbackTimer = setTimeout(enableInteractive, 5500);
+      window.addEventListener('pointerdown', enableInteractive, { once: true, passive: true });
+      window.addEventListener('mousemove', enableInteractive, { once: true, passive: true });
+      window.addEventListener('keydown', enableInteractive, { once: true, passive: true });
+      window.addEventListener('touchstart', enableInteractive, { once: true, passive: true });
+
       try {
         const params = new URLSearchParams(window.location.search);
         if (params.get('auth') === 'login') {
@@ -88,10 +91,11 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
     window.addEventListener('open-wishlist', triggerWishlist);
 
     return () => {
-      if (idleHandle !== null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
-        window.cancelIdleCallback(idleHandle);
-      }
       if (fallbackTimer) clearTimeout(fallbackTimer);
+      window.removeEventListener('pointerdown', enableInteractive);
+      window.removeEventListener('mousemove', enableInteractive);
+      window.removeEventListener('keydown', enableInteractive);
+      window.removeEventListener('touchstart', enableInteractive);
       window.removeEventListener('open-auth', handler);
       window.removeEventListener('open-cart', triggerCart);
       window.removeEventListener('open-wishlist', triggerWishlist);

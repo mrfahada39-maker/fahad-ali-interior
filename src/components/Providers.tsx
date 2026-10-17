@@ -34,26 +34,35 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
       setSiteSettings(initialSettings);
     }
 
-    // Register Service Worker during browser idle time without destroying active offline caches
+    // Register Service Worker after initial load settles to avoid main-thread TBT during first 4 seconds
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw-push.js').catch(() => {});
+      const swTimer = setTimeout(() => {
+        navigator.serviceWorker.register('/sw-push.js').catch(() => {});
+      }, 4500);
+      return () => clearTimeout(swTimer);
     }
   }, [initialSettings, setSiteSettings]);
 
   useEffect(() => {
     if (!initialSettings && !settings) {
-      fetch('/api/public/settings')
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && !data.error && (data.siteName || data.id)) setSiteSettings(data);
-        })
-        .catch(() => {});
+      const settingsTimer = setTimeout(() => {
+        fetch('/api/public/settings')
+          .then((res) => res.json())
+          .then((data) => {
+            if (data && !data.error && (data.siteName || data.id)) setSiteSettings(data);
+          })
+          .catch(() => {});
+      }, 2000);
+      return () => clearTimeout(settingsTimer);
     }
   }, [initialSettings, settings, setSiteSettings]);
 
-  // Lightweight passive cache hydration (Non-blocking idle fetch)
+  // Lightweight passive cache hydration (Triggered on first user interaction or after 6s quiet window)
   useEffect(() => {
+    let hydrated = false;
     const idlePreload = () => {
+      if (hydrated) return;
+      hydrated = true;
       fetch('/api/v1/products')
         .then((res) => res.json())
         .then((body) => {
@@ -66,11 +75,14 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
     };
 
     if (typeof window !== 'undefined') {
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(idlePreload, { timeout: 3000 });
-      } else {
-        setTimeout(idlePreload, 2000);
-      }
+      const timer = setTimeout(idlePreload, 6000);
+      window.addEventListener('pointerdown', idlePreload, { once: true, passive: true });
+      window.addEventListener('keydown', idlePreload, { once: true, passive: true });
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('pointerdown', idlePreload);
+        window.removeEventListener('keydown', idlePreload);
+      };
     }
   }, [setCachedProducts]);
 

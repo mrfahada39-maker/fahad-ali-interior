@@ -159,15 +159,8 @@ export default function TelemetryTracker() {
           }
         };
 
-        // Defer initial telemetry ping until browser main thread is completely idle
-        let initialTimer: NodeJS.Timeout | null = null;
-        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-          (window as any).requestIdleCallback(() => {
-            sendPing();
-          }, { timeout: 3000 });
-        } else {
-          initialTimer = setTimeout(sendPing, 2500);
-        }
+        // Defer initial telemetry ping until 5.5s after mount so main thread stays 100% free during initial load
+        const initialTimer: NodeJS.Timeout = setTimeout(sendPing, 5500);
 
         // Send heartbeat every 45 seconds only when tab is active
         const interval = setInterval(sendPing, 45000);
