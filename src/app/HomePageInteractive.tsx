@@ -2,17 +2,14 @@
 'use client';
 import { logger } from '@/lib/logger';
 
-import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import {
-  ChevronRight,
   ChevronDown,
 } from 'lucide-react';
 import { apiFetchJson } from '@/lib/api-client';
-import { resolveImageUrl } from '@/lib/images';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
-import ProductCard from '@/components/ProductCard';
+import ShopPage from '@/app/shop/ShopPage';
 import dynamic from 'next/dynamic';
 
 const TestimonialsSection = dynamic(() => import('@/components/TestimonialsSection'), {
@@ -251,126 +248,14 @@ export default function HomePageInteractive({
         <div className="absolute -bottom-1 inset-x-0 h-16 bg-gradient-to-t from-[#FCFAF7] via-[#FCFAF7]/30 to-transparent pointer-events-none z-10" />
       </section>
 
-      {/* ── CATEGORIES SECTION (LOW-END PHONE OPTIMIZED JANK-FREE ENGINE) ── */}
-      <section className="smooth-scroll-section w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 mb-16 relative z-10">
-        <div className="gsap-cat-header text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] shadow-xs mb-3.5">
-            <span className="text-[#B88E4B] text-sm font-bold">✦</span>
-            <span className="text-xs sm:text-[13px] font-black uppercase tracking-[0.25em] text-[#7A6354]">
-              HAUTE COUTURE COLLECTIONS
-            </span>
-          </div>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-[#221814] tracking-tight leading-tight mb-2">
-            Signature <span className="font-serif italic font-normal text-[#C9A24D] mx-2 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">Categories</span>
-          </h2>
-          <div className="flex items-center justify-center gap-3 my-3">
-            <div className="h-[1.5px] w-24 sm:w-32 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
-            <div className="w-2.5 h-2.5 rounded-full bg-[#B88E4B] shadow-[0_0_8px_#B88E4B]" />
-            <div className="h-[1.5px] w-24 sm:w-32 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
-          </div>
-          <p className="text-[#7A6048] text-sm sm:text-base md:text-lg max-w-xl mx-auto font-serif italic">
-            100% Solid Seasoned Sheesham masterworks handcrafted for luxury living.
-          </p>
-        </div>
-
-        {/* Compact Grid Gap */}
-        <div className="gsap-cat-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3.5 sm:gap-4">
-          {categoriesList.map((cat, i) => (
-            <div
-              key={cat.name || i}
-              className="gsap-cat-card-wrapper"
-            >
-              <Link 
-                href={`/shop?category=${encodeURIComponent(cat.name)}`} 
-                prefetch={false}
-                className="gsap-cat-card group relative aspect-[5/4] rounded-[24px] overflow-hidden bg-[#FAF5EE] shadow-[0_3px_14px_rgba(184,142,75,0.08)] hover:shadow-[0_12px_32px_rgba(184,142,75,0.18)] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] transition-all duration-300 block"
-              >
-                {/* Background Image Wrap */}
-                <div className="gsap-cat-img-wrap absolute inset-0 overflow-hidden">
-                  <Image 
-                    src={resolveImageUrl(cat.image, cat.name, 450, 'good')} 
-                    alt={cat.name} 
-                    width={550}
-                    height={440}
-                    unoptimized
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    loading="lazy"
-                    decoding="async"
-                    style={{ aspectRatio: '5/4' }}
-                    className="gsap-cat-img w-full h-full object-cover aspect-[5/4] transition-transform duration-500 group-hover:scale-105" 
-                  />
-                </div>
-
-                {/* Ambient Corner Glow — GPU Shader Gradient (Zero Blur Calculation on Budget Chips) */}
-                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.22)_0%,transparent_70%)] opacity-80 z-10" />
-
-                {/* Subtle Light Sweep Luxury Overlay */}
-                <div className="gsap-cat-light absolute inset-0 pointer-events-none opacity-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full rotate-45 z-20" />
-
-                {/* Dark Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1C1410]/85 via-[#1C1410]/20 to-transparent transition-opacity duration-300 group-hover:opacity-95 z-10 pointer-events-none" />
-                
-                {/* Category Card Details */}
-                <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end text-white z-20 pointer-events-none">
-                  <div>
-                    <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-wide leading-tight mb-0.5 drop-shadow-md">
-                      {cat.name}
-                    </h3>
-                    <span className="gsap-cat-subtitle text-[10px] uppercase tracking-widest text-[#E6DCCF] font-semibold opacity-90 block">
-                      {cat.items || 'View Collection'}
-                    </span>
-                  </div>
-                  <div className="gsap-cat-btn w-9 h-9 rounded-xl border border-amber-300/80 flex items-center justify-center bg-[#FAF5EE] text-[#8C6239] group-hover:bg-gradient-to-br group-hover:from-[#B88E4B] group-hover:to-[#996515] group-hover:text-white transition-all duration-300 shadow-[0_3px_10px_rgba(184,142,75,0.25)]">
-                    <ChevronRight size={17} className="gsap-cat-arrow stroke-[2.5]" />
-                  </div>
-                </div>
-              </Link>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── FEATURED MASTERPIECES SECTION ── */}
-      {productsList.length > 0 && (
-        <section className="smooth-scroll-section w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-4 sm:px-6 lg:px-10 mb-16 relative z-10">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] shadow-xs mb-3.5">
-              <span className="text-[#B88E4B] text-sm font-bold">✦</span>
-              <span className="text-xs sm:text-[13px] font-black uppercase tracking-[0.25em] text-[#7A6354]">
-                BESPOKE HANDCRAFTED CREATIONS
-              </span>
-            </div>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-[#221814] tracking-tight leading-tight mb-2">
-              Featured <span className="font-serif italic font-normal text-[#C9A24D] mx-2 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">Masterpieces</span>
-            </h2>
-            <div className="flex items-center justify-center gap-3 my-3">
-              <div className="h-[1.5px] w-24 sm:w-32 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#B88E4B] shadow-[0_0_8px_#B88E4B]" />
-              <div className="h-[1.5px] w-24 sm:w-32 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
-            </div>
-            <p className="text-[#7A6048] text-sm sm:text-base md:text-lg max-w-xl mx-auto font-serif italic">
-              Exclusive 100% Solid Seasoned Sheesham pieces ready for complimentary nationwide delivery.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {productsList.slice(0, 8).map((product, idx) => (
-              <ProductCard key={product.id || idx} product={product} index={idx} />
-            ))}
-          </div>
-
-          <div className="text-center mt-10">
-            <Link
-              href="/shop"
-              prefetch={false}
-              className="inline-flex items-center gap-2 bg-[#FAF5EE] hover:bg-[#F3E7D3] text-[#221814] border border-[#B88E4B]/50 hover:border-[#B88E4B] font-serif font-bold text-sm px-8 py-3.5 rounded-xl transition-all shadow-sm cursor-pointer"
-            >
-              <span>Explore Complete Collection</span>
-              <ChevronRight size={16} />
-            </Link>
-          </div>
-        </section>
-      )}
+      {/* ── HANDCRAFTED & MASTERPIECES SECTION (FULL INTERACTIVE CATALOG SHOWCASE) ── */}
+      <Suspense fallback={<div className="min-h-[600px] bg-[#FCFAF7]" />}>
+        <ShopPage
+          embedded={true}
+          initialProducts={productsList}
+          initialCategories={['All', ...categoriesList.map((c: any) => c.name)]}
+        />
+      </Suspense>
 
       {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION (Hydrated on scroll/interaction for 0ms initial TBT) ── */}
       {mountVideo && (

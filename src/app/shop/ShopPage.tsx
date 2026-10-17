@@ -67,9 +67,10 @@ interface ShopPageProps {
   initialProducts?: StorefrontProduct[];
   initialCategory?: string;
   initialCategories?: string[];
+  embedded?: boolean;
 }
 
-export default function ShopPage({ initialProducts = [], initialCategory, initialCategories }: ShopPageProps) {
+export default function ShopPage({ initialProducts = [], initialCategory, initialCategories, embedded = false }: ShopPageProps) {
   const defaultPool = initialProducts;
   const searchParamsHook = useSearchParams();
   const urlCategory = searchParamsHook?.get('category') || undefined;
@@ -439,8 +440,10 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
     !selectedColor &&
     !userAdjustedPrice;
 
+  const HeadingTag = embedded ? 'h2' : 'h1';
+
   return (
-    <div className="min-h-screen bg-[#FCFAF7] text-[#221814] pt-24 sm:pt-28">
+    <div className={`${embedded ? 'pt-10 sm:pt-14' : 'min-h-screen pt-24 sm:pt-28'} bg-[#FCFAF7] text-[#221814]`}>
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
 
         {/* Open Royal Editorial Header */}
@@ -449,9 +452,9 @@ export default function ShopPage({ initialProducts = [], initialCategory, initia
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8 pt-2"
         >
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-[#221814] tracking-tight leading-tight mb-2">
+          <HeadingTag className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-[#221814] tracking-tight leading-tight mb-2">
             Handcrafted <span className="font-serif italic font-normal text-[#C9A24D] mx-2 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">Masterpieces</span>
-          </h1>
+          </HeadingTag>
           <div className="flex items-center justify-center gap-3 my-2.5">
             <div className="h-[1.5px] w-20 sm:w-28 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
             <div className="w-2.5 h-2.5 rounded-full bg-[#B88E4B] shadow-[0_0_8px_#B88E4B]" />

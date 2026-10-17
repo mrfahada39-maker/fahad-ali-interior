@@ -100,7 +100,7 @@ export function invalidateHomePageDataCache() {
 
 const getCachedHomePageDataNext = unstable_cache(
   async () => fetchHomePageDataInternal(),
-  ['home-page-data-v2'],
+  ['home-page-data-v3'],
   { revalidate: 300, tags: ['home-data', 'products', 'categories', 'reviews', 'settings'] }
 );
 
@@ -132,13 +132,17 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
           price: true,
           category: true,
           image: true,
+          images: true,
           dimensions: true,
           material: true,
           stockCount: true,
           isPremium: true,
           description: true,
+          specs: true,
+          createdAt: true,
+          updatedAt: true,
         },
-        take: 12,
+        take: 48,
         orderBy: { createdAt: 'desc' },
       }),
       db.category.findMany({
