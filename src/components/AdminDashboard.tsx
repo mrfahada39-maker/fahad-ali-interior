@@ -784,8 +784,12 @@ export default function AdminDashboard() {
       toast.error('All password fields are required');
       return;
     }
-    if (passwordForm.newPassword.length < 8) {
-      toast.error('New password must be at least 8 characters');
+    if (
+      passwordForm.newPassword.length < 10 ||
+      !/[A-Za-z]/.test(passwordForm.newPassword) ||
+      !/[0-9]/.test(passwordForm.newPassword)
+    ) {
+      toast.error('New password must be at least 10 characters and include a letter and a number');
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {

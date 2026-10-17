@@ -192,6 +192,8 @@ export default function UserDashboard() {
           phone: data.phone || '',
           bio: data.bio || '',
         });
+        if (data.timberFinish) setSelectedTimberFinish(data.timberFinish);
+        if (data.fabricPreference) setSelectedFabricPreference(data.fabricPreference);
       }
       if (addrRes.status === 'fulfilled' && addrRes.value.ok) {
         const data = await addrRes.value.json();
@@ -336,11 +338,26 @@ export default function UserDashboard() {
   }, [mergedWishlist, wishlistCategoryFilter, searchQuery]);
 
   const trajectoryData = useMemo(() => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-    const total = (orders || []).reduce((sum, o) => sum + Number(o?.totalAmount || 0), 0);
-    return months.map((m, idx) =>
-      idx === months.length - 1 ? { name: m, revenue: total, count: orders?.length || 0 } : { name: m, revenue: 0, count: 0 }
-    );
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const now = new Date();
+    const buckets: Array<{ key: string; name: string; revenue: number; count: number }> = [];
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      buckets.push({ key, name: monthNames[d.getMonth()], revenue: 0, count: 0 });
+    }
+    const bucketMap = new Map(buckets.map((b) => [b.key, b]));
+    for (const o of orders || []) {
+      const dt = o?.createdAt ? new Date(o.createdAt) : now;
+      const validDate = Number.isNaN(dt.getTime()) ? now : dt;
+      const key = `${validDate.getFullYear()}-${validDate.getMonth()}`;
+      const bucket = bucketMap.get(key) || buckets[buckets.length - 1];
+      if (bucket) {
+        bucket.revenue += Number(o?.totalAmount || 0);
+        bucket.count += 1;
+      }
+    }
+    return buckets.map(({ name, revenue, count }) => ({ name, revenue, count }));
   }, [orders]);
 
   const fulfillmentData = useMemo(() => {
@@ -386,10 +403,14 @@ export default function UserDashboard() {
       const res = await apiFetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileForm),
+        body: JSON.stringify({
+          ...profileForm,
+          timberFinish: selectedTimberFinish,
+          fabricPreference: selectedFabricPreference,
+        }),
       });
       if (res.ok) {
-        toast.success('Royal Profile updated successfully');
+        toast.success('Royal Profile & Bespoke Preferences updated successfully');
         loadAllData();
       } else {
         toast.error('Failed to update profile');

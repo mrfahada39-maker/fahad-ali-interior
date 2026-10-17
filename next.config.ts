@@ -174,6 +174,21 @@ const nextConfig: NextConfig = {
         destination: '/faq#returns',
         permanent: true,
       },
+      {
+        source: '/forgot-password',
+        destination: '/reset-password',
+        permanent: true,
+      },
+      {
+        source: '/journal',
+        destination: '/blog',
+        permanent: true,
+      },
+      {
+        source: '/journal/:slug',
+        destination: '/blog/:slug',
+        permanent: true,
+      },
     ];
   },
   async headers() {

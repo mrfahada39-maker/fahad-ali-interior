@@ -40,7 +40,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-20">
             <div className="lg:col-span-6 relative aspect-[4/3] rounded-[28px] overflow-hidden border-[1.5px] border-amber-300/80 shadow-[0_12px_40px_rgba(184,142,75,0.15)] bg-[#FAF5EE]">
               <Image
-                src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80"
+                src="/hero-desktop.avif"
                 alt="Fahad Ali Interior Royal Living Room Atelier"
                 fill
                 priority
@@ -76,7 +76,7 @@ export default function AboutPage() {
               <div className="pt-2">
                 <Link
                   href="/shop"
-                  prefetch={true}
+                  prefetch={false}
                   className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
                 >
                   <span>Explore Masterpieces</span>

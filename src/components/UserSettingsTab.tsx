@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { signOut } from 'next-auth/react';
 import { Bell, BellOff, Mail, ShoppingBag, Tag, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
@@ -48,6 +49,28 @@ export default function SettingsTab({ profile, onSaved }: Props) {
     promoNotif: profile?.promoNotif ?? false,
   });
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const res = await apiFetch('/api/user/profile', { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.success('Account deactivated successfully');
+        await signOut({ callbackUrl: '/' });
+      } else {
+        toast.error(data.error || 'Unable to delete account');
+        setConfirmDelete(false);
+      }
+    } catch {
+      toast.error('Failed to process account deletion');
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (profile) {
@@ -198,19 +221,42 @@ export default function SettingsTab({ profile, onSaved }: Props) {
       {/* Danger Zone */}
       <div className="bg-theme-surface border border-red-200 rounded-xl p-5">
         <p className="text-theme-muted text-xs tracking-wider uppercase mb-4">Account</p>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <p className="text-theme-dark text-sm">Delete Account</p>
-            <p className="text-theme-muted text-xs">Permanently remove your account and all data</p>
+            <p className="text-theme-muted text-xs">Permanently deactivate your account and personal profile</p>
           </div>
-          <button
-            className="px-4 py-1.5 text-xs font-semibold tracking-wider uppercase rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors border border-red-200"
-            onClick={() => toast.error('Contact support to delete your account')}
-          >
-            Delete
-          </button>
+          {!confirmDelete ? (
+            <button
+              type="button"
+              className="px-4 py-1.5 text-xs font-semibold tracking-wider uppercase rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors border border-red-200 cursor-pointer"
+              onClick={() => setConfirmDelete(true)}
+            >
+              Delete
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setConfirmDelete(false)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-theme-border text-theme-dark hover:bg-stone-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDeleteAccount}
+                className="px-3.5 py-1.5 text-xs font-semibold uppercase rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
