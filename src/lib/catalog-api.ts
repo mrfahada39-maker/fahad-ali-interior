@@ -28,8 +28,8 @@ function setCached<T>(key: string, data: T, ttlSeconds = 60): void {
   memoryCache.set(key, { data, expiry: Date.now() + ttlSeconds * 1000 });
 }
 
-function normalizeCatalogText(text: string | null | undefined, fallback = ''): string {
-  if (!text) return fallback;
+function normalizeCatalogText(text: string | null | undefined, fallback: string | null | undefined = ''): string {
+  if (!text) return fallback || '';
   return text
     .replace(/\bProuducts\b/g, 'Products')
     .replace(/\bprouducts\b/gi, 'products')

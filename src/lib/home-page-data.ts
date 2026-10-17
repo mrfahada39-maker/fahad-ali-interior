@@ -202,8 +202,8 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       }
     }
 
-    const normalizeCatalogText = (text: string | null | undefined, fallback = ''): string => {
-      if (!text) return fallback;
+    const normalizeCatalogText = (text: string | null | undefined, fallback: string | null | undefined = ''): string => {
+      if (!text) return fallback || '';
       return text
         .replace(/\bProuducts\b/g, 'Products')
         .replace(/\bprouducts\b/gi, 'products')
