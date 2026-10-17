@@ -63,6 +63,27 @@ function normalizeCategoryParam(raw?: string | null): string {
   return trimmed;
 }
 
+function isCategoryMatch(p: StorefrontProduct, cat: string): boolean {
+  const pCat = (p.category || '').toLowerCase().trim();
+  const aCat = cat.toLowerCase().trim();
+  const norm = (s: string) => s.replace(/[^a-z0-9]/g, '');
+  const pNorm = norm(pCat);
+  const aNorm = norm(aCat);
+
+  return (
+    pCat === aCat ||
+    pNorm === aNorm ||
+    (Boolean(pCat) && Boolean(aCat) && (pCat.includes(aCat) || aCat.includes(pCat))) ||
+    (aCat.includes('bed') && pCat.includes('bed')) ||
+    (aCat.includes('dining') && pCat.includes('dining')) ||
+    (aCat.includes('chair') && (pCat.includes('chair') || (p.name || '').toLowerCase().includes('lounge') || (p.name || '').toLowerCase().includes('chair'))) ||
+    (aCat.includes('table') && pCat.includes('table')) ||
+    (aCat.includes('wardrobe') && (pCat.includes('wardrobe') || pCat.includes('closet'))) ||
+    ((aCat.includes('decor') || aCat.includes('lighting') || aCat.includes('showcase')) && (pCat.includes('decor') || pCat.includes('lighting') || pCat.includes('showcase'))) ||
+    (!pCat && (p.name || '').toLowerCase().includes(aCat))
+  );
+}
+
 interface ShopPageProps {
   initialProducts?: StorefrontProduct[];
   initialCategory?: string;
@@ -102,6 +123,11 @@ export default function ShopPage({
   const [sortBy, setSortBy] = useState(urlSort);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
+  const isManualScrolling = useRef(false);
+  const manualScrollTimer = useRef<NodeJS.Timeout | null>(null);
+  const pillRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const pillsContainerRef = useRef<HTMLDivElement | null>(null);
+  const catalogTopRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (urlCategory) {
@@ -357,37 +383,156 @@ export default function ShopPage({
     window.history.pushState({}, '', '/shop');
   };
 
+  // Grouped products by Category for the Scrollspy multi-section view (when not searching/filtering)
+  const groupedCategoryProducts = useMemo(() => {
+    if (debouncedSearchQuery.trim() || selectedMaterial || selectedColor || userAdjustedPrice || sortBy) {
+      return null;
+    }
+
+    const validCategories = categoriesList.filter(
+      (c) => c !== 'All' && c !== 'Custom Furniture Solutions'
+    );
+
+    const groups: { category: string; slug: string; products: StorefrontProduct[] }[] = [];
+    const assignedIds = new Set<string>();
+
+    for (const cat of validCategories) {
+      const matching = products.filter(
+        (p) => !assignedIds.has(p.id) && isCategoryMatch(p, cat)
+      );
+      if (matching.length > 0) {
+        matching.forEach((p) => assignedIds.add(p.id));
+        groups.push({
+          category: cat,
+          slug: cat.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          products: matching,
+        });
+      }
+    }
+
+    const remaining = products.filter((p) => !assignedIds.has(p.id));
+    if (remaining.length > 0) {
+      groups.push({
+        category: 'Atelier Signature Pieces',
+        slug: 'atelier-signature-pieces',
+        products: remaining,
+      });
+    }
+
+    return groups.length > 0 ? groups : null;
+  }, [products, categoriesList, debouncedSearchQuery, selectedMaterial, selectedColor, userAdjustedPrice, sortBy]);
+
   const handleCategoryClick = (cat: string) => {
     const norm = normalizeCategoryParam(cat);
-    setActiveCategory(norm);
-    const url = norm === 'All' ? '/shop' : `/shop?category=${encodeURIComponent(norm)}`;
-    window.history.pushState({}, '', url);
+    
+    if (norm === 'All') {
+      setActiveCategory('All');
+      isManualScrolling.current = true;
+      if (manualScrollTimer.current) clearTimeout(manualScrollTimer.current);
+      if (catalogTopRef.current) {
+        const yOffset = -90;
+        const y = catalogTopRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+      manualScrollTimer.current = setTimeout(() => {
+        isManualScrolling.current = false;
+      }, 800);
+      return;
+    }
+
+    if (norm === 'Custom Furniture Solutions') {
+      setActiveCategory(norm);
+      return;
+    }
+
+    const slug = norm.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const targetEl = document.getElementById(`cat-section-${slug}`);
+
+    if (targetEl && groupedCategoryProducts) {
+      isManualScrolling.current = true;
+      if (manualScrollTimer.current) clearTimeout(manualScrollTimer.current);
+      setActiveCategory(norm);
+
+      const yOffset = -140; // sticky header + sticky pills offset
+      const y = targetEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+
+      manualScrollTimer.current = setTimeout(() => {
+        isManualScrolling.current = false;
+      }, 800);
+    } else {
+      setActiveCategory(norm);
+    }
   };
+
+  // Auto-scroll the active pill horizontally into view in the pills bar
+  useEffect(() => {
+    if (activeCategory && pillRefs.current[activeCategory]) {
+      pillRefs.current[activeCategory]?.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      });
+    }
+  }, [activeCategory]);
+
+  // Scrollspy observer: Detect visible category section and automatically update the active pill
+  useEffect(() => {
+    if (!groupedCategoryProducts || groupedCategoryProducts.length === 0) return;
+
+    const sections = document.querySelectorAll<HTMLElement>('.category-scroll-section');
+    if (!sections || sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isManualScrolling.current) return;
+
+        const visibleEntries = entries.filter((e) => e.isIntersecting);
+        if (visibleEntries.length > 0) {
+          visibleEntries.sort((a, b) => {
+            const topA = Math.abs(a.boundingClientRect.top - 130);
+            const topB = Math.abs(b.boundingClientRect.top - 130);
+            return topA - topB;
+          });
+          const best = visibleEntries[0];
+          const cat = best.target.getAttribute('data-category');
+          if (cat && cat !== activeCategory) {
+            setActiveCategory(cat);
+          }
+        }
+      },
+      {
+        rootMargin: '-100px 0px -50% 0px',
+        threshold: [0, 0.1, 0.25, 0.5],
+      }
+    );
+
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, [groupedCategoryProducts, activeCategory]);
+
+  // Reset to "All" when user scrolls back up near the top of the section
+  useEffect(() => {
+    if (!groupedCategoryProducts || groupedCategoryProducts.length === 0) return;
+    const handleScrollTop = () => {
+      if (isManualScrolling.current) return;
+      if (catalogTopRef.current) {
+        const topRect = catalogTopRef.current.getBoundingClientRect();
+        if (topRect.top > 120 && activeCategory !== 'All') {
+          setActiveCategory('All');
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScrollTop, { passive: true });
+    return () => window.removeEventListener('scroll', handleScrollTop);
+  }, [groupedCategoryProducts, activeCategory]);
 
   // Client-Side Filtering (Category, Search, Price, Material, Wood Finish Tone, Sort)
   const filteredProducts = useMemo(() => {
     const list = products.filter((p) => {
       // 1. Category filter
       if (activeCategory && activeCategory !== 'All' && activeCategory !== 'Custom Furniture Solutions') {
-        const pCat = (p.category || '').toLowerCase().trim();
-        const aCat = activeCategory.toLowerCase().trim();
-        const norm = (s: string) => s.replace(/[^a-z0-9]/g, '');
-        const pNorm = norm(pCat);
-        const aNorm = norm(aCat);
-
-        const isMatch =
-          pCat === aCat ||
-          pNorm === aNorm ||
-          (Boolean(pCat) && Boolean(aCat) && (pCat.includes(aCat) || aCat.includes(pCat))) ||
-          (aCat.includes('bed') && pCat.includes('bed')) ||
-          (aCat.includes('dining') && pCat.includes('dining')) ||
-          (aCat.includes('chair') && (pCat.includes('chair') || (p.name || '').toLowerCase().includes('lounge'))) ||
-          (aCat.includes('table') && pCat.includes('table')) ||
-          (aCat.includes('wardrobe') && (pCat.includes('wardrobe') || pCat.includes('closet'))) ||
-          ((aCat.includes('decor') || aCat.includes('lighting') || aCat.includes('showcase')) && (pCat.includes('decor') || pCat.includes('lighting') || pCat.includes('showcase'))) ||
-          (!pCat && (p.name || '').toLowerCase().includes(aCat));
-
-        if (!isMatch) return false;
+        if (!isCategoryMatch(p, activeCategory)) return false;
       }
 
       // 2. Search query filter
@@ -459,7 +604,7 @@ export default function ShopPage({
   const HeadingTag = embedded ? 'h2' : 'h1';
 
   return (
-    <div className={`${embedded ? 'pt-10 sm:pt-14' : 'min-h-screen pt-24 sm:pt-28'} bg-[#FCFAF7] text-[#221814]`}>
+    <div ref={catalogTopRef} className={`${embedded ? 'pt-10 sm:pt-14' : 'min-h-screen pt-24 sm:pt-28'} bg-[#FCFAF7] text-[#221814]`}>
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
 
         {/* Open Royal Editorial Header */}
@@ -645,25 +790,28 @@ export default function ShopPage({
           </div>
         </div>
 
-        {/* Luxury Category Pills */}
-        <div className="flex gap-2.5 overflow-x-auto pb-3 mb-8 scrollbar-hide">
-          {categoriesList.map(cat => {
-            const isActive = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => handleCategoryClick(cat)}
-                className={`relative flex-shrink-0 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                  isActive 
-                    ? 'text-white bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] shadow-[0_3px_12px_rgba(184,142,75,0.3)] border border-amber-200/60' 
-                    : 'text-[#5A4336] bg-white border border-amber-200/70 hover:border-amber-400 hover:bg-[#FAF5EE] shadow-2xs'
-                }`}
-              >
-                <span className="relative z-10">{cat}</span>
-              </button>
-            );
-          })}
+        {/* Sticky Luxury Category Pills Bar */}
+        <div className="sticky top-[58px] sm:top-[70px] z-30 bg-[#FCFAF7]/95 backdrop-blur-md py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-y border-amber-200/50 shadow-[0_4px_16px_rgba(184,142,75,0.06)] mb-8 transition-all">
+          <div ref={pillsContainerRef} className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1">
+            {categoriesList.map(cat => {
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  ref={el => { pillRefs.current[cat] = el; }}
+                  type="button"
+                  onClick={() => handleCategoryClick(cat)}
+                  className={`relative flex-shrink-0 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+                    isActive 
+                      ? 'text-white bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] shadow-[0_4px_14px_rgba(184,142,75,0.35)] border border-amber-200/80 scale-[1.03]' 
+                      : 'text-[#5A4336] bg-white border border-amber-200/70 hover:border-amber-400 hover:bg-[#FAF5EE] shadow-2xs hover:scale-[1.01]'
+                  }`}
+                >
+                  <span className="relative z-10">{cat}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="flex gap-8 items-start">
@@ -1022,40 +1170,96 @@ export default function ShopPage({
               )
             ) : (
               <>
-                <div
-                  className={
-                    layoutMode === 'list'
-                      ? 'space-y-4'
-                      : layoutMode === 'grid4'
-                      ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5'
-                      : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                  }
-                >
-                  {visibleProducts.map((product, idx) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      index={idx}
-                      layoutMode={layoutMode}
-                      onQuickView={(p) => setQuickViewProduct(p)}
-                    />
-                  ))}
-                </div>
+                {groupedCategoryProducts ? (
+                  /* ── SCROLLSPY CATEGORY-BY-CATEGORY SECTIONS ── */
+                  <div className="space-y-14 sm:space-y-18">
+                    {groupedCategoryProducts.map((group) => (
+                      <section
+                        key={group.slug}
+                        id={`cat-section-${group.slug}`}
+                        data-category={group.category}
+                        className="category-scroll-section scroll-mt-28 sm:scroll-mt-36"
+                      >
+                        {/* Luxury Category Section Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-5 border-b border-amber-200/60 pb-3 gap-2">
+                          <div>
+                            <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#B88E4B] mb-1">
+                              <span>✦</span>
+                              <span>ROYAL BESPOKE COLLECTION</span>
+                            </div>
+                            <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#221814] tracking-tight">
+                              {group.category}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-serif italic text-[#7A6048]">
+                              {group.products.length} {group.products.length === 1 ? 'Masterpiece' : 'Masterpieces'}
+                            </span>
+                          </div>
+                        </div>
 
-                {filteredProducts.length > displayLimit && (
-                  <div className="mt-12 text-center">
-                    <p className="text-xs text-[#7A6048] mb-3 font-serif">
-                      Showing {visibleProducts.length} of {filteredProducts.length} masterpieces
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setDisplayLimit((prev) => prev + 18)}
-                      className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] text-white font-serif font-bold text-xs uppercase tracking-widest shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer inline-flex items-center gap-2"
-                    >
-                      <span>Load More Masterpieces</span>
-                      <ChevronDown size={15} />
-                    </button>
+                        {/* Product Grid */}
+                        <div
+                          className={
+                            layoutMode === 'list'
+                              ? 'space-y-4'
+                              : layoutMode === 'grid4'
+                              ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5'
+                              : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                          }
+                        >
+                          {group.products.map((product, idx) => (
+                            <ProductCard
+                              key={product.id}
+                              product={product}
+                              index={idx}
+                              layoutMode={layoutMode}
+                              onQuickView={(p) => setQuickViewProduct(p)}
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    ))}
                   </div>
+                ) : (
+                  /* ── FLAT GRID (Active Filters / Search / Sort) ── */
+                  <>
+                    <div
+                      className={
+                        layoutMode === 'list'
+                          ? 'space-y-4'
+                          : layoutMode === 'grid4'
+                          ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5'
+                          : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                      }
+                    >
+                      {visibleProducts.map((product, idx) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          index={idx}
+                          layoutMode={layoutMode}
+                          onQuickView={(p) => setQuickViewProduct(p)}
+                        />
+                      ))}
+                    </div>
+
+                    {filteredProducts.length > displayLimit && (
+                      <div className="mt-12 text-center">
+                        <p className="text-xs text-[#7A6048] mb-3 font-serif">
+                          Showing {visibleProducts.length} of {filteredProducts.length} masterpieces
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setDisplayLimit((prev) => prev + 18)}
+                          className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] text-white font-serif font-bold text-xs uppercase tracking-widest shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer inline-flex items-center gap-2"
+                        >
+                          <span>Load More Masterpieces</span>
+                          <ChevronDown size={15} />
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
