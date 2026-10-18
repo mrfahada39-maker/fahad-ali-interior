@@ -218,7 +218,7 @@ export default function HomePageInteractive({
           {/* Action Buttons (Original Styling Restored 100%) */}
           <div className="gsap-hero-cta flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 w-full sm:w-auto max-w-xs sm:max-w-none px-4 sm:px-0">
             <Link
-              href="/shop"
+              href="/#signature-categories"
               prefetch={false}
               className="gsap-hero-magnetic w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] hover:brightness-110 text-white border border-white/20 font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 shadow-xl flex items-center justify-center gap-3 cursor-pointer will-change-transform active:scale-95"
             >
@@ -226,7 +226,7 @@ export default function HomePageInteractive({
               <span className="text-sm">→</span>
             </Link>
             <Link
-              href="/shop/categories"
+              href="/#signature-categories"
               prefetch={false}
               className="gsap-hero-magnetic w-full sm:w-auto bg-white/10 backdrop-blur-md border border-[#E2D1BC]/60 text-[#F3E5AB] hover:bg-white/20 font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 flex items-center justify-center cursor-pointer will-change-transform active:scale-95 shadow-md"
             >
@@ -236,9 +236,13 @@ export default function HomePageInteractive({
         </div>
 
         {/* Animated Down Chevron Scroll Indicator */}
-        <div className="gsap-hero-chevron absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce pointer-events-none text-[#F3E5AB] drop-shadow-md">
+        <a
+          href="#signature-categories"
+          aria-label="Scroll to Signature & Categories"
+          className="gsap-hero-chevron absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce cursor-pointer text-[#F3E5AB] drop-shadow-md hover:scale-110 transition-transform"
+        >
           <ChevronDown size={28} />
-        </div>
+        </a>
 
         {/* Seamless Soft Blend Transition to Categories Section (Zero Black Gap) */}
         <div className="absolute -bottom-1 inset-x-0 h-16 bg-gradient-to-t from-[#FCFAF7] via-[#FCFAF7]/30 to-transparent pointer-events-none z-10" />

@@ -117,9 +117,9 @@ export default function Footer() {
             <ul className="space-y-3 text-[16px] sm:text-[17px] font-medium text-[#5C483E] flex flex-col items-center text-center">
               {[
                 { label: 'Home', href: '/' },
-                { label: 'Collections', href: '/shop/categories' },
-                { label: 'Best Sellers', href: '/shop?sort=bestsellers' },
-                { label: 'Custom Furniture', href: '/shop?category=Custom' },
+                { label: 'Collections', href: '/#signature-categories' },
+                { label: 'Best Sellers', href: '/#signature-categories' },
+                { label: 'Custom Furniture', href: '/contact' },
                 { label: 'Contact Us', href: '/contact' },
               ].map((item) => (
                 <li key={item.label}>
@@ -165,12 +165,12 @@ export default function Footer() {
             <h4 className="font-serif font-black text-2xl sm:text-[26px] text-[#221814] mb-5 tracking-tight text-center w-full">Categories</h4>
             <ul className="space-y-3 text-[16px] sm:text-[17px] font-medium text-[#5C483E] flex flex-col items-center text-center">
               {[
-                { label: 'Sofa Collection', href: '/shop?category=Living%20Room' },
-                { label: 'Dining Tables', href: '/shop?category=Dining%20Room' },
-                { label: 'Bedroom Sets', href: '/shop?category=Bedroom' },
-                { label: 'Chairs & Stools', href: '/shop?category=Coffee%20Chairs' },
-                { label: 'Coffee Tables', href: '/shop?category=Center%20Tables' },
-                { label: 'Storage & Cabinets', href: '/shop?category=Luxury%20Wardrobes' },
+                { label: 'Sofa Collection', href: '/#cat-section-living-room' },
+                { label: 'Dining Tables', href: '/#cat-section-dining-room' },
+                { label: 'Bedroom Sets', href: '/#cat-section-bedroom' },
+                { label: 'Chairs & Stools', href: '/#cat-section-coffee-chairs' },
+                { label: 'Coffee Tables', href: '/#cat-section-center-tables' },
+                { label: 'Storage & Cabinets', href: '/#cat-section-luxury-wardrobes' },
                 { label: 'Decor & Lighting', href: '/shop?category=Decor%20%26%20Lighting' },
               ].map((item) => (
                 <li key={item.label}>
@@ -276,9 +276,9 @@ export default function Footer() {
               title: 'MENU',
               links: [
                 { label: 'Home', href: '/' },
-                { label: 'Collections', href: '/shop/categories' },
-                { label: 'Best Sellers', href: '/shop?sort=bestsellers' },
-                { label: 'Custom Furniture', href: '/shop?category=Custom' },
+                { label: 'Collections', href: '/#signature-categories' },
+                { label: 'Best Sellers', href: '/#signature-categories' },
+                { label: 'Custom Furniture', href: '/contact' },
                 { label: 'Contact Us', href: '/contact' },
               ]
             },
@@ -298,12 +298,12 @@ export default function Footer() {
               id: 'categories',
               title: 'CATEGORIES',
               links: [
-                { label: 'Sofa Collection', href: '/shop?category=Living%20Room' },
-                { label: 'Dining Tables', href: '/shop?category=Dining%20Room' },
-                { label: 'Bedroom Sets', href: '/shop?category=Bedroom' },
-                { label: 'Chairs & Stools', href: '/shop?category=Coffee%20Chairs' },
-                { label: 'Coffee Tables', href: '/shop?category=Center%20Tables' },
-                { label: 'Storage & Cabinets', href: '/shop?category=Luxury%20Wardrobes' },
+                { label: 'Sofa Collection', href: '/#cat-section-living-room' },
+                { label: 'Dining Tables', href: '/#cat-section-dining-room' },
+                { label: 'Bedroom Sets', href: '/#cat-section-bedroom' },
+                { label: 'Chairs & Stools', href: '/#cat-section-coffee-chairs' },
+                { label: 'Coffee Tables', href: '/#cat-section-center-tables' },
+                { label: 'Storage & Cabinets', href: '/#cat-section-luxury-wardrobes' },
                 { label: 'Decor & Lighting', href: '/shop?category=Decor%20%26%20Lighting' },
               ]
             },

@@ -316,14 +316,6 @@ export default function HomeSignatureCategories({
                 <span className="text-xs font-serif italic text-[#7A6048]">
                   {group.products.length} {group.products.length === 1 ? 'Masterpiece' : 'Masterpieces'} Available
                 </span>
-                <Link
-                  href={`/shop?category=${encodeURIComponent(group.name)}`}
-                  prefetch={false}
-                  className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-[#B88E4B] hover:text-[#8C6944] transition-colors"
-                >
-                  <span>Explore All</span>
-                  <ChevronRight size={14} />
-                </Link>
               </div>
             </div>
 
@@ -337,33 +329,21 @@ export default function HomeSignatureCategories({
                 />
               ))}
             </div>
-
-            {/* Mobile View All Link */}
-            <div className="mt-5 text-center sm:hidden">
-              <Link
-                href={`/shop?category=${encodeURIComponent(group.name)}`}
-                prefetch={false}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B88E4B] hover:underline"
-              >
-                <span>View All {group.name} Pieces</span>
-                <ArrowRight size={13} />
-              </Link>
-            </div>
           </div>
         ))}
       </div>
 
-      {/* ── BOTTOM EXPLORE COMPLETE CATALOG CTA ── */}
+      {/* ── BOTTOM BACK TO ALL CATEGORIES CTA ── */}
       <div className="text-center mt-16 pt-6 border-t border-amber-200/50">
-        <Link
-          href="/shop"
-          prefetch={false}
+        <button
+          type="button"
+          onClick={() => handlePillClick('All')}
           className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] hover:brightness-110 text-white font-serif font-bold text-xs sm:text-sm uppercase tracking-widest px-8 py-4 rounded-xl shadow-lg transition-all duration-300 active:scale-95 cursor-pointer"
         >
           <Sparkles size={16} />
-          <span>Explore Complete Atelier Collection</span>
-          <ArrowRight size={16} />
-        </Link>
+          <span>Back To Top Categories</span>
+          <ArrowRight size={16} className="-rotate-90" />
+        </button>
       </div>
     </section>
   );

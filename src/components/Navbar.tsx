@@ -70,7 +70,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   // Left primary links with outline icons + text
   const leftLinks = [
     { label: 'Home', href: '/', icon: Home },
-    { label: 'Collections', href: '/shop/categories', icon: Armchair },
+    { label: 'Collections', href: '/#signature-categories', icon: Armchair },
     { label: 'About', href: '/about', icon: Sparkles },
     { label: 'Contact Us', href: '/contact', icon: PhoneCall },
   ];
@@ -290,7 +290,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
           {/* 3. SHOP */}
           <Link
-            href="/shop"
+            href="/#signature-categories"
             prefetch={false}
             onClick={() => setMobileOpen(false)}
             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
@@ -306,7 +306,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
           {/* 4. COLLECTIONS */}
           <Link
-            href="/shop/categories"
+            href="/#signature-categories"
             prefetch={false}
             onClick={() => setMobileOpen(false)}
             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
@@ -511,7 +511,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       >
         {/* 1. Shop */}
         <Link prefetch={false}
-          href="/shop"
+          href="/#signature-categories"
           className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
             mounted && (pathname === '/shop' || pathname.startsWith('/product')) ? '-top-3.5' : 'py-1'
           }`}
