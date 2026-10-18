@@ -32,7 +32,7 @@ export default async function HomePage() {
         media="(min-width: 769px)"
         fetchPriority="high"
       />
-      <main className="min-h-screen bg-[#FCFAF7] text-[#221814] font-sans overflow-x-hidden">
+      <main className="min-h-screen bg-[#FCFAF7] text-[#221814] font-sans overflow-x-clip">
         <HomePageInteractive 
           initialBanners={homeData?.banners || []}
           initialCategories={homeData?.categories || []}

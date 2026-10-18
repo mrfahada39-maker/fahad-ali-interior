@@ -2,14 +2,14 @@
 'use client';
 import { logger } from '@/lib/logger';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   ChevronDown,
 } from 'lucide-react';
 import { apiFetchJson } from '@/lib/api-client';
 import { CLOUDINARY_ASSETS } from '@/lib/cloudinary-assets';
-import ShopPage from '@/app/shop/ShopPage';
+import HomeSignatureCategories from '@/components/HomeSignatureCategories';
 import TestimonialsSection from '@/components/TestimonialsSection';
 
 const CATEGORIES = [
@@ -244,16 +244,11 @@ export default function HomePageInteractive({
         <div className="absolute -bottom-1 inset-x-0 h-16 bg-gradient-to-t from-[#FCFAF7] via-[#FCFAF7]/30 to-transparent pointer-events-none z-10" />
       </section>
 
-      {/* ── SIGNATURE & CATEGORIES (FULL INTERACTIVE CATALOG SHOWCASE) ── */}
-      <Suspense fallback={<div className="min-h-[600px] bg-[#FCFAF7]" />}>
-        <ShopPage
-          embedded={true}
-          titlePrefix="Signature"
-          titleHighlight="Categories"
-          initialProducts={productsList}
-          initialCategories={['All', ...categoriesList.map((c: any) => c.name)]}
-        />
-      </Suspense>
+      {/* ── SIGNATURE & CATEGORIES (INSTANT SSR WITH 60FPS SCROLLSPY STICKY PILLS) ── */}
+      <HomeSignatureCategories
+        products={productsList}
+        categories={categoriesList}
+      />
 
       {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION ── */}
       <TestimonialsSection reviews={reviewsList.length > 0 ? reviewsList : initialReviews} />

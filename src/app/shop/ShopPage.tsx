@@ -514,18 +514,22 @@ export default function ShopPage({
   // Reset to "All" when user scrolls back up near the top of the section
   useEffect(() => {
     if (!groupedCategoryProducts || groupedCategoryProducts.length === 0) return;
-    const handleScrollTop = () => {
-      if (isManualScrolling.current) return;
-      if (catalogTopRef.current) {
-        const topRect = catalogTopRef.current.getBoundingClientRect();
-        if (topRect.top > 120 && activeCategory !== 'All') {
+    const topEl = catalogTopRef.current;
+    if (!topEl || typeof IntersectionObserver === 'undefined') return;
+
+    const topObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (isManualScrolling.current) return;
+        if (entry.isIntersecting && entry.boundingClientRect.top > 0) {
           setActiveCategory('All');
         }
-      }
-    };
-    window.addEventListener('scroll', handleScrollTop, { passive: true });
-    return () => window.removeEventListener('scroll', handleScrollTop);
-  }, [groupedCategoryProducts, activeCategory]);
+      },
+      { threshold: 0.15 }
+    );
+
+    topObserver.observe(topEl);
+    return () => topObserver.disconnect();
+  }, [groupedCategoryProducts]);
 
   // Client-Side Filtering (Category, Search, Price, Material, Wood Finish Tone, Sort)
   const filteredProducts = useMemo(() => {
