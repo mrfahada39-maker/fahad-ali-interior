@@ -244,6 +244,7 @@ export default function HomeSignatureCategories({
   return (
     <section
       ref={sectionTopRef}
+      id="signature-categories"
       className="w-full max-w-[1600px] 2xl:max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-16 relative z-10"
     >
       {/* ── SECTION HEADER ── */}

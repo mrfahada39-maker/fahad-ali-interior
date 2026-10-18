@@ -1,40 +1,36 @@
-import { Suspense } from 'react';
 import { Metadata } from 'next';
 import StoreShell from '@/components/StoreShell';
-import { getStorefrontProducts, getStorefrontCategories } from '@/lib/catalog-api';
-import ShopPage from './ShopPage';
+import HomeSignatureCategories from '@/components/HomeSignatureCategories';
+import { getHomePageData } from '@/lib/home-page-data';
 
 // Next.js ISR (Incremental Static Regeneration) — Edge cached on Vercel for instant sub-50ms TTFB
-export const revalidate = 120;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Shop — Luxury Furniture Collection',
+  title: 'Signature & Categories | Luxury Furniture Collection',
   description:
-    'Browse our collection of handcrafted luxury furniture. Premium beds, sofas, dining sets, and wardrobes crafted in Pakistan.',
+    'Browse our Signature & Categories collection of handcrafted solid Sheesham luxury furniture. Premium beds, sofas, dining sets, and wardrobes crafted in Pakistan.',
   alternates: {
     canonical: '/shop',
   },
   openGraph: {
-    title: 'Shop | Fahad Ali Interior',
-    description: 'Handcrafted luxury furniture collection — Beds, Sofas, Dining, Wardrobes.',
+    title: 'Signature & Categories | Fahad Ali Interior',
+    description: 'Signature & Categories collection — Beds, Sofas, Dining, Wardrobes.',
     type: 'website',
   },
 };
 
 export default async function Shop() {
-  const [initialProducts, initialCategories] = await Promise.all([
-    getStorefrontProducts(24),
-    getStorefrontCategories(),
-  ]);
+  const homeData = await getHomePageData();
 
   return (
-    <StoreShell>
-      <Suspense fallback={<div className="min-h-screen bg-[#FCFAF7] animate-pulse" />}>
-        <ShopPage
-          initialProducts={initialProducts}
-          initialCategories={initialCategories}
+    <StoreShell showFooter={true}>
+      <main className="min-h-screen bg-[#FCFAF7] text-[#221814] font-sans pt-14 sm:pt-16 lg:pt-20">
+        <HomeSignatureCategories
+          products={homeData?.products || []}
+          categories={homeData?.categories || []}
         />
-      </Suspense>
+      </main>
     </StoreShell>
   );
 }
