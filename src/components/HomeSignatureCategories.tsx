@@ -179,61 +179,76 @@ export default function HomeSignatureCategories({
     }
   }, [activeCategory]);
 
-  // High-performance IntersectionObserver for Scrollspy (Zero scroll event listeners)
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return;
-
-    const sections = document.querySelectorAll<HTMLElement>('.home-category-anchor-section');
-    if (!sections || sections.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (isAutoScrolling.current) return;
-
-        // Find intersecting section
-        const intersecting = entries.filter((e) => e.isIntersecting);
-        if (intersecting.length > 0) {
-          // Choose the one highest up or with greatest ratio
-          intersecting.sort((a, b) => {
-            const topA = Math.abs(a.boundingClientRect.top - 140);
-            const topB = Math.abs(b.boundingClientRect.top - 140);
-            return topA - topB;
-          });
-          const cat = intersecting[0].target.getAttribute('data-category');
-          if (cat && cat !== activeCategory) {
-            setActiveCategory(cat);
-          }
-        }
-      },
-      {
-        rootMargin: '-15% 0px -65% 0px',
-        threshold: [0, 0.2, 0.5],
-      }
-    );
-
-    sections.forEach((s) => observer.observe(s));
-    return () => observer.disconnect();
-  }, [groupedCategories, activeCategory]);
-
-  // If user scrolls back up past the first section, reset to "All"
+  // 60FPS High-Performance Scrollspy with requestAnimationFrame
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const topEl = sectionTopRef.current;
-    if (!topEl || typeof IntersectionObserver === 'undefined') return;
 
-    const topObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (isAutoScrolling.current) return;
-        if (entry.isIntersecting && entry.boundingClientRect.top > 0) {
-          setActiveCategory('All');
-        }
-      },
-      { threshold: 0.2 }
-    );
+    let ticking = false;
 
-    topObserver.observe(topEl);
-    return () => topObserver.disconnect();
-  }, []);
+    const onScroll = () => {
+      if (isAutoScrolling.current) return;
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const navHeight = window.innerWidth >= 1024 ? 80 : window.innerWidth >= 640 ? 64 : 56;
+          const pillsBarHeight = 58;
+          const triggerLine = navHeight + pillsBarHeight + 50;
+
+          const sections = document.querySelectorAll<HTMLElement>('.home-category-anchor-section');
+          if (!sections || sections.length === 0) {
+            ticking = false;
+            return;
+          }
+
+          // If scrolled above the first category section, active pill is "All"
+          const firstSection = sections[0];
+          if (firstSection) {
+            const firstRect = firstSection.getBoundingClientRect();
+            if (firstRect.top > triggerLine) {
+              setActiveCategory('All');
+              ticking = false;
+              return;
+            }
+          }
+
+          // Find the category whose section contains or is closest to the trigger line
+          let matchedCategory = '';
+          for (let i = 0; i < sections.length; i++) {
+            const sec = sections[i];
+            const rect = sec.getBoundingClientRect();
+            if (rect.top <= triggerLine && rect.bottom > triggerLine) {
+              matchedCategory = sec.getAttribute('data-category') || '';
+              break;
+            }
+          }
+
+          // Fallback to last passed section when scrolled deeply
+          if (!matchedCategory) {
+            for (let i = sections.length - 1; i >= 0; i--) {
+              const sec = sections[i];
+              const rect = sec.getBoundingClientRect();
+              if (rect.top <= triggerLine) {
+                matchedCategory = sec.getAttribute('data-category') || '';
+                break;
+              }
+            }
+          }
+
+          if (matchedCategory) {
+            setActiveCategory(matchedCategory);
+          }
+
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [groupedCategories]);
 
   return (
     <section
@@ -262,7 +277,7 @@ export default function HomeSignatureCategories({
       </div>
 
       {/* ── STICKY CATEGORY PILLS BAR (PINS FLUSH UNDER FIXED NAVBAR) ── */}
-      <div className="sticky top-14 sm:top-16 lg:top-20 z-40 bg-[#FCFAF7]/95 backdrop-blur-md py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-y border-amber-200/60 shadow-[0_4px_16px_rgba(184,142,75,0.06)] mb-8 transition-all">
+      <div className="sticky top-[56px] sm:top-[64px] lg:top-[80px] z-40 bg-[#FCFAF7]/95 backdrop-blur-md py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-y border-amber-200/60 shadow-[0_4px_16px_rgba(184,142,75,0.06)] mb-8 transition-all">
         <div className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1">
           {categoryNames.map((cat) => {
             const isActive = activeCategory === cat;
