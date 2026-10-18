@@ -132,7 +132,7 @@ export default function HomePageInteractive({
       <section ref={heroSectionRef} className="gsap-hero-section relative w-full h-[100svh] min-h-[100svh] overflow-hidden bg-[#1A110B] flex items-center justify-center text-center">
         {/* Background Parallax & Video Container */}
         <div className="gsap-hero-bg absolute inset-0 w-full h-full overflow-hidden pointer-events-none" style={{ width: '100%', height: '100%' }}>
-          {/* Instant SSR Responsive LCP Poster Image (Native Media Queries — Zero Double-Download) priority sizes="100vw" */}
+          {/* Instant SSR Responsive LCP Poster Image (Native Media Queries — Zero Double-Download) priority sizes="100vw" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" */}
           <picture className="absolute inset-0 w-full h-full pointer-events-none">
             <source media="(max-width: 768px)" srcSet={CLOUDINARY_ASSETS.heroMobilePoster} />
             <source media="(min-width: 769px)" srcSet={CLOUDINARY_ASSETS.heroDesktopPoster} />
