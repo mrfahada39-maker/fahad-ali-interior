@@ -141,11 +141,13 @@ export default function HomeSignatureCategories({
     isAutoScrolling.current = true;
     if (scrollTimer.current) clearTimeout(scrollTimer.current);
 
+    const navHeight = window.innerWidth >= 1024 ? 80 : window.innerWidth >= 640 ? 64 : 56;
+    const pillsBarHeight = 56;
+
     if (cat === 'All') {
       const el = sectionTopRef.current;
       if (el) {
-        const navHeight = window.innerWidth >= 1024 ? 80 : window.innerWidth >= 640 ? 64 : 56;
-        const y = el.getBoundingClientRect().top + window.pageYOffset - (navHeight + 20);
+        const y = el.getBoundingClientRect().top + window.scrollY - (navHeight + 16);
         window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
       }
       scrollTimer.current = setTimeout(() => {
@@ -157,9 +159,7 @@ export default function HomeSignatureCategories({
     const slug = slugify(cat);
     const target = document.getElementById(`cat-section-${slug}`);
     if (target) {
-      const navHeight = window.innerWidth >= 1024 ? 80 : window.innerWidth >= 640 ? 64 : 56;
-      const pillsBarHeight = 65;
-      const y = target.getBoundingClientRect().top + window.pageYOffset - (navHeight + pillsBarHeight + 10);
+      const y = target.getBoundingClientRect().top + window.scrollY - (navHeight + pillsBarHeight + 12);
       window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
     }
 
@@ -168,14 +168,19 @@ export default function HomeSignatureCategories({
     }, 700);
   };
 
-  // Auto-scroll the active category pill into view horizontally on mobile
+  const pillsContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll the active category pill into view horizontally without touching window scroll
   useEffect(() => {
-    if (activeCategory && pillRefs.current[activeCategory]) {
-      pillRefs.current[activeCategory]?.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'center',
-        block: 'nearest',
-      });
+    if (!activeCategory || !pillsContainerRef.current) return;
+    const activePill = pillRefs.current[activeCategory];
+    const container = pillsContainerRef.current;
+    if (activePill && container) {
+      const pillLeft = activePill.offsetLeft;
+      const pillWidth = activePill.offsetWidth;
+      const containerWidth = container.offsetWidth;
+      const targetScrollLeft = pillLeft - (containerWidth / 2) + (pillWidth / 2);
+      container.scrollTo({ left: Math.max(0, targetScrollLeft), behavior: 'smooth' });
     }
   }, [activeCategory]);
 
@@ -191,8 +196,8 @@ export default function HomeSignatureCategories({
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const navHeight = window.innerWidth >= 1024 ? 80 : window.innerWidth >= 640 ? 64 : 56;
-          const pillsBarHeight = 58;
-          const triggerLine = navHeight + pillsBarHeight + 50;
+          const pillsBarHeight = 56;
+          const triggerLine = navHeight + pillsBarHeight + 24;
 
           const sections = document.querySelectorAll<HTMLElement>('.home-category-anchor-section');
           if (!sections || sections.length === 0) {
@@ -200,42 +205,28 @@ export default function HomeSignatureCategories({
             return;
           }
 
-          // If scrolled above the first category section, active pill is "All"
+          // Check if user is scrolled above the first category section
           const firstSection = sections[0];
-          if (firstSection) {
-            const firstRect = firstSection.getBoundingClientRect();
-            if (firstRect.top > triggerLine) {
-              setActiveCategory('All');
-              ticking = false;
-              return;
-            }
+          if (firstSection && firstSection.getBoundingClientRect().top > triggerLine) {
+            setActiveCategory((prev) => (prev !== 'All' ? 'All' : prev));
+            ticking = false;
+            return;
           }
 
-          // Find the category whose section contains or is closest to the trigger line
-          let matchedCategory = '';
+          // Find the last section whose top has crossed the triggerLine
+          let matchedCategory = 'All';
           for (let i = 0; i < sections.length; i++) {
             const sec = sections[i];
             const rect = sec.getBoundingClientRect();
-            if (rect.top <= triggerLine && rect.bottom > triggerLine) {
-              matchedCategory = sec.getAttribute('data-category') || '';
+            if (rect.top <= triggerLine) {
+              matchedCategory = sec.getAttribute('data-category') || matchedCategory;
+            } else {
               break;
             }
           }
 
-          // Fallback to last passed section when scrolled deeply
-          if (!matchedCategory) {
-            for (let i = sections.length - 1; i >= 0; i--) {
-              const sec = sections[i];
-              const rect = sec.getBoundingClientRect();
-              if (rect.top <= triggerLine) {
-                matchedCategory = sec.getAttribute('data-category') || '';
-                break;
-              }
-            }
-          }
-
           if (matchedCategory) {
-            setActiveCategory(matchedCategory);
+            setActiveCategory((prev) => (prev !== matchedCategory ? matchedCategory : prev));
           }
 
           ticking = false;
@@ -278,7 +269,7 @@ export default function HomeSignatureCategories({
 
       {/* ── STICKY CATEGORY PILLS BAR (PINS FLUSH UNDER FIXED NAVBAR) ── */}
       <div className="sticky top-[56px] sm:top-[64px] lg:top-[80px] z-40 bg-[#FCFAF7]/95 backdrop-blur-md py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-y border-amber-200/60 shadow-[0_4px_16px_rgba(184,142,75,0.06)] mb-8 transition-all">
-        <div className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1">
+        <div ref={pillsContainerRef} className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1">
           {categoryNames.map((cat) => {
             const isActive = activeCategory === cat;
             return (
