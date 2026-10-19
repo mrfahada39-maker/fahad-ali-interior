@@ -50,27 +50,40 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
   };
 
   return (
-    <div className="relative w-full bg-[#FAF6F0] text-[#1F1A17] overflow-hidden pt-20 sm:pt-24 lg:pt-28 pb-8 lg:pb-12">
-      {/* Subtle Warm Ivory Ambient Background Gradients */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-[#F2E5D0]/60 via-[#F7EFE2]/40 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-[#EFE5D5]/50 via-transparent to-transparent rounded-full blur-2xl pointer-events-none" />
+    <div className="relative w-full bg-[#FAF6F0] text-[#1F1A17] overflow-hidden pt-24 sm:pt-28 lg:pt-32 pb-6 lg:pb-8 min-h-[600px] lg:min-h-[820px] 2xl:min-h-[880px] flex flex-col justify-between">
+      {/* ── FULL-BLEED DESKTOP LUXURY LIVING ROOM BACKGROUND (100% MATCHES USER'S UPLOADED IMAGE) ── */}
+      <div className="hidden lg:block absolute inset-0 w-full h-full pointer-events-none z-0">
+        <Image
+          src="/hero-living-room-bg.webp"
+          alt="Luxury Living Room Interior"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+        {/* Soft subtle radial scrim on left wall to guarantee 100% crisp text readability */}
+        <div className="absolute inset-y-0 left-0 w-3/5 bg-gradient-to-r from-[#FAF6F0]/70 via-[#FAF6F0]/20 to-transparent" />
+      </div>
 
-      <div className="relative z-10 max-w-[1550px] mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Subtle Warm Ivory Ambient Background Gradients for Mobile */}
+      <div className="lg:hidden absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-[#F2E5D0]/60 via-[#F7EFE2]/40 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 max-w-[1550px] w-full mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col justify-between">
         
-        {/* ── DESKTOP & TABLET LAYOUT (MATCHES DESKTOP MOCKUP 100%) ── */}
-        <div className="hidden lg:grid grid-cols-12 gap-8 items-center pt-2 pb-4">
+        {/* ── DESKTOP & TABLET CONTENT (SITS OVER THE LEFT WALL OF THE LIVING ROOM) ── */}
+        <div className="hidden lg:grid grid-cols-12 gap-8 items-center pt-2 pb-6">
           
           {/* Left Column: Headlines, Trust Badges, Buttons */}
-          <div className="col-span-6 2xl:col-span-5 flex flex-col items-start pr-2">
+          <div className="col-span-7 xl:col-span-6 2xl:col-span-5 flex flex-col items-start pr-4">
             
             {/* 1. Crown Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F3EADB] border border-[#E4D5BE] text-[#9A7030] text-[11px] font-bold tracking-[0.18em] uppercase shadow-2xs mb-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F3EADB]/90 backdrop-blur-xs border border-[#E4D5BE] text-[#9A7030] text-[11px] font-bold tracking-[0.18em] uppercase shadow-2xs mb-4">
               <Crown size={14} className="text-[#C59B4B] fill-[#C59B4B]" />
               <span>PREMIUM FURNITURE COLLECTION</span>
             </div>
 
             {/* 2. Main Title */}
-            <h1 className="font-serif text-[48px] xl:text-[58px] 2xl:text-[66px] font-black text-[#1F1A17] leading-[1.06] tracking-tight mb-4">
+            <h1 className="font-serif text-[46px] xl:text-[56px] 2xl:text-[64px] font-black text-[#1F1A17] leading-[1.06] tracking-tight mb-4 drop-shadow-2xs">
               Luxury Furniture <br />
               <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#A67C37] bg-clip-text text-transparent italic font-normal">
                 for Modern Living
@@ -78,12 +91,12 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
             </h1>
 
             {/* 3. Subtitle */}
-            <p className="text-[15px] xl:text-[16px] text-[#6B5E55] leading-relaxed max-w-xl font-normal mb-6">
+            <p className="text-[15px] xl:text-[16px] text-[#5C4F46] leading-relaxed max-w-xl font-medium mb-6">
               Transform your home with premium furniture crafted for comfort, style and timeless elegance.
             </p>
 
             {/* 4. Trust Badges Row */}
-            <div className="grid grid-cols-4 gap-2 w-full max-w-xl mb-7">
+            <div className="grid grid-cols-4 gap-2.5 w-full max-w-xl mb-7">
               {[
                 { icon: ShieldCheck, label: 'Premium Quality' },
                 { icon: Truck, label: 'Safe & Fast Delivery' },
@@ -94,7 +107,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                 return (
                   <div 
                     key={badge.label}
-                    className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-white/95 border border-[#EAE1D5] shadow-[0_2px_10px_rgba(44,30,24,0.03)] text-center transition-transform hover:-translate-y-0.5"
+                    className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-white/95 backdrop-blur-sm border border-[#EAE1D5] shadow-[0_2px_12px_rgba(44,30,24,0.04)] text-center transition-transform hover:-translate-y-0.5"
                   >
                     <div className="w-8 h-8 rounded-full bg-[#FAF5ED] flex items-center justify-center text-[#B88E4B] mb-1.5">
                       <Icon size={16} strokeWidth={1.8} />
@@ -123,14 +136,14 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                 className="flex items-center gap-3 group cursor-pointer"
                 aria-label="Watch Showroom Video"
               >
-                <div className="w-12 h-12 rounded-full bg-white border border-[#E8DFC8] shadow-md flex items-center justify-center text-[#B88E4B] group-hover:scale-110 group-hover:bg-[#FAF5ED] transition-all">
+                <div className="w-12 h-12 rounded-full bg-white/95 backdrop-blur-sm border border-[#E8DFC8] shadow-md flex items-center justify-center text-[#B88E4B] group-hover:scale-110 group-hover:bg-[#FAF5ED] transition-all">
                   <Play size={16} className="fill-[#B88E4B] ml-0.5" />
                 </div>
                 <div className="text-left">
                   <p className="font-serif font-bold text-xs xl:text-sm text-[#1F1A17] group-hover:text-[#B88E4B] transition-colors">
                     Watch 20s Video
                   </p>
-                  <p className="text-[11px] text-[#8C7A6D] font-medium">
+                  <p className="text-[11px] text-[#7A6A5E] font-medium">
                     Experience Luxury
                   </p>
                 </div>
@@ -139,26 +152,14 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
 
           </div>
 
-          {/* Right Column: Hero Living Room Visual */}
-          <div className="col-span-6 2xl:col-span-7 relative flex justify-end">
-            <div className="relative w-full aspect-[16/10] max-w-[800px] rounded-[32px] overflow-hidden shadow-[0_15px_45px_rgba(44,30,24,0.09)] border border-[#EBE2D5]">
-              <Image
-                src="/hero-living-room-2x.webp"
-                alt="Fahad Ali Interior Luxury Living Room Showcase"
-                fill
-                priority
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                className="object-cover object-center transform hover:scale-102 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none" />
-            </div>
-          </div>
+          {/* Right Column: Spans across the sofa and room in the background */}
+          <div className="col-span-5 xl:col-span-6 2xl:col-span-7 min-h-[300px] lg:min-h-[440px] pointer-events-none" />
 
         </div>
 
 
         {/* ── DESKTOP FLOATING CATEGORY SHELF (MATCHES DESKTOP MOCKUP 100%) ── */}
-        <div className="hidden lg:block w-full mt-4 bg-white/95 border border-[#EBE1D3] rounded-[28px] p-3.5 xl:p-4 shadow-[0_12px_40px_rgba(44,30,24,0.06)]">
+        <div className="hidden lg:block w-full mt-auto bg-white/95 backdrop-blur-md border border-[#EBE1D3] rounded-[28px] p-3.5 xl:p-4 shadow-[0_12px_40px_rgba(44,30,24,0.08)]">
           <div className="grid grid-cols-6 gap-3">
             {DESKTOP_SHELF_CATEGORIES.map((cat) => (
               <Link
