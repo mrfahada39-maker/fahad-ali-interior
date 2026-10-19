@@ -347,7 +347,6 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
 
       try {
         revalidatePath('/', 'layout');
-        revalidatePath('/shop', 'layout');
       } catch {}
 
       return NextResponse.json({ success: true, data: category, category });
@@ -385,7 +384,6 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
 
       try {
         revalidatePath('/', 'layout');
-        revalidatePath('/shop', 'layout');
       } catch {}
 
       return NextResponse.json({ success: true, data: updated, category: updated });
@@ -420,7 +418,6 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
 
       try {
         revalidatePath('/', 'layout');
-        revalidatePath('/shop', 'layout');
       } catch {}
 
       return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });

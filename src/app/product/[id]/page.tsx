@@ -150,14 +150,14 @@ export default async function ProductDetail({ params }: Props) {
           {
             '@type': 'ListItem',
             position: 2,
-            name: 'Shop',
-            item: `${siteUrl}/shop`,
+            name: 'Masterpieces',
+            item: `${siteUrl}/#signature-categories`,
           },
           {
             '@type': 'ListItem',
             position: 3,
             name: product.category || 'Collection',
-            item: `${siteUrl}/shop?category=${encodeURIComponent(product.category || 'All')}`,
+            item: `${siteUrl}/#signature-categories`,
           },
           {
             '@type': 'ListItem',

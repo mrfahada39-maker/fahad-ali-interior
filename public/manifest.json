@@ -75,7 +75,7 @@
       "name": "Browse Collection",
       "short_name": "Collection",
       "description": "Explore handcrafted luxury furniture",
-      "url": "/shop",
+      "url": "/#signature-categories",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {

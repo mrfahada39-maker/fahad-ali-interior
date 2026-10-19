@@ -181,7 +181,6 @@ export function revalidateProductCaches(productId?: string): void {
   try {
     revalidatePath('/', 'layout');
     revalidatePath('/', 'page');
-    revalidatePath('/shop', 'layout');
     revalidatePath('/admin', 'layout');
     revalidatePath('/dashboard', 'layout');
     if (productId) {

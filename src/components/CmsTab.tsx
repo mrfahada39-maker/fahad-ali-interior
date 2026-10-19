@@ -516,7 +516,7 @@ export default function CmsTab() {
                           {c.name}
                         </h4>
                         <p className="text-stone-400 text-[10px] font-mono mt-0.5">
-                          /shop?category={c.slug || c.name?.toLowerCase().replace(/\s+/g, '-')}
+                          /#cat-section-{c.slug || c.name?.toLowerCase().replace(/\s+/g, '-')}
                         </p>
                       </div>
 
@@ -549,7 +549,7 @@ export default function CmsTab() {
                   {/* Bottom: Luxury Action Bar */}
                   <div className="pt-3 px-1 mt-2 border-t border-neutral-100 flex items-center justify-between">
                     <a
-                      href={`/shop?category=${encodeURIComponent(c.name || '')}`}
+                      href="/#signature-categories"
                       target="_blank"
                       rel="noreferrer"
                       className="text-[11px] font-black text-stone-500 hover:text-[#1F1612] inline-flex items-center gap-1 transition-colors group/link"
@@ -819,7 +819,7 @@ export default function CmsTab() {
                           Storefront Destination URL Slug
                         </label>
                         <div className="flex items-center bg-[#FCFAF7] border border-[#E7DDD0] rounded-xl overflow-hidden h-10 px-3 shadow-2xs">
-                          <span className="text-stone-400 font-mono text-xs select-none">/shop?category=</span>
+                          <span className="text-stone-400 font-mono text-xs select-none">/#cat-section-</span>
                           <input id="fai-cmstab-field-8" name="fai_cmstab_field_8"
                             placeholder="royal-living-room"
                             value={categoryForm.slug ?? ''}
@@ -891,7 +891,7 @@ export default function CmsTab() {
                           <span>View Live Shop</span>
                           <ExternalLink size={10} />
                         </span>
-                        <span className="font-mono text-stone-400">/shop?category={categoryForm.slug || 'category'}</span>
+                        <span className="font-mono text-stone-400">/#cat-section-{categoryForm.slug || 'category'}</span>
                       </div>
                     </div>
                   </div>

@@ -182,7 +182,7 @@ export function CheckoutSectionSummary({
               Need to add customized sizing or polish choice?
             </span>
             <Link
-              href="/shop"
+              href="/#signature-categories"
               className="text-[10.5px] font-serif font-black text-[#8C6239] hover:underline"
             >
               Browse Catalog →

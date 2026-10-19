@@ -143,7 +143,7 @@ export default async function BlogDetailPage({ params }: RouteProps) {
               </p>
             </div>
             <Link
-              href="/shop"
+              href="/#signature-categories"
               prefetch={false}
               className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white font-serif font-bold text-xs uppercase tracking-wider inline-flex items-center gap-2 shrink-0 transition-all"
             >

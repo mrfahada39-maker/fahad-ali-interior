@@ -193,9 +193,9 @@ export default function Footer() {
                 {[
                   { label: 'My Account', href: '/dashboard' },
                   { label: 'Wishlist', href: '/dashboard?tab=wishlist' },
-                  { label: 'Compare', href: '/shop' },
+                  { label: 'Compare', href: '/#signature-categories' },
                   { label: 'VIP Concierge', href: '/contact' },
-                  { label: 'Haute Portfolio', href: '/shop' },
+                  { label: 'Haute Portfolio', href: '/#signature-categories' },
                 ].map((item) => (
                   <li key={item.label}>
                     <Link 
@@ -311,7 +311,7 @@ export default function Footer() {
               links: [
                 { label: 'My Account', href: '/dashboard' },
                 { label: 'Wishlist', href: '/dashboard?tab=wishlist' },
-                { label: 'Compare', href: '/shop' },
+                { label: 'Compare', href: '/#signature-categories' },
                 { label: 'VIP Concierge', href: '/contact' },
               ]
             }

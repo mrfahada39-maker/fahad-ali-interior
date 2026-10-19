@@ -566,7 +566,6 @@ export async function handleSettingsAndBundleRoutes(
         const result = await restoreFromRecycleBin(id, user?.id);
         try {
           revalidatePath('/', 'layout');
-          revalidatePath('/shop', 'layout');
         } catch {}
         return NextResponse.json(result);
       }
