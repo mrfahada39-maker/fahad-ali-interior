@@ -139,18 +139,18 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
 
           </div>
 
-          {/* Right Column: Hero Living Room Visual */}
-          <div className="col-span-6 2xl:col-span-7 relative flex justify-end">
-            <div className="relative w-full aspect-[16/10] max-w-[800px] rounded-[32px] overflow-hidden shadow-[0_15px_45px_rgba(44,30,24,0.09)] border border-[#EBE2D5]">
+          {/* Right Column: Hero Living Room Visual (Matches Image 1 100%) */}
+          <div className="col-span-6 2xl:col-span-7 relative flex justify-end items-center">
+            <div className="relative w-full aspect-[4/3] max-w-[760px] 2xl:max-w-[820px] rounded-[32px] overflow-hidden shadow-[0_20px_55px_rgba(44,30,24,0.08)] border border-[#E8DEC9] bg-[#FAF6F0]">
               <Image
-                src="/hero-living-room-showcase.webp"
+                src="/hero-living-room-img1-4k.webp"
                 alt="Fahad Ali Interior Luxury Living Room Showcase"
                 fill
                 priority
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover object-center transform hover:scale-102 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/8 via-transparent to-transparent pointer-events-none" />
             </div>
           </div>
 
@@ -246,10 +246,10 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
             </button>
           </div>
 
-          {/* 5. Mobile Living Room Image Container with Dots */}
-          <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden shadow-sm border border-[#EBE2D5] mt-1">
+          {/* 5. Mobile Living Room Image Container with Dots (Matches Image 1 100%) */}
+          <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-[#EBE2D5] bg-[#FAF6F0] mt-1">
             <Image
-              src="/hero-living-room-showcase.webp"
+              src="/hero-living-room-img1-4k.webp"
               alt="Luxury Living Room"
               fill
               priority

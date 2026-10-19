@@ -21,7 +21,7 @@ export default async function HomePage() {
       <link
         rel="preload"
         as="image"
-        href="/hero-living-room-showcase.webp"
+        href="/hero-living-room-img1-4k.webp"
         fetchPriority="high"
       />
       <main className="min-h-screen bg-[#FCFAF7] text-[#221814] font-sans">
