@@ -67,11 +67,11 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       .catch(() => {});
   }, [mounted, session?.user]);
 
-  // Left primary links with outline icons + text
+  // Left primary links with outline icons + text: 1 Home, 2 Contact Us, 3 About
   const leftLinks = [
     { label: 'Home', href: '/', icon: Home },
-    { label: 'About', href: '/about', icon: Sparkles },
     { label: 'Contact Us', href: '/contact', icon: PhoneCall },
+    { label: 'About', href: '/about', icon: Sparkles },
   ];
 
   const isSolid = isScrolled || pathname !== '/';
@@ -92,18 +92,8 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       >
           
           <div className="w-full max-w-[1600px] 2xl:max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 lg:h-20 flex items-center justify-between">
-            {/* LEFT SECTION: Search, Home, About, Contact Us */}
-            <div className="hidden lg:flex items-center gap-6 xl:gap-8 w-2/5">
-              <button 
-                onClick={onSearchOpen} 
-                className={`flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-all duration-300 hover:opacity-100 hover:text-[#B88E4B] cursor-pointer whitespace-nowrap ${
-                  isSolid ? 'text-[#2C1E18] opacity-90' : 'text-white opacity-90'
-                }`}
-                aria-label="Search Catalog"
-              >
-                <Search size={16} strokeWidth={1.7} />
-                <span>Search</span>
-              </button>
+            {/* LEFT SECTION: 1 Home, 2 Contact Us, 3 About, 4 Search */}
+            <div className="hidden lg:flex items-center gap-5 xl:gap-7 w-2/5">
               {leftLinks.map((link) => {
                 const IconComponent = link.icon;
                 const isActive = pathname === link.href;
@@ -114,10 +104,12 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                     prefetch={false}
                     className={`flex items-center gap-2 text-[14px] xl:text-[15px] font-medium tracking-wide whitespace-nowrap transition-all duration-300 ${
                       isActive 
-                        ? 'underline underline-offset-8 opacity-100 text-[#B88E4B]' 
+                        ? isSolid
+                          ? 'underline underline-offset-8 opacity-100 text-[#B88E4B] font-semibold' 
+                          : 'underline underline-offset-8 opacity-100 text-white font-semibold decoration-[#F3E5AB]'
                         : isSolid
                           ? 'text-[#2C1E18] opacity-90 hover:opacity-100 hover:text-[#B88E4B] hover:underline hover:underline-offset-8'
-                          : 'text-white opacity-90 hover:opacity-100 hover:underline hover:underline-offset-8'
+                          : 'text-white opacity-90 hover:opacity-100 hover:text-white hover:underline hover:underline-offset-8'
                     }`}
                   >
                     <IconComponent size={16} strokeWidth={1.7} />
@@ -125,6 +117,20 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                   </Link>
                 );
               })}
+
+              {/* 4. Search Icon Button */}
+              <button 
+                onClick={onSearchOpen} 
+                className={`flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-all duration-300 hover:opacity-100 cursor-pointer whitespace-nowrap ${
+                  isSolid 
+                    ? 'text-[#2C1E18] opacity-90 hover:text-[#B88E4B] hover:underline hover:underline-offset-8' 
+                    : 'text-white opacity-90 hover:opacity-100 hover:text-white hover:underline hover:underline-offset-8'
+                }`}
+                aria-label="Search Catalog"
+              >
+                <Search size={16} strokeWidth={1.7} />
+                <span>Search</span>
+              </button>
             </div>
 
             {/* MOBILE HAMBURGER & SEARCH (LEFT SIDE) */}
@@ -311,6 +317,22 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           </Link>
 
 
+          {/* CONTACT US */}
+          <Link
+            href="/contact"
+            prefetch={false}
+            onClick={() => setMobileOpen(false)}
+            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
+          >
+            <div className="flex items-center gap-3.5">
+              <PhoneCall size={20} strokeWidth={1.5} className="text-[#8A5A2B] group-hover:scale-125 group-hover:rotate-6 group-hover:text-[#C9A96E] transition-all duration-300" />
+              <span className="font-serif text-xs font-semibold tracking-widest uppercase text-[#2C1E18] group-hover:text-[#8A5A2B] transition-colors duration-300">
+                CONTACT US
+              </span>
+            </div>
+            <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
+          </Link>
+
           {/* ABOUT */}
           <Link
             href="/about"
@@ -322,22 +344,6 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               <Sparkles size={20} strokeWidth={1.5} className="text-[#8A5A2B] group-hover:scale-125 group-hover:rotate-6 group-hover:text-[#C9A96E] transition-all duration-300" />
               <span className="font-serif text-xs font-semibold tracking-widest uppercase text-[#2C1E18] group-hover:text-[#8A5A2B] transition-colors duration-300">
                 ABOUT
-              </span>
-            </div>
-            <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
-          </Link>
-
-          {/* 5. CONTACT US */}
-          <Link
-            href="/contact"
-            prefetch={false}
-            onClick={() => setMobileOpen(false)}
-            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
-          >
-            <div className="flex items-center gap-3.5">
-              <PhoneCall size={20} strokeWidth={1.5} className="text-[#8A5A2B] group-hover:scale-125 group-hover:rotate-6 group-hover:text-[#C9A96E] transition-all duration-300" />
-              <span className="font-serif text-xs font-semibold tracking-widest uppercase text-[#2C1E18] group-hover:text-[#8A5A2B] transition-colors duration-300">
-                CONTACT US
               </span>
             </div>
             <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
