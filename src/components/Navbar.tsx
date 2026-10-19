@@ -92,7 +92,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       >
           
           <div className="w-full max-w-[1600px] 2xl:max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 lg:h-20 flex items-center justify-between">
-            {/* LEFT SECTION: Home, Collections, About, Contact Us */}
+            {/* LEFT SECTION: Home, About, Contact Us */}
             <div className="hidden lg:flex items-center gap-6 xl:gap-8 w-2/5">
               {leftLinks.map((link) => {
                 const IconComponent = link.icon;
