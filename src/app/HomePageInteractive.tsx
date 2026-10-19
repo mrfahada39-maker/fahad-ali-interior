@@ -225,13 +225,6 @@ export default function HomePageInteractive({
               <span>EXPLORE COLLECTION</span>
               <span className="text-sm">→</span>
             </Link>
-            <Link
-              href="/#signature-categories"
-              prefetch={false}
-              className="gsap-hero-magnetic w-full sm:w-auto bg-white/10 backdrop-blur-md border border-[#E2D1BC]/60 text-[#F3E5AB] hover:bg-white/20 font-black text-xs sm:text-sm px-8 py-3.5 sm:py-4 rounded-xl tracking-widest uppercase transition-all duration-300 flex items-center justify-center cursor-pointer will-change-transform active:scale-95 shadow-md"
-            >
-              VIEW CATALOG
-            </Link>
           </div>
         </div>
 

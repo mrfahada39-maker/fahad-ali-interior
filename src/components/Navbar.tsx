@@ -70,7 +70,6 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   // Left primary links with outline icons + text
   const leftLinks = [
     { label: 'Home', href: '/', icon: Home },
-    { label: 'Collections', href: '/#signature-categories', icon: Armchair },
     { label: 'About', href: '/about', icon: Sparkles },
     { label: 'Contact Us', href: '/contact', icon: PhoneCall },
   ];
@@ -304,21 +303,6 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
           </Link>
 
-          {/* 4. COLLECTIONS */}
-          <Link
-            href="/#signature-categories"
-            prefetch={false}
-            onClick={() => setMobileOpen(false)}
-            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
-          >
-            <div className="flex items-center gap-3.5">
-              <LayoutGrid size={20} strokeWidth={1.5} className="text-[#8A5A2B] group-hover:scale-125 group-hover:rotate-6 group-hover:text-[#C9A96E] transition-all duration-300" />
-              <span className="font-serif text-xs font-semibold tracking-widest uppercase text-[#2C1E18] group-hover:text-[#8A5A2B] transition-colors duration-300">
-                COLLECTIONS
-              </span>
-            </div>
-            <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
-          </Link>
 
           {/* ABOUT */}
           <Link

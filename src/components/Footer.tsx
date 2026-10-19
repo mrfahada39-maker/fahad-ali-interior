@@ -117,7 +117,6 @@ export default function Footer() {
             <ul className="space-y-3 text-[16px] sm:text-[17px] font-medium text-[#5C483E] flex flex-col items-center text-center">
               {[
                 { label: 'Home', href: '/' },
-                { label: 'Collections', href: '/#signature-categories' },
                 { label: 'Best Sellers', href: '/#signature-categories' },
                 { label: 'Custom Furniture', href: '/contact' },
                 { label: 'Contact Us', href: '/contact' },
@@ -276,7 +275,6 @@ export default function Footer() {
               title: 'MENU',
               links: [
                 { label: 'Home', href: '/' },
-                { label: 'Collections', href: '/#signature-categories' },
                 { label: 'Best Sellers', href: '/#signature-categories' },
                 { label: 'Custom Furniture', href: '/contact' },
                 { label: 'Contact Us', href: '/contact' },

@@ -45,6 +45,25 @@ const nextConfig: NextConfig = {
   httpAgentOptions: {
     keepAlive: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/shop',
+        destination: '/#signature-categories',
+        permanent: true,
+      },
+      {
+        source: '/shop/categories',
+        destination: '/#signature-categories',
+        permanent: true,
+      },
+      {
+        source: '/shop/:slug*',
+        destination: '/#signature-categories',
+        permanent: true,
+      },
+    ];
+  },
 
   typescript: {
     ignoreBuildErrors: false,
