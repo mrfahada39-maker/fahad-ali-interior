@@ -92,8 +92,18 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       >
           
           <div className="w-full max-w-[1600px] 2xl:max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 lg:h-20 flex items-center justify-between">
-            {/* LEFT SECTION: Home, About, Contact Us */}
+            {/* LEFT SECTION: Search, Home, About, Contact Us */}
             <div className="hidden lg:flex items-center gap-6 xl:gap-8 w-2/5">
+              <button 
+                onClick={onSearchOpen} 
+                className={`flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-all duration-300 hover:opacity-100 hover:text-[#B88E4B] cursor-pointer whitespace-nowrap ${
+                  isSolid ? 'text-[#2C1E18] opacity-90' : 'text-white opacity-90'
+                }`}
+                aria-label="Search Catalog"
+              >
+                <Search size={16} strokeWidth={1.7} />
+                <span>Search</span>
+              </button>
               {leftLinks.map((link) => {
                 const IconComponent = link.icon;
                 const isActive = pathname === link.href;
@@ -117,14 +127,21 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               })}
             </div>
 
-            {/* MOBILE HAMBURGER */}
-            <div className="lg:hidden flex items-center w-1/4">
+            {/* MOBILE HAMBURGER & SEARCH (LEFT SIDE) */}
+            <div className="lg:hidden flex items-center gap-2.5 w-1/4">
               <button 
                 onClick={() => setMobileOpen(true)} 
                 className="p-1.5 transition-all duration-300 hover:scale-110 focus:outline-none cursor-pointer" 
                 aria-label="Open Navigation Menu"
               >
                 <LayoutGrid size={19} strokeWidth={1.6} className="text-current opacity-90 hover:opacity-100" />
+              </button>
+              <button 
+                onClick={onSearchOpen} 
+                className="p-1.5 transition-all duration-300 hover:scale-110 focus:outline-none cursor-pointer" 
+                aria-label="Search Catalog"
+              >
+                <Search size={18} strokeWidth={1.7} className="text-current opacity-90 hover:opacity-100" />
               </button>
             </div>
 
@@ -147,16 +164,6 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             {/* RIGHT SECTION: Search, Notification, Profile, Cart */}
             <div className="flex items-center justify-end gap-4 xl:gap-6 w-1/4 lg:w-2/5">
               
-              {/* 1. Sleek Search Button */}
-              <button 
-                onClick={onSearchOpen} 
-                className="hidden sm:flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-opacity hover:opacity-75 cursor-pointer whitespace-nowrap"
-                aria-label="Search Catalog"
-              >
-                <Search size={16} strokeWidth={1.7} />
-                <span>Search</span>
-              </button>
-
               {/* 2. Notification */}
               {mounted && session?.user ? (
                 <div className="hidden sm:flex items-center">
