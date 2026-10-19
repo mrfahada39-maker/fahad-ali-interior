@@ -530,123 +530,92 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       </>
       )}
 
-      {/* ── 100% FLUSH BOTTOM NAVBAR (HAUTE COUTURE 24K ROYAL GOLD & OBSIDIAN GLASS) ── */}
+      {/* ── CLEAN LUXURY WHITE/IVORY BOTTOM NAVIGATION (MATCHES IMAGE 1 100%) ── */}
       <nav 
         suppressHydrationWarning
         aria-label="Mobile Navigation Bar"
-        className="fixed bottom-0 left-0 right-0 w-full z-40 lg:hidden bg-[#0D0704] border-t border-[#D4AF37]/50 text-white shadow-[0_-12px_45px_rgba(0,0,0,0.9),0_0_30px_rgba(212,175,55,0.15)] px-1 pt-1.5 pb-2 h-[66px] sm:h-[70px] flex items-center justify-around select-none overflow-visible before:absolute before:inset-x-0 before:top-0 before:h-[1.5px] before:bg-gradient-to-r before:from-transparent before:via-[#FFEAA0] before:to-transparent"
+        className="fixed bottom-0 left-0 right-0 w-full z-40 lg:hidden bg-white/95 md:backdrop-blur-md border-t border-[#EAE1D5] shadow-[0_-4px_25px_rgba(44,30,24,0.06)] px-2 pt-1.5 pb-2 h-[62px] flex items-center justify-around select-none"
       >
-        {/* 1. Shop */}
-        <Link prefetch={false}
-          href="/#signature-categories"
-          className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
-            mounted && pathname.startsWith('/product') ? '-top-3.5' : 'py-1'
-          }`}
-        >
-          {/* 24K Gold Liquid Bubble Dome (Active) */}
-          <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] items-center justify-center ${mounted && pathname.startsWith('/product') ? 'flex' : 'hidden'}`}>
-            <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
-              <LayoutGrid size={24} strokeWidth={2.4} className="text-[#FFEAA0] drop-shadow-[0_0_10px_rgba(255,234,160,0.95)]" />
-            </div>
-          </div>
-          {/* Flat Inactive Item */}
-          <LayoutGrid size={23} strokeWidth={1.8} className={`text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200 ${mounted && pathname.startsWith('/product') ? 'hidden' : 'block'}`} />
-          <span className={`text-[9.5px] mt-0.5 font-serif uppercase tracking-widest transition-colors ${
-            mounted && pathname.startsWith('/product')
-              ? 'font-black bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#FFEAA0] bg-clip-text text-transparent drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]'
-              : 'font-medium text-[#D4C3B3] group-hover:text-[#FFEAA0]'
-          }`}>
-            Shop
-          </span>
-          {mounted && pathname.startsWith('/product') && (
-            <span className="w-3.5 h-0.5 rounded-full bg-gradient-to-r from-[#FFDF78] via-[#FFEAA0] to-[#FFDF78] shadow-[0_0_8px_#FFEAA0] mt-0.5 animate-pulse" />
-          )}
-        </Link>
-
-        {/* 2. Search */}
-        <button
-          onClick={onSearchOpen}
-          className="relative flex-1 flex flex-col items-center justify-center py-1 text-[#E5D5BA] hover:text-[#FFEAA0] transition-all duration-200 cursor-pointer active:scale-90 group"
-          aria-label="Search Catalog"
-        >
-          <Search size={23} strokeWidth={1.8} className="text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200" />
-          <span className="text-[9.5px] mt-0.5 font-serif uppercase tracking-widest font-medium text-[#D4C3B3] group-hover:text-[#FFEAA0]">
-            Search
-          </span>
-        </button>
-
-        {/* 3. 👑 HOME (PROMINENT 24K GOLD JEWEL IN THE CENTER) */}
-        <Link prefetch={false}
+        {/* 1. Home */}
+        <Link 
+          prefetch={false}
           href="/"
-          className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
-            mounted && pathname === '/' ? '-top-3.5' : 'py-1'
-          }`}
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
         >
-          {/* 24K Gold Liquid Bubble Dome (Active) */}
-          <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] items-center justify-center ${mounted && pathname === '/' ? 'flex' : 'hidden'}`}>
-            <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
-              <Compass size={25} strokeWidth={2.4} className="text-[#FFEAA0] drop-shadow-[0_0_10px_rgba(255,234,160,0.95)]" />
-            </div>
-          </div>
-          {/* Flat Inactive Item */}
-          <Compass size={24} strokeWidth={1.8} className={`text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200 ${mounted && pathname === '/' ? 'hidden' : 'block'}`} />
-          <span className={`text-[9.5px] mt-0.5 font-serif uppercase tracking-widest transition-colors ${
-            mounted && pathname === '/'
-              ? 'font-black bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#FFEAA0] bg-clip-text text-transparent drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]'
-              : 'font-medium text-[#D4C3B3] group-hover:text-[#FFEAA0]'
-          }`}>
+          <Home 
+            size={20} 
+            strokeWidth={pathname === '/' ? 2.2 : 1.8} 
+            className={pathname === '/' ? 'text-[#B88E4B]' : 'text-[#7D6F64]'} 
+          />
+          <span className={`text-[10px] mt-0.5 tracking-wide ${pathname === '/' ? 'font-bold text-[#B88E4B]' : 'font-medium text-[#7D6F64]'}`}>
             Home
           </span>
-          {mounted && pathname === '/' && (
-            <span className="w-4 h-0.5 rounded-full bg-gradient-to-r from-[#FFDF78] via-[#FFEAA0] to-[#FFDF78] shadow-[0_0_8px_#FFEAA0] mt-0.5 animate-pulse" />
+          {pathname === '/' && (
+            <span className="w-5 h-0.5 rounded-full bg-[#B88E4B] mt-0.5" />
           )}
         </Link>
+
+        {/* 2. Shop */}
+        <Link 
+          prefetch={false}
+          href="/#signature-categories"
+          onClick={(e) => {
+            const el = document.getElementById('signature-categories');
+            if (el) {
+              e.preventDefault();
+              el.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
+        >
+          <LayoutGrid size={20} strokeWidth={1.8} className="text-[#7D6F64]" />
+          <span className="text-[10px] mt-0.5 font-medium text-[#7D6F64] tracking-wide">
+            Shop
+          </span>
+        </Link>
+
+        {/* 3. Wishlist */}
+        <button
+          onClick={() => useWishlistDrawerStore.getState().openDrawer()}
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
+          aria-label="Wishlist"
+        >
+          <Heart size={20} strokeWidth={1.8} className="text-[#7D6F64]" />
+          <span className="text-[10px] mt-0.5 font-medium text-[#7D6F64] tracking-wide">
+            Wishlist
+          </span>
+        </button>
 
         {/* 4. Cart */}
         <button
           onClick={openCart}
-          className="relative flex-1 flex flex-col items-center justify-center py-1 transition-all duration-300 cursor-pointer active:scale-90 group"
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
           aria-label="Shopping Cart"
         >
           <div className="relative">
-            <ShoppingBag size={23} strokeWidth={1.8} className="text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200" />
+            <ShoppingBag size={20} strokeWidth={1.8} className="text-[#7D6F64]" />
             {mounted && cartItemCount > 0 && (
-              <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-0.5 rounded-full bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#C9A96E] text-[#1A0E07] text-[8.5px] font-black flex items-center justify-center shadow-[0_0_10px_rgba(255,234,160,0.9)] border border-[#0D0704] animate-pulse">
+              <span className="absolute -top-1 -right-2 min-w-[15px] h-[15px] px-0.5 rounded-full bg-[#C59B4B] text-white text-[8.5px] font-bold flex items-center justify-center shadow-xs">
                 {cartItemCount}
               </span>
             )}
           </div>
-          <span className="text-[9.5px] mt-0.5 font-serif uppercase tracking-widest font-medium text-[#D4C3B3] group-hover:text-[#FFEAA0]">
+          <span className="text-[10px] mt-0.5 font-medium text-[#7D6F64] tracking-wide">
             Cart
           </span>
         </button>
 
         {/* 5. Account */}
-        <Link prefetch={false}
+        <Link 
+          prefetch={false}
           href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
           onClick={mounted && session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}
-          className={`relative flex-1 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 group ${
-            mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? '-top-3.5' : 'py-1'
-          }`}
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
         >
-          {/* 24K Gold Liquid Bubble Dome (Active) */}
-          <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br from-[#FFEAA0] via-[#C9A96E] to-[#6E4B1F] p-[2.5px] shadow-[0_8px_25px_rgba(212,175,55,0.8),0_0_15px_rgba(255,234,160,0.6),inset_0_1.5px_2px_rgba(255,255,255,0.9)] items-center justify-center ${mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? 'flex' : 'hidden'}`}>
-            <div className="w-full h-full rounded-full bg-gradient-to-b from-[#28170D] via-[#1A0E07] to-[#0D0603] flex items-center justify-center shadow-inner">
-              <Crown size={24} strokeWidth={2.4} className="text-[#FFEAA0] drop-shadow-[0_0_10px_rgba(255,234,160,0.95)]" />
-            </div>
-          </div>
-          {/* Flat Inactive Item */}
-          <Crown size={23} strokeWidth={1.8} className={`text-[#E5D5BA] group-hover:scale-110 group-hover:text-[#FFEAA0] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] transition-all duration-200 ${mounted && (pathname.includes('dashboard') || pathname.includes('admin')) ? 'hidden' : 'block'}`} />
-          <span className={`text-[9.5px] mt-0.5 font-serif uppercase tracking-widest transition-colors ${
-            mounted && (pathname.includes('dashboard') || pathname.includes('admin'))
-              ? 'font-black bg-gradient-to-r from-[#FFEAA0] via-[#F5C46B] to-[#FFEAA0] bg-clip-text text-transparent drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]'
-              : 'font-medium text-[#D4C3B3] group-hover:text-[#FFEAA0]'
-          }`}>
-            {mounted && session?.user ? 'Account' : 'Login'}
+          <User size={20} strokeWidth={1.8} className="text-[#7D6F64]" />
+          <span className="text-[10px] mt-0.5 font-medium text-[#7D6F64] tracking-wide">
+            Account
           </span>
-          {mounted && (pathname.includes('dashboard') || pathname.includes('admin')) && (
-            <span className="w-3.5 h-0.5 rounded-full bg-gradient-to-r from-[#FFDF78] via-[#FFEAA0] to-[#FFDF78] shadow-[0_0_8px_#FFEAA0] mt-0.5 animate-pulse" />
-          )}
         </Link>
       </nav>
     </>

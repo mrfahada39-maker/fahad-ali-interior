@@ -237,7 +237,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
               </div>
               <div className="text-left">
                 <p className="font-serif font-bold text-[11px] text-[#1F1A17] leading-tight">
-                  Watch 30s Video
+                  Watch 20s Video
                 </p>
                 <p className="text-[9.5px] text-[#8C7A6D]">
                   Experience Luxury
