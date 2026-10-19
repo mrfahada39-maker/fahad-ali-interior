@@ -67,167 +67,197 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       .catch(() => {});
   }, [mounted, session?.user]);
 
-  // Left primary links with outline icons + text: 1 Home, 2 Contact Us, 3 About
-  const leftLinks = [
-    { label: 'Home', href: '/', icon: Home },
-    { label: 'Contact Us', href: '/contact', icon: PhoneCall },
-    { label: 'About', href: '/about', icon: Sparkles },
+  const desktopNavLinks = [
+    { label: 'Home', href: '/' },
+    { label: 'Shop', href: '/#signature-categories' },
+    { label: 'Blog', href: '/#signature-categories' },
+    { label: 'Collection', href: '/#signature-categories' },
+    { label: 'About', href: '/about' },
+    { label: 'Service', href: '/contact' },
+    { label: 'Contact', href: '/contact' },
   ];
 
-  const isSolid = isScrolled || pathname !== '/';
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('/#')) {
+      const targetId = href.replace('/#', '');
+      const el = document.getElementById(targetId);
+      if (el) {
+        e.preventDefault();
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
     <>
-      {/* ── STICKY EDITORIAL LUXURY HEADER ── */}
-      <header suppressHydrationWarning className="fixed top-0 left-0 right-0 z-50 w-full transition-colors duration-500 font-sans">
-        
-      {/* Main Full-Width Editorial Navbar */}
-      <nav 
-        suppressHydrationWarning
-        className={`w-full transition-all duration-500 border-b ${
-          isSolid 
-            ? "bg-[#FCFAF7]/98 md:backdrop-blur-xl text-[#221814] border-[#E7DDD0] shadow-[0_4px_25px_rgba(44,30,24,0.04)]" 
-            : "bg-gradient-to-b from-black/80 via-black/45 to-transparent text-white border-white/10"
-        }`}
-      >
-          
-          <div className="w-full max-w-[1600px] 2xl:max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 lg:h-20 flex items-center justify-between">
-            {/* LEFT SECTION: 1 Home, 2 Contact Us, 3 About, 4 Search */}
-            <div className="hidden lg:flex items-center gap-5 xl:gap-7 w-2/5">
-              {leftLinks.map((link) => {
-                const IconComponent = link.icon;
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    prefetch={false}
-                    className={`flex items-center gap-2 text-[14px] xl:text-[15px] font-medium tracking-wide whitespace-nowrap transition-all duration-300 ${
-                      isActive 
-                        ? isSolid
-                          ? 'underline underline-offset-8 opacity-100 text-[#B88E4B] font-semibold' 
-                          : 'underline underline-offset-8 opacity-100 text-white font-semibold decoration-[#F3E5AB]'
-                        : isSolid
-                          ? 'text-[#2C1E18] opacity-90 hover:opacity-100 hover:text-[#B88E4B] hover:underline hover:underline-offset-8'
-                          : 'text-white opacity-90 hover:opacity-100 hover:text-white hover:underline hover:underline-offset-8'
-                    }`}
-                  >
-                    <IconComponent size={16} strokeWidth={1.7} />
-                    <span>{link.label}</span>
-                  </Link>
-                );
-              })}
+      {/* ── STICKY FLOATING EDITORIAL LUXURY NAVBAR (MATCHES MOCKUP 100%) ── */}
+      <header suppressHydrationWarning className="fixed top-0 left-0 right-0 z-50 w-full px-3 sm:px-6 pt-2.5 sm:pt-3 pointer-events-none font-sans">
+        <nav 
+          suppressHydrationWarning
+          className="pointer-events-auto w-full max-w-[1550px] mx-auto bg-white/95 md:backdrop-blur-md rounded-[20px] sm:rounded-full border border-[#EBE1D3] shadow-[0_4px_25px_rgba(44,30,24,0.06)] px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between transition-all duration-300"
+        >
+          {/* ── DESKTOP LEFT SECTION: BRAND LOGO WITH ICON ── */}
+          <div className="hidden lg:flex items-center">
+            <Link href="/" prefetch={false} className="flex items-center gap-2.5 group shrink-0">
+              <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-[#FAF5ED] border border-[#E8DFC8] flex items-center justify-center text-[#B88E4B] shrink-0">
+                <svg className="w-5 h-5 xl:w-6 xl:h-6 fill-none stroke-[#B88E4B] stroke-[1.8]" viewBox="0 0 24 24">
+                  <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
+                  <path d="M7 16h10M8 12h8" />
+                </svg>
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="font-serif font-black text-base xl:text-lg text-[#1F1A17] tracking-tight leading-none group-hover:text-[#B88E4B] transition-colors whitespace-nowrap">
+                  Fahad Ali Interior
+                </span>
+                <span className="text-[8px] xl:text-[9px] font-bold tracking-[0.2em] uppercase text-[#A67C37] mt-1 leading-none whitespace-nowrap">
+                  LUXURY FURNITURE • MODERN LIVING
+                </span>
+              </div>
+            </Link>
+          </div>
 
-              {/* 4. Search Icon Button */}
+          {/* ── DESKTOP CENTER SECTION: NAV LINKS ── */}
+          <div className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {desktopNavLinks.map((link) => {
+              const isActive = (link.href === '/' && pathname === '/') || (link.href !== '/' && !link.href.startsWith('/#') && pathname === link.href);
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  prefetch={false}
+                  onClick={(e) => handleNavClick(e, link.href)}
+                  className={`text-xs xl:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    isActive
+                      ? 'bg-[#C59B4B] text-white px-4.5 py-1.5 rounded-full shadow-xs'
+                      : 'text-[#4A3E38] hover:text-[#C59B4B] px-3 py-1.5 rounded-full hover:bg-[#FAF5ED]'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* ── DESKTOP RIGHT SECTION: SEARCH, WISHLIST, CART, ALERTS, PROFILE ── */}
+          <div className="hidden lg:flex items-center gap-2 xl:gap-2.5">
+            {/* 1. Search */}
+            <button 
+              onClick={onSearchOpen} 
+              className="w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-[#FAF2E5] text-[#2C1E18] hover:text-[#B88E4B] flex items-center justify-center transition-colors cursor-pointer"
+              aria-label="Search Catalog"
+            >
+              <Search size={16} strokeWidth={1.8} />
+            </button>
+
+            {/* 2. Wishlist */}
+            <button
+              onClick={() => useWishlistDrawerStore.getState().openDrawer()}
+              className="w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-[#FAF2E5] text-[#2C1E18] hover:text-[#B88E4B] flex items-center justify-center transition-colors cursor-pointer"
+              aria-label="Wishlist"
+            >
+              <Heart size={16} strokeWidth={1.8} />
+            </button>
+
+            {/* 3. Shopping Cart */}
+            <button 
+              onClick={openCart} 
+              className="relative w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-[#FAF2E5] text-[#2C1E18] hover:text-[#B88E4B] flex items-center justify-center transition-colors cursor-pointer"
+              aria-label="Shopping Cart"
+            >
+              <ShoppingBag size={16} strokeWidth={1.8} />
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-[#C59B4B] text-white text-[9.5px] font-bold flex items-center justify-center px-1">
+                {mounted ? cartItemCount : 0}
+              </span>
+            </button>
+
+            {/* 4. Notifications / Alerts */}
+            {mounted && session?.user ? (
+              <div className="flex items-center">
+                <NotificationBell />
+              </div>
+            ) : (
               <button 
-                onClick={onSearchOpen} 
-                className={`flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-all duration-300 hover:opacity-100 cursor-pointer whitespace-nowrap ${
-                  isSolid 
-                    ? 'text-[#2C1E18] opacity-90 hover:text-[#B88E4B] hover:underline hover:underline-offset-8' 
-                    : 'text-white opacity-90 hover:opacity-100 hover:text-white hover:underline hover:underline-offset-8'
-                }`}
-                aria-label="Search Catalog"
+                onClick={onAuthOpen}
+                className="relative w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-[#FAF2E5] text-[#2C1E18] hover:text-[#B88E4B] flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Notifications"
               >
-                <Search size={16} strokeWidth={1.7} />
-                <span>Search</span>
+                <Bell size={16} strokeWidth={1.8} />
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-[#C59B4B] text-white text-[9.5px] font-bold flex items-center justify-center px-1">
+                  {unreadCount}
+                </span>
               </button>
-            </div>
+            )}
 
-            {/* MOBILE HAMBURGER & SEARCH (LEFT SIDE) */}
-            <div className="lg:hidden flex items-center gap-2.5 w-1/4">
+            {/* 5. Account / Profile */}
+            <Link
+              href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
+              prefetch={false}
+              onClick={mounted && session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}
+              className="w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-[#FAF2E5] text-[#2C1E18] hover:text-[#B88E4B] flex items-center justify-center transition-colors"
+              aria-label="Profile / Account"
+            >
+              <User size={16} strokeWidth={1.8} />
+            </Link>
+
+            {mounted && session?.user && (
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-red-50 text-red-500 flex items-center justify-center transition-colors cursor-pointer"
+                title="Log out"
+              >
+                <LogOut size={15} strokeWidth={1.8} />
+              </button>
+            )}
+          </div>
+
+          {/* ── MOBILE NAV BAR (LG:HIDDEN) ── */}
+          <div className="lg:hidden flex items-center justify-between w-full">
+            {/* Mobile Left: Menu & Search */}
+            <div className="flex items-center gap-2">
               <button 
                 onClick={() => setMobileOpen(true)} 
-                className="p-1.5 transition-all duration-300 hover:scale-110 focus:outline-none cursor-pointer" 
+                className="w-9 h-9 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#2C1E18] active:scale-95 transition-transform" 
                 aria-label="Open Navigation Menu"
               >
-                <LayoutGrid size={19} strokeWidth={1.6} className="text-current opacity-90 hover:opacity-100" />
+                <LayoutGrid size={18} strokeWidth={1.8} />
               </button>
               <button 
                 onClick={onSearchOpen} 
-                className="p-1.5 transition-all duration-300 hover:scale-110 focus:outline-none cursor-pointer" 
+                className="w-9 h-9 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#2C1E18] active:scale-95 transition-transform" 
                 aria-label="Search Catalog"
               >
-                <Search size={18} strokeWidth={1.7} className="text-current opacity-90 hover:opacity-100" />
+                <Search size={17} strokeWidth={1.8} />
               </button>
             </div>
 
-            {/* CENTER SECTION: Logo (Original Font Weight + Two-Tone Color Combination) */}
-            <div className="flex justify-center items-center w-2/4 lg:w-1/5 text-center">
-              <Link href="/" prefetch={false} className="group flex flex-col items-center">
-                <span className={`font-serif text-2xl min-[380px]:text-3xl sm:text-3xl lg:text-4xl font-normal tracking-wider uppercase transition-opacity group-hover:opacity-80 whitespace-nowrap drop-shadow-sm ${
-                  isSolid ? 'text-[#221814]' : 'text-white'
-                }`}>
-                  FAHAD ALI
-                </span>
-                <span className={`text-[9px] sm:text-[11px] tracking-[0.35em] font-light uppercase transition-colors -mt-0.5 ${
-                  isSolid ? 'text-[#B88E4B]' : 'text-[#F3E5AB]'
-                }`}>
-                  INTERIOR
-                </span>
-              </Link>
-            </div>
+            {/* Mobile Center: Brand Logo */}
+            <Link href="/" prefetch={false} className="flex flex-col items-center">
+              <span className="font-serif text-lg font-black tracking-wider uppercase text-[#1F1A17]">
+                FAHAD ALI
+              </span>
+              <span className="text-[8px] tracking-[0.3em] font-medium uppercase text-[#B88E4B] -mt-1">
+                INTERIOR
+              </span>
+            </Link>
 
-            {/* RIGHT SECTION: Search, Notification, Profile, Cart */}
-            <div className="flex items-center justify-end gap-4 xl:gap-6 w-1/4 lg:w-2/5">
-              
-              {/* 2. Notification */}
-              {mounted && session?.user ? (
-                <div className="hidden sm:flex items-center">
-                  <NotificationBell />
-                </div>
-              ) : (
-                <button 
-                  onClick={onAuthOpen}
-                  className="hidden sm:flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-opacity hover:opacity-75 cursor-pointer whitespace-nowrap"
-                  aria-label="Notifications"
-                >
-                  <Bell size={16} strokeWidth={1.7} />
-                  <span className="hidden xl:inline">Alerts</span>
-                </button>
-              )}
-
-              {/* Wishlist */}
+            {/* Mobile Right: Wishlist & Cart */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => useWishlistDrawerStore.getState().openDrawer()}
-                className="hidden sm:flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-opacity hover:opacity-75 cursor-pointer whitespace-nowrap"
+                className="w-9 h-9 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#2C1E18] active:scale-95 transition-transform"
                 aria-label="Wishlist"
               >
-                <Heart size={16} strokeWidth={1.7} />
-                <span className="hidden xl:inline">Wishlist</span>
+                <Heart size={17} strokeWidth={1.8} />
               </button>
-
-              {/* 3. Account / Profile */}
-              <Link
-                href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
-                prefetch={false}
-                onClick={mounted && session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}
-                className="hidden sm:flex items-center gap-1.5 text-[14px] xl:text-[15px] font-medium tracking-wide transition-opacity hover:opacity-75 whitespace-nowrap"
-                aria-label="Profile / Account"
-              >
-                <User size={16} strokeWidth={1.7} />
-                <span>{mounted && session?.user ? (isAdmin ? 'Admin' : 'Account') : 'Login'}</span>
-              </Link>
-
-              {mounted && session?.user && (
-                <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
-                  className="hidden sm:flex items-center gap-1 text-[14px] font-medium text-red-500 transition-opacity hover:opacity-75 cursor-pointer"
-                  title="Log out"
-                >
-                  <LogOut size={15} strokeWidth={1.7} />
-                  <span className="hidden xl:inline">Logout</span>
-                </button>
-              )}
-
-              {/* 4. Elegant Luxury Cart Button */}
               <button 
                 onClick={openCart} 
-                className="flex items-center gap-1.5 sm:gap-2 text-[14px] xl:text-[15px] font-medium tracking-wide transition-all duration-300 hover:scale-105 hover:opacity-85 cursor-pointer p-1 whitespace-nowrap"
+                className="relative w-9 h-9 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#2C1E18] active:scale-95 transition-transform" 
                 aria-label="Shopping Cart"
               >
-                <ShoppingBag size={19} strokeWidth={1.6} className="text-current opacity-90 hover:opacity-100" />
-                <span className="hidden sm:inline">Cart</span>
-                <span className="text-xs font-semibold">({mounted ? cartItemCount : 0})</span>
+                <ShoppingBag size={17} strokeWidth={1.8} />
+                <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] rounded-full bg-[#C59B4B] text-white text-[9px] font-bold flex items-center justify-center px-1">
+                  {mounted ? cartItemCount : 0}
+                </span>
               </button>
             </div>
           </div>

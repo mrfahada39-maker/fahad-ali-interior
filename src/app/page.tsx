@@ -21,15 +21,7 @@ export default async function HomePage() {
       <link
         rel="preload"
         as="image"
-        href="/hero-mobile.avif"
-        media="(max-width: 768px)"
-        fetchPriority="high"
-      />
-      <link
-        rel="preload"
-        as="image"
-        href="/hero-desktop.avif"
-        media="(min-width: 769px)"
+        href="/hero-living-room-2x.webp"
         fetchPriority="high"
       />
       <main className="min-h-screen bg-[#FCFAF7] text-[#221814] font-sans">
