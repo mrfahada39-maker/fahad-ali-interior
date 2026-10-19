@@ -73,7 +73,7 @@ export default function Footer() {
 
               <div className="transition-transform duration-200 hover:scale-[1.03] hover:-translate-y-0.5 active:scale-[0.97] w-fit">
                 <Link 
-                  href="/shop"
+                  href="/#signature-categories"
                   prefetch={false}
                   className="relative group overflow-hidden inline-flex items-center gap-2 bg-[#5C3D2E] hover:bg-[#4A2F22] text-white text-xs sm:text-sm font-semibold px-5 py-3 rounded-xl transition-all duration-300 shadow-md mb-4 hover:shadow-lg w-fit cursor-pointer"
                 >

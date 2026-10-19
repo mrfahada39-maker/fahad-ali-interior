@@ -55,7 +55,7 @@ export function DashboardWishlistTab({
         'Wishlist & Living Pieces',
         'Solid Sheesham specifications, Turkish velvet customization, Cloudinary high-res gallery, and instant bag allocation.',
         <Link
-          href="/shop"
+          href="/#signature-categories"
           className="inline-flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] text-white font-serif font-bold text-xs uppercase tracking-wider hover:brightness-110 transition-all shadow-md shrink-0 active:scale-95"
         >
           <Plus size={14} />
@@ -125,7 +125,7 @@ export function DashboardWishlistTab({
             Explore our private bespoke catalog and save handcrafted Solid Sheesham and Turkish velvet pieces to your royal suite.
           </p>
           <Link
-            href="/shop"
+            href="/#signature-categories"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#B88E4B] text-white font-serif font-bold text-xs shadow-md hover:bg-[#8C6239] transition-all"
           >
             <Plus size={14} /> Explore Master Catalog

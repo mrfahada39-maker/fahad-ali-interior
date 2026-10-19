@@ -133,7 +133,7 @@ export function WishlistDrawerPanel() {
             <Button
               onClick={() => {
                 closeDrawer();
-                router.push('/shop');
+                router.push('/#signature-categories');
               }}
               className="mt-5 bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] hover:brightness-110 text-white font-serif font-bold rounded-xl px-5 h-10 text-xs shadow-xs transition-all cursor-pointer"
             >

@@ -64,7 +64,7 @@ export default function CartPage() {
             <div className="text-center py-24">
               <p className="font-serif text-2xl text-theme-dark mb-4">Your cart is empty</p>
               <p className="text-theme-muted text-sm mb-8">Looks like you haven't added anything yet.</p>
-              <Link href="/shop" prefetch={true} className="bg-theme-dark text-white px-8 py-3.5 rounded-md text-xs font-semibold tracking-widest uppercase hover:bg-theme-muted transition-colors inline-block">
+              <Link href="/#signature-categories" prefetch={false} className="bg-theme-dark text-white px-8 py-3.5 rounded-md text-xs font-semibold tracking-widest uppercase hover:bg-theme-muted transition-colors inline-block">
                 Continue Shopping
               </Link>
             </div>
@@ -229,8 +229,8 @@ export default function CartPage() {
                       Proceed To Royal Checkout
                     </Link>
                     <Link
-                      href="/shop"
-                      prefetch={true}
+                      href="/#signature-categories"
+                      prefetch={false}
                       className="block w-full text-center text-stone-500 text-xs mt-3.5 hover:text-[#B88E4B] transition-colors relative z-10 font-bold"
                     >
                       ← Continue Curating Collection

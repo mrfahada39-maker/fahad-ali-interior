@@ -72,7 +72,7 @@ export default function ProductPageClient({
         <div className="text-center bg-white border-2 border-[#E7DDD0] p-8 rounded-[28px] shadow-sm max-w-md">
           <p className="font-serif text-2xl font-black text-[#221814] mb-3">Masterpiece Not Found</p>
           <p className="text-xs text-[#7A6048] mb-6">The requested furniture item may have been archived or customized.</p>
-          <Link href="/shop" prefetch={true} className="inline-flex items-center gap-2 px-6 py-3 bg-[#221814] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:bg-[#B88E4B] transition-all">
+          <Link href="/#signature-categories" prefetch={false} className="inline-flex items-center gap-2 px-6 py-3 bg-[#221814] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:bg-[#B88E4B] transition-all">
             Return to Luxury Catalog
           </Link>
         </div>
@@ -251,7 +251,7 @@ export default function ProductPageClient({
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-[#7A6048]">
             <Link href="/" className="hover:text-[#B88E4B] transition-colors">Home</Link>
             <span className="text-[#B88E4B]">/</span>
-            <Link href={`/shop?category=${encodeURIComponent(product.category || 'Living Room')}`} className="hover:text-[#B88E4B] transition-colors">{product.category || 'Catalog'}</Link>
+            <Link href="/#signature-categories" className="hover:text-[#B88E4B] transition-colors">{product.category || 'Catalog'}</Link>
             <span className="text-[#B88E4B]">/</span>
             <span className="text-[#221814] font-black truncate max-w-[240px]">{product.name}</span>
           </nav>

@@ -38,7 +38,7 @@ export function DashboardOverviewTab({
         '— Client Executive Suite',
         'Real-time bespoke commission tracking, timber seasoning radar, curated wishlist gallery, and direct master artisan concierge.',
         <Link
-          href="/shop"
+          href="/#signature-categories"
           className="w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] hover:brightness-110 text-white font-serif font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
         >
           <FileText size={15} />
@@ -91,7 +91,7 @@ export function DashboardOverviewTab({
                   <Coins size={28} className="text-[#C9A24D] mb-2 stroke-[1.5] opacity-80" />
                   <p className="font-serif text-sm font-bold text-[#1F1612]">No living room investments yet</p>
                   <p className="text-[11px] text-[#7A6354] mt-0.5 max-w-xs">Your bespoke acquisition trajectory will track here live once your first piece is commissioned.</p>
-                  <Link href="/shop" className="mt-2.5 text-[11px] font-bold uppercase tracking-wider text-[#8C6239] hover:underline flex items-center gap-1">
+                  <Link href="/#signature-categories" className="mt-2.5 text-[11px] font-bold uppercase tracking-wider text-[#8C6239] hover:underline flex items-center gap-1">
                     Browse Haute Catalog ↗
                   </Link>
                 </div>
@@ -224,7 +224,7 @@ export function DashboardOrdersTab({
         '& Bespoke Commissions',
         'Real-time fulfillment stages, customer WhatsApp hotline, timber seasoning validation, and invoice generation.',
         <Link
-          href="/shop"
+          href="/#signature-categories"
           className="inline-flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] text-white font-serif font-bold text-xs uppercase tracking-wider hover:brightness-110 transition-all shadow-md shrink-0 active:scale-95"
         >
           <ShoppingBag size={14} />

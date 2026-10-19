@@ -228,7 +228,7 @@ export default function OrdersPageClient() {
               {searchQuery ? `No orders matched your search query "${searchQuery}".` : 'You haven\'t placed any furniture orders in this category yet.'}
             </p>
             <Link
-              href="/shop"
+              href="/#signature-categories"
               prefetch={true}
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2A170D] via-[#1A0E07] to-[#0D0603] text-[#FFEAA0] font-serif font-bold text-xs uppercase tracking-wider rounded-xl hover:brightness-110 transition-all shadow-md active:scale-95"
             >

@@ -500,7 +500,7 @@ export default function Checkout() {
           </p>
 
           <Link
-            href="/shop"
+            href="/#signature-categories"
             className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#2A170D] via-[#1A0E07] to-[#0D0603] text-[#FFEAA0] font-serif font-bold text-xs sm:text-sm uppercase tracking-wider rounded-xl hover:brightness-110 transition-all shadow-md active:scale-95"
           >
             <Sparkles size={15} />
@@ -550,7 +550,7 @@ export default function Checkout() {
 
           <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full lg:w-auto shrink-0 relative z-10 pt-1 sm:pt-0 border-t sm:border-t-0 border-[#E7DDD0]/60">
             <Link
-              href="/shop"
+              href="/#signature-categories"
               className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold text-stone-600 hover:text-[#1F1612] bg-[#FAF7F2] hover:bg-[#F2ECE0] border border-[#DDD3C5] transition-all shadow-2xs cursor-pointer"
             >
               <ShoppingBag size={14} className="text-[#8C6239]" />

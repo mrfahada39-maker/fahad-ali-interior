@@ -75,7 +75,7 @@ export default function AboutPage() {
 
               <div className="pt-2">
                 <Link
-                  href="/shop"
+                  href="/#signature-categories"
                   prefetch={false}
                   className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
                 >

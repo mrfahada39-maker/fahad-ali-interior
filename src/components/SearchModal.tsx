@@ -36,10 +36,10 @@ const POPULAR_SEARCHES = [
 ];
 
 const CURATED_CATEGORIES = [
-  { name: 'Bedroom Suites', href: '/shop?category=Bedroom', count: '18 Pieces' },
-  { name: 'Living & Lounge', href: '/shop?category=Living', count: '24 Pieces' },
-  { name: 'Imperial Dining', href: '/shop?category=Dining', count: '12 Pieces' },
-  { name: 'Office & Study', href: '/shop?category=Office', count: '10 Pieces' }
+  { name: 'Bedroom Suites', href: '/#signature-categories', count: '18 Pieces' },
+  { name: 'Living & Lounge', href: '/#signature-categories', count: '24 Pieces' },
+  { name: 'Imperial Dining', href: '/#signature-categories', count: '12 Pieces' },
+  { name: 'Office & Study', href: '/#signature-categories', count: '10 Pieces' }
 ];
 
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
@@ -389,7 +389,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             {/* Bottom Footer Hint */}
             <div className="pt-3 border-t border-[#E2D6C8]/80 flex items-center justify-between text-[11px] text-[#7A6354] font-medium px-1">
               <span className="hidden sm:inline">Press <kbd className="px-1.5 py-0.5 rounded bg-white border border-[#E2D1BC] font-mono text-[10px]">ESC</kbd> to exit</span>
-              <Link href="/shop" onClick={onClose} className="flex items-center gap-1 font-serif font-bold text-[#8C6239] hover:text-[#B88E4B] transition-colors ml-auto">
+              <Link href="/#signature-categories" onClick={onClose} className="flex items-center gap-1 font-serif font-bold text-[#8C6239] hover:text-[#B88E4B] transition-colors ml-auto">
                 <span>View Full Masterpiece Catalog</span>
                 <ArrowRight size={12} />
               </Link>

@@ -29,7 +29,6 @@ export default function CartDrawer() {
   useEffect(() => {
     if (!isOpen) return;
     router.prefetch('/checkout');
-    router.prefetch('/shop');
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeCart();
     };
@@ -125,7 +124,7 @@ export default function CartDrawer() {
                 <Button
                   onClick={() => {
                     closeCart();
-                    router.push('/shop');
+                    router.push('/#signature-categories');
                   }}
                   className="mt-5 bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] hover:brightness-110 text-white font-serif font-bold rounded-xl px-5 h-10 text-xs shadow-xs transition-all cursor-pointer"
                 >

@@ -29,7 +29,7 @@ export default function NotFound() {
             Go Home
           </Link>
           <Link
-            href="/shop"
+            href="/#signature-categories"
             className="px-8 py-3 border border-theme-accent text-theme-accent font-semibold rounded-lg hover:bg-theme-accent/10 transition-colors"
           >
             Browse Shop

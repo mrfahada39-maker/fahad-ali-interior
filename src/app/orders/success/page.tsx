@@ -154,7 +154,7 @@ function SuccessContent() {
           </a>
 
           <Link
-            href="/shop"
+            href="/#signature-categories"
             prefetch={true}
             className="w-full sm:w-auto px-7 py-3.5 bg-white hover:bg-[#FAF7F2] text-[#5C483E] border border-[#E8DFC8] hover:border-[#D4AF37] font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2"
           >
