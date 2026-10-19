@@ -143,7 +143,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
           <div className="col-span-6 2xl:col-span-7 relative flex justify-end">
             <div className="relative w-full aspect-[16/10] max-w-[800px] rounded-[32px] overflow-hidden shadow-[0_15px_45px_rgba(44,30,24,0.09)] border border-[#EBE2D5]">
               <Image
-                src="/hero-living-room-2x.webp"
+                src="/hero-living-room-showcase.webp"
                 alt="Fahad Ali Interior Luxury Living Room Showcase"
                 fill
                 priority
@@ -249,7 +249,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
           {/* 5. Mobile Living Room Image Container with Dots */}
           <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden shadow-sm border border-[#EBE2D5] mt-1">
             <Image
-              src="/hero-living-room-2x.webp"
+              src="/hero-living-room-showcase.webp"
               alt="Luxury Living Room"
               fill
               priority
