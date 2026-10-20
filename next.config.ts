@@ -10,7 +10,7 @@ const withPWA = withSerwistInit({
   swSrc: 'src/app/sw.ts',
   swDest: 'public/sw.js',
   disable: isDev,
-  register: !isDev,
+  register: false,
   reloadOnOnline: true,
   // sw-push.js is our custom push SW — exclude from PWA precache, exclude video media
   exclude: [/sw-push\.js$/, /\.mp4$/i, /\.webm$/i],
@@ -106,7 +106,6 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    inlineCss: true,
     staleTimes: {
       dynamic: 30, // 30 seconds for dynamic pages (fresh cart, price, and stock updates)
       static: 600, // 10 minutes (5-30 min window) for static pages

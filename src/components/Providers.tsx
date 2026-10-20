@@ -50,9 +50,9 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
     // Register service worker purely in idle time to protect TBT
     const swTimer = setTimeout(() => {
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw-push.js').catch(() => {});
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
       }
-    }, 4500);
+    }, 5000);
 
     window.addEventListener('pointerdown', onFirstInteraction, { once: true, passive: true });
     window.addEventListener('keydown', onFirstInteraction, { once: true, passive: true });
