@@ -19,20 +19,19 @@ interface ModernLuxuryHeroProps {
   onShopClick?: () => void;
 }
 
-const DESKTOP_SHELF_CATEGORIES = [
+const ALL_12_CATEGORIES = [
   { name: 'Sofas', href: '/#cat-section-living-room', img: '/cat-thumb-sofas-2x.webp' },
+  { name: 'L-Shape', href: '/#cat-section-living-room', img: '/cat-thumb-lshape-2x.webp' },
   { name: 'Beds', href: '/#cat-section-bedroom', img: '/cat-thumb-beds-2x.webp' },
   { name: 'Dining', href: '/#cat-section-dining-room', img: '/cat-thumb-dining-2x.webp' },
+  { name: 'Coffee Chairs', href: '/#cat-section-coffee-chairs', img: '/cat-thumb-chairs-2x.webp' },
+  { name: 'Center Tables', href: '/#cat-section-center-tables', img: '/cat-thumb-centertables-2x.webp' },
   { name: 'Wardrobes', href: '/#cat-section-luxury-wardrobes', img: '/cat-thumb-wardrobes-2x.webp' },
-  { name: 'Chairs', href: '/#cat-section-coffee-chairs', img: '/cat-thumb-chairs-2x.webp' },
-  { name: 'Accessories', href: '/#cat-section-center-tables', img: '/cat-thumb-accessories-2x.webp' },
-];
-
-const MOBILE_CATEGORIES = [
-  { name: 'Sofas', href: '/#cat-section-living-room', img: '/cat-thumb-sofas-2x.webp' },
-  { name: 'Beds', href: '/#cat-section-bedroom', img: '/cat-thumb-beds-2x.webp' },
-  { name: 'Dining', href: '/#cat-section-dining-room', img: '/cat-thumb-dining-2x.webp' },
-  { name: 'Wardrobes', href: '/#cat-section-luxury-wardrobes', img: '/cat-thumb-wardrobes-2x.webp' },
+  { name: 'Dividers', href: '/#cat-section-luxury-showcase', img: '/cat-thumb-divider-2x.webp' },
+  { name: 'TV Units', href: '/#cat-section-center-tables', img: '/cat-thumb-tvunits-2x.webp' },
+  { name: 'Dressing', href: '/#cat-section-bedroom', img: '/cat-thumb-dressing-2x.webp' },
+  { name: 'Consoles', href: '/#cat-section-center-tables', img: '/cat-thumb-accessories-2x.webp' },
+  { name: 'Showcases', href: '/#cat-section-luxury-showcase', img: '/cat-thumb-showcase-2x.webp' },
 ];
 
 export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps) {
@@ -160,7 +159,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
         {/* ── DESKTOP FLOATING CATEGORY SHELF (MATCHES DESKTOP MOCKUP 100%) ── */}
         <div className="hidden lg:block w-full mt-4 bg-white/95 border border-[#EBE1D3] rounded-[28px] p-3.5 xl:p-4 shadow-[0_12px_40px_rgba(44,30,24,0.06)]">
           <div className="grid grid-cols-6 gap-3">
-            {DESKTOP_SHELF_CATEGORIES.map((cat) => (
+            {ALL_12_CATEGORIES.map((cat) => (
               <Link
                 key={cat.name}
                 href={cat.href}
@@ -322,7 +321,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
 
             {/* 4 Category Cards Grid on Mobile (Matches Mockup 4 in a row) */}
             <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
-              {MOBILE_CATEGORIES.map((cat) => (
+              {ALL_12_CATEGORIES.map((cat) => (
                 <Link
                   key={cat.name}
                   href={cat.href}
