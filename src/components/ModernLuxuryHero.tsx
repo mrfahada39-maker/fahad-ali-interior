@@ -297,8 +297,8 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
         {/* ── MOBILE LAYOUT (MATCHES MOBILE MOCKUP IMG 1 100%) ── */}
         <div className="lg:hidden flex flex-col pt-1">
           
-          {/* 1. Full-Width Seamless Hero Scene matching Image 1 (Ultra-sleek compact height) */}
-          <div className="relative -mx-4 sm:-mx-6 aspect-[16/8.5] xs:aspect-[16/8.2] sm:aspect-[16/8] overflow-hidden bg-[#FAF6F0]">
+          {/* 1. Full-Width Seamless Hero Scene matching Image 1 */}
+          <div className="relative -mx-4 sm:-mx-6 aspect-[16/9.2] xs:aspect-[16/9] sm:aspect-[16/8.8] overflow-hidden bg-[#FAF6F0]">
             {/* Background 4K Living Room Scene */}
             <Image
               src="/hero-living-room-mobile-img1.webp"
@@ -312,57 +312,57 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
             {/* Soft Warm Ivory Gradient Overlay on left to guarantee crystal clear text contrast */}
             <div className="absolute inset-0 bg-gradient-to-r from-[#FAF6F0]/95 via-[#FAF6F0]/70 via-55% to-transparent pointer-events-none" />
 
-            {/* Content: Left-Aligned Badge, Heading, Subtitle & Buttons */}
-            <div className="relative z-10 h-full flex flex-col justify-between py-2 xs:py-2.5 px-3.5 sm:px-6 w-[74%] xs:w-[70%] sm:w-[60%] max-w-[270px] sm:max-w-[320px]">
+            {/* Content: Vertically Centered Left-Aligned Badge, Heading, Subtitle & Buttons */}
+            <div className="relative z-10 h-full flex flex-col justify-center py-3 xs:py-3.5 px-4 sm:px-6 w-[75%] xs:w-[70%] sm:w-[60%] max-w-[280px] sm:max-w-[320px]">
               
               {/* Top: Badge + Headline + Subtitle */}
               <div className="flex flex-col items-start">
                 {/* Crown Badge */}
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F3EADB]/90 border border-[#E4D5BE] text-[#9A7030] text-[7.5px] xs:text-[8.5px] font-bold tracking-[0.12em] uppercase shadow-2xs w-fit mb-0.5">
-                  <Crown size={9} className="text-[#C59B4B] fill-[#C59B4B]" />
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F3EADB]/95 border border-[#E4D5BE] text-[#8C6222] text-[8.5px] xs:text-[9.5px] font-black tracking-[0.14em] uppercase shadow-xs w-fit mb-1.5">
+                  <Crown size={11} className="text-[#B88E4B] fill-[#B88E4B]" />
                   <span>PREMIUM FURNITURE COLLECTION</span>
                 </div>
 
                 {/* Main Headline */}
-                <h1 className="font-serif text-[18px] xs:text-[20px] sm:text-[24px] font-black text-[#1F1A17] leading-[1.06] tracking-tight mb-0.5">
+                <h1 className="font-serif text-[22px] xs:text-[25px] sm:text-[30px] font-black text-[#1F1A17] leading-[1.08] tracking-tight mb-1.5">
                   Luxury Furniture <br />
-                  <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#A67C37] bg-clip-text text-transparent italic font-normal">
-                    for a Better Living
+                  <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#A67C37] bg-clip-text text-transparent italic font-black">
+                    for Modern Living
                   </span>
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-[9px] xs:text-[10px] sm:text-[11px] text-[#6B5E55] leading-tight font-normal line-clamp-2">
-                  Modern designs, premium quality and handcrafted furniture to transform your home.
+                <p className="text-[10.5px] xs:text-[11.5px] sm:text-[12.5px] text-[#4A3E36] font-medium leading-snug line-clamp-2 mb-2">
+                  Transform your home with premium furniture crafted for comfort, style and timeless elegance.
                 </p>
               </div>
 
               {/* Bottom: Action Buttons */}
-              <div className="flex flex-col items-start gap-1 pt-0.5">
+              <div className="flex flex-col items-start gap-1.5 pt-0.5">
                 {/* Shop Collection Button */}
                 <Link
                   href="/#signature-categories"
                   onClick={(e) => handleSmoothScroll(e, '/#signature-categories')}
-                  className="bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] active:scale-95 text-white font-serif font-bold text-[9.5px] xs:text-[10.5px] px-3 py-1.5 rounded-full shadow-[0_4px_15px_rgba(184,142,75,0.3)] flex items-center gap-1.5 cursor-pointer w-fit"
+                  className="bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] active:scale-95 text-white font-serif font-black text-[11px] xs:text-[12px] px-4 py-2 rounded-full shadow-[0_4px_16px_rgba(184,142,75,0.35)] flex items-center gap-1.5 cursor-pointer w-fit"
                 >
                   <span>Shop Collection</span>
-                  <ArrowRight size={11} />
+                  <ArrowRight size={13} />
                 </Link>
 
                 {/* Watch 20s Video Button */}
                 <button
                   onClick={() => setVideoModalOpen(true)}
-                  className="flex items-center gap-1.5 active:scale-95 cursor-pointer text-left w-fit"
+                  className="flex items-center gap-2 active:scale-95 cursor-pointer text-left w-fit"
                   aria-label="Watch Video"
                 >
-                  <div className="w-5.5 h-5.5 xs:w-6 xs:h-6 rounded-full bg-white border border-[#E8DFC8] shadow-2xs flex items-center justify-center text-[#B88E4B] shrink-0">
-                    <Play size={9} className="fill-[#B88E4B] ml-0.5" />
+                  <div className="w-6 h-6 xs:w-7 xs:h-7 rounded-full bg-white border border-[#E8DFC8] shadow-xs flex items-center justify-center text-[#B88E4B] shrink-0">
+                    <Play size={10} className="fill-[#B88E4B] ml-0.5" />
                   </div>
                   <div>
-                    <p className="font-serif font-bold text-[9px] xs:text-[9.5px] text-[#1F1A17] leading-tight">
+                    <p className="font-serif font-bold text-[10px] xs:text-[10.5px] text-[#1F1A17] leading-tight">
                       Watch 20s Video
                     </p>
-                    <p className="text-[7.5px] xs:text-[8px] text-[#8C7A6D]">
+                    <p className="text-[8.5px] xs:text-[9px] text-[#8C7A6D] font-medium">
                       Experience Luxury
                     </p>
                   </div>
@@ -372,7 +372,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
             </div>
 
             {/* 3 Carousel Indicator Dots on bottom right over rug (Matches Image 1 100%) */}
-            <div className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-black/25 backdrop-blur-xs px-2 py-0.5 rounded-full z-10">
+            <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 bg-black/25 backdrop-blur-xs px-2 py-0.5 rounded-full z-10">
               <span className="w-1.5 h-1.5 rounded-full bg-[#C59B4B]" />
               <span className="w-1 h-1 rounded-full bg-white/70" />
               <span className="w-1 h-1 rounded-full bg-white/70" />
