@@ -45,22 +45,36 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
   const [isMobilePaused, setIsMobilePaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
-  // Desktop Slider Auto-play (slides automatically every 3.5s)
+  // Desktop Slider Auto-play (slides automatically every 3.5s after initial idle load)
   useEffect(() => {
     if (isDesktopPaused) return;
-    const timer = setInterval(() => {
-      setDesktopIndex((prev) => (prev >= TEN_CATEGORIES.length - 5 ? 0 : prev + 1));
-    }, 3500);
-    return () => clearInterval(timer);
+    let timer: NodeJS.Timeout;
+    const initialDelay = setTimeout(() => {
+      timer = setInterval(() => {
+        setDesktopIndex((prev) => (prev >= TEN_CATEGORIES.length - 5 ? 0 : prev + 1));
+      }, 3500);
+    }, 4500);
+
+    return () => {
+      clearTimeout(initialDelay);
+      if (timer) clearInterval(timer);
+    };
   }, [isDesktopPaused]);
 
-  // Mobile Slider Auto-play (slides automatically every 3.2s)
+  // Mobile Slider Auto-play (slides automatically every 3.2s after initial idle load)
   useEffect(() => {
     if (isMobilePaused) return;
-    const timer = setInterval(() => {
-      setMobileIndex((prev) => (prev >= TEN_CATEGORIES.length - 3 ? 0 : prev + 1));
-    }, 3200);
-    return () => clearInterval(timer);
+    let timer: NodeJS.Timeout;
+    const initialDelay = setTimeout(() => {
+      timer = setInterval(() => {
+        setMobileIndex((prev) => (prev >= TEN_CATEGORIES.length - 3 ? 0 : prev + 1));
+      }, 3200);
+    }, 4500);
+
+    return () => {
+      clearTimeout(initialDelay);
+      if (timer) clearInterval(timer);
+    };
   }, [isMobilePaused]);
 
   const handleDesktopPrev = () => {

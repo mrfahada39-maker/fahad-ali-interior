@@ -184,61 +184,34 @@ export default function HomeSignatureCategories({
     }
   }, [activeCategory]);
 
-  // 60FPS High-Performance Scrollspy with requestAnimationFrame
+  // Zero-Reflow Ultra-Performance Scrollspy with IntersectionObserver
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
 
-    let ticking = false;
+    const sections = document.querySelectorAll<HTMLElement>('.home-category-anchor-section');
+    if (!sections || sections.length === 0) return;
 
-    const onScroll = () => {
-      if (isAutoScrolling.current) return;
-
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const navHeight = window.innerWidth >= 1024 ? 80 : window.innerWidth >= 640 ? 64 : 56;
-          const pillsBarHeight = 56;
-          const triggerLine = navHeight + pillsBarHeight + 24;
-
-          const sections = document.querySelectorAll<HTMLElement>('.home-category-anchor-section');
-          if (!sections || sections.length === 0) {
-            ticking = false;
-            return;
-          }
-
-          // Check if user is scrolled above the first category section
-          const firstSection = sections[0];
-          if (firstSection && firstSection.getBoundingClientRect().top > triggerLine) {
-            setActiveCategory((prev) => (prev !== 'All' ? 'All' : prev));
-            ticking = false;
-            return;
-          }
-
-          // Find the last section whose top has crossed the triggerLine
-          let matchedCategory = 'All';
-          for (let i = 0; i < sections.length; i++) {
-            const sec = sections[i];
-            const rect = sec.getBoundingClientRect();
-            if (rect.top <= triggerLine) {
-              matchedCategory = sec.getAttribute('data-category') || matchedCategory;
-            } else {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isAutoScrolling.current) return;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const cat = entry.target.getAttribute('data-category');
+            if (cat) {
+              setActiveCategory(cat);
               break;
             }
           }
-
-          if (matchedCategory) {
-            setActiveCategory((prev) => (prev !== matchedCategory ? matchedCategory : prev));
-          }
-
-          ticking = false;
-        });
-        ticking = true;
+        }
+      },
+      {
+        rootMargin: '-100px 0px -65% 0px',
+        threshold: 0,
       }
-    };
+    );
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-
-    return () => window.removeEventListener('scroll', onScroll);
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
   }, [groupedCategories]);
 
   return (

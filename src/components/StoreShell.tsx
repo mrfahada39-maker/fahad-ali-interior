@@ -120,8 +120,6 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       {wishlistMounted && <WishlistDrawerPanel />}
       {searchOpen && <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />}
       {authOpen && <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} googleEnabled={googleEnabled} />}
-      {interactive && <PWAInstallPrompt />}
-      {interactive && <AiInteriorChatbot />}
       <BackToTop />
     </div>
   );
