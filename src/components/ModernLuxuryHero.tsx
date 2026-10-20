@@ -218,71 +218,71 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
         </div>
 
 
-        {/* ── DESKTOP FLOATING CATEGORY SHELF (10 CATEGORIES - 5 VISIBLE SLIDER) ── */}
+        {/* ── DESKTOP CATEGORY SHELF (10 CATEGORIES - 5 VISIBLE SLIDER, MATCHES IMAGE 3) ── */}
         <div 
-          className="hidden lg:block w-full mt-4 bg-white/95 border border-[#EBE1D3] rounded-[28px] p-4 shadow-[0_12px_40px_rgba(44,30,24,0.06)]"
+          className="hidden lg:block w-full mt-6 xl:mt-8"
           onMouseEnter={() => setIsDesktopPaused(true)}
           onMouseLeave={() => setIsDesktopPaused(false)}
         >
-          {/* Header Row with Arrows */}
-          <div className="flex items-center justify-between mb-3 px-1">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2 h-2 rounded-full bg-[#B88E4B]" />
-              <h3 className="font-serif font-black text-base text-[#1F1A17] tracking-tight">
-                Shop by Category <span className="text-xs font-normal text-[#8C7A6D] ml-2">(10 Collections — 5 on screen, auto-sliding)</span>
+          {/* Header Row: Title & Navigation Arrows directly on Warm Skin Background */}
+          <div className="flex items-center justify-between mb-4 px-0.5">
+            <div>
+              <div className="w-8 h-1 bg-[#C59B4B] rounded-full mb-1.5" />
+              <h3 className="font-serif font-black text-2xl xl:text-3xl text-[#1F1A17] tracking-tight">
+                Shop by Category
               </h3>
             </div>
             
-            {/* Desktop Navigation Arrows */}
-            <div className="flex items-center gap-2">
+            {/* Desktop Navigation Arrows on Skin Background */}
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={handleDesktopPrev}
                 aria-label="Previous Category"
-                className="w-8 h-8 rounded-full bg-[#FAF5ED] border border-[#E2D2BC] text-[#8C7A6D] hover:text-[#B88E4B] hover:bg-white hover:border-[#B88E4B] flex items-center justify-center transition-all shadow-2xs active:scale-95 cursor-pointer"
+                className="w-10 h-10 rounded-full bg-white border border-[#E2D2BC] text-[#8C7A6D] hover:text-[#B88E4B] hover:border-[#B88E4B] flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={18} />
               </button>
               <button
                 onClick={handleDesktopNext}
                 aria-label="Next Category"
-                className="w-8 h-8 rounded-full bg-[#FAF5ED] border border-[#E2D2BC] text-[#8C7A6D] hover:text-[#B88E4B] hover:bg-white hover:border-[#B88E4B] flex items-center justify-center transition-all shadow-2xs active:scale-95 cursor-pointer"
+                className="w-10 h-10 rounded-full bg-white border border-[#E2D2BC] text-[#8C7A6D] hover:text-[#B88E4B] hover:border-[#B88E4B] flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={18} />
               </button>
             </div>
           </div>
 
-          {/* 5-Item Viewport Track */}
-          <div className="overflow-hidden w-full">
+          {/* 5-Item Viewport Track (Matches Image 3 100%) */}
+          <div className="overflow-hidden w-full -mx-2 px-2">
             <div 
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${desktopIndex * 20}%)` }}
             >
               {TEN_CATEGORIES.map((cat) => (
-                <div key={cat.name} className="w-1/5 shrink-0 px-1.5">
+                <div key={cat.name} className="w-1/5 shrink-0 px-2">
                   <Link
                     href={cat.href}
                     onClick={(e) => handleSmoothScroll(e, cat.href)}
-                    className="group relative flex flex-col justify-between p-3 rounded-2xl bg-[#FAF7F2] border border-[#EFE8DC] hover:border-[#C59B4B] hover:bg-white hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden h-[155px]"
+                    className="group relative flex flex-col justify-between p-4 rounded-2xl bg-white border border-[#EAE1D5] shadow-xs hover:border-[#C59B4B] hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden h-[215px] xl:h-[230px]"
                   >
-                    {/* Product Cutout Image */}
-                    <div className="relative w-full h-18 flex items-center justify-center mb-1">
+                    {/* Product Cutout Image (Ultra 4K, Large & Crisp) */}
+                    <div className="relative w-full h-32 xl:h-36 flex items-center justify-center mb-1">
                       <Image
                         src={cat.img}
                         alt={cat.name}
-                        width={180}
-                        height={90}
+                        width={280}
+                        height={160}
                         className="max-h-full w-auto object-contain group-hover:scale-108 transition-transform duration-300"
                       />
                     </div>
 
                     {/* Bottom Title & Circular Arrow */}
-                    <div className="flex items-center justify-between pt-1 border-t border-[#EFE8DC]/80">
-                      <span className="font-serif font-black text-xs xl:text-sm text-[#221814] group-hover:text-[#B88E4B] transition-colors truncate">
+                    <div className="flex items-center justify-between pt-2.5 border-t border-[#F3ECE1]">
+                      <span className="font-serif font-black text-sm xl:text-base text-[#221814] group-hover:text-[#B88E4B] transition-colors truncate">
                         {cat.name}
                       </span>
-                      <div className="w-6 h-6 rounded-full bg-white border border-[#E5DACB] text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white transition-all flex items-center justify-center shadow-2xs shrink-0">
-                        <ArrowRight size={12} />
+                      <div className="w-7 h-7 rounded-full bg-[#FAF5ED] text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white transition-all flex items-center justify-center shadow-2xs shrink-0">
+                        <ArrowRight size={14} />
                       </div>
                     </div>
                   </Link>
@@ -403,15 +403,15 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
 
           {/* 3. Shop by Category (10 Categories - 3 on screen auto-sliding slider) */}
           <div 
-            className="mt-3"
+            className="mt-4"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
             {/* Header Row with Arrows */}
-            <div className="flex items-center justify-between mb-2 px-0.5">
+            <div className="flex items-center justify-between mb-2.5 px-0.5">
               <div>
-                <div className="w-6 h-0.5 bg-[#C59B4B] mb-1" />
-                <h3 className="font-serif font-black text-base text-[#1F1A17]">
+                <div className="w-7 h-0.5 bg-[#C59B4B] mb-1.5" />
+                <h3 className="font-serif font-black text-lg text-[#1F1A17] tracking-tight">
                   Shop by Category
                 </h3>
               </div>
@@ -421,16 +421,16 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                 <button
                   onClick={handleMobilePrev}
                   aria-label="Previous Category"
-                  className="w-7 h-7 rounded-full bg-white border border-[#E4D5BE] text-[#B88E4B] flex items-center justify-center active:scale-95 shadow-2xs cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-white border border-[#E2D2BC] text-[#8C7A6D] flex items-center justify-center active:scale-95 shadow-xs cursor-pointer"
                 >
-                  <ChevronLeft size={14} />
+                  <ChevronLeft size={16} />
                 </button>
                 <button
                   onClick={handleMobileNext}
                   aria-label="Next Category"
-                  className="w-7 h-7 rounded-full bg-white border border-[#E4D5BE] text-[#B88E4B] flex items-center justify-center active:scale-95 shadow-2xs cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-white border border-[#E2D2BC] text-[#8C7A6D] flex items-center justify-center active:scale-95 shadow-xs cursor-pointer"
                 >
-                  <ChevronRight size={14} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
             </div>
@@ -446,22 +446,22 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                     <Link
                       href={cat.href}
                       onClick={(e) => handleSmoothScroll(e, cat.href)}
-                      className="flex flex-col justify-between p-2 rounded-xl bg-white border border-[#EAE1D5] shadow-2xs hover:border-[#C59B4B] active:scale-98 transition-all h-[115px]"
+                      className="flex flex-col justify-between p-2.5 rounded-2xl bg-white border border-[#EAE1D5] shadow-xs hover:border-[#C59B4B] active:scale-98 transition-all h-[130px]"
                     >
-                      <div className="relative w-full h-12 flex items-center justify-center mb-1">
+                      <div className="relative w-full h-16 flex items-center justify-center mb-1">
                         <Image
                           src={cat.img}
                           alt={cat.name}
-                          width={100}
-                          height={50}
+                          width={140}
+                          height={75}
                           className="max-h-full w-auto object-contain"
                         />
                       </div>
-                      <div className="flex items-center justify-between pt-1 border-t border-[#F3ECE1]">
-                        <span className="font-serif font-bold text-[9.5px] text-[#221814] truncate">
+                      <div className="flex items-center justify-between pt-1.5 border-t border-[#F3ECE1]">
+                        <span className="font-serif font-bold text-[10.5px] text-[#221814] truncate">
                           {cat.name}
                         </span>
-                        <div className="w-4 h-4 rounded-full bg-[#FAF5ED] text-[#B88E4B] flex items-center justify-center text-[8px] shrink-0">
+                        <div className="w-4 h-4 rounded-full bg-[#FAF5ED] text-[#B88E4B] flex items-center justify-center text-[9px] shrink-0">
                           →
                         </div>
                       </div>
@@ -472,14 +472,14 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
             </div>
 
             {/* Pagination Pill Dots for Mobile */}
-            <div className="flex items-center justify-center gap-1 mt-2.5">
+            <div className="flex items-center justify-center gap-1.5 mt-3">
               {Array.from({ length: TEN_CATEGORIES.length - 2 }).map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setMobileIndex(i)}
                   aria-label={`Go to slide ${i + 1}`}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === mobileIndex ? 'w-4 bg-[#B88E4B]' : 'w-1.5 bg-[#E2D6C6]'
+                    i === mobileIndex ? 'w-5 bg-[#B88E4B]' : 'w-1.5 bg-[#E2D6C6]'
                   }`}
                 />
               ))}
