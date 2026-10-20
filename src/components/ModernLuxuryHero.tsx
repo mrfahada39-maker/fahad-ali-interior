@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
@@ -12,14 +12,17 @@ import {
   Play, 
   ArrowRight, 
   X,
-  Sparkles
+  Sparkles,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface ModernLuxuryHeroProps {
   onShopClick?: () => void;
 }
 
-const ALL_12_CATEGORIES = [
+// Exactly 10 Luxury Categories (Dividers & Dressing removed per user instruction)
+const TEN_CATEGORIES = [
   { name: 'Sofas', href: '/#cat-section-living-room', img: '/cat-thumb-sofas-2x.webp' },
   { name: 'L-Shape', href: '/#cat-section-living-room', img: '/cat-thumb-lshape-2x.webp' },
   { name: 'Beds', href: '/#cat-section-bedroom', img: '/cat-thumb-beds-2x.webp' },
@@ -27,15 +30,74 @@ const ALL_12_CATEGORIES = [
   { name: 'Coffee Chairs', href: '/#cat-section-coffee-chairs', img: '/cat-thumb-chairs-2x.webp' },
   { name: 'Center Tables', href: '/#cat-section-center-tables', img: '/cat-thumb-centertables-2x.webp' },
   { name: 'Wardrobes', href: '/#cat-section-luxury-wardrobes', img: '/cat-thumb-wardrobes-2x.webp' },
-  { name: 'Dividers', href: '/#cat-section-luxury-showcase', img: '/cat-thumb-divider-2x.webp' },
   { name: 'TV Units', href: '/#cat-section-center-tables', img: '/cat-thumb-tvunits-2x.webp' },
-  { name: 'Dressing', href: '/#cat-section-bedroom', img: '/cat-thumb-dressing-2x.webp' },
   { name: 'Consoles', href: '/#cat-section-center-tables', img: '/cat-thumb-accessories-2x.webp' },
   { name: 'Showcases', href: '/#cat-section-luxury-showcase', img: '/cat-thumb-showcase-2x.webp' },
 ];
 
 export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps) {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+
+  // Responsive Slider states: Desktop (5 visible at a time) and Mobile (3 visible at a time)
+  const [desktopIndex, setDesktopIndex] = useState(0);
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const [isDesktopPaused, setIsDesktopPaused] = useState(false);
+  const [isMobilePaused, setIsMobilePaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+
+  // Desktop Slider Auto-play (slides automatically every 3.5s)
+  useEffect(() => {
+    if (isDesktopPaused) return;
+    const timer = setInterval(() => {
+      setDesktopIndex((prev) => (prev >= TEN_CATEGORIES.length - 5 ? 0 : prev + 1));
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [isDesktopPaused]);
+
+  // Mobile Slider Auto-play (slides automatically every 3.2s)
+  useEffect(() => {
+    if (isMobilePaused) return;
+    const timer = setInterval(() => {
+      setMobileIndex((prev) => (prev >= TEN_CATEGORIES.length - 3 ? 0 : prev + 1));
+    }, 3200);
+    return () => clearInterval(timer);
+  }, [isMobilePaused]);
+
+  const handleDesktopPrev = () => {
+    setDesktopIndex((prev) => (prev <= 0 ? TEN_CATEGORIES.length - 5 : prev - 1));
+  };
+
+  const handleDesktopNext = () => {
+    setDesktopIndex((prev) => (prev >= TEN_CATEGORIES.length - 5 ? 0 : prev + 1));
+  };
+
+  const handleMobilePrev = () => {
+    setMobileIndex((prev) => (prev <= 0 ? TEN_CATEGORIES.length - 3 : prev - 1));
+  };
+
+  const handleMobileNext = () => {
+    setMobileIndex((prev) => (prev >= TEN_CATEGORIES.length - 3 ? 0 : prev + 1));
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsMobilePaused(true);
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+    if (Math.abs(diff) > 35) {
+      if (diff > 0) {
+        handleMobileNext();
+      } else {
+        handleMobilePrev();
+      }
+    }
+    touchStartX.current = null;
+    setTimeout(() => setIsMobilePaused(false), 2000);
+  };
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith('/#')) {
@@ -156,38 +218,77 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
         </div>
 
 
-        {/* ── DESKTOP FLOATING CATEGORY SHELF (MATCHES DESKTOP MOCKUP 100%) ── */}
-        <div className="hidden lg:block w-full mt-4 bg-white/95 border border-[#EBE1D3] rounded-[28px] p-3.5 xl:p-4 shadow-[0_12px_40px_rgba(44,30,24,0.06)]">
-          <div className="grid grid-cols-6 gap-3">
-            {ALL_12_CATEGORIES.map((cat) => (
-              <Link
-                key={cat.name}
-                href={cat.href}
-                onClick={(e) => handleSmoothScroll(e, cat.href)}
-                className="group relative flex flex-col justify-between p-3 rounded-2xl bg-[#FAF7F2] border border-[#EFE8DC] hover:border-[#C59B4B] hover:bg-white hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden"
+        {/* ── DESKTOP FLOATING CATEGORY SHELF (10 CATEGORIES - 5 VISIBLE SLIDER) ── */}
+        <div 
+          className="hidden lg:block w-full mt-4 bg-white/95 border border-[#EBE1D3] rounded-[28px] p-4 shadow-[0_12px_40px_rgba(44,30,24,0.06)]"
+          onMouseEnter={() => setIsDesktopPaused(true)}
+          onMouseLeave={() => setIsDesktopPaused(false)}
+        >
+          {/* Header Row with Arrows */}
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-[#B88E4B]" />
+              <h3 className="font-serif font-black text-base text-[#1F1A17] tracking-tight">
+                Shop by Category <span className="text-xs font-normal text-[#8C7A6D] ml-2">(10 Collections — 5 on screen, auto-sliding)</span>
+              </h3>
+            </div>
+            
+            {/* Desktop Navigation Arrows */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDesktopPrev}
+                aria-label="Previous Category"
+                className="w-8 h-8 rounded-full bg-[#FAF5ED] border border-[#E2D2BC] text-[#8C7A6D] hover:text-[#B88E4B] hover:bg-white hover:border-[#B88E4B] flex items-center justify-center transition-all shadow-2xs active:scale-95 cursor-pointer"
               >
-                {/* Product Cutout Image */}
-                <div className="relative w-full h-16 xl:h-20 flex items-center justify-center mb-2">
-                  <Image
-                    src={cat.img}
-                    alt={cat.name}
-                    width={180}
-                    height={90}
-                    className="max-h-full w-auto object-contain group-hover:scale-108 transition-transform duration-300"
-                  />
-                </div>
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={handleDesktopNext}
+                aria-label="Next Category"
+                className="w-8 h-8 rounded-full bg-[#FAF5ED] border border-[#E2D2BC] text-[#8C7A6D] hover:text-[#B88E4B] hover:bg-white hover:border-[#B88E4B] flex items-center justify-center transition-all shadow-2xs active:scale-95 cursor-pointer"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
 
-                {/* Bottom Title & Circular Arrow */}
-                <div className="flex items-center justify-between pt-1 border-t border-[#EFE8DC]/80">
-                  <span className="font-serif font-black text-xs xl:text-sm text-[#221814] group-hover:text-[#B88E4B] transition-colors">
-                    {cat.name}
-                  </span>
-                  <div className="w-6 h-6 rounded-full bg-white border border-[#E5DACB] text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white transition-all flex items-center justify-center shadow-2xs">
-                    <ArrowRight size={12} />
-                  </div>
+          {/* 5-Item Viewport Track */}
+          <div className="overflow-hidden w-full">
+            <div 
+              className="flex transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${desktopIndex * 20}%)` }}
+            >
+              {TEN_CATEGORIES.map((cat) => (
+                <div key={cat.name} className="w-1/5 shrink-0 px-1.5">
+                  <Link
+                    href={cat.href}
+                    onClick={(e) => handleSmoothScroll(e, cat.href)}
+                    className="group relative flex flex-col justify-between p-3 rounded-2xl bg-[#FAF7F2] border border-[#EFE8DC] hover:border-[#C59B4B] hover:bg-white hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden h-[155px]"
+                  >
+                    {/* Product Cutout Image */}
+                    <div className="relative w-full h-18 flex items-center justify-center mb-1">
+                      <Image
+                        src={cat.img}
+                        alt={cat.name}
+                        width={180}
+                        height={90}
+                        className="max-h-full w-auto object-contain group-hover:scale-108 transition-transform duration-300"
+                      />
+                    </div>
+
+                    {/* Bottom Title & Circular Arrow */}
+                    <div className="flex items-center justify-between pt-1 border-t border-[#EFE8DC]/80">
+                      <span className="font-serif font-black text-xs xl:text-sm text-[#221814] group-hover:text-[#B88E4B] transition-colors truncate">
+                        {cat.name}
+                      </span>
+                      <div className="w-6 h-6 rounded-full bg-white border border-[#E5DACB] text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white transition-all flex items-center justify-center shadow-2xs shrink-0">
+                        <ArrowRight size={12} />
+                      </div>
+                    </div>
+                  </Link>
                 </div>
-              </Link>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
@@ -300,52 +401,87 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
             })}
           </div>
 
-          {/* 7. Shop by Category (Mobile Section matching Mockup) */}
-          <div className="mt-3">
-            <div className="flex items-center justify-between mb-2.5">
+          {/* 3. Shop by Category (10 Categories - 3 on screen auto-sliding slider) */}
+          <div 
+            className="mt-3"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Header Row with Arrows */}
+            <div className="flex items-center justify-between mb-2 px-0.5">
               <div>
                 <div className="w-6 h-0.5 bg-[#C59B4B] mb-1" />
-                <h3 className="font-serif font-black text-lg text-[#1F1A17]">
+                <h3 className="font-serif font-black text-base text-[#1F1A17]">
                   Shop by Category
                 </h3>
               </div>
-              <Link
-                href="/#signature-categories"
-                onClick={(e) => handleSmoothScroll(e, '/#signature-categories')}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#A67C37] hover:underline"
-              >
-                <span>View All</span>
-                <ArrowRight size={12} />
-              </Link>
+              
+              {/* Mobile Arrows */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleMobilePrev}
+                  aria-label="Previous Category"
+                  className="w-7 h-7 rounded-full bg-white border border-[#E4D5BE] text-[#B88E4B] flex items-center justify-center active:scale-95 shadow-2xs cursor-pointer"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <button
+                  onClick={handleMobileNext}
+                  aria-label="Next Category"
+                  className="w-7 h-7 rounded-full bg-white border border-[#E4D5BE] text-[#B88E4B] flex items-center justify-center active:scale-95 shadow-2xs cursor-pointer"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
 
-            {/* 4 Category Cards Grid on Mobile (Matches Mockup 4 in a row) */}
-            <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
-              {ALL_12_CATEGORIES.map((cat) => (
-                <Link
-                  key={cat.name}
-                  href={cat.href}
-                  onClick={(e) => handleSmoothScroll(e, cat.href)}
-                  className="flex flex-col justify-between p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-[#EAE1D5] shadow-2xs hover:border-[#C59B4B] active:scale-98 transition-all"
-                >
-                  <div className="relative w-full h-10 sm:h-14 flex items-center justify-center mb-1">
-                    <Image
-                      src={cat.img}
-                      alt={cat.name}
-                      width={100}
-                      height={50}
-                      className="max-h-full w-auto object-contain"
-                    />
+            {/* 3-Item Viewport Track on Mobile */}
+            <div className="overflow-hidden w-full -mx-1 px-1">
+              <div 
+                className="flex transition-transform duration-500 ease-out"
+                style={{ transform: `translateX(-${mobileIndex * (100 / 3)}%)` }}
+              >
+                {TEN_CATEGORIES.map((cat) => (
+                  <div key={cat.name} className="w-1/3 shrink-0 px-1">
+                    <Link
+                      href={cat.href}
+                      onClick={(e) => handleSmoothScroll(e, cat.href)}
+                      className="flex flex-col justify-between p-2 rounded-xl bg-white border border-[#EAE1D5] shadow-2xs hover:border-[#C59B4B] active:scale-98 transition-all h-[115px]"
+                    >
+                      <div className="relative w-full h-12 flex items-center justify-center mb-1">
+                        <Image
+                          src={cat.img}
+                          alt={cat.name}
+                          width={100}
+                          height={50}
+                          className="max-h-full w-auto object-contain"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between pt-1 border-t border-[#F3ECE1]">
+                        <span className="font-serif font-bold text-[9.5px] text-[#221814] truncate">
+                          {cat.name}
+                        </span>
+                        <div className="w-4 h-4 rounded-full bg-[#FAF5ED] text-[#B88E4B] flex items-center justify-center text-[8px] shrink-0">
+                          →
+                        </div>
+                      </div>
+                    </Link>
                   </div>
-                  <div className="flex items-center justify-between pt-1 border-t border-[#F3ECE1]">
-                    <span className="font-serif font-bold text-[9px] sm:text-xs text-[#221814] truncate">
-                      {cat.name}
-                    </span>
-                    <div className="w-3.5 h-3.5 sm:w-5 sm:h-5 rounded-full bg-[#FAF5ED] text-[#B88E4B] flex items-center justify-center text-[7px] sm:text-[10px] shrink-0">
-                      →
-                    </div>
-                  </div>
-                </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Pagination Pill Dots for Mobile */}
+            <div className="flex items-center justify-center gap-1 mt-2.5">
+              {Array.from({ length: TEN_CATEGORIES.length - 2 }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setMobileIndex(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === mobileIndex ? 'w-4 bg-[#B88E4B]' : 'w-1.5 bg-[#E2D6C6]'
+                  }`}
+                />
               ))}
             </div>
           </div>
