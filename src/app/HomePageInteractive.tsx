@@ -3,10 +3,18 @@
 import { logger } from '@/lib/logger';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { apiFetchJson } from '@/lib/api-client';
 import HomeSignatureCategories from '@/components/HomeSignatureCategories';
-import TestimonialsSection from '@/components/TestimonialsSection';
 import ModernLuxuryHero from '@/components/ModernLuxuryHero';
+
+const TestimonialsSection = dynamic(
+  () => import('@/components/TestimonialsSection'),
+  {
+    ssr: false,
+    loading: () => <div className="min-h-[300px] w-full bg-[#FAF6F0]" />,
+  }
+);
 
 const CATEGORIES = [
   { name: 'Living Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },

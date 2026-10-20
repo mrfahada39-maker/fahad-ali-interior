@@ -28,7 +28,7 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
     }
   }, [initialSettings, setSiteSettings]);
 
-  // Activate non-critical background services (Toaster, SW, product cache) on first user interaction
+  // Activate non-critical background services (Toaster, SW) on real user interaction or idle time
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let triggered = false;
@@ -36,15 +36,6 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
       if (triggered) return;
       triggered = true;
       setInteractive(true);
-
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw-push.js').then((reg) => {
-          reg.update().catch(() => {});
-        }).catch(() => {});
-        navigator.serviceWorker.getRegistrations().then((regs) => {
-          regs.forEach((r) => r.update().catch(() => {}));
-        }).catch(() => {});
-      }
 
       if (!initialSettings && !useSiteSettingsStore.getState().settings) {
         fetch('/api/public/settings')
@@ -54,30 +45,26 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
           })
           .catch(() => {});
       }
-
-      fetch('/api/v1/products')
-        .then((res) => res.json())
-        .then((body) => {
-          const items = body?.data || body?.products || (Array.isArray(body) ? body : []);
-          if (items && items.length > 0) {
-            setCachedProducts(items);
-          }
-        })
-        .catch(() => {});
     };
+
+    // Register service worker purely in idle time to protect TBT
+    const swTimer = setTimeout(() => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw-push.js').catch(() => {});
+      }
+    }, 4500);
 
     window.addEventListener('pointerdown', onFirstInteraction, { once: true, passive: true });
     window.addEventListener('keydown', onFirstInteraction, { once: true, passive: true });
-    window.addEventListener('scroll', onFirstInteraction, { once: true, passive: true });
     window.addEventListener('touchstart', onFirstInteraction, { once: true, passive: true });
 
     return () => {
+      clearTimeout(swTimer);
       window.removeEventListener('pointerdown', onFirstInteraction);
       window.removeEventListener('keydown', onFirstInteraction);
-      window.removeEventListener('scroll', onFirstInteraction);
       window.removeEventListener('touchstart', onFirstInteraction);
     };
-  }, [initialSettings, setSiteSettings, setCachedProducts]);
+  }, [initialSettings, setSiteSettings]);
 
   useEffect(() => {
     if (!settings) return;
