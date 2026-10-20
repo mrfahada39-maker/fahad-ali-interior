@@ -195,77 +195,92 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
 
 
         {/* ── MOBILE LAYOUT (MATCHES MOBILE MOCKUP IMG 1 100%) ── */}
-        <div className="lg:hidden flex flex-col gap-4 pt-1">
+        <div className="lg:hidden flex flex-col pt-1">
           
-          {/* 1. Crown Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F3EADB] border border-[#E4D5BE] text-[#9A7030] text-[10px] font-bold tracking-[0.16em] uppercase shadow-2xs w-fit">
-            <Crown size={12} className="text-[#C59B4B] fill-[#C59B4B]" />
-            <span>PREMIUM FURNITURE COLLECTION</span>
-          </div>
-
-          {/* 2. Mobile Main Headline */}
-          <h1 className="font-serif text-[32px] sm:text-[40px] font-black text-[#1F1A17] leading-[1.08] tracking-tight">
-            Luxury Furniture <br />
-            <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#A67C37] bg-clip-text text-transparent italic font-normal">
-              for a Better Living
-            </span>
-          </h1>
-
-          {/* 3. Subtitle */}
-          <p className="text-[13px] text-[#6B5E55] leading-relaxed font-normal">
-            Modern designs, premium quality and handcrafted furniture to transform your home.
-          </p>
-
-          {/* 4. Action Row */}
-          <div className="flex items-center gap-3 pt-1">
-            <Link
-              href="/#signature-categories"
-              onClick={(e) => handleSmoothScroll(e, '/#signature-categories')}
-              className="bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] active:scale-95 text-white font-serif font-bold text-xs px-5 py-3 rounded-full shadow-[0_6px_20px_rgba(184,142,75,0.3)] flex items-center gap-2 cursor-pointer"
-            >
-              <span>Shop Collection</span>
-              <ArrowRight size={14} />
-            </Link>
-
-            <button
-              onClick={() => setVideoModalOpen(true)}
-              className="flex items-center gap-2 active:scale-95 cursor-pointer"
-              aria-label="Watch Video"
-            >
-              <div className="w-10 h-10 rounded-full bg-white border border-[#E8DFC8] shadow-sm flex items-center justify-center text-[#B88E4B]">
-                <Play size={14} className="fill-[#B88E4B] ml-0.5" />
-              </div>
-              <div className="text-left">
-                <p className="font-serif font-bold text-[11px] text-[#1F1A17] leading-tight">
-                  Watch 20s Video
-                </p>
-                <p className="text-[9.5px] text-[#8C7A6D]">
-                  Experience Luxury
-                </p>
-              </div>
-            </button>
-          </div>
-
-          {/* 5. Mobile Living Room Image Container with Dots (Matches Image 1 100%) */}
-          <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-[#EBE2D5] bg-[#FAF6F0] mt-1">
+          {/* 1. Full-Width Seamless Hero Scene matching Image 1 (No boxed card, seamless edge-to-edge) */}
+          <div className="relative -mx-4 sm:-mx-6 aspect-[16/11.5] xs:aspect-[16/11] sm:aspect-[16/10] overflow-hidden bg-[#FAF6F0]">
+            {/* Background 4K Living Room Scene */}
             <Image
-              src="/hero-living-room-img1-4k.webp"
-              alt="Luxury Living Room"
+              src="/hero-living-room-mobile-img1.webp"
+              alt="Fahad Ali Interior Luxury Living Room Showcase"
               fill
               priority
               sizes="100vw"
-              className="object-cover object-center"
+              className="object-cover object-[78%_center] sm:object-center"
             />
-            {/* 3 Carousel Indicator Dots on bottom right */}
-            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/25 backdrop-blur-xs px-2 py-1 rounded-full">
+
+            {/* Soft Warm Ivory Gradient Overlay on left to guarantee crystal clear text contrast */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FAF6F0]/95 via-[#FAF6F0]/70 via-55% to-transparent pointer-events-none" />
+
+            {/* Content: Left-Aligned Badge, Heading, Subtitle & Buttons */}
+            <div className="relative z-10 h-full flex flex-col justify-between py-3.5 xs:py-4 px-4 sm:px-6 w-[72%] xs:w-[68%] sm:w-[58%] max-w-[270px] sm:max-w-[320px]">
+              
+              {/* Top: Badge + Headline + Subtitle */}
+              <div className="flex flex-col items-start">
+                {/* Crown Badge */}
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F3EADB]/90 border border-[#E4D5BE] text-[#9A7030] text-[8.5px] xs:text-[9.5px] font-bold tracking-[0.14em] uppercase shadow-2xs w-fit mb-1.5">
+                  <Crown size={11} className="text-[#C59B4B] fill-[#C59B4B]" />
+                  <span>PREMIUM FURNITURE COLLECTION</span>
+                </div>
+
+                {/* Main Headline */}
+                <h1 className="font-serif text-[23px] xs:text-[26px] sm:text-[32px] font-black text-[#1F1A17] leading-[1.08] tracking-tight mb-1">
+                  Luxury Furniture <br />
+                  <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#A67C37] bg-clip-text text-transparent italic font-normal">
+                    for a Better Living
+                  </span>
+                </h1>
+
+                {/* Subtitle */}
+                <p className="text-[10.5px] xs:text-[11.5px] sm:text-[12.5px] text-[#6B5E55] leading-snug font-normal line-clamp-2">
+                  Modern designs, premium quality and handcrafted furniture to transform your home.
+                </p>
+              </div>
+
+              {/* Bottom: Action Buttons */}
+              <div className="flex flex-col items-start gap-2 pt-1">
+                {/* Shop Collection Button */}
+                <Link
+                  href="/#signature-categories"
+                  onClick={(e) => handleSmoothScroll(e, '/#signature-categories')}
+                  className="bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] active:scale-95 text-white font-serif font-bold text-[10.5px] xs:text-[11.5px] px-4 py-2 rounded-full shadow-[0_4px_15px_rgba(184,142,75,0.3)] flex items-center gap-1.5 cursor-pointer w-fit"
+                >
+                  <span>Shop Collection</span>
+                  <ArrowRight size={13} />
+                </Link>
+
+                {/* Watch 20s Video Button */}
+                <button
+                  onClick={() => setVideoModalOpen(true)}
+                  className="flex items-center gap-2 active:scale-95 cursor-pointer text-left w-fit"
+                  aria-label="Watch Video"
+                >
+                  <div className="w-7 h-7 xs:w-8 xs:h-8 rounded-full bg-white border border-[#E8DFC8] shadow-2xs flex items-center justify-center text-[#B88E4B] shrink-0">
+                    <Play size={11} className="fill-[#B88E4B] ml-0.5" />
+                  </div>
+                  <div>
+                    <p className="font-serif font-bold text-[10px] xs:text-[10.5px] text-[#1F1A17] leading-tight">
+                      Watch 20s Video
+                    </p>
+                    <p className="text-[8.5px] xs:text-[9px] text-[#8C7A6D]">
+                      Experience Luxury
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+            </div>
+
+            {/* 3 Carousel Indicator Dots on bottom right over rug (Matches Image 1 100%) */}
+            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/25 backdrop-blur-xs px-2.5 py-1 rounded-full z-10">
               <span className="w-2 h-2 rounded-full bg-[#C59B4B]" />
               <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
               <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
             </div>
           </div>
 
-          {/* 6. Feature Cards Row (Mobile) */}
-          <div className="w-full bg-white border border-[#EAE1D5] rounded-2xl p-2.5 shadow-2xs grid grid-cols-4 divide-x divide-[#EFE7DC] text-center mt-1">
+          {/* 2. Feature Cards Row (Mobile) */}
+          <div className="w-full bg-white border border-[#EAE1D5] rounded-2xl p-2.5 shadow-2xs grid grid-cols-4 divide-x divide-[#EFE7DC] text-center mt-3">
             {[
               { icon: ShieldCheck, title: 'Premium', sub: 'Quality' },
               { icon: Truck, title: 'Safe & Fast', sub: 'Delivery' },

@@ -38,7 +38,12 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
       setInteractive(true);
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw-push.js').catch(() => {});
+        navigator.serviceWorker.register('/sw-push.js').then((reg) => {
+          reg.update().catch(() => {});
+        }).catch(() => {});
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((r) => r.update().catch(() => {}));
+        }).catch(() => {});
       }
 
       if (!initialSettings && !useSiteSettingsStore.getState().settings) {
