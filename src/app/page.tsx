@@ -18,20 +18,6 @@ export default async function HomePage() {
 
   return (
     <StoreShell showFooter={true}>
-      <link
-        rel="preload"
-        as="image"
-        href="/hero-living-room-img1-4k.webp"
-        media="(min-width: 1024px)"
-        fetchPriority="high"
-      />
-      <link
-        rel="preload"
-        as="image"
-        href="/hero-living-room-mobile-img1.webp"
-        media="(max-width: 1023px)"
-        fetchPriority="high"
-      />
       <main className="min-h-screen bg-[#FCFAF7] text-[#221814] font-sans">
         <HomePageInteractive 
           initialBanners={homeData?.banners || []}
