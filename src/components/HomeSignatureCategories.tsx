@@ -75,6 +75,7 @@ export default function HomeSignatureCategories({
   categories = [],
 }: HomeSignatureCategoriesProps) {
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const setIsCategoryBarSticky = useUiNavigationStore((s) => s.setIsCategoryBarSticky);
   const sectionTopRef = useRef<HTMLElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -139,6 +140,10 @@ export default function HomeSignatureCategories({
   // Handle clicking a category pill (navbar is hidden when category bar is sticky, clean top-0 alignment)
   const handlePillClick = (cat: string) => {
     setActiveCategory(cat);
+    if (cat !== 'All') {
+      const slug = slugify(cat);
+      setExpandedCategories((prev) => ({ ...prev, [slug]: true }));
+    }
     isAutoScrolling.current = true;
     if (scrollTimer.current) clearTimeout(scrollTimer.current);
 
@@ -318,16 +323,37 @@ export default function HomeSignatureCategories({
               </div>
             </div>
 
-            {/* Product Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {group.products.map((product, idx) => (
-                <ProductCard
-                  key={product.id || idx}
-                  product={product}
-                  index={idx}
-                />
-              ))}
-            </div>
+            {/* Product Cards Grid (Initial 4 per category for low TBT + expand on click) */}
+            {(() => {
+              const isExpanded = !!expandedCategories[group.slug];
+              const visibleProducts = isExpanded ? group.products : group.products.slice(0, 4);
+              return (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                    {visibleProducts.map((product, idx) => (
+                      <ProductCard
+                        key={product.id || idx}
+                        product={product}
+                        index={idx}
+                      />
+                    ))}
+                  </div>
+
+                  {group.products.length > 4 && !isExpanded && (
+                    <div className="text-center mt-6 sm:mt-8">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedCategories((prev) => ({ ...prev, [group.slug]: true }))}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-amber-300 bg-white hover:bg-[#FAF5EE] text-[#8C6222] text-xs font-bold uppercase tracking-wider transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer"
+                      >
+                        <span>View All {group.products.length} {group.name} Pieces</span>
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         ))}
       </div>

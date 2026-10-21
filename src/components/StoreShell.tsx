@@ -15,11 +15,6 @@ const WishlistDrawerPanel = dynamic(
 );
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false });
-const PWAInstallPrompt = dynamic(() => import('@/components/PWAInstallPrompt'), { ssr: false });
-const AiInteriorChatbot = dynamic(
-  () => import('@/components/AiEmployeeWidget').then((m) => m.AiEmployeeWidget),
-  { ssr: false }
-);
 
 // Read at module level (server-evaluated at build time in Next.js)
 const googleEnabled =
@@ -35,7 +30,6 @@ interface StoreShellProps {
 export default function StoreShell({ children, showFooter = true, hideNavbar = false }: StoreShellProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [interactive, setInteractive] = useState(false);
   const isCartOpen = useCartStore((s) => s.isOpen);
   const isWishlistOpen = useWishlistDrawerStore((s) => s.isOpen);
   const [cartMounted, setCartMounted] = useState(false);
@@ -50,30 +44,7 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
   }, [isWishlistOpen, wishlistMounted]);
 
   useEffect(() => {
-    // Ultra-Fast TBT Optimization: Mount secondary floating widgets on real user interaction or idle time
-    let activated = false;
-    const enableInteractive = () => {
-      if (!activated) {
-        activated = true;
-        setInteractive(true);
-      }
-    };
-
-    let idleTimer: NodeJS.Timeout | null = null;
     if (typeof window !== 'undefined') {
-      window.addEventListener('pointerdown', enableInteractive, { once: true, passive: true });
-      window.addEventListener('keydown', enableInteractive, { once: true, passive: true });
-      window.addEventListener('touchstart', enableInteractive, { once: true, passive: true });
-
-      // Defer non-critical floating widgets (Chatbot, PWA) so GTmetrix tests run at 0ms TBT
-      idleTimer = setTimeout(() => {
-        if ('requestIdleCallback' in window) {
-          (window as any).requestIdleCallback(enableInteractive, { timeout: 2000 });
-        } else {
-          enableInteractive();
-        }
-      }, 3500);
-
       try {
         const params = new URLSearchParams(window.location.search);
         if (params.get('auth') === 'login') {
@@ -83,24 +54,14 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
     }
 
     const handler = () => setAuthOpen(true);
-    const triggerCart = () => {
-      setCartMounted(true);
-      enableInteractive();
-    };
-    const triggerWishlist = () => {
-      setWishlistMounted(true);
-      enableInteractive();
-    };
+    const triggerCart = () => setCartMounted(true);
+    const triggerWishlist = () => setWishlistMounted(true);
 
     window.addEventListener('open-auth', handler);
     window.addEventListener('open-cart', triggerCart);
     window.addEventListener('open-wishlist', triggerWishlist);
 
     return () => {
-      if (idleTimer) clearTimeout(idleTimer);
-      window.removeEventListener('pointerdown', enableInteractive);
-      window.removeEventListener('keydown', enableInteractive);
-      window.removeEventListener('touchstart', enableInteractive);
       window.removeEventListener('open-auth', handler);
       window.removeEventListener('open-cart', triggerCart);
       window.removeEventListener('open-wishlist', triggerWishlist);

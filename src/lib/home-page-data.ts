@@ -138,7 +138,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
           isPremium: true,
           createdAt: true,
         },
-        take: 48,
+        take: 28,
         orderBy: { createdAt: 'desc' },
       }),
       db.category.findMany({

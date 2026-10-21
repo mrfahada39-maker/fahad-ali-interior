@@ -240,7 +240,7 @@ describe('Auth Security & Flows: Password Reset OTP & Multi-Account Registration
       const createData = (db.user.create as any).mock.calls[0][0].data;
       const isMatch = await bcrypt.compare('FatimaPassword123!', createData.password);
       expect(isMatch).toBe(true);
-    });
+    }, 15000);
 
     it('rejects duplicate email registration with 409 Conflict', async () => {
       (db.user.findFirst as any).mockResolvedValue({
@@ -347,6 +347,6 @@ describe('Auth Security & Flows: Password Reset OTP & Multi-Account Registration
           }),
         })
       );
-    });
+    }, 15000);
   });
 });

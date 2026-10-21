@@ -493,3 +493,9 @@ body {
 .text-luxury-gold {
   color: #8C6222 !important;
 }
+
+/* ── ULTRA-LOW TBT & RENDERING ACCELERATION ── */
+.home-category-anchor-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 650px;
+}

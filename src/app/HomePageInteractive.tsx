@@ -2,7 +2,7 @@
 'use client';
 import { logger } from '@/lib/logger';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { apiFetchJson } from '@/lib/api-client';
 import HomeSignatureCategories from '@/components/HomeSignatureCategories';
@@ -15,6 +15,41 @@ const TestimonialsSection = dynamic(
     loading: () => <div className="min-h-[300px] w-full bg-[#FAF6F0]" />,
   }
 );
+
+function LazyTestimonials({ reviews, initialReviews }: { reviews: any[]; initialReviews?: any[] }) {
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!ref.current || typeof window === 'undefined') return;
+    if (!('IntersectionObserver' in window)) {
+      setShouldLoad(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '350px 0px' }
+    );
+
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="min-h-[300px]">
+      {shouldLoad ? (
+        <TestimonialsSection reviews={reviews.length > 0 ? reviews : initialReviews} />
+      ) : (
+        <div className="min-h-[300px] w-full bg-[#FAF6F0]" />
+      )}
+    </div>
+  );
+}
 
 const CATEGORIES = [
   { name: 'Living Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
@@ -81,8 +116,8 @@ export default function HomePageInteractive({
         categories={categoriesList}
       />
 
-      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION ── */}
-      <TestimonialsSection reviews={reviewsList.length > 0 ? reviewsList : initialReviews} />
+      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION (DEFERRED ON INTERSECTION FOR 0ms TBT) ── */}
+      <LazyTestimonials reviews={reviewsList} initialReviews={initialReviews} />
     </div>
   );
 }

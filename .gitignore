@@ -50,6 +50,7 @@ public/test-results/
 NEXTJS_ECOMMERCE_TEST_REPORT.html
 *.pdf
 scripts/generate-pdf-report.mjs
+scratch/
 
 # Temporary Markdown Reports & Dumps
 *.md.bak
