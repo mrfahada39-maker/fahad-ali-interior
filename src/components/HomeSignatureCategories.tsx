@@ -177,7 +177,8 @@ export default function HomeSignatureCategories({
 
   // Auto-scroll the active category pill into view horizontally without touching window scroll
   useEffect(() => {
-    if (!activeCategory || !pillsContainerRef.current) return;
+    // Only adjust horizontal scroll if a specific category was clicked (not default 'All')
+    if (!activeCategory || activeCategory === 'All' || !pillsContainerRef.current) return;
     const activePill = pillRefs.current[activeCategory];
     const container = pillsContainerRef.current;
     if (activePill && container) {
@@ -185,7 +186,7 @@ export default function HomeSignatureCategories({
       const pillWidth = activePill.offsetWidth;
       const containerWidth = container.offsetWidth;
       const targetScrollLeft = pillLeft - (containerWidth / 2) + (pillWidth / 2);
-      container.scrollTo({ left: Math.max(0, targetScrollLeft) });
+      container.scrollTo({ left: Math.max(0, targetScrollLeft), behavior: 'smooth' });
     }
   }, [activeCategory]);
 
@@ -220,24 +221,29 @@ export default function HomeSignatureCategories({
   }, [groupedCategories]);
 
   // Single Top Bar Coordinator: When category pills bar reaches top, autonomously hide top navbar to eliminate dual bars
+  // Zero-Reflow IntersectionObserver eliminates synchronous window scroll getBoundingClientRect() calls
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
 
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
-    const checkSticky = () => {
-      if (!sentinel) return;
-      const rect = sentinel.getBoundingClientRect();
-      const isSticky = rect.top <= 12;
-      setIsCategoryBarSticky(isSticky);
-    };
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // When sentinel scrolls out of top viewport, bar is pinned/sticky
+        const isSticky = !entry.isIntersecting && entry.boundingClientRect.top <= 20;
+        setIsCategoryBarSticky(isSticky);
+      },
+      {
+        rootMargin: '-12px 0px 0px 0px',
+        threshold: [0, 1],
+      }
+    );
 
-    window.addEventListener('scroll', checkSticky, { passive: true });
-    checkSticky();
+    observer.observe(sentinel);
 
     return () => {
-      window.removeEventListener('scroll', checkSticky);
+      observer.disconnect();
       setIsCategoryBarSticky(false);
     };
   }, [setIsCategoryBarSticky]);

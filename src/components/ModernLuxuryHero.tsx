@@ -43,28 +43,35 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
   const [isDesktop, setIsDesktop] = useState(true);
   const touchStartX = useRef<number | null>(null);
 
-  // Viewport detection (SSR-safe)
+  // Viewport detection via matchMedia (zero reflow, no resize storm)
   useEffect(() => {
-    const checkViewport = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-    checkViewport();
-    window.addEventListener('resize', checkViewport, { passive: true });
-    return () => window.removeEventListener('resize', checkViewport);
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(min-width: 1024px)');
+    setIsDesktop(mql.matches);
+
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
   }, []);
 
   const visibleItems = isDesktop ? 5 : 3;
   const maxIndex = Math.max(0, TEN_CATEGORIES.length - visibleItems);
 
-  // Single unified, viewport-aware slider controller (prevents dual-interval lag & main-thread stutter)
+  // Single unified slider controller with hydration grace period (keeps main thread idle during initial load)
   useEffect(() => {
     if (isPaused) return;
 
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-    }, isDesktop ? 3800 : 3500);
+    let timer: NodeJS.Timeout | null = null;
+    const delayTimer = setTimeout(() => {
+      timer = setInterval(() => {
+        setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+      }, isDesktop ? 4000 : 3600);
+    }, 1500);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearTimeout(delayTimer);
+      if (timer) clearInterval(timer);
+    };
   }, [isPaused, maxIndex, isDesktop]);
 
   const handlePrev = useCallback(() => {
