@@ -57,9 +57,9 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
   const visibleItems = isDesktop ? 5 : 3;
   const maxIndex = Math.max(0, TEN_CATEGORIES.length - visibleItems);
 
-  // Single unified slider controller with hydration grace period (keeps main thread completely idle during initial load)
+  // Single unified slider controller with hydration grace period (runs on desktop only to eliminate mobile CPU throttling)
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || !isDesktop) return;
 
     let timer: NodeJS.Timeout | null = null;
     const delayTimer = setTimeout(() => {
@@ -72,7 +72,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
       clearTimeout(delayTimer);
       if (timer) clearInterval(timer);
     };
-  }, [isPaused, maxIndex]);
+  }, [isPaused, maxIndex, isDesktop]);
 
   const handlePrev = useCallback(() => {
     setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
@@ -220,7 +220,6 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                 src="/hero-living-room-img1-4k.webp"
                 alt="Fahad Ali Interior Luxury Living Room Showcase"
                 fill
-                priority
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover object-center transform hover:scale-102 transition-transform duration-700"
               />
@@ -238,6 +237,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
               src="/hero-living-room-mobile-img1.webp"
               alt="Fahad Ali Interior Luxury Living Room Showcase"
               fill
+              priority
               sizes="100vw"
               className="object-cover object-[78%_center] sm:object-center"
             />
