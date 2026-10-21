@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { getProductById, getStorefrontProducts } from '@/lib/catalog-api';
 import { resolveImageUrl } from '@/lib/images';
 import { getSiteUrl } from '@/lib/utils';
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   try {
     const product = await getProductById(id);
-    if (!product) return { title: 'Product Not Found' };
+    if (!product) return { title: 'Product Not Found | Fahad Ali Interior', robots: { index: false } };
     const imageUrl = resolveImageUrl(product.image, product.category);
     const absoluteImage = imageUrl.startsWith('http') ? imageUrl : `${getSiteUrl()}${imageUrl}`;
     const description =
@@ -54,13 +55,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   } catch {
-    return { title: 'Product' };
+    return { title: 'Product Not Found', robots: { index: false } };
   }
 }
 
 export default async function ProductDetail({ params }: Props) {
   const { id } = await params;
   const product = await getProductById(id);
+  if (!product) {
+    notFound();
+  }
   const siteUrl = getSiteUrl();
 
   const productUrl = `${siteUrl}/product/${id}`;

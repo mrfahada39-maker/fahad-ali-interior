@@ -22,7 +22,7 @@ const securityHeaders = [
   { key: 'X-Frame-Options',              value: 'DENY' },
   { key: 'X-Content-Type-Options',       value: 'nosniff' },
   { key: 'Referrer-Policy',              value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy',           value: 'camera=(self), microphone=(self), geolocation=(), payment=()' },
+  { key: 'Permissions-Policy',           value: 'camera=(self), microphone=(self), geolocation=()' },
   { key: 'Cross-Origin-Opener-Policy',   value: 'same-origin-allow-popups' },
   // HSTS: enforce HTTPS for 2 years, include subdomains, allow preload
   { key: 'Strict-Transport-Security',    value: 'max-age=63072000; includeSubDomains; preload' },
@@ -44,25 +44,6 @@ const nextConfig: NextConfig = {
   staticPageGenerationTimeout: 300,
   httpAgentOptions: {
     keepAlive: true,
-  },
-  async redirects() {
-    return [
-      {
-        source: '/shop',
-        destination: '/#signature-categories',
-        permanent: true,
-      },
-      {
-        source: '/shop/categories',
-        destination: '/#signature-categories',
-        permanent: true,
-      },
-      {
-        source: '/shop/:slug*',
-        destination: '/#signature-categories',
-        permanent: true,
-      },
-    ];
   },
 
   typescript: {
@@ -167,6 +148,21 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      {
+        source: '/shop',
+        destination: '/#signature-categories',
+        permanent: true,
+      },
+      {
+        source: '/shop/categories',
+        destination: '/#signature-categories',
+        permanent: true,
+      },
+      {
+        source: '/shop/:slug*',
+        destination: '/#signature-categories',
+        permanent: true,
+      },
       {
         source: '/shipping',
         destination: '/faq#delivery',

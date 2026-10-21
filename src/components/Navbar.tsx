@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Menu, X, Search, ShoppingBag, User, Home, Armchair, Sparkles, PhoneCall, Bell, LogOut, Compass, Crown, ChevronRight, Heart, LayoutGrid, Phone, UserPlus, Headphones, Facebook, Instagram, Youtube } from 'lucide-react';
-import { useCartStore, useSiteSettingsStore } from '@/store';
+import { useCartStore, useSiteSettingsStore, useUiNavigationStore } from '@/store';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
@@ -24,6 +24,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   const cartItemCount = useCartStore((s) => s.getItemCount());
   const openCart = useCartStore((s) => s.openCart);
   const { data: session } = useSession();
+  const isCategoryBarSticky = useUiNavigationStore((s) => s.isCategoryBarSticky);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -70,10 +71,10 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   const desktopNavLinks = [
     { label: 'Home', href: '/' },
     { label: 'Shop', href: '/#signature-categories' },
-    { label: 'Blog', href: '/#signature-categories' },
+    { label: 'Blog', href: '/blog' },
     { label: 'Collection', href: '/#signature-categories' },
     { label: 'About', href: '/about' },
-    { label: 'Service', href: '/contact' },
+    { label: 'Service', href: '/faq#delivery' },
     { label: 'Contact', href: '/contact' },
   ];
 
@@ -90,8 +91,13 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
   return (
     <>
-      {/* ── STICKY FLOATING EDITORIAL LUXURY NAVBAR (MATCHES MOCKUP 100%) ── */}
-      <header suppressHydrationWarning className="fixed top-0 left-0 right-0 z-50 w-full px-3 sm:px-6 pt-2.5 sm:pt-3 pointer-events-none font-sans">
+      {/* ── STICKY FLOATING EDITORIAL LUXURY NAVBAR (HIDES WHEN CATEGORY BAR IS PINNED) ── */}
+      <header
+        suppressHydrationWarning
+        className={`fixed top-0 left-0 right-0 z-50 w-full px-3 sm:px-6 pt-2.5 sm:pt-3 pointer-events-none font-sans transition-all duration-300 ease-in-out ${
+          isCategoryBarSticky ? '-translate-y-28 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
+        }`}
+      >
         <nav 
           suppressHydrationWarning
           className="pointer-events-auto w-full max-w-[1550px] mx-auto bg-white/95 md:backdrop-blur-md rounded-[20px] sm:rounded-full border border-[#EBE1D3] shadow-[0_4px_25px_rgba(44,30,24,0.06)] px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between transition-all duration-300"
@@ -204,6 +210,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                 onClick={() => signOut({ callbackUrl: '/' })}
                 className="w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-red-50 text-red-500 flex items-center justify-center transition-colors cursor-pointer"
                 title="Log out"
+                aria-label="Log out"
               >
                 <LogOut size={15} strokeWidth={1.8} />
               </button>
@@ -213,17 +220,17 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* ── MOBILE NAV BAR (LG:HIDDEN) ── */}
           <div className="lg:hidden flex items-center justify-between w-full">
             {/* Mobile Left: Menu & Search */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button 
                 onClick={() => setMobileOpen(true)} 
-                className="w-9 h-9 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#2C1E18] active:scale-95 transition-transform" 
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs" 
                 aria-label="Open Navigation Menu"
               >
                 <LayoutGrid size={18} strokeWidth={1.8} />
               </button>
               <button 
                 onClick={onSearchOpen} 
-                className="w-9 h-9 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#2C1E18] active:scale-95 transition-transform" 
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs" 
                 aria-label="Search Catalog"
               >
                 <Search size={17} strokeWidth={1.8} />
@@ -231,31 +238,31 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             </div>
 
             {/* Mobile Center: Brand Logo */}
-            <Link href="/" prefetch={false} className="flex flex-col items-center">
+            <Link href="/" prefetch={false} className="flex flex-col items-center py-1">
               <span className="font-serif text-lg font-black tracking-wider uppercase text-[#1F1A17]">
                 FAHAD ALI
               </span>
-              <span className="text-[8px] tracking-[0.3em] font-medium uppercase text-[#B88E4B] -mt-1">
+              <span className="text-[8px] tracking-[0.3em] font-medium uppercase text-[#8C6222] -mt-1">
                 INTERIOR
               </span>
             </Link>
 
             {/* Mobile Right: Wishlist & Cart */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => useWishlistDrawerStore.getState().openDrawer()}
-                className="w-9 h-9 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#2C1E18] active:scale-95 transition-transform"
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs"
                 aria-label="Wishlist"
               >
                 <Heart size={17} strokeWidth={1.8} />
               </button>
               <button 
                 onClick={openCart} 
-                className="relative w-9 h-9 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#2C1E18] active:scale-95 transition-transform" 
+                className="relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs" 
                 aria-label="Shopping Cart"
               >
                 <ShoppingBag size={17} strokeWidth={1.8} />
-                <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] rounded-full bg-[#C59B4B] text-white text-[9px] font-bold flex items-center justify-center px-1">
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-[#C59B4B] text-white text-[9px] font-bold flex items-center justify-center px-1">
                   {mounted ? cartItemCount : 0}
                 </span>
               </button>
@@ -264,19 +271,21 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         </nav>
       </header>
 
-      {/* ── LUXURY CURVED MOBILE DRAWER (EXACT 100% REPLICA OF SCREENSHOT IMAGE) ── */}
-      {mobileOpen && (
-      <>
+      {/* ── LUXURY CURVED MOBILE DRAWER (SNAPPY 300MS HARDWARE-ACCELERATED TRANSITION) ── */}
       <div
         onClick={() => setMobileOpen(false)}
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden transition-opacity duration-500 ${
+        aria-hidden={!mobileOpen}
+        className={`fixed inset-0 bg-black/60 z-50 lg:hidden transition-opacity duration-300 ${
           mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       />
       
       <div
-        className={`fixed top-0 left-0 bottom-0 w-[88%] max-w-[390px] bg-[#FAF7F2] text-[#2C1E18] z-50 flex flex-col justify-between p-5 sm:p-6 overflow-y-auto shadow-2xl rounded-r-[40px] border-r-2 border-[#C9A96E]/40 lg:hidden transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation Menu"
+        className={`fixed top-0 left-0 bottom-0 w-[88%] max-w-[390px] bg-[#FAF7F2] text-[#2C1E18] z-50 flex flex-col justify-between p-5 sm:p-6 overflow-y-auto shadow-2xl rounded-r-[40px] border-r-2 border-[#C9A96E]/40 lg:hidden transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
         }`}
       >
         {/* Top Header: Logo with Ornate Flourish & Circular Close Button */}
@@ -286,7 +295,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               <span className="font-serif text-2xl sm:text-3xl font-normal tracking-wider uppercase text-[#1C1410]">
                 FAHAD ALI
               </span>
-              <span className="text-[9px] sm:text-[10px] tracking-[0.35em] font-light uppercase text-[#B88E4B] -mt-0.5">
+              <span className="text-[9px] sm:text-[10px] tracking-[0.35em] font-light uppercase text-[#8C6222] -mt-0.5">
                 INTERIOR
               </span>
             </Link>
@@ -301,7 +310,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
           <button 
             onClick={() => setMobileOpen(false)} 
-            className="w-11 h-11 rounded-full bg-[#F4ECE1] border border-[#E6DCCF] flex items-center justify-center text-[#8A5A2B] shadow-sm hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer" 
+            className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#F4ECE1] border border-[#E6DCCF] flex items-center justify-center text-[#8A5A2B] shadow-sm hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer active:scale-95" 
             aria-label="Close Navigation"
           >
             <X size={22} strokeWidth={1.7} />
@@ -379,10 +388,25 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
           </Link>
 
+          {/* BLOG / JOURNAL */}
+          <Link
+            href="/blog"
+            prefetch={false}
+            onClick={() => setMobileOpen(false)}
+            className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
+          >
+            <div className="flex items-center gap-3.5">
+              <Compass size={20} strokeWidth={1.5} className="text-[#8A5A2B] group-hover:scale-125 group-hover:rotate-6 group-hover:text-[#C9A96E] transition-all duration-300" />
+              <span className="font-serif text-xs font-semibold tracking-widest uppercase text-[#2C1E18] group-hover:text-[#8A5A2B] transition-colors duration-300">
+                JOURNAL & CRAFT
+              </span>
+            </div>
+            <ChevronRight size={18} className="text-[#C9A96E] opacity-75 group-hover:translate-x-1.5 group-hover:text-[#8A5A2B] group-hover:opacity-100 transition-all duration-300" />
+          </Link>
+
           {/* 6. WISHLIST */}
           <button
-
-
+            aria-label="Open Wishlist"
             onClick={(e) => {
               setMobileOpen(false);
               useWishlistDrawerStore.getState().openDrawer();
@@ -527,9 +551,6 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         </div>
       </div>
 
-      </>
-      )}
-
       {/* ── CLEAN LUXURY WHITE/IVORY BOTTOM NAVIGATION (MATCHES IMAGE 1 100%) ── */}
       <nav 
         suppressHydrationWarning
@@ -545,9 +566,9 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           <Home 
             size={20} 
             strokeWidth={pathname === '/' ? 2.2 : 1.8} 
-            className={pathname === '/' ? 'text-[#B88E4B]' : 'text-[#7D6F64]'} 
+            className={pathname === '/' ? 'text-[#8C6222]' : 'text-[#7D6F64]'} 
           />
-          <span className={`text-[10px] mt-0.5 tracking-wide ${pathname === '/' ? 'font-bold text-[#B88E4B]' : 'font-medium text-[#7D6F64]'}`}>
+          <span className={`text-[10px] mt-0.5 tracking-wide ${pathname === '/' ? 'font-bold text-[#8C6222]' : 'font-medium text-[#7D6F64]'}`}>
             Home
           </span>
           {pathname === '/' && (

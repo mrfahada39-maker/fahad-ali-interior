@@ -80,16 +80,16 @@ export function WishlistDrawerPanel() {
       aria-label="Wishlist Drawer"
       className="fixed inset-0 z-[99999] flex items-center justify-center sm:justify-end p-3 sm:p-6 overflow-hidden"
     >
-      {/* Subtle Luxury Frosted Glass Backdrop */}
+      {/* Subtle Luxury Frosted Glass Backdrop (Zero Mobile GPU Overhead) */}
       <div
         onClick={closeDrawer}
-        className="fixed inset-0 -z-10 bg-[#221814]/30 backdrop-blur-sm transition-all duration-300"
+        className="fixed inset-0 -z-10 bg-black/60 md:backdrop-blur-xs transition-opacity duration-200"
       />
 
       {/* Luxury Floating Wishlist Modal Container */}
       <div
         style={{ backgroundColor: '#FCFAF7' }}
-        className="w-full max-w-[440px] h-[600px] max-h-[90vh] bg-[#FCFAF7] border-2 border-[#D4AF37]/50 rounded-[28px] shadow-[0_25px_80px_rgba(44,30,24,0.18),0_0_35px_rgba(184,142,75,0.2)] flex flex-col overflow-hidden z-20 transition-all duration-200"
+        className="w-full max-w-[440px] h-[600px] max-h-[90vh] bg-[#FCFAF7] border-2 border-[#D4AF37]/50 rounded-[28px] shadow-[0_25px_80px_rgba(44,30,24,0.18),0_0_35px_rgba(184,142,75,0.2)] flex flex-col overflow-hidden z-20 transition-all duration-200 will-change-transform"
       >
         {/* Top Brand Header */}
         <div className="relative px-5 py-4 border-b border-[#E2D6C8] bg-white flex items-center justify-between shrink-0">
@@ -110,13 +110,13 @@ export function WishlistDrawerPanel() {
             </div>
           </div>
 
-          {/* Ornate Circular Close Button */}
+          {/* Ornate Circular Close Button (WCAG 44px Touch Target Compliant) */}
           <button
             onClick={closeDrawer}
-            className="w-8.5 h-8.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] text-[#8C6239] hover:bg-[#B88E4B] hover:text-white hover:border-[#B88E4B] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[#FAF5EE] border border-[#E2D1BC] text-[#8C6239] hover:bg-[#B88E4B] hover:text-white hover:border-[#B88E4B] flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
             aria-label="Close wishlist"
           >
-            <X size={16} strokeWidth={2.2} />
+            <X size={18} strokeWidth={2.2} />
           </button>
         </div>
 
@@ -178,7 +178,7 @@ export function WishlistDrawerPanel() {
                           100% Solid Seasoned Wood • {item.category}
                         </p>
                       </div>
-                      <span className="font-serif font-black text-xs sm:text-sm text-[#B88E4B] shrink-0">
+                      <span className="font-serif font-black text-xs sm:text-sm text-[#8C6222] shrink-0">
                         Rs. {formatPricePk(item.price)}
                       </span>
                     </div>
@@ -221,7 +221,7 @@ export function WishlistDrawerPanel() {
                     <span className="font-serif font-black text-sm text-[#221814]">Wishlist Total</span>
                     <p className="text-[9.5px] font-bold text-[#8C6239]">✓ Handcrafted Bespoke Value</p>
                   </div>
-                  <span className="font-serif font-black text-base sm:text-lg text-[#B88E4B]">
+                  <span className="font-serif font-black text-base sm:text-lg text-[#8C6222]">
                     Rs. {formatPricePk(totalValue)}
                   </span>
                 </div>

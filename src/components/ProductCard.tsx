@@ -133,7 +133,7 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
               <span className="text-[9.5px] font-black uppercase tracking-wider text-[#8C6239] bg-[#FAF5EE] border border-amber-300/60 px-3 py-0.5 rounded-full shadow-2xs">
                 {product.category || 'Solid Wood'}
               </span>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-[#B88E4B]">
+              <div className="flex items-center gap-1 text-[11px] font-bold text-[#8C6222]">
                 <Star size={12} className="fill-[#B88E4B] text-[#B88E4B]" />
                 <span>{product.avgRating ? Number(product.avgRating).toFixed(1) : '5.0'}</span>
               </div>
@@ -220,15 +220,15 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
           </span>
         </div>
 
-        {/* Floating Wishlist Button */}
+        {/* Floating Wishlist Button (WCAG 44px Touch Target Compliant) */}
         <button
           type="button"
           onClick={handleWishlist}
-          className="absolute top-2.5 right-2.5 w-8.5 h-8.5 rounded-xl bg-white hover:bg-[#FAF5EE] text-[#221814] border border-amber-300/60 shadow-[0_2px_8px_rgba(184,142,75,0.15)] flex items-center justify-center transition-all z-10 hover:scale-110 cursor-pointer"
+          className="absolute top-2.5 right-2.5 w-11 h-11 sm:w-9 sm:h-9 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 rounded-xl bg-white/95 hover:bg-[#FAF5EE] text-[#221814] border border-amber-300/60 shadow-[0_2px_8px_rgba(184,142,75,0.15)] flex items-center justify-center transition-all z-10 hover:scale-110 active:scale-95 cursor-pointer"
           aria-label="Toggle Wishlist"
         >
           <Heart
-            size={14}
+            size={15}
             className={wishlisted ? 'fill-rose-500 text-rose-500' : 'text-[#221814]'}
           />
         </button>
@@ -285,9 +285,9 @@ export default function ProductCard({ product, index = 0, onQuickView, layoutMod
           <button
             type="button"
             onClick={handleAddToCart}
-            className="bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+            className="bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider shadow-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            <ShoppingBag size={13} />
+            <ShoppingBag size={14} />
             <span>Add</span>
           </button>
         </div>

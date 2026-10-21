@@ -1,9 +1,20 @@
-# Fahad Ali Interior
+# Fahad Ali Interior — Haute Couture Living
 
-> Handcrafted luxury solid Sheesham wood furniture from Lahore, Pakistan.
+> Handcrafted luxury solid Sheesham wood furniture engineered for modern living in Lahore, Pakistan.
 
 ## Storefront & Architecture Links
-- [Shop Catalog](https://fahad-ali-interior.vercel.app/shop): Complete collection of luxury beds, sofas, dining, and wardrobes.
-- [Categories Hub](https://fahad-ali-interior.vercel.app/shop/categories): Visual category browser for bespoke furniture.
-- [About Fahad Ali Interior](https://fahad-ali-interior.vercel.app/about): Brand heritage, artisan craftsmanship, and story.
-- [Contact Concierge](https://fahad-ali-interior.vercel.app/contact): VIP customer service, inquiries, and showroom locations.
+- [Masterpieces Collection](https://fahad-ali-interior.vercel.app/#signature-categories): Complete catalog of luxury solid wood beds, L-shape sectionals, dining sets, and wardrobes.
+- [Editorial Journal & Styling Guides](https://fahad-ali-interior.vercel.app/blog): Generational woodworking mastery, solid Sheesham joinery, and interior design inspiration.
+- [About Atelier & Heritage](https://fahad-ali-interior.vercel.app/about): Artisan craftsmanship, sustainably seasoned Dalbergia sissoo hardwood, and brand story.
+- [Contact & VIP Concierge](https://fahad-ali-interior.vercel.app/contact): Direct showroom appointments, custom sizing inquiries, and WhatsApp support.
+- [Frequently Asked Questions & Warranty](https://fahad-ali-interior.vercel.app/faq): Delivery timelines, 10-year anti-termite guarantee, and custom blueprints.
+
+## Core Brand & Specification Facts
+- **Location:** Main Boulevard, Gulberg III, Lahore, Punjab, Pakistan (54660).
+- **Primary Material:** 100% Solid Seasoned Sheesham Wood (Dalbergia sissoo) kiln-dried to <12% moisture content. No hollow MDF, chipboard, or vinyl stickers.
+- **Joinery Standard:** Generational mortise-and-tenon structural wood joinery with anti-warp guarantees.
+- **Warranty:** 10-Year Structural Timber & Anti-Termite Guarantee on all masterwork pieces.
+- **Delivery Scope:** White-glove in-room delivery and assembly across Lahore, Islamabad, Rawalpindi, Karachi, Faisalabad, Multan, and nationwide Pakistan.
+- **Payment Methods:** Cash on Delivery (COD), RAAST Instant Transfer, Direct Bank Wire (HBL), JazzCash, and Easypaisa.
+- **Official WhatsApp Concierge:** +92 320 7006110
+- **Official Concierge Email:** concierge@fahadali.pk

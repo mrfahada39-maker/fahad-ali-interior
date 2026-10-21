@@ -369,3 +369,16 @@ export const useSiteSettingsStore = create<SiteSettingsStore>((set) => ({
   hydrated: false,
   setSettings: (settings) => set({ settings, hydrated: true }),
 }));
+
+// ----------------------------------------------------
+// UI NAVIGATION STORE (COORDINATES SINGLE TOP BAR)
+// ----------------------------------------------------
+interface UiNavigationStore {
+  isCategoryBarSticky: boolean;
+  setIsCategoryBarSticky: (isCategoryBarSticky: boolean) => void;
+}
+
+export const useUiNavigationStore = create<UiNavigationStore>((set) => ({
+  isCategoryBarSticky: false,
+  setIsCategoryBarSticky: (isCategoryBarSticky) => set({ isCategoryBarSticky }),
+}));

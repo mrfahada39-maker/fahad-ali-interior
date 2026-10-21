@@ -23,7 +23,7 @@ export const FALLBACK_EDITORIAL_ARTICLES: EditorialArticle[] = [
 Unlike mass-produced MDF or hollow veneer boards that peel within a few seasons, 100% solid heartwood develops a richer golden-walnut patina every decade. Our ustads inspect each plank for natural interlocking grain density before hand-cutting traditional mortise-and-tenon joints.
 
 When you commission a dining table, royal bedstead, or majlis sofa set from our Lahore showroom, each surface is hand-rubbed with multi-layer protective sealers that highlight the organic river-grain of authentic Pakistani rosewood while resisting everyday spills and heat.`,
-    image: '/hero-desktop.avif',
+    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80',
     author: 'Fahad Ali Atelier',
     tags: ['Solid Sheesham', 'Craftsmanship', 'Lahore Heritage'],
     createdAt: '2026-09-15T10:00:00.000Z',
@@ -40,7 +40,7 @@ When you commission a dining table, royal bedstead, or majlis sofa set from our 
 For spacious 1-kanal and 2-kanal residences in DHA and Bahria Town, we recommend anchoring the main seating zone with a 3-2-1-1 solid Sheesham sofa suite finished in Royal Walnut or Antique Teak. Pairing deep hand-tufted Turkish champagne or emerald velvet with brass-inlaid center tables creates immediate depth without overwhelming the floor plan.
 
 Leave at least 30 inches of circulation clearance around the central coffee table so white-glove serving and conversation flow naturally during family gatherings.`,
-    image: '/hero-desktop.avif',
+    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80',
     author: 'Senior Interior Concierge',
     tags: ['Drawing Room', 'Interior Styling', 'Turkish Velvet'],
     createdAt: '2026-10-01T10:00:00.000Z',
@@ -55,7 +55,7 @@ Leave at least 30 inches of circulation clearance around the central coffee tabl
     content: `Maintaining solid seasoned hardwood is remarkably simple when you follow atelier-approved practices. Never use harsh ammonia or silicone sprays on hand-polished Sheesham; a dry, ultra-soft microfiber cloth is all that is needed for weekly dusting.
 
 Every six months, apply a light coat of natural beeswax or carnauba furniture balm along the direction of the wood grain, then buff gently with a clean cotton cloth. Keep pieces positioned away from direct, unshaded afternoon sunlight and AC vents to preserve the natural oils within the timber.`,
-    image: '/hero-desktop.avif',
+    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80',
     author: 'Master Finishing Ustad',
     tags: ['Care Guide', 'Polish & Finish', '10-Year Guarantee'],
     createdAt: '2026-10-10T10:00:00.000Z',

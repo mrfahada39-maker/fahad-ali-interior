@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, ChevronRight, Sparkles } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import type { StorefrontProduct } from '@/lib/types';
+import { useUiNavigationStore } from '@/store';
 
 interface HomeSignatureCategoriesProps {
   products: StorefrontProduct[];
@@ -74,17 +75,19 @@ export default function HomeSignatureCategories({
   categories = [],
 }: HomeSignatureCategoriesProps) {
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const setIsCategoryBarSticky = useUiNavigationStore((s) => s.setIsCategoryBarSticky);
   const sectionTopRef = useRef<HTMLElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const pillRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const isAutoScrolling = useRef(false);
   const scrollTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Determine category list in luxury editorial order
+  // Determine category list in luxury editorial order (All canonical atelier categories always visible)
   const categoryNames = useMemo(() => {
     const list = ['All'];
     const seen = new Set<string>();
 
-    // 1. Prioritize canonical atelier order
+    // 1. Prioritize canonical atelier order (always displayed in Category Pills Bar)
     for (const name of DEFAULT_CATEGORY_ORDER) {
       list.push(name);
       seen.add(name.toLowerCase());
@@ -112,14 +115,12 @@ export default function HomeSignatureCategories({
       const matching = products.filter(
         (p) => !assignedIds.has(p.id) && isProductInCategory(p, cat)
       );
-      if (matching.length > 0) {
-        matching.forEach((p) => assignedIds.add(p.id));
-        groups.push({
-          name: cat,
-          slug: slugify(cat),
-          products: matching,
-        });
-      }
+      matching.forEach((p) => assignedIds.add(p.id));
+      groups.push({
+        name: cat,
+        slug: slugify(cat),
+        products: matching,
+      });
     }
 
     // Remaining products grouped under Atelier Signature
@@ -135,19 +136,18 @@ export default function HomeSignatureCategories({
     return groups;
   }, [products, categoryNames]);
 
-  // Handle clicking a category pill
+  // Handle clicking a category pill (navbar is hidden when category bar is sticky, clean top-0 alignment)
   const handlePillClick = (cat: string) => {
     setActiveCategory(cat);
     isAutoScrolling.current = true;
     if (scrollTimer.current) clearTimeout(scrollTimer.current);
 
-    const navHeight = window.innerWidth >= 1024 ? 80 : window.innerWidth >= 640 ? 64 : 56;
-    const pillsBarHeight = 56;
+    const pillsBarHeight = 58;
 
     if (cat === 'All') {
       const el = sectionTopRef.current;
       if (el) {
-        const y = el.getBoundingClientRect().top + window.scrollY - (navHeight + 16);
+        const y = el.getBoundingClientRect().top + window.scrollY - 16;
         window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
       }
       scrollTimer.current = setTimeout(() => {
@@ -159,7 +159,7 @@ export default function HomeSignatureCategories({
     const slug = slugify(cat);
     const target = document.getElementById(`cat-section-${slug}`);
     if (target) {
-      const y = target.getBoundingClientRect().top + window.scrollY - (navHeight + pillsBarHeight + 12);
+      const y = target.getBoundingClientRect().top + window.scrollY - (pillsBarHeight + 8);
       window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
     }
 
@@ -180,7 +180,7 @@ export default function HomeSignatureCategories({
       const pillWidth = activePill.offsetWidth;
       const containerWidth = container.offsetWidth;
       const targetScrollLeft = pillLeft - (containerWidth / 2) + (pillWidth / 2);
-      container.scrollTo({ left: Math.max(0, targetScrollLeft), behavior: 'smooth' });
+      container.scrollTo({ left: Math.max(0, targetScrollLeft) });
     }
   }, [activeCategory]);
 
@@ -214,6 +214,29 @@ export default function HomeSignatureCategories({
     return () => observer.disconnect();
   }, [groupedCategories]);
 
+  // Single Top Bar Coordinator: When category pills bar reaches top, autonomously hide top navbar to eliminate dual bars
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const checkSticky = () => {
+      if (!sentinel) return;
+      const rect = sentinel.getBoundingClientRect();
+      const isSticky = rect.top <= 12;
+      setIsCategoryBarSticky(isSticky);
+    };
+
+    window.addEventListener('scroll', checkSticky, { passive: true });
+    checkSticky();
+
+    return () => {
+      window.removeEventListener('scroll', checkSticky);
+      setIsCategoryBarSticky(false);
+    };
+  }, [setIsCategoryBarSticky]);
+
   return (
     <section
       ref={sectionTopRef}
@@ -241,9 +264,12 @@ export default function HomeSignatureCategories({
         </p>
       </div>
 
-      {/* ── STICKY CATEGORY PILLS BAR (PINS FLUSH UNDER FIXED NAVBAR) ── */}
-      <div className="sticky top-[56px] sm:top-[64px] lg:top-[80px] z-40 bg-[#FCFAF7]/95 backdrop-blur-md py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-y border-amber-200/60 shadow-[0_4px_16px_rgba(184,142,75,0.06)] mb-8 transition-all">
-        <div ref={pillsContainerRef} className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1">
+      {/* Invisible Sentinel right before category pills bar (detects when category bar pins at top) */}
+      <div ref={sentinelRef} className="h-0.5 w-full pointer-events-none -mt-2 mb-1" />
+
+      {/* ── STICKY CATEGORY PILLS BAR (PINS FLUSH AT TOP-0, NAVBAR AUTONOMOUSLY HIDES) ── */}
+      <div className="sticky top-0 z-40 bg-[#FCFAF7] md:bg-[#FCFAF7]/98 md:backdrop-blur-md py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-amber-200/70 shadow-[0_4px_16px_rgba(184,142,75,0.06)] mb-8 transition-all">
+        <div ref={pillsContainerRef} data-scroll-container="horizontal" className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1">
           {categoryNames.map((cat) => {
             const isActive = activeCategory === cat;
             return (
@@ -252,7 +278,7 @@ export default function HomeSignatureCategories({
                 ref={(el) => { pillRefs.current[cat] = el; }}
                 type="button"
                 onClick={() => handlePillClick(cat)}
-                className={`relative flex-shrink-0 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+                className={`relative flex-shrink-0 px-5 py-2.5 min-h-[44px] flex items-center justify-center rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
                   isActive
                     ? 'text-white bg-gradient-to-r from-[#B88E4B] via-[#A68254] to-[#8C6944] shadow-[0_4px_14px_rgba(184,142,75,0.35)] border border-amber-200/80 scale-[1.03]'
                     : 'text-[#5A4336] bg-white border border-amber-200/70 hover:border-amber-400 hover:bg-[#FAF5EE] shadow-2xs hover:scale-[1.01]'
@@ -272,12 +298,12 @@ export default function HomeSignatureCategories({
             key={group.slug}
             id={`cat-section-${group.slug}`}
             data-category={group.name}
-            className="home-category-anchor-section scroll-mt-32 sm:scroll-mt-40"
+            className="home-category-anchor-section scroll-mt-24 sm:scroll-mt-28"
           >
             {/* Category Subheading Banner */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 border-b border-amber-200/70 pb-3.5 gap-2">
               <div>
-                <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#B88E4B] mb-1">
+                <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#8C6222] mb-1">
                   <span>✦</span>
                   <span>ROYAL BESPOKE COLLECTION</span>
                 </div>

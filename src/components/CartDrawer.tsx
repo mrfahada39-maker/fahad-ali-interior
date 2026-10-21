@@ -63,13 +63,13 @@ export default function CartDrawer() {
           aria-label="Shopping Cart"
           className="fixed inset-0 z-[99999] flex items-center justify-center sm:justify-end p-3 sm:p-6 overflow-hidden"
         >
-          {/* Subtle Luxury Frosted Glass Backdrop (Background Stays Visible) */}
+          {/* Subtle Luxury Frosted Glass Backdrop (Zero Mobile GPU Overhead) */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeCart}
-            className="fixed inset-0 -z-10 bg-[#221814]/30 backdrop-blur-sm transition-all duration-300"
+            className="fixed inset-0 -z-10 bg-black/60 md:backdrop-blur-xs transition-opacity duration-200"
           />
 
           {/* Luxury Floating Cart Modal Container */}
@@ -77,9 +77,9 @@ export default function CartDrawer() {
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             style={{ backgroundColor: '#FCFAF7' }}
-            className="w-full max-w-[440px] h-[600px] max-h-[90vh] bg-[#FCFAF7] border-2 border-[#D4AF37]/50 rounded-[28px] shadow-[0_25px_80px_rgba(44,30,24,0.18),0_0_35px_rgba(184,142,75,0.2)] flex flex-col overflow-hidden z-20"
+            className="w-full max-w-[440px] h-[600px] max-h-[90vh] bg-[#FCFAF7] border-2 border-[#D4AF37]/50 rounded-[28px] shadow-[0_25px_80px_rgba(44,30,24,0.18),0_0_35px_rgba(184,142,75,0.2)] flex flex-col overflow-hidden z-20 will-change-transform"
           >
             {/* Top Brand Header */}
             <div className="relative px-5 py-4 border-b border-[#E2D6C8] bg-white flex items-center justify-between shrink-0">
@@ -100,14 +100,14 @@ export default function CartDrawer() {
                 </div>
               </div>
 
-              {/* Ornate Close Button */}
+              {/* Ornate Close Button (WCAG 44px Touch Target Compliant) */}
               <button
                 type="button"
                 onClick={closeCart}
-                className="w-8.5 h-8.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] text-[#8C6239] hover:bg-[#B88E4B] hover:text-white hover:border-[#B88E4B] flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[#FAF5EE] border border-[#E2D1BC] text-[#8C6239] hover:bg-[#B88E4B] hover:text-white hover:border-[#B88E4B] flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                 aria-label="Close cart"
               >
-                <X size={16} strokeWidth={2.2} />
+                <X size={18} strokeWidth={2.2} />
               </button>
             </div>
 
@@ -166,34 +166,34 @@ export default function CartDrawer() {
                               100% Solid Seasoned Wood
                             </p>
                           </div>
-                          <span className="font-serif font-black text-xs sm:text-sm text-[#B88E4B] shrink-0">
+                          <span className="font-serif font-black text-xs sm:text-sm text-[#8C6222] shrink-0">
                             Rs. {formatPricePk(item.price)}
                           </span>
                         </div>
 
-                        {/* Quantity Controls & Delete */}
+                        {/* Quantity Controls & Delete (WCAG Touch Target Compliant) */}
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100">
-                          <div className="flex items-center gap-1 bg-[#FAF5EE] p-0.5 rounded-lg border border-[#E2D1BC]">
+                          <div className="flex items-center gap-1.5 bg-[#FAF5EE] p-1 rounded-xl border border-[#E2D1BC]">
                             <button
                               type="button"
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-7 h-7 rounded-md bg-white border border-[#E2D1BC] flex items-center justify-center text-[#8C6239] hover:bg-[#B88E4B] hover:text-white transition-colors cursor-pointer"
+                              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg bg-white border border-[#E2D1BC] flex items-center justify-center text-[#8C6239] hover:bg-[#B88E4B] hover:text-white transition-colors cursor-pointer active:scale-95"
                               title="Decrease quantity"
                               aria-label={`Decrease quantity of ${item.name}`}
                             >
-                              <Minus size={11} strokeWidth={2.5} />
+                              <Minus size={13} strokeWidth={2.5} />
                             </button>
-                            <span className="text-[#221814] text-xs font-black w-6 text-center font-serif">
+                            <span className="text-[#221814] text-xs font-black w-7 text-center font-serif">
                               {item.quantity}
                             </span>
                             <button
                               type="button"
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-7 h-7 rounded-md bg-white border border-[#E2D1BC] flex items-center justify-center text-[#8C6239] hover:bg-[#B88E4B] hover:text-white transition-colors cursor-pointer"
+                              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg bg-white border border-[#E2D1BC] flex items-center justify-center text-[#8C6239] hover:bg-[#B88E4B] hover:text-white transition-colors cursor-pointer active:scale-95"
                               title="Increase quantity"
                               aria-label={`Increase quantity of ${item.name}`}
                             >
-                              <Plus size={11} strokeWidth={2.5} />
+                              <Plus size={13} strokeWidth={2.5} />
                             </button>
                           </div>
 
@@ -203,11 +203,11 @@ export default function CartDrawer() {
                               removeItem(item.id);
                               toast.success(`${item.name} removed from cart`);
                             }}
-                            className="text-stone-400 hover:text-rose-600 transition-colors p-1.5 cursor-pointer flex items-center gap-1 text-[10px] font-semibold"
+                            className="text-stone-400 hover:text-rose-600 transition-colors p-2 min-h-[40px] cursor-pointer flex items-center gap-1.5 text-xs font-semibold active:scale-95"
                             title="Remove item"
                             aria-label={`Remove ${item.name} from cart`}
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={14} />
                             <span className="hidden sm:inline">Remove</span>
                           </button>
                         </div>
@@ -238,7 +238,7 @@ export default function CartDrawer() {
                         <span className="font-serif font-black text-sm text-[#221814]">Grand Total</span>
                         <p className="text-[9.5px] font-bold text-emerald-700">✓ Free White-Glove Dispatch</p>
                       </div>
-                      <span className="font-serif font-black text-base sm:text-lg text-[#B88E4B]">
+                      <span className="font-serif font-black text-base sm:text-lg text-[#8C6222]">
                         Rs. {formatPricePk(grandTotal)}
                       </span>
                     </div>

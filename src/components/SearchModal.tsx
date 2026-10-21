@@ -213,6 +213,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     onClick={() => setQuery('')}
                     className="p-1 rounded-full text-stone-400 hover:text-[#221814] transition-colors cursor-pointer"
                     title="Clear search"
+                    aria-label="Clear search"
                   >
                     <X size={16} />
                   </button>
@@ -284,7 +285,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                             <p className="text-[10px] font-bold uppercase tracking-wider text-[#8C6239] mt-0.5 truncate">
                               {product.category}
                             </p>
-                            <p className="font-serif font-black text-xs sm:text-sm text-[#B88E4B] mt-1">
+                            <p className="font-serif font-black text-xs sm:text-sm text-[#8C6222] mt-1">
                               Rs. {formatPricePk(product.price)}
                             </p>
                           </div>

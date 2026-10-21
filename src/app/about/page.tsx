@@ -40,7 +40,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-20">
             <div className="lg:col-span-6 relative aspect-[4/3] rounded-[28px] overflow-hidden border-[1.5px] border-amber-300/80 shadow-[0_12px_40px_rgba(184,142,75,0.15)] bg-[#FAF5EE]">
               <Image
-                src="/hero-desktop.avif"
+                src="/hero-living-room-img1-4k.webp"
                 alt="Fahad Ali Interior Royal Living Room Atelier"
                 fill
                 priority

@@ -130,6 +130,7 @@ function applyPageSecurityHeaders(
   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   response.headers.set('X-Permitted-Cross-Domain-Policies', 'none');
   response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
   if (httpsOnly) {
     response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   }
@@ -231,6 +232,22 @@ export async function proxy(request: NextRequest) {
       if (!rl.allowed) {
         return NextResponse.json(
           { error: rl.error || 'Too many review submissions. Please wait.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
+    } else if (pathname.includes('/orders') && isUnsafeMethod(request.method)) {
+      const rl = await rateLimit(`order_create:${ip}`, 'api');
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Too many order requests. Please wait a moment.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
+    } else if (pathname.includes('/ai/chat')) {
+      const rl = await rateLimit(`ai_chat:${ip}`, 'api');
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'AI concierge rate limit exceeded. Please wait a moment.' },
           { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
         );
       }
