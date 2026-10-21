@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING: '1'
+
 jobs:
   lint-and-typecheck:
     name: Lint & Typecheck
@@ -25,7 +28,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Root Dependencies
-        run: npm ci
+        run: npm ci || (echo "Retrying npm ci after ECONNRESET..." && sleep 3 && npm ci) || (echo "Final retry npm ci..." && sleep 5 && npm ci)
 
       - name: Generate Root Prisma Client
         run: npm run db:generate
@@ -50,7 +53,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Root Dependencies
-        run: npm ci
+        run: npm ci || (echo "Retrying npm ci after ECONNRESET..." && sleep 3 && npm ci) || (echo "Final retry npm ci..." && sleep 5 && npm ci)
 
       - name: Generate Root Prisma Client
         run: npm run db:generate
@@ -95,7 +98,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm ci || (echo "Retrying npm ci after ECONNRESET..." && sleep 3 && npm ci) || (echo "Final retry npm ci..." && sleep 5 && npm ci)
 
       - name: Generate Prisma Client
         run: npm run db:generate
