@@ -57,7 +57,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
   const visibleItems = isDesktop ? 5 : 3;
   const maxIndex = Math.max(0, TEN_CATEGORIES.length - visibleItems);
 
-  // Single unified slider controller with hydration grace period (keeps main thread idle during initial load)
+  // Single unified slider controller with hydration grace period (keeps main thread completely idle during initial load)
   useEffect(() => {
     if (isPaused) return;
 
@@ -65,14 +65,14 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
     const delayTimer = setTimeout(() => {
       timer = setInterval(() => {
         setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-      }, isDesktop ? 4000 : 3600);
-    }, 1500);
+      }, 5000);
+    }, 6000);
 
     return () => {
       clearTimeout(delayTimer);
       if (timer) clearInterval(timer);
     };
-  }, [isPaused, maxIndex, isDesktop]);
+  }, [isPaused, maxIndex]);
 
   const handlePrev = useCallback(() => {
     setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
