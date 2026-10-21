@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   });
 
   // 2. Fetch Blog / Editorial Articles
-  let blogArticles: Array<{ slug: string; updatedAt?: Date | string; image?: string }> = [];
+  let blogArticles: Array<{ slug: string; updatedAt?: Date | string; image?: string | null }> = [];
   try {
     const dbBlogs = await db.blogPost.findMany({
       where: { isActive: true, deletedAt: null },
