@@ -390,7 +390,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
           </div>
 
           {/* Dots Indicator matching Image 1 */}
-          <div className="flex items-center justify-center gap-1.5 mt-3 sm:mt-4">
+          <div suppressHydrationWarning className="flex items-center justify-center gap-1.5 mt-3 sm:mt-4">
             {Array.from({ length: maxIndex + 1 }).map((_, i) => (
               <button
                 key={i}

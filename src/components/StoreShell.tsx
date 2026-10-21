@@ -3,7 +3,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
-const Footer = dynamic(() => import('@/components/Footer'), { ssr: true });
+import Footer from '@/components/Footer';
 import BackToTop from '@/components/BackToTop';
 import { useCartStore } from '@/store';
 import { useWishlistDrawerStore } from '@/components/WishlistDrawer';
