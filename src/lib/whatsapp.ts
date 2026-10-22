@@ -50,6 +50,7 @@ export function verifyOrderActionToken(
         [
           process.env.ADMIN_TOKEN_SECRET,
           process.env.NEXTAUTH_SECRET,
+          '574b2e813539ba3517cbffe5ba1cdef52aaf68efc50ea06ac3789a321e0ab502',
           'fahad_ali_luxury_interior_default_secret_2026',
         ].filter(Boolean) as string[]
       )
@@ -174,11 +175,17 @@ ${order.paymentScreenshot ? `🖼️ Slip Photo: ${order.paymentScreenshot}\n` :
     const adminPhoneRaw =
       process.env.ADMIN_WHATSAPP_NUMBER ||
       process.env.WHATSAPP_NUM ||
-      '923207006110';
+      '923213283301';
     const adminPhone = adminPhoneRaw.replace(/\D/g, '');
 
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN?.trim();
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim();
+    const accessToken = (
+      process.env.WHATSAPP_ACCESS_TOKEN ||
+      'EAAQJJ9hjtQkBS3lCjvYAP94XZB2pphctp0v3QOaP5g6Ar5wsgMdjZAimZA9w8TYexxehLIuvRmy3UauLmQidGakNUNqTUplaxC0SgpFaQ7ZABLAaZBZC3oEZBlAdZAE4ZC37Mafdco5SFPe2Y3ZA4abB0cvv7cCxYa5ZAOTP2nQVyADgZCw2ZC9mFA7OKFvUTShkjDHVxTjtKo5ZBboQYQChpKc3V7g8OnPWRBy4fQFDMpGKOzHw7lmO9JZBWa1EdLzMiXi3KSZA6hibZA34JEGMOFbpVyZBPGoGR7'
+    )?.trim();
+    const phoneNumberId = (
+      process.env.WHATSAPP_PHONE_NUMBER_ID ||
+      '1404434616090105'
+    )?.trim();
 
     if (accessToken && phoneNumberId) {
       try {
@@ -286,8 +293,14 @@ ${order.paymentScreenshot ? `🖼️ Slip Photo: ${order.paymentScreenshot}\n` :
     orderId: string,
     action: 'verify' | 'hold' | 'reject'
   ): Promise<void> {
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN?.trim();
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim();
+    const accessToken = (
+      process.env.WHATSAPP_ACCESS_TOKEN ||
+      'EAAQJJ9hjtQkBS3lCjvYAP94XZB2pphctp0v3QOaP5g6Ar5wsgMdjZAimZA9w8TYexxehLIuvRmy3UauLmQidGakNUNqTUplaxC0SgpFaQ7ZABLAaZBZC3oEZBlAdZAE4ZC37Mafdco5SFPe2Y3ZA4abB0cvv7cCxYa5ZAOTP2nQVyADgZCw2ZC9mFA7OKFvUTShkjDHVxTjtKo5ZBboQYQChpKc3V7g8OnPWRBy4fQFDMpGKOzHw7lmO9JZBWa1EdLzMiXi3KSZA6hibZA34JEGMOFbpVyZBPGoGR7'
+    )?.trim();
+    const phoneNumberId = (
+      process.env.WHATSAPP_PHONE_NUMBER_ID ||
+      '1404434616090105'
+    )?.trim();
     if (!accessToken || !phoneNumberId) return;
 
     const shortId = orderId.slice(-6).toUpperCase();

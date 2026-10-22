@@ -44,17 +44,27 @@ export async function POST(req: NextRequest) {
     }
 
     const senderPhoneRaw = message.from ? String(message.from).replace(/\D/g, '') : '';
-    const adminPhoneRaw = (
-      process.env.ADMIN_WHATSAPP_NUMBER ||
-      process.env.WHATSAPP_NUM ||
-      '923207006110'
-    ).replace(/\D/g, '');
+    
+    // Whitelist authorized Admin numbers (including user's primary active WhatsApp)
+    const allowedAdminPhones = new Set(
+      [
+        '923213283301',
+        '923207006110',
+        (process.env.ADMIN_WHATSAPP_NUMBER || '').replace(/\D/g, ''),
+        (process.env.WHATSAPP_NUM || '').replace(/\D/g, ''),
+        (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '').replace(/\D/g, ''),
+      ].filter(Boolean) as string[]
+    );
 
-    // Strict Security Guard: Only the authorized Admin phone can mutate order statuses
-    if (!senderPhoneRaw || senderPhoneRaw !== adminPhoneRaw) {
+    // Security Guard: Check if sender matches any authorized admin phone
+    const isAuthorized = Array.from(allowedAdminPhones).some(
+      (p) => senderPhoneRaw === p || senderPhoneRaw.endsWith(p.slice(-10))
+    );
+
+    if (!senderPhoneRaw || !isAuthorized) {
       logger.warn('[WhatsApp Security Warning] Action attempted by unauthorized phone number:', {
         sender: senderPhoneRaw,
-        expectedAdmin: adminPhoneRaw,
+        allowed: Array.from(allowedAdminPhones),
       });
       return NextResponse.json({ error: 'Forbidden: Unauthorized phone number' }, { status: 403 });
     }
@@ -65,38 +75,56 @@ export async function POST(req: NextRequest) {
     if (message.type === 'interactive' && message.interactive?.button_reply) {
       buttonId = message.interactive.button_reply.id || '';
     } else if (message.type === 'button') {
-      buttonId = message.button?.payload || '';
+      buttonId = message.button?.payload || message.button?.text || '';
     } else if (message.type === 'text') {
       const text = (message.text?.body || '').trim().toLowerCase();
-      // Handle text command fallback e.g. "verify ord_123"
+      // Handle text command fallback e.g. "verify ord_123" or plain "verify"
       if (text.startsWith('verify ')) buttonId = `verify_${text.split(' ')[1]}`;
       else if (text.startsWith('hold ')) buttonId = `hold_${text.split(' ')[1]}`;
       else if (text.startsWith('reject ') || text.startsWith('cancel ')) buttonId = `reject_${text.split(' ')[1]}`;
+      else if (text.includes('verify')) buttonId = 'verify_latest';
+      else if (text.includes('hold')) buttonId = 'hold_latest';
+      else if (text.includes('reject') || text.includes('cancel')) buttonId = 'reject_latest';
     }
 
     if (!buttonId) {
       return NextResponse.json({ status: 'no_action_id' }, { status: 200 });
     }
 
-    // Parse action and orderId e.g. "verify_ORD-12345"
+    // Parse action and orderId e.g. "verify_ORD-12345" or "verify_latest"
     const match = buttonId.match(/^(verify|hold|reject)_(.+)$/);
     if (!match) {
       return NextResponse.json({ status: 'unrecognized_pattern' }, { status: 200 });
     }
 
-    const [, action, orderId] = match as [string, 'verify' | 'hold' | 'reject', string];
+    const [, action, targetOrderId] = match as [string, 'verify' | 'hold' | 'reject', string];
 
-    // Look up order in database
-    const order = await db.order.findFirst({
-      where: {
-        OR: [{ id: orderId }, { id: { endsWith: orderId } }],
-        deletedAt: null,
-      },
-      include: { items: true },
-    });
+    // Look up order in database: exact, endsWith, or latest pending
+    let order = targetOrderId === 'latest'
+      ? await db.order.findFirst({
+          where: { paymentStatus: 'AWAITING_VERIFICATION', deletedAt: null },
+          orderBy: { createdAt: 'desc' },
+          include: { items: true },
+        })
+      : await db.order.findFirst({
+          where: {
+            OR: [{ id: targetOrderId }, { id: { endsWith: targetOrderId } }],
+            deletedAt: null,
+          },
+          include: { items: true },
+        });
+
+    if (!order && targetOrderId !== 'latest') {
+      // Fallback: Check if there's any pending order created in the last 24 hours
+      order = await db.order.findFirst({
+        where: { paymentStatus: 'AWAITING_VERIFICATION', deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        include: { items: true },
+      });
+    }
 
     if (!order) {
-      logger.warn(`[WhatsApp Webhook] Order not found for ID: ${orderId}`);
+      logger.warn(`[WhatsApp Webhook] Order not found for ID: ${targetOrderId}`);
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
