@@ -47,12 +47,24 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
       }
     };
 
-    // Register service worker purely in idle time to protect TBT
+    // Register service worker purely in idle time in production to protect TBT
     const swTimer = setTimeout(() => {
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
+        if (process.env.NODE_ENV === 'production') {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        } else {
+          // In development, automatically unregister stale service workers to prevent bad-precaching 404 errors
+          navigator.serviceWorker
+            .getRegistrations()
+            .then((registrations) => {
+              for (const registration of registrations) {
+                registration.unregister().catch(() => {});
+              }
+            })
+            .catch(() => {});
+        }
       }
-    }, 5000);
+    }, 1000);
 
     window.addEventListener('pointerdown', onFirstInteraction, { once: true, passive: true });
     window.addEventListener('keydown', onFirstInteraction, { once: true, passive: true });

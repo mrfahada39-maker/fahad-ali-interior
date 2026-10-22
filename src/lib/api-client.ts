@@ -105,7 +105,7 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
   // Auth: httpOnly cookies only (no Authorization header injected from JS storage).
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30_000);
+  const timer = setTimeout(() => controller.abort(), 60_000);
   const signal = init?.signal ? combineSignals(init.signal, controller.signal) : controller.signal;
 
   // Note: credentials 'include' is mandatory for HttpOnly cookies to be sent

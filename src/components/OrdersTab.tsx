@@ -25,7 +25,7 @@ const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface OrdersTabProps {
   orders: any[];
-  updateOrderStatus: (id: string, status: string) => void;
+  updateOrderStatus: (id: string, status: string, paymentStatus?: string) => void;
 }
 
 export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps) {
@@ -78,6 +78,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
   const statusCounts = {
     all: orders.length,
     pending: orders.filter((o) => (o.status || '').toLowerCase() === 'pending').length,
+    verificationPending: orders.filter((o) => o.paymentStatus === 'AWAITING_VERIFICATION').length,
     processing: orders.filter((o) => (o.status || '').toLowerCase() === 'processing').length,
     shipped: orders.filter((o) => (o.status || '').toLowerCase() === 'shipped').length,
     delivered: orders.filter((o) => (o.status || '').toLowerCase() === 'delivered').length,
@@ -87,7 +88,12 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
   const totalOrderRevenue = orders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
 
   const filteredOrders = orders.filter((o) => {
-    const matchesStatus = selectedStatusFilter === 'all' || (o.status || '').toLowerCase() === selectedStatusFilter;
+    const matchesStatus =
+      selectedStatusFilter === 'all'
+        ? true
+        : selectedStatusFilter === 'verification'
+          ? o.paymentStatus === 'AWAITING_VERIFICATION'
+          : (o.status || '').toLowerCase() === selectedStatusFilter;
     const rawQ = searchQuery.trim();
     if (!rawQ) return matchesStatus;
 
@@ -214,7 +220,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
 
   return (
     <div className="space-y-4 font-sans">
-      
+
       {/* ── $100,000 EXECUTIVE HEADER (DUAL RESPONSIVE: GRAND ON DESKTOP, COMPACT ON MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
@@ -310,11 +316,12 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
 
       {/* ── STATUS FILTER PILLS & SEARCH TOOLBAR ── */}
       <div className="bg-white border border-[#E7DDD0] p-3 rounded-[20px] shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex flex-col lg:flex-row items-center justify-between gap-3">
-        
+
         {/* Status Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0 scrollbar-hide">
           {[
             { id: 'all', label: 'All Orders', count: statusCounts.all },
+            { id: 'verification', label: '⚡ Awaiting Slip Verification', count: statusCounts.verificationPending },
             { id: 'pending', label: 'Pending', count: statusCounts.pending },
             { id: 'processing', label: 'Processing', count: statusCounts.processing },
             { id: 'shipped', label: 'Shipped', count: statusCounts.shipped },
@@ -326,16 +333,14 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
               <button
                 key={tab.id}
                 onClick={() => setSelectedStatusFilter(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-xs'
-                    : 'bg-[#FCFAF7] border border-[#E7DDD0] text-stone-600 hover:text-[#221814] hover:border-[#B88E4B]/50'
-                }`}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${isActive
+                  ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-xs'
+                  : 'bg-[#FCFAF7] border border-[#E7DDD0] text-stone-600 hover:text-[#221814] hover:border-[#B88E4B]/50'
+                  }`}
               >
                 <span>{tab.label}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                  isActive ? 'bg-white/25 text-white' : 'bg-white text-stone-500 border border-stone-200'
-                }`}>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isActive ? 'bg-white/25 text-white' : 'bg-white text-stone-500 border border-stone-200'
+                  }`}>
                   <AnimatedCounter value={tab.count} duration={1.2} />
                 </span>
               </button>
@@ -636,6 +641,136 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                   <span>Payment Status: <strong className="text-stone-800 uppercase">{selectedOrderDetails.paymentStatus || 'Pending'}</strong></span>
                 </div>
               </div>
+
+              {/* AI Payment Bot Verification & 3 Action Buttons */}
+              {((selectedOrderDetails.paymentMethod || '').toLowerCase() !== 'cod' ||
+                selectedOrderDetails.paymentScreenshot ||
+                selectedOrderDetails.paymentStatus === 'AWAITING_VERIFICATION' ||
+                selectedOrderDetails.paymentGatewayRef) && (
+                  <div className="mb-5 bg-gradient-to-br from-[#FFFDF9] via-white to-[#FAF6EE] p-4 rounded-2xl border-2 border-[#D4AF37]/50 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#EFE8DD] pb-2">
+                      <p className="text-xs font-black text-[#221814] uppercase tracking-wider font-serif flex items-center gap-1.5">
+                        <Sparkles size={14} className="text-[#B88E4B]" />
+                        <span>AI Payment Bot Verification & Actions</span>
+                      </p>
+                      <span
+                        className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border ${selectedOrderDetails.paymentStatus === 'PAID'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                          : selectedOrderDetails.paymentStatus === 'FAILED'
+                            ? 'bg-rose-50 text-rose-800 border-rose-300'
+                            : 'bg-amber-50 text-amber-900 border-amber-300 animate-pulse'
+                          }`}
+                      >
+                        {selectedOrderDetails.paymentStatus === 'PAID'
+                          ? 'VERIFIED & PAID'
+                          : selectedOrderDetails.paymentStatus === 'FAILED'
+                            ? 'REJECTED'
+                            : 'PENDING APPROVAL'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="space-y-1.5">
+                        <div>
+                          <p className="text-[11px] text-stone-500 font-medium">Transaction ID (TID / Ref):</p>
+                          <p className="font-mono font-black text-sm text-[#8C6239] mt-0.5">
+                            {selectedOrderDetails.paymentGatewayRef ||
+                              (() => {
+                                const notes = selectedOrderDetails.shippingNotes || selectedOrderDetails.shippingInfo?.notes || '';
+                                const match = notes.match(/TxID:\s*([A-Za-z0-9_-]+)/i);
+                                return match && match[1] && match[1] !== 'N/A' ? match[1] : 'Provided in Notes';
+                              })()}
+                          </p>
+                        </div>
+                        <p className="text-[10.5px] text-stone-500">
+                          Method: <strong className="text-stone-800 uppercase">{selectedOrderDetails.paymentMethod}</strong>
+                        </p>
+                        <p className="text-[10.5px] text-emerald-700 font-bold flex items-center gap-1">
+                          <ShieldCheck size={12} />
+                          SBP & Bank Transfer Compliant
+                        </p>
+                      </div>
+
+                      {selectedOrderDetails.paymentScreenshot ? (
+                        <div className="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-stone-200/80 shadow-2xs">
+                          <a
+                            href={selectedOrderDetails.paymentScreenshot}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="relative block w-14 h-14 rounded-lg overflow-hidden border border-stone-200 shrink-0 hover:opacity-90"
+                            title="Click to view full screenshot"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={selectedOrderDetails.paymentScreenshot}
+                              alt="Receipt"
+                              className="w-full h-full object-cover"
+                            />
+                          </a>
+                          <div className="text-[11px] space-y-1">
+                            <p className="font-bold text-stone-800">Customer Slip Attached</p>
+                            <a
+                              href={selectedOrderDetails.paymentScreenshot}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#8C6239] font-black text-[11px] hover:underline flex items-center gap-1"
+                            >
+                              <Eye size={12} /> View Full Receipt
+                            </a>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 text-center space-y-1 text-xs">
+                          <p className="font-bold text-amber-900">Slip Screenshot Pending</p>
+                          <p className="text-stone-500 text-[10.5px]">
+                            Customer submitted TID: {selectedOrderDetails.paymentGatewayRef || 'In Shipping Notes'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2.5 border-t border-[#EFE8DD] grid grid-cols-3 gap-2">
+                      {/* 1. Verify Payment */}
+                      <button
+                        onClick={() => {
+                          updateOrderStatus(selectedOrderDetails.id, 'PROCESSING', 'PAID');
+                          setSelectedOrderDetails((prev: any) => ({ ...prev, status: 'PROCESSING', paymentStatus: 'PAID' }));
+                        }}
+                        className="h-10 sm:h-10.5 px-2.5 sm:px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 border border-emerald-400/50 text-white font-bold text-xs sm:text-[13px] tracking-tight shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                        title="Verify payment and approve order"
+                      >
+                        <span className="text-[14px] sm:text-[15px] leading-none shrink-0">✅</span>
+                        <span className="truncate">Verify <span className="hidden sm:inline">Payment</span></span>
+                      </button>
+
+                      {/* 2. Hold 24-48 Hours */}
+                      <button
+                        onClick={() => {
+                          updateOrderStatus(selectedOrderDetails.id, 'PENDING', 'AWAITING_VERIFICATION');
+                          setSelectedOrderDetails((prev: any) => ({ ...prev, status: 'PENDING', paymentStatus: 'AWAITING_VERIFICATION' }));
+                        }}
+                        className="h-10 sm:h-10.5 px-2.5 sm:px-3.5 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#C9A24D] to-[#996515] hover:from-[#C9A24D] hover:to-[#B88E4B] border border-amber-300/50 text-white font-bold text-xs sm:text-[13px] tracking-tight shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                        title="Hold order for 24-48 hours bank clearance"
+                      >
+                        <span className="text-[14px] sm:text-[15px] leading-none shrink-0">⏳</span>
+                        <span className="truncate">Hold 24-48h</span>
+                      </button>
+
+                      {/* 3. Reject / Cancel Order */}
+                      <button
+                        onClick={() => {
+                          updateOrderStatus(selectedOrderDetails.id, 'CANCELLED', 'FAILED');
+                          setSelectedOrderDetails((prev: any) => ({ ...prev, status: 'CANCELLED', paymentStatus: 'FAILED' }));
+                        }}
+                        className="h-10 sm:h-10.5 px-2.5 sm:px-3.5 rounded-xl bg-gradient-to-r from-rose-600 via-rose-700 to-red-700 hover:from-rose-500 hover:to-red-600 border border-rose-400/50 text-white font-bold text-xs sm:text-[13px] tracking-tight shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                        title="Reject slip and cancel order"
+                      >
+                        <span className="text-[14px] sm:text-[15px] leading-none shrink-0">❌</span>
+                        <span className="truncate">Reject <span className="hidden sm:inline">Order</span></span>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
               {/* In-Admin Actions (NO APP REDIRECT!) */}
               <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-200">

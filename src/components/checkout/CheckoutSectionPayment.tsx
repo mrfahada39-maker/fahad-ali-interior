@@ -176,7 +176,8 @@ export function CheckoutSectionPayment({
                       alt="JazzCash"
                       width={120}
                       height={56}
-                      className="w-full h-full max-h-[52px] sm:max-h-[58px] object-contain group-hover:scale-105 transition-transform"
+                      className="max-h-[52px] sm:max-h-[58px] max-w-[90%] object-contain group-hover:scale-105 transition-transform"
+                      style={{ width: 'auto', height: 'auto' }}
                     />
                   </button>
 
@@ -196,7 +197,8 @@ export function CheckoutSectionPayment({
                       alt="Easypaisa"
                       width={120}
                       height={44}
-                      className="w-full h-full max-h-[38px] sm:max-h-[44px] max-w-[90%] object-contain group-hover:scale-105 transition-transform"
+                      className="max-h-[38px] sm:max-h-[44px] max-w-[90%] object-contain group-hover:scale-105 transition-transform"
+                      style={{ width: 'auto', height: 'auto' }}
                     />
                   </button>
 
@@ -249,7 +251,8 @@ export function CheckoutSectionPayment({
                       alt="Raast State Bank of Pakistan"
                       width={120}
                       height={60}
-                      className="w-full h-full max-h-[56px] sm:max-h-[62px] object-contain group-hover:scale-105 transition-transform"
+                      className="max-h-[56px] sm:max-h-[62px] max-w-[90%] object-contain group-hover:scale-105 transition-transform"
+                      style={{ width: 'auto', height: 'auto' }}
                     />
                   </button>
                 </div>
@@ -332,13 +335,13 @@ export function CheckoutSectionPayment({
                           <div className="flex items-center justify-between border-b border-[#E7DDD0] pb-2.5">
                             <div className="flex items-center gap-2">
                               {paymentMethod === 'jazzcash' && (
-                                <Image src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto,w_140/v1788039222/fahad-ali-interior/assets/jazzcash_logo.svg" alt="JazzCash" width={100} height={24} className="h-6 w-auto object-contain" />
+                                <Image src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto,w_140/v1788039222/fahad-ali-interior/assets/jazzcash_logo.svg" alt="JazzCash" width={100} height={24} style={{ width: 'auto', height: 'auto' }} className="h-6 w-auto object-contain" />
                               )}
                               {paymentMethod === 'easypaisa' && (
-                                <Image src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/easypaisa_logo.png" alt="Easypaisa" width={100} height={22} className="h-5.5 w-auto object-contain" />
+                                <Image src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/easypaisa_logo.png" alt="Easypaisa" width={100} height={22} style={{ width: 'auto', height: 'auto' }} className="h-5.5 w-auto object-contain" />
                               )}
                               {paymentMethod === 'bank' && (
-                                <Image src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/raast_logo.png" alt="Raast SBP" width={100} height={24} className="h-6 w-auto object-contain" />
+                                <Image src="https://res.cloudinary.com/dfd8rzojj/image/upload/f_webp,q_auto:eco,w_140/v1788039224/fahad-ali-interior/assets/raast_logo.png" alt="Raast SBP" width={100} height={24} style={{ width: 'auto', height: 'auto' }} className="h-6 w-auto object-contain" />
                               )}
                             </div>
                             <span className="text-[9.5px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full">

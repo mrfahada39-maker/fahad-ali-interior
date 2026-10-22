@@ -26,6 +26,7 @@ const AiRadarTab = dynamic(() => import('./AiRadarTab'), { ssr: false });
 const LuxuryCallModal = dynamic(() => import('@/components/LuxuryCallModal'), { ssr: false });
 import { useAdminCall } from '@/hooks/use-admin-call';
 import { AdminNavigationChrome } from '@/components/admin/AdminNavigationChrome';
+import { PaymentVerificationsTab } from '@/components/admin/PaymentVerificationsTab';
 import { AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
 
 import { useSiteSettingsStore } from '@/store';
@@ -452,10 +453,20 @@ export default function AdminDashboard() {
     }
   }, [activeTab, unreadMessageCount]);
 
-  const updateOrderStatus = async (id: string, status: string) => {
-    setOrders((prev: any[]) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
-    toast.success(`Order marked as ${status}`);
-    const res = await apiFetch('/api/admin/orders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
+  const updateOrderStatus = async (id: string, status: string, paymentStatus?: string) => {
+    setOrders((prev: any[]) =>
+      prev.map((o) =>
+        o.id === id
+          ? { ...o, status, ...(paymentStatus ? { paymentStatus } : {}) }
+          : o
+      )
+    );
+    toast.success(`Order updated: ${status}${paymentStatus ? ` (${paymentStatus})` : ''}`);
+    const res = await apiFetch('/api/admin/orders', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status, ...(paymentStatus ? { paymentStatus } : {}) }),
+    });
     if (!res.ok) {
       toast.error('Failed to update order');
       loadAll();
@@ -835,6 +846,11 @@ export default function AdminDashboard() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         unreadMessageCount={unreadMessageCount}
+        pendingVerificationCount={
+          (orders || []).filter(
+            (o: any) => (o.paymentStatus || '').toUpperCase() === 'AWAITING_VERIFICATION'
+          ).length
+        }
       />
 
       {/* Main Content Area */}
@@ -883,6 +899,15 @@ export default function AdminDashboard() {
               <OrdersTab
                 orders={orders}
                 updateOrderStatus={updateOrderStatus}
+              />
+            )}
+
+            {/* PAYMENT SLIP VERIFICATIONS */}
+            {activeTab === 'payment-verifications' && (
+              <PaymentVerificationsTab
+                orders={orders}
+                updateOrderStatus={updateOrderStatus}
+                onRefresh={loadAll}
               />
             )}
 

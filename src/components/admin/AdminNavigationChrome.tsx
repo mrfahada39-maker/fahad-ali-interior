@@ -10,12 +10,14 @@ export interface AdminNavigationChromeProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   unreadMessageCount: number;
+  pendingVerificationCount?: number;
 }
 
 export function AdminNavigationChrome({
   activeTab,
   setActiveTab,
   unreadMessageCount,
+  pendingVerificationCount = 0,
 }: AdminNavigationChromeProps) {
   return (
     <>
@@ -62,6 +64,12 @@ export function AdminNavigationChrome({
                   {tab.id === 'messages' && unreadMessageCount > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
                       {unreadMessageCount}
+                    </span>
+                  )}
+
+                  {tab.id === 'payment-verifications' && pendingVerificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs animate-bounce">
+                      {pendingVerificationCount}
                     </span>
                   )}
                 </button>
@@ -196,6 +204,11 @@ export function AdminNavigationChrome({
                 {tab.id === 'messages' && unreadMessageCount > 0 && (
                   <span className="min-w-4 h-4 px-1 bg-rose-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-pulse shadow-xs">
                     {unreadMessageCount}
+                  </span>
+                )}
+                {tab.id === 'payment-verifications' && pendingVerificationCount > 0 && (
+                  <span className="min-w-4 h-4 px-1 bg-amber-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-bounce shadow-xs">
+                    {pendingVerificationCount}
                   </span>
                 )}
               </button>

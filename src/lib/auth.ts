@@ -13,7 +13,8 @@ import { logger } from '@/lib/logger';
 const isProduction = process.env.NODE_ENV === 'production';
 const isLocalAuth =
   (process.env.NEXTAUTH_URL ?? '').includes('localhost') ||
-  (process.env.NEXTAUTH_URL ?? '').includes('127.0.0.1');
+  (process.env.NEXTAUTH_URL ?? '').includes('127.0.0.1') ||
+  process.env.NODE_ENV !== 'production';
 
 /** True only when both Google OAuth env vars are filled with real values */
 export const isGoogleOAuthEnabled =

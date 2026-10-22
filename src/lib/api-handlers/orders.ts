@@ -22,6 +22,8 @@ import {
   getUserFromSessionOrToken,
   requireAdmin,
 } from './shared';
+import { PaymentVerifier } from '@/lib/ai/payment-verifier';
+import { WhatsAppService } from '@/lib/whatsapp';
 
 export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextResponse | null> {
   const { method, segment, normalizedSegment, req } = ctx;
@@ -364,9 +366,11 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
 
     try {
       const runTx = db.$transaction.bind(db) as unknown as <T>(
-        fn: (tx: typeof db) => Promise<T>
+        fn: (tx: typeof db) => Promise<T>,
+        options?: { maxWait?: number; timeout?: number }
       ) => Promise<T>;
-      newOrder = await runTx(async (tx) => {
+      newOrder = await runTx(
+        async (tx) => {
         for (const item of formattedItems) {
           const stockUpdate = await tx.product.updateMany({
             where: {
@@ -424,7 +428,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
             discount,
             totalAmount,
             status: 'PENDING',
-            paymentStatus: 'PENDING',
+            paymentStatus: validPaymentMethod !== 'COD' || body.paymentScreenshot ? 'AWAITING_VERIFICATION' : 'PENDING',
             items: {
               create: formattedItems,
             },
@@ -449,7 +453,9 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
           .catch(() => null);
 
         return order;
-      });
+      },
+      { maxWait: 15000, timeout: 25000 }
+    );
     } catch (txError: unknown) {
       const msg = txError instanceof Error ? txError.message : String(txError || '');
       if (msg.startsWith('INSUFFICIENT_STOCK:')) {
@@ -467,24 +473,90 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
           { status: 400 }
         );
       }
+      logger.error('[Order Placement Transaction Failed]:', txError);
       throw txError;
     }
 
-    await sendOrderConfirmationEmail({
-      orderId: newOrder.id,
-      customerName: newOrder.shippingName || shippingName,
-      customerEmail: newOrder.shippingEmail || shippingEmail,
-      customerPhone: newOrder.shippingPhone || shippingPhone,
-      shippingAddress: newOrder.shippingAddress || shippingAddress,
-      shippingCity: newOrder.shippingCity || shippingCity,
-      paymentMethod: newOrder.paymentMethod || validPaymentMethod,
-      items: formattedItems,
-      subtotal,
-      gst,
-      discount,
-      totalAmount,
-      couponCode: appliedCoupon?.code || null,
-    }).catch((err) => logger.error('[SMTP BACKGROUND ERROR]', err));
+    // ── Asynchronous Background Processing: AI Screenshot Verifier, WhatsApp Admin Alert & Email ──
+    const runPostOrderTasks = async () => {
+      if (body.paymentScreenshot || validPaymentMethod !== 'COD') {
+        try {
+          const audit = await PaymentVerifier.verifyScreenshot({
+            orderId: newOrder.id,
+            screenshotUrlOrBase64: body.paymentScreenshot || '',
+            expectedAmount: Number(totalAmount),
+            paymentMethod: validPaymentMethod,
+            selectedBank: String(body.selectedBank || ''),
+          });
+
+          if (audit.transactionId) {
+            await db.order
+              .update({
+                where: { id: newOrder.id },
+                data: { paymentGatewayRef: audit.transactionId },
+              })
+              .catch(() => null);
+          }
+
+          await db.auditLog
+            .create({
+              data: {
+                userId: targetUserId,
+                action: 'AI_PAYMENT_AUDIT',
+                entity: 'Order',
+                entityId: newOrder.id,
+                metadata: {
+                  verdict: audit.verdict,
+                  confidence: audit.confidence,
+                  amountMatches: audit.amountMatches,
+                  isDuplicateTid: audit.isDuplicateTid,
+                  extractedAmount: audit.extractedAmount,
+                  transactionId: audit.transactionId,
+                  summaryUrdu: audit.summaryUrdu,
+                },
+              },
+            })
+            .catch(() => null);
+
+          // Send WhatsApp alert to Admin phone with the 3 Native Interactive Buttons
+          await WhatsAppService.sendAdminOrderVerificationAlert({
+            order: {
+              ...newOrder,
+              totalAmount: Number(newOrder.totalAmount || totalAmount),
+              paymentScreenshot:
+                typeof body.paymentScreenshot === 'string' ? body.paymentScreenshot : null,
+              items: formattedItems,
+            },
+            audit,
+          });
+        } catch (auditErr) {
+          logger.warn('[Payment Verifier & WhatsApp Dispatch Exception]:', {
+            detail: String(auditErr),
+          });
+        }
+      }
+
+      await sendOrderConfirmationEmail({
+        orderId: newOrder.id,
+        customerName: newOrder.shippingName || shippingName,
+        customerEmail: newOrder.shippingEmail || shippingEmail,
+        customerPhone: newOrder.shippingPhone || shippingPhone,
+        shippingAddress: newOrder.shippingAddress || shippingAddress,
+        shippingCity: newOrder.shippingCity || shippingCity,
+        paymentMethod: newOrder.paymentMethod || validPaymentMethod,
+        items: formattedItems,
+        subtotal,
+        gst,
+        discount,
+        totalAmount,
+        couponCode: appliedCoupon?.code || null,
+      }).catch((err) => logger.error('[SMTP BACKGROUND ERROR]', err));
+    };
+
+    // Execute background jobs without delaying customer response
+    runPostOrderTasks().catch((err) =>
+      logger.error('[Post-Order Background Tasks Error]:', err)
+    );
 
     if (user?.id && shippingInfo?.saveAddress !== false && shippingAddress) {
       const existingAddr = await db.address

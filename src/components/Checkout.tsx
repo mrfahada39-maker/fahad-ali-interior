@@ -36,6 +36,17 @@ import { CheckoutSectionShipping } from '@/components/checkout/CheckoutSectionSh
 import { CheckoutSectionPayment } from '@/components/checkout/CheckoutSectionPayment';
 import { SavedAddressItem } from '@/components/checkout/checkout-types';
 
+function safeRandomUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export default function Checkout() {
   const { items: cartStoreItems, clearCart, updateQuantity, removeItem } = useCartStore();
   const { data: session } = useSession();
@@ -264,14 +275,49 @@ export default function Checkout() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size exceeds 10MB limit');
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('File size exceeds 20MB limit');
       return;
     }
+
     const reader = new FileReader();
-    reader.onload = () => {
-      setDigitalPaymentDetails((p) => ({ ...p, screenshotUrl: reader.result as string }));
-      toast.success('Payment receipt screenshot attached!');
+    reader.onload = (event) => {
+      const rawDataUrl = event.target?.result as string;
+      if (!rawDataUrl) return;
+
+      // Automatically optimize client-side via Canvas to ensure fast, reliable upload under 350KB
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1200;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          setDigitalPaymentDetails((p) => ({ ...p, screenshotUrl: compressedDataUrl }));
+          toast.success('Payment receipt attached & optimized!');
+        } else {
+          setDigitalPaymentDetails((p) => ({ ...p, screenshotUrl: rawDataUrl }));
+          toast.success('Payment receipt screenshot attached!');
+        }
+      };
+      img.onerror = () => {
+        setDigitalPaymentDetails((p) => ({ ...p, screenshotUrl: rawDataUrl }));
+        toast.success('Payment receipt screenshot attached!');
+      };
+      img.src = rawDataUrl;
     };
     reader.readAsDataURL(file);
   };
@@ -395,7 +441,7 @@ export default function Checkout() {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Idempotency-Key': crypto.randomUUID(),
+          'Idempotency-Key': safeRandomUUID(),
         },
         body: JSON.stringify({
           items: itemsToOrder,
@@ -449,7 +495,8 @@ export default function Checkout() {
         } catch { /* ignore */ }
         toast.error(errMsg);
       }
-    } catch {
+    } catch (err: unknown) {
+      console.error('[Checkout Submission Error]:', err);
       toast.error('Network error while placing order. Please check your connection and try again.');
     } finally {
       setPlacing(false);

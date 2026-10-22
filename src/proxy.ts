@@ -261,13 +261,18 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    if (isUnsafeMethod(request.method) && !isSameOriginRequest(request)) {
+    const isWebhookOrPublicAction =
+      pathname.startsWith('/api/whatsapp') ||
+      pathname.startsWith('/api/orders/action');
+
+    if (isUnsafeMethod(request.method) && !isSameOriginRequest(request) && !isWebhookOrPublicAction) {
       return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
     }
 
     if (
       !pathname.startsWith('/api/v1') &&
-      !pathname.startsWith('/api/admin')
+      !pathname.startsWith('/api/admin') &&
+      !isWebhookOrPublicAction
     ) {
       const mapped = toV1ApiPath(`${pathname}${request.nextUrl.search}`);
       const q = mapped.indexOf('?');
@@ -280,10 +285,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  const token =
+    (await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: false,
+    })) ||
+    (await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: true,
+    }));
 
   if (pathname !== '/admin/login' && adminPages.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     if (!token) {
