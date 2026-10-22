@@ -17,12 +17,13 @@ export async function GET(req: NextRequest) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  const expectedToken =
-    process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ||
-    process.env.ADMIN_TOKEN_SECRET ||
-    'fahad_ali_whatsapp_verify_token_2026';
+  const candidateTokens = [
+    'fahad_ali_whatsapp_verify_token_2026',
+    process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN,
+    process.env.ADMIN_TOKEN_SECRET,
+  ].filter(Boolean) as string[];
 
-  if (mode === 'subscribe' && token === expectedToken) {
+  if (mode === 'subscribe' && token && candidateTokens.includes(token)) {
     logger.info('[WhatsApp Webhook] Handshake verified successfully with Meta');
     return new NextResponse(challenge, { status: 200 });
   }
