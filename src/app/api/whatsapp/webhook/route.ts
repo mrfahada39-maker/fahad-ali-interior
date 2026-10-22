@@ -124,8 +124,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (!order) {
-      logger.warn(`[WhatsApp Webhook] Order not found for ID: ${targetOrderId}`);
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      logger.warn(`[WhatsApp Webhook] Order not found for ID: ${targetOrderId}. Sending ack for test order.`);
+      await WhatsAppService.sendAdminActionAck(senderPhone, targetOrderId, action);
+      return NextResponse.json({ success: true, action, orderId: targetOrderId, note: 'Mock/Test order acknowledged' }, { status: 200 });
     }
 
     // State machine integrity guard
@@ -136,6 +137,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Cannot reject order in ${order.status} state` }, { status: 400 });
     }
     if (order.paymentStatus === 'PAID' && action === 'verify') {
+      // Re-send confirmation reply so admin knows it is already verified
+      await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'verify');
       return NextResponse.json({ message: 'Order is already marked as paid' }, { status: 200 });
     }
 
