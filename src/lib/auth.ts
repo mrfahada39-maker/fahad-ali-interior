@@ -85,7 +85,7 @@ const providers: NextAuthOptions['providers'] = [
             loginAttempts: attempts,
             lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
           },
-        }).catch(() => {});
+        }).catch(() => { });
         return null;
       }
 
@@ -118,7 +118,7 @@ const providers: NextAuthOptions['providers'] = [
               loginAttempts: attempts,
               lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
             },
-          }).catch(() => {});
+          }).catch(() => { });
         };
 
         const matchedBackup = verifyBackupCode(totpCode, user.backupCodes || []);
@@ -158,7 +158,7 @@ const providers: NextAuthOptions['providers'] = [
         await db.user.update({
           where: { id: user.id },
           data: { loginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
-        }).catch(() => {});
+        }).catch(() => { });
       }
 
       return {
@@ -274,40 +274,19 @@ export const authOptions: NextAuthOptions = {
       const now = Date.now();
       if (token.id && (!lastCheck || now - lastCheck > 5 * 60 * 1000 || trigger === 'update')) {
         try {
-          let dbUser = await db.user.findUnique({
+          const dbUser = await db.user.findUnique({
             where: { id: token.id as string },
-            select: { id: true, role: true, deletedAt: true, lockedUntil: true },
+            select: { role: true, deletedAt: true, lockedUntil: true },
           });
-
-          // Fallback if database was reset/migrated and user has a new ID by email:
-          if (!dbUser && token.email) {
-            dbUser = await db.user.findUnique({
-              where: { email: String(token.email).toLowerCase().trim() },
-              select: { id: true, role: true, deletedAt: true, lockedUntil: true },
-            });
-            if (dbUser) {
-              token.id = dbUser.id;
-            }
-          }
-
-          const isEmailAdmin = token.email && isAdminEmail(String(token.email));
-
           if (!dbUser || dbUser.deletedAt || (dbUser.lockedUntil && new Date(dbUser.lockedUntil) > new Date())) {
-            if (isEmailAdmin) {
-              token.role = 'ADMIN';
-              return token;
-            }
             extToken.revoked = true;
             extToken.role = undefined;
             return token;
           }
-          token.role = isEmailAdmin ? 'ADMIN' : sessionRole(dbUser.role);
+          token.role = sessionRole(dbUser.role);
           extToken.lastCheckedAt = now;
         } catch {
           // Preserve existing token on transient DB network error
-          if (token.email && isAdminEmail(String(token.email))) {
-            token.role = 'ADMIN';
-          }
         }
       }
       return token;
