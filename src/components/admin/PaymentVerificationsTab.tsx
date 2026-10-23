@@ -125,12 +125,15 @@ export function PaymentVerificationsTab({
     try {
       if (action === 'verify') {
         await updateOrderStatus(orderId, 'PROCESSING', 'PAID');
+        await onRefresh?.();
         toast.success(`Order #${orderId.slice(-6).toUpperCase()} Payment Verified & Processing Started!`);
       } else if (action === 'hold') {
         await updateOrderStatus(orderId, 'PENDING', 'AWAITING_VERIFICATION');
+        await onRefresh?.();
         toast.warning(`Order #${orderId.slice(-6).toUpperCase()} placed on 24-48 Hours Verification Hold.`);
       } else if (action === 'reject') {
         await updateOrderStatus(orderId, 'CANCELLED', 'FAILED');
+        await onRefresh?.();
         toast.error(`Order #${orderId.slice(-6).toUpperCase()} Payment Rejected. Inventory restored.`);
       }
     } finally {

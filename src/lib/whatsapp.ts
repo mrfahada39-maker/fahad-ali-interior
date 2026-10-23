@@ -187,68 +187,35 @@ export class WhatsAppService {
       }
     }
 
-    const messageBody = `✦ FAHAD ALI INTERIOR — PAYMENT VERIFICATION ✦
-━━━━━━━━━━━━━━━━━━━━
-📦 Order ID: #${shortId}
-👤 Client: ${customerName}
-📞 Phone: ${customerPhone}
+    const messageBody = `✦ ORDER #${shortId} VERIFICATION ✦
+👤 Client: ${customerName} | 📞 ${customerPhone}
 📍 Delivery: ${customerCity}
 🛋️ Masterpieces:
 ${itemsList}
-💰 Total Amount: PKR ${totalAmount}
-💳 Payment Method: ${order.paymentMethod || 'BANK'}
+💰 Total Amount: PKR ${totalAmount} (${order.paymentMethod || 'BANK'})
 
-────────────────────
 🤖 AI BOT AUDIT REPORT:
 • Verdict: ${auditBadge}
-• Extracted Amount: ${audit.extractedAmount ? `PKR ${audit.extractedAmount.toLocaleString()}` : 'Not Clear'}
-• Transaction ID (TID): ${audit.transactionId || 'Manual Screenshot'}
-• Duplicate TID Check: ${audit.isDuplicateTid ? '❌ FOUND IN PREVIOUS ORDER' : '✅ Clean'}
+• Extracted: ${audit.extractedAmount ? `PKR ${audit.extractedAmount.toLocaleString()}` : 'N/A'}
+• Transaction ID: ${audit.transactionId || 'Manual Screenshot'}
 • AI Confidence: ${audit.confidence}%
 • Bot Note: ${audit.summaryUrdu}
-────────────────────
-${publicScreenshotUrl ? `🖼️ Slip Photo: Attached above 👆\n` : ''}⚡ DIRECT 1-TAP ACTIONS (Tap link to execute):
+
+⚡ DIRECT 1-TAP ACTIONS (Instant Bypass):
 1️⃣ [✅ Verify Payment]:
 👉 ${verifyUrl}
 
-2️⃣ [⏳ Hold 24-48 Hours]:
+2️⃣ [⏳ Hold 24-48h]:
 👉 ${holdUrl}
 
-3️⃣ [❌ Reject / Cancel Order]:
-👉 ${rejectUrl}
-━━━━━━━━━━━━━━━━━━━━
-⚠️ Note: Order confirmation is strictly locked until you or Admin Dashboard approves.`;
+3️⃣ [❌ Reject / Cancel]:
+👉 ${rejectUrl}`;
 
     if (accessToken && phoneNumberId) {
       try {
         const metaApiUrl = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
 
-        // 1. Dispatch Actual Slip Photo as an Image to WhatsApp
-        if (publicScreenshotUrl) {
-          try {
-            await fetch(metaApiUrl, {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                messaging_product: 'whatsapp',
-                recipient_type: 'individual',
-                to: adminPhone,
-                type: 'image',
-                image: {
-                  link: publicScreenshotUrl,
-                  caption: `📸 Bank Transfer Slip — Order #${shortId} (PKR ${totalAmount})\nCustomer: ${customerName} (${customerPhone})`,
-                },
-              }),
-            });
-          } catch (imgErr) {
-            logger.warn('[WhatsApp Image Dispatch Warning]', { detail: String(imgErr) });
-          }
-        }
-
-        // 2. Send Interactive Message with 3 Buttons
+        // Interactive Message with 3 Buttons + Direct Embedded Slip Image Header
         const buttonPayload = {
           messaging_product: 'whatsapp',
           recipient_type: 'individual',
@@ -256,12 +223,19 @@ ${publicScreenshotUrl ? `🖼️ Slip Photo: Attached above 👆\n` : ''}⚡ DIR
           type: 'interactive',
           interactive: {
             type: 'button',
-            header: {
-              type: 'text',
-              text: `✦ ORDER #${shortId} VERIFICATION ✦`,
-            },
+            header: publicScreenshotUrl
+              ? {
+                  type: 'image',
+                  image: {
+                    link: publicScreenshotUrl,
+                  },
+                }
+              : {
+                  type: 'text',
+                  text: `✦ ORDER #${shortId} VERIFICATION ✦`,
+                },
             body: {
-              text: messageBody.slice(0, 1024), // Meta character limit for body
+              text: messageBody.slice(0, 1024), // Meta character limit
             },
             footer: {
               text: 'Fahad Ali Interior • Executive Terminal',

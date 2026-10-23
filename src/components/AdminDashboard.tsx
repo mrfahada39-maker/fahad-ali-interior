@@ -397,12 +397,17 @@ export default function AdminDashboard() {
     loadAll();
   }, []);
 
-  // Silent 10-second background live sync loop (Real PostgreSQL polling)
+  // Fast 6-second background live sync loop + instant sync on tab focus
   useEffect(() => {
     const silentSync = async () => {
-      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       try {
-        const res = await fetch('/api/v1/admin/dashboard-bundle', { cache: 'no-store' });
+        const res = await fetch('/api/v1/admin/dashboard-bundle', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+          },
+        });
         if (res.ok) {
           const bundle = (await res.json()) as AdminBundle;
           if (bundle && bundle.stats) {
@@ -412,8 +417,27 @@ export default function AdminDashboard() {
       } catch { }
     };
 
-    const intervalId = setInterval(silentSync, 45000);
-    return () => clearInterval(intervalId);
+    const intervalId = setInterval(silentSync, 6000);
+
+    const onFocus = () => silentSync();
+    const onVisibility = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        silentSync();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', onFocus);
+      document.addEventListener('visibilitychange', onVisibility);
+    }
+
+    return () => {
+      clearInterval(intervalId);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', onFocus);
+        document.removeEventListener('visibilitychange', onVisibility);
+      }
+    };
   }, []);
 
   useEffect(() => {
