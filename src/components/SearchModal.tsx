@@ -36,10 +36,10 @@ const POPULAR_SEARCHES = [
 ];
 
 const CURATED_CATEGORIES = [
-  { name: 'Bedroom Suites', href: '/#signature-categories', count: '18 Pieces' },
-  { name: 'Living & Lounge', href: '/#signature-categories', count: '24 Pieces' },
-  { name: 'Imperial Dining', href: '/#signature-categories', count: '12 Pieces' },
-  { name: 'Office & Study', href: '/#signature-categories', count: '10 Pieces' }
+  { name: 'Living Room', href: '/#signature-categories', count: 'Explore Collection' },
+  { name: 'Bedroom', href: '/#signature-categories', count: 'Explore Collection' },
+  { name: 'Dining Room', href: '/#signature-categories', count: 'Explore Collection' },
+  { name: 'Office', href: '/#signature-categories', count: 'Explore Collection' }
 ];
 
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {

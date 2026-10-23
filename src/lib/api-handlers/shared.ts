@@ -144,13 +144,16 @@ export interface DbNotificationRecord {
 }
 
 export const fallbackCategories = [
-  { id: 'cat_living', name: 'Living Room', description: 'Solid Sheesham luxury sofas, chairs and cabinets' },
-  { id: 'cat_bedroom', name: 'Bedroom', description: 'Artisanal beds, wardrobes and side tables' },
-  { id: 'cat_dining', name: 'Dining Room', description: 'Handcrafted dining sets and buffets' },
-  { id: 'cat_coffee', name: 'Coffee Chairs', description: 'Premium accent and coffee chairs' },
-  { id: 'cat_showcase', name: 'Luxury Showcase', description: 'Exquisite consoles and display units' },
-  { id: 'cat_wardrobe', name: 'Luxury Wardrobes', description: 'Custom solid wood wardrobes' },
-  { id: 'cat_center', name: 'Center Tables', description: 'Luxury center and nesting tables' },
+  { id: 'cat_living', name: 'Living Room', slug: 'living-room', order: 1 },
+  { id: 'cat_bedroom', name: 'Bedroom', slug: 'bedroom', order: 2 },
+  { id: 'cat_dining', name: 'Dining Room', slug: 'dining-room', order: 3 },
+  { id: 'cat_office', name: 'Office', slug: 'office', order: 4 },
+  { id: 'cat_sofas', name: 'Sofas', slug: 'sofas', order: 5 },
+  { id: 'cat_coffee', name: 'Coffee Tables', slug: 'coffee-tables', order: 6 },
+  { id: 'cat_tv', name: 'TV Units', slug: 'tv-units', order: 7 },
+  { id: 'cat_storage', name: 'Storage', slug: 'storage', order: 8 },
+  { id: 'cat_outdoor', name: 'Outdoor', slug: 'outdoor', order: 9 },
+  { id: 'cat_accessories', name: 'Accessories', slug: 'accessories', order: 10 },
 ];
 
 export async function getUserFromSessionOrToken(req: NextRequest): Promise<SessionUser | null> {

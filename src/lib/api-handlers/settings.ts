@@ -322,7 +322,7 @@ export async function handleSettingsAndBundleRoutes(
             ? formattedCategories
             : fallbackCategories.map((c) => ({
                 name: c.name,
-                count: 12,
+                count: 0,
                 image: '/images/placeholder.webp',
                 description: c.description,
               })),

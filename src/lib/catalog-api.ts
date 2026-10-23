@@ -83,10 +83,13 @@ export async function getStorefrontCategories(): Promise<string[]> {
     'Living Room',
     'Bedroom',
     'Dining Room',
-    'Coffee Chairs',
-    'Center Tables',
-    'Luxury Showcase',
-    'Luxury Wardrobes',
+    'Office',
+    'Sofas',
+    'Coffee Tables',
+    'TV Units',
+    'Storage',
+    'Outdoor',
+    'Accessories',
   ];
   setCached(cacheKey, fallback, 120);
   return fallback;
