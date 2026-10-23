@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     const senderPhoneRaw = message.from ? String(message.from).replace(/\D/g, '') : '';
-    
+
     // Whitelist authorized Admin numbers (including user's primary active WhatsApp)
     const allowedAdminPhones = new Set(
       [
@@ -102,17 +102,17 @@ export async function POST(req: NextRequest) {
     // Look up order in database: exact, endsWith, or latest pending
     let order = targetOrderId === 'latest'
       ? await db.order.findFirst({
-          where: { paymentStatus: 'AWAITING_VERIFICATION', deletedAt: null },
-          orderBy: { createdAt: 'desc' },
-          include: { items: true },
-        })
+        where: { paymentStatus: 'AWAITING_VERIFICATION', deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        include: { items: true },
+      })
       : await db.order.findFirst({
-          where: {
-            OR: [{ id: targetOrderId }, { id: { endsWith: targetOrderId } }],
-            deletedAt: null,
-          },
-          include: { items: true },
-        });
+        where: {
+          OR: [{ id: targetOrderId }, { id: { endsWith: targetOrderId } }],
+          deletedAt: null,
+        },
+        include: { items: true },
+      });
 
     if (!order && targetOrderId !== 'latest') {
       // Fallback: Check if there's any pending order created in the last 24 hours
@@ -124,9 +124,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (!order) {
-      logger.warn(`[WhatsApp Webhook] Order not found for ID: ${targetOrderId}. Sending ack for test order.`);
-      await WhatsAppService.sendAdminActionAck(senderPhone, targetOrderId, action);
-      return NextResponse.json({ success: true, action, orderId: targetOrderId, note: 'Mock/Test order acknowledged' }, { status: 200 });
+      logger.warn(`[WhatsApp Webhook] Order not found for ID: ${targetOrderId}`);
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
     // State machine integrity guard
@@ -137,8 +136,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Cannot reject order in ${order.status} state` }, { status: 400 });
     }
     if (order.paymentStatus === 'PAID' && action === 'verify') {
-      // Re-send confirmation reply so admin knows it is already verified
-      await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'verify');
       return NextResponse.json({ message: 'Order is already marked as paid' }, { status: 200 });
     }
 
@@ -164,7 +161,7 @@ export async function POST(req: NextRequest) {
               isNew: true,
             },
           })
-          ?.catch(() => {});
+          ?.catch(() => { });
       }
 
       await db.auditLog
@@ -176,7 +173,7 @@ export async function POST(req: NextRequest) {
             metadata: { senderPhone, source: 'Meta WhatsApp Interactive Button' },
           },
         })
-        ?.catch(() => {});
+        ?.catch(() => { });
 
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'verify');
     } else if (action === 'hold') {
@@ -198,7 +195,7 @@ export async function POST(req: NextRequest) {
               isNew: true,
             },
           })
-          ?.catch(() => {});
+          ?.catch(() => { });
       }
 
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'hold');
@@ -238,7 +235,7 @@ export async function POST(req: NextRequest) {
               isNew: true,
             },
           })
-          ?.catch(() => {});
+          ?.catch(() => { });
       }
 
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'reject');

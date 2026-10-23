@@ -120,9 +120,9 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       const id = req.nextUrl.searchParams.get('id');
       const productId = req.nextUrl.searchParams.get('productId');
       if (id) {
-        await db.wishlistItem.deleteMany({ where: { id, userId: user.id } }).catch(() => {});
+        await db.wishlistItem.deleteMany({ where: { id, userId: user.id } }).catch(() => { });
       } else if (productId) {
-        await db.wishlistItem.deleteMany({ where: { userId: user.id, productId } }).catch(() => {});
+        await db.wishlistItem.deleteMany({ where: { userId: user.id, productId } }).catch(() => { });
       }
       return NextResponse.json({ success: true });
     }
@@ -361,7 +361,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       subtotal: unknown;
       gst: unknown;
       discount: unknown;
-      items: Array<{ price: unknown; [key: string]: unknown }>;
+      items: Array<{ price: unknown;[key: string]: unknown }>;
     };
 
     try {
@@ -371,91 +371,91 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       ) => Promise<T>;
       newOrder = await runTx(
         async (tx) => {
-        for (const item of formattedItems) {
-          const stockUpdate = await tx.product.updateMany({
-            where: {
-              id: item.productId,
+          for (const item of formattedItems) {
+            const stockUpdate = await tx.product.updateMany({
+              where: {
+                id: item.productId,
+                deletedAt: null,
+                stockCount: { gte: item.quantity },
+              },
+              data: {
+                stockCount: { decrement: item.quantity },
+              },
+            });
+
+            if (stockUpdate.count === 0) {
+              throw new Error(`INSUFFICIENT_STOCK:${item.name}`);
+            }
+          }
+
+          if (appliedCoupon?.id) {
+            const couponCondition: Record<string, unknown> = {
+              id: appliedCoupon.id,
+              isActive: true,
               deletedAt: null,
-              stockCount: { gte: item.quantity },
-            },
+            };
+            if (appliedCoupon.maxUses > 0) {
+              couponCondition.usedCount = { lt: appliedCoupon.maxUses };
+            }
+
+            const couponUpdate = await tx.coupon.updateMany({
+              where: couponCondition,
+              data: { usedCount: { increment: 1 } },
+            });
+
+            if (couponUpdate.count === 0) {
+              throw new Error(
+                'COUPON_LIMIT_REACHED:Coupon usage limit reached or coupon no longer valid.'
+              );
+            }
+          }
+
+          const order = await tx.order.create({
             data: {
-              stockCount: { decrement: item.quantity },
-            },
-          });
-
-          if (stockUpdate.count === 0) {
-            throw new Error(`INSUFFICIENT_STOCK:${item.name}`);
-          }
-        }
-
-        if (appliedCoupon?.id) {
-          const couponCondition: Record<string, unknown> = {
-            id: appliedCoupon.id,
-            isActive: true,
-            deletedAt: null,
-          };
-          if (appliedCoupon.maxUses > 0) {
-            couponCondition.usedCount = { lt: appliedCoupon.maxUses };
-          }
-
-          const couponUpdate = await tx.coupon.updateMany({
-            where: couponCondition,
-            data: { usedCount: { increment: 1 } },
-          });
-
-          if (couponUpdate.count === 0) {
-            throw new Error(
-              'COUPON_LIMIT_REACHED:Coupon usage limit reached or coupon no longer valid.'
-            );
-          }
-        }
-
-        const order = await tx.order.create({
-          data: {
-            user: { connect: { id: targetUserId } },
-            shippingName,
-            shippingPhone,
-            shippingEmail: shippingEmail || 'customer@fahadaliinterior.com',
-            shippingAddress,
-            shippingCity,
-            shippingProvince,
-            shippingNotes,
-            paymentMethod: validPaymentMethod,
-            paymentScreenshot: body.paymentScreenshot || null,
-            couponCode: appliedCoupon?.code || null,
-            subtotal,
-            gst,
-            discount,
-            totalAmount,
-            status: 'PENDING',
-            paymentStatus: validPaymentMethod !== 'COD' || body.paymentScreenshot ? 'AWAITING_VERIFICATION' : 'PENDING',
-            items: {
-              create: formattedItems,
-            },
-          },
-          include: { items: true },
-        });
-
-        await tx.auditLog
-          .create({
-            data: {
-              userId: targetUserId,
-              action: 'ORDER_PLACED',
-              entity: 'Order',
-              entityId: order.id,
-              metadata: {
-                totalAmount: Number(totalAmount),
-                itemCount: formattedItems.length,
-                paymentMethod: validPaymentMethod,
+              user: { connect: { id: targetUserId } },
+              shippingName,
+              shippingPhone,
+              shippingEmail: shippingEmail || 'customer@fahadaliinterior.com',
+              shippingAddress,
+              shippingCity,
+              shippingProvince,
+              shippingNotes,
+              paymentMethod: validPaymentMethod,
+              paymentScreenshot: body.paymentScreenshot || null,
+              couponCode: appliedCoupon?.code || null,
+              subtotal,
+              gst,
+              discount,
+              totalAmount,
+              status: 'PENDING',
+              paymentStatus: validPaymentMethod !== 'COD' || body.paymentScreenshot ? 'AWAITING_VERIFICATION' : 'PENDING',
+              items: {
+                create: formattedItems,
               },
             },
-          })
-          .catch(() => null);
+            include: { items: true },
+          });
 
-        return order;
-      },
-      { maxWait: 15000, timeout: 25000 }
-    );
+          await tx.auditLog
+            .create({
+              data: {
+                userId: targetUserId,
+                action: 'ORDER_PLACED',
+                entity: 'Order',
+                entityId: order.id,
+                metadata: {
+                  totalAmount: Number(totalAmount),
+                  itemCount: formattedItems.length,
+                  paymentMethod: validPaymentMethod,
+                },
+              },
+            })
+            .catch(() => null);
+
+          return order;
+        },
+        { maxWait: 15000, timeout: 25000 }
+      );
     } catch (txError: unknown) {
       const msg = txError instanceof Error ? txError.message : String(txError || '');
       if (msg.startsWith('INSUFFICIENT_STOCK:')) {
@@ -599,7 +599,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
             isNew: true,
           },
         })
-        ?.catch(() => {});
+        ?.catch(() => { });
     }
 
     const guestTrackingToken = newOrder.shippingEmail
@@ -675,9 +675,9 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
     const isEmailMatch = Boolean(email && orderEmail && email === orderEmail);
     const isTokenMatch = Boolean(
       token &&
-        orderEmail &&
-        (verifyGuestOrderToken(order.id, orderEmail, token) ||
-          verifyGuestOrderToken(cleanOrderId, orderEmail, token))
+      orderEmail &&
+      (verifyGuestOrderToken(order.id, orderEmail, token) ||
+        verifyGuestOrderToken(cleanOrderId, orderEmail, token))
     );
 
     if (!isAdmin && !isOwner && !isEmailMatch && !isTokenMatch) {
@@ -737,9 +737,9 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
     const isEmailMatch = Boolean(guestEmail && orderEmail && guestEmail === orderEmail);
     const isTokenMatch = Boolean(
       guestToken &&
-        orderEmail &&
-        (verifyGuestOrderToken(order.id, orderEmail, guestToken) ||
-          verifyGuestOrderToken(orderId, orderEmail, guestToken))
+      orderEmail &&
+      (verifyGuestOrderToken(order.id, orderEmail, guestToken) ||
+        verifyGuestOrderToken(orderId, orderEmail, guestToken))
     );
 
     if (!isAdmin && !isOwner) {
@@ -869,7 +869,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
               isNew: true,
             },
           })
-          ?.catch(() => {});
+          ?.catch(() => { });
       }
 
       return NextResponse.json({

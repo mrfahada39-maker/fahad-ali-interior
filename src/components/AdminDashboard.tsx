@@ -56,7 +56,7 @@ export default function AdminDashboard() {
           const parsed = JSON.parse(cached);
           if (parsed?.stats) return parsed.stats;
         }
-      } catch {}
+      } catch { }
     }
     return DEFAULT_ADMIN_STATS;
   });
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
           const parsed = JSON.parse(cached);
           if (parsed?.analytics) return parsed.analytics;
         }
-      } catch {}
+      } catch { }
     }
     return null;
   });
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
             return Array.isArray(parsed.products) ? parsed.products : (parsed.products?.products || []);
           }
         }
-      } catch {}
+      } catch { }
     }
     return [];
   });
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed?.orders)) return parsed.orders;
         }
-      } catch {}
+      } catch { }
     }
     return [];
   });
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed?.users)) return parsed.users;
         }
-      } catch {}
+      } catch { }
     }
     return [];
   });
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
             setTelemetry(data);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     };
     fetchTelemetry();
     const interval = setInterval(fetchTelemetry, 30000);
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed?.messages)) return parsed.messages;
         }
-      } catch {}
+      } catch { }
     }
     return [];
   });
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed?.reviews)) return parsed.reviews;
         }
-      } catch {}
+      } catch { }
     }
     return [];
   });
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed?.inquiries)) return parsed.inquiries;
         }
-      } catch {}
+      } catch { }
     }
     return [];
   });
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
           const parsed = JSON.parse(cached);
           if (parsed?.siteSettings) return parsed.siteSettings;
         }
-      } catch {}
+      } catch { }
     }
     return {};
   });
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
             };
           }
         }
-      } catch {}
+      } catch { }
     }
     return { name: 'Fahad Ali', email: BUSINESS_CONTACT.adminEmail, phone: BUSINESS_CONTACT.phone };
   });
@@ -302,7 +302,7 @@ export default function AdminDashboard() {
           });
         }
       }
-    } catch {}
+    } catch { }
   };
 
   const applyMessageThreads = (messageThreads: unknown) => {
@@ -343,7 +343,7 @@ export default function AdminDashboard() {
     if (saveToCache && typeof window !== 'undefined') {
       try {
         localStorage.setItem('fahad_admin_live_bundle', JSON.stringify(bundle));
-      } catch {}
+      } catch { }
     }
   };
 
@@ -368,14 +368,14 @@ export default function AdminDashboard() {
       fetch('/api/v1/blog', { cache: 'no-store' })
         .then((r) => r.ok ? r.json() : null)
         .then((data) => { if (data) setBlogs(data); })
-        .catch(() => {});
+        .catch(() => { });
 
       fetch('/api/v1/admin/categories', { cache: 'no-store' })
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
           if (data) setCategories(Array.isArray(data.data || data) ? (data.data || data) : []);
         })
-        .catch(() => {});
+        .catch(() => { });
     } catch {
       // fallback
     }
@@ -392,7 +392,7 @@ export default function AdminDashboard() {
             applyBundle(parsed, false);
           }
         }
-      } catch {}
+      } catch { }
     }
     loadAll();
   }, []);
@@ -409,7 +409,7 @@ export default function AdminDashboard() {
             applyBundle(bundle);
           }
         }
-      } catch {}
+      } catch { }
     };
 
     const intervalId = setInterval(silentSync, 45000);
@@ -637,7 +637,7 @@ export default function AdminDashboard() {
           try {
             localStorage.setItem('fahad_catalog_updated', String(Date.now()));
             window.dispatchEvent(new Event('fahad_catalog_updated'));
-          } catch {}
+          } catch { }
         }
         toast.success(editingId ? 'Product updated!' : 'Product published!');
       } else {
@@ -659,7 +659,7 @@ export default function AdminDashboard() {
       try {
         localStorage.setItem('fahad_catalog_updated', String(Date.now()));
         window.dispatchEvent(new Event('fahad_catalog_updated'));
-      } catch {}
+      } catch { }
     }
     toast.success('Product permanently deleted');
 
@@ -685,14 +685,14 @@ export default function AdminDashboard() {
     const blogId = blogForm.id;
     setShowAddBlog(false);
     setBlogForm({ id: '', title: '', slug: '', content: '', excerpt: '', image: '', author: 'Admin', isActive: true, tags: '' });
-    
+
     let res;
     if (blogId) {
       res = await apiFetch(`/api/v1/blog/${blogId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     } else {
       res = await apiFetch('/api/v1/blog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     }
-    
+
     if (res.ok) {
       const saved = await res.json().catch(() => null);
       if (saved && saved.id) {
@@ -863,149 +863,149 @@ export default function AdminDashboard() {
           className="flex-1 flex flex-col min-h-0 pb-3"
         >
 
-            {/* OVERVIEW */}
-            {activeTab === 'overview' && (
-              <OverviewTab
-                stats={stats}
-                analytics={analytics}
-                orders={orders}
-                setActiveTab={setActiveTab}
-              />
-            )}
+          {/* OVERVIEW */}
+          {activeTab === 'overview' && (
+            <OverviewTab
+              stats={stats}
+              analytics={analytics}
+              orders={orders}
+              setActiveTab={setActiveTab}
+            />
+          )}
 
-            {/* AI CONTROL RADAR */}
-            {activeTab === 'ai-control-center' && (
-              <AiRadarTab telemetry={telemetry} stats={stats} />
-            )}
+          {/* AI CONTROL RADAR */}
+          {activeTab === 'ai-control-center' && (
+            <AiRadarTab telemetry={telemetry} stats={stats} />
+          )}
 
-            {activeTab === 'products' && (
-              <ProductsTab
-                products={products}
-                categories={categories}
-                showAddProduct={showAddProduct}
-                setShowAddProduct={setShowAddProduct}
-                productForm={productForm}
-                setProductForm={setProductForm}
-                addProduct={addProduct}
-                deleteProduct={deleteProduct}
-                defaultProductImage={defaultProductImage}
-                editingProductId={editingProductId}
-                setEditingProductId={setEditingProductId}
-              />
-            )}
+          {activeTab === 'products' && (
+            <ProductsTab
+              products={products}
+              categories={categories}
+              showAddProduct={showAddProduct}
+              setShowAddProduct={setShowAddProduct}
+              productForm={productForm}
+              setProductForm={setProductForm}
+              addProduct={addProduct}
+              deleteProduct={deleteProduct}
+              defaultProductImage={defaultProductImage}
+              editingProductId={editingProductId}
+              setEditingProductId={setEditingProductId}
+            />
+          )}
 
-            {/* ORDERS */}
-            {activeTab === 'orders' && (
-              <OrdersTab
-                orders={orders}
-                updateOrderStatus={updateOrderStatus}
-              />
-            )}
+          {/* ORDERS */}
+          {activeTab === 'orders' && (
+            <OrdersTab
+              orders={orders}
+              updateOrderStatus={updateOrderStatus}
+            />
+          )}
 
-            {/* PAYMENT SLIP VERIFICATIONS */}
-            {activeTab === 'payment-verifications' && (
-              <PaymentVerificationsTab
-                orders={orders}
-                updateOrderStatus={updateOrderStatus}
-                onRefresh={loadAll}
-              />
-            )}
+          {/* PAYMENT SLIP VERIFICATIONS */}
+          {activeTab === 'payment-verifications' && (
+            <PaymentVerificationsTab
+              orders={orders}
+              updateOrderStatus={updateOrderStatus}
+              onRefresh={loadAll}
+            />
+          )}
 
-            {/* CUSTOMERS */}
-            {activeTab === 'customers' && <CustomersTab initialUsers={users} />}
+          {/* CUSTOMERS */}
+          {activeTab === 'customers' && <CustomersTab initialUsers={users} />}
 
-            {/* AI CHATBOT */}
-            {activeTab === 'ai-chatbot' && <AiChatbotTab />}
+          {/* AI CHATBOT */}
+          {activeTab === 'ai-chatbot' && <AiChatbotTab />}
 
-            {/* MESSAGES */}
-            {activeTab === 'messages' && (
-              <MessagesTab
-                messages={messages}
-                replyDrafts={replyDrafts}
-                setReplyDrafts={setReplyDrafts}
-                sendAdminReply={sendAdminReply}
-                selectedThreadIndex={selectedThreadIndex}
-                setSelectedThreadIndex={setSelectedThreadIndex}
-                onStartCall={startAdminCall}
-                onSendAdminVoiceNote={handleSendAdminVoiceNote}
-              />
-            )}
+          {/* MESSAGES */}
+          {activeTab === 'messages' && (
+            <MessagesTab
+              messages={messages}
+              replyDrafts={replyDrafts}
+              setReplyDrafts={setReplyDrafts}
+              sendAdminReply={sendAdminReply}
+              selectedThreadIndex={selectedThreadIndex}
+              setSelectedThreadIndex={setSelectedThreadIndex}
+              onStartCall={startAdminCall}
+              onSendAdminVoiceNote={handleSendAdminVoiceNote}
+            />
+          )}
 
-            {/* BLOG */}
-            {activeTab === 'blog' && (
-              <BlogTab
-                blogs={blogs}
-                blogForm={blogForm}
-                setBlogForm={setBlogForm}
-                showAddBlog={showAddBlog}
-                setShowAddBlog={setShowAddBlog}
-                saveBlog={saveBlog}
-                deleteBlog={deleteBlog}
-                editBlog={editBlog}
-              />
-            )}
+          {/* BLOG */}
+          {activeTab === 'blog' && (
+            <BlogTab
+              blogs={blogs}
+              blogForm={blogForm}
+              setBlogForm={setBlogForm}
+              showAddBlog={showAddBlog}
+              setShowAddBlog={setShowAddBlog}
+              saveBlog={saveBlog}
+              deleteBlog={deleteBlog}
+              editBlog={editBlog}
+            />
+          )}
 
-            {/* REVIEWS */}
-            {activeTab === 'reviews' && (
-              <ReviewsTab
-                reviews={reviews}
-                updateReviewStatus={updateReviewStatus}
-                deleteReview={async (id: string) => {
-                  await apiFetch('/api/admin/reviews', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-                  toast.success('Review deleted');
-                  loadAll();
-                }}
-                statusColor={statusColor}
-              />
-            )}
+          {/* REVIEWS */}
+          {activeTab === 'reviews' && (
+            <ReviewsTab
+              reviews={reviews}
+              updateReviewStatus={updateReviewStatus}
+              deleteReview={async (id: string) => {
+                await apiFetch('/api/admin/reviews', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+                toast.success('Review deleted');
+                loadAll();
+              }}
+              statusColor={statusColor}
+            />
+          )}
 
-            {/* INQUIRIES */}
-            {activeTab === 'inquiries' && (
-              <InquiriesTab
-                inquiries={inquiries}
-                updateInquiryStatus={updateInquiryStatus}
-              />
-            )}
+          {/* INQUIRIES */}
+          {activeTab === 'inquiries' && (
+            <InquiriesTab
+              inquiries={inquiries}
+              updateInquiryStatus={updateInquiryStatus}
+            />
+          )}
 
-            {/* ANALYTICS */}
-            {activeTab === 'analytics' && (
-              <AnalyticsTab
-                stats={stats}
-                analytics={analytics}
-                orders={orders}
-                products={products}
-              />
-            )}
+          {/* ANALYTICS */}
+          {activeTab === 'analytics' && (
+            <AnalyticsTab
+              stats={stats}
+              analytics={analytics}
+              orders={orders}
+              products={products}
+            />
+          )}
 
-            {/* CMS Tab */}
-            {activeTab === 'cms' && (
-              <CmsTab />
-            )}
+          {/* CMS Tab */}
+          {activeTab === 'cms' && (
+            <CmsTab />
+          )}
 
-            {/* RECYCLE BIN */}
-            {activeTab === 'recycle-bin' && (
-              <RecycleBinTab />
-            )}
+          {/* RECYCLE BIN */}
+          {activeTab === 'recycle-bin' && (
+            <RecycleBinTab />
+          )}
 
-            {/* SETTINGS */}
-            {activeTab === 'settings' && (
-              <SettingsTab
-                siteSettings={siteSettings}
-                setSiteSettings={setSiteSettings}
-                saveSettings={saveSettings}
-                adminAccount={adminAccount}
-                setAdminAccount={setAdminAccount}
-                saveAdminAccount={saveAdminAccount}
-                passwordForm={passwordForm}
-                setPasswordForm={setPasswordForm}
-                showPassword={showPassword}
-                setShowPassword={setShowPassword}
-                changeAdminPassword={changeAdminPassword}
-              />
-            )}
+          {/* SETTINGS */}
+          {activeTab === 'settings' && (
+            <SettingsTab
+              siteSettings={siteSettings}
+              setSiteSettings={setSiteSettings}
+              saveSettings={saveSettings}
+              adminAccount={adminAccount}
+              setAdminAccount={setAdminAccount}
+              saveAdminAccount={saveAdminAccount}
+              passwordForm={passwordForm}
+              setPasswordForm={setPasswordForm}
+              showPassword={showPassword}
+              setShowPassword={setShowPassword}
+              changeAdminPassword={changeAdminPassword}
+            />
+          )}
 
 
-          </motion.div>
+        </motion.div>
       </main>
 
       {/* Royal Luxury Call Modal for Admin */}

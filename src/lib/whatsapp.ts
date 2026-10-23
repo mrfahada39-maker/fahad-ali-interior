@@ -178,20 +178,75 @@ ${order.paymentScreenshot ? `🖼️ Slip Photo: ${order.paymentScreenshot}\n` :
       '923213283301';
     const adminPhone = adminPhoneRaw.replace(/\D/g, '');
 
-    const accessToken = (
-      process.env.WHATSAPP_ACCESS_TOKEN ||
-      'EAAQJJ9hjtQkBS3lCjvYAP94XZB2pphctp0v3QOaP5g6Ar5wsgMdjZAimZA9w8TYexxehLIuvRmy3UauLmQidGakNUNqTUplaxC0SgpFaQ7ZABLAaZBZC3oEZBlAdZAE4ZC37Mafdco5SFPe2Y3ZA4abB0cvv7cCxYa5ZAOTP2nQVyADgZCw2ZC9mFA7OKFvUTShkjDHVxTjtKo5ZBboQYQChpKc3V7g8OnPWRBy4fQFDMpGKOzHw7lmO9JZBWa1EdLzMiXi3KSZA6hibZA34JEGMOFbpVyZBPGoGR7'
-    )?.trim();
-    const phoneNumberId = (
-      process.env.WHATSAPP_PHONE_NUMBER_ID ||
-      '1404434616090105'
-    )?.trim();
+    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN?.trim();
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim() || '1404434616090105';
+
+    // ── Upload base64 screenshot to Cloudinary if needed to get public HTTPS image URL ──
+    let publicScreenshotUrl: string | null = null;
+    if (order.paymentScreenshot) {
+      if (order.paymentScreenshot.startsWith('https://') || order.paymentScreenshot.startsWith('http://')) {
+        publicScreenshotUrl = order.paymentScreenshot;
+      } else if (order.paymentScreenshot.startsWith('data:image/')) {
+        try {
+          const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dfd8rzojj';
+          const apiKey = process.env.CLOUDINARY_API_KEY || '349178888815894';
+          const apiSecret = process.env.CLOUDINARY_API_SECRET || 'ZeZe39YqYU2RgC_JBEkWC3AO_Js';
+          const timestamp = Math.round(Date.now() / 1000);
+          const folder = 'fahad-ali-interior/payment-slips';
+          const paramsToSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+          const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
+
+          const formData = new FormData();
+          formData.append('file', order.paymentScreenshot);
+          formData.append('api_key', apiKey);
+          formData.append('timestamp', String(timestamp));
+          formData.append('folder', folder);
+          formData.append('signature', signature);
+
+          const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: 'POST',
+            body: formData,
+          });
+          if (cRes.ok) {
+            const cData = await cRes.json();
+            publicScreenshotUrl = cData.secure_url || cData.url;
+          }
+        } catch (uploadErr) {
+          logger.warn('[WhatsApp Cloudinary Upload Warning]', { detail: String(uploadErr) });
+        }
+      }
+    }
 
     if (accessToken && phoneNumberId) {
       try {
         const metaApiUrl = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
 
-        // Send Interactive Message with 3 Buttons
+        // 1. Dispatch Actual Slip Photo as an Image to WhatsApp
+        if (publicScreenshotUrl) {
+          try {
+            await fetch(metaApiUrl, {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                messaging_product: 'whatsapp',
+                recipient_type: 'individual',
+                to: adminPhone,
+                type: 'image',
+                image: {
+                  link: publicScreenshotUrl,
+                  caption: `📸 Bank Transfer Slip — Order #${shortId} (PKR ${totalAmount})\nCustomer: ${customerName} (${customerPhone})`,
+                },
+              }),
+            });
+          } catch (imgErr) {
+            logger.warn('[WhatsApp Image Dispatch Warning]', { detail: String(imgErr) });
+          }
+        }
+
+        // 2. Send Interactive Message with 3 Buttons
         const buttonPayload = {
           messaging_product: 'whatsapp',
           recipient_type: 'individual',
