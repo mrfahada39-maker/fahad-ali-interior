@@ -86,7 +86,12 @@ if (typeof setInterval !== 'undefined') {
 
 let loggedMissingUpstashError = false;
 
-if (process.env.NODE_ENV === 'production' && !isRateLimitConfigured()) {
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.NEXT_PHASE !== 'phase-production-build' &&
+  process.env.SKIP_ENV_VALIDATION !== 'true' &&
+  !isRateLimitConfigured()
+) {
   logger.error('[RateLimit FATAL] Upstash Redis configuration (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN) is missing in production! Distributed rate limiting is required.');
   loggedMissingUpstashError = true;
 }

@@ -318,7 +318,7 @@ export function DashboardOrdersTab({
                             <span className="font-mono font-black text-xs text-[#1F1612] tracking-wide block group-hover:text-[#B88E4B] transition-colors">
                               {orderRef}
                             </span>
-                            <span className="text-[10px] text-stone-400 mt-0.5 block font-mono">
+                            <span suppressHydrationWarning className="text-[10px] text-stone-400 mt-0.5 block font-mono">
                               {new Date(order.createdAt || Date.now()).toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
                           </div>

@@ -324,7 +324,7 @@ export default function BlogTab({
                       {b.author || 'Admin'}
                     </td>
 
-                    <td className="py-3.5 px-3 text-stone-500 font-semibold text-[11px]">
+                    <td suppressHydrationWarning className="py-3.5 px-3 text-stone-500 font-semibold text-[11px]">
                       {new Date(b.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
 

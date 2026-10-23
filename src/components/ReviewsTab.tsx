@@ -299,7 +299,7 @@ export default function ReviewsTab({
                         <h4 className="text-[#1F1612] font-black text-sm font-serif leading-none">
                           {r.customerName || r.user?.name || 'Valued Client'}
                         </h4>
-                        <p className="text-stone-400 text-[10.5px] font-semibold mt-1">
+                        <p suppressHydrationWarning className="text-stone-400 text-[10.5px] font-semibold mt-1">
                           {new Date(r.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} • <span className="text-emerald-700 font-bold">✓ Verified Purchase</span>
                         </p>
                       </div>

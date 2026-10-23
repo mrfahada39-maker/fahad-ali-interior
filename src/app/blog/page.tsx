@@ -118,7 +118,7 @@ export default async function BlogIndexPage() {
                         {article.author}
                       </span>
                       <span>•</span>
-                      <span className="inline-flex items-center gap-1">
+                      <span suppressHydrationWarning className="inline-flex items-center gap-1">
                         <Calendar size={12} className="text-[#B88E4B]" />
                         {new Date(article.createdAt).toLocaleDateString('en-GB', {
                           day: 'numeric',

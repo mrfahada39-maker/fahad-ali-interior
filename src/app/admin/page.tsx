@@ -2,16 +2,22 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 const AdminDashboard = dynamic(() => import('@/components/AdminDashboard'), { ssr: false });
 
 export default function AdminPage() {
+  const [mounted, setMounted] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     if (status === 'unauthenticated') {
       router.replace('/admin/login?next=/admin');
     } else if (status === 'authenticated') {
@@ -20,9 +26,9 @@ export default function AdminPage() {
         router.replace('/dashboard');
       }
     }
-  }, [status, session, router]);
+  }, [mounted, status, session, router]);
 
-  if (status === 'loading') {
+  if (!mounted || status === 'loading') {
     return (
       <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
         <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" />

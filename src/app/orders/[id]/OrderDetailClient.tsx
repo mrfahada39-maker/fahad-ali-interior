@@ -418,7 +418,7 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
                   </button>
                 </div>
                 <p className="text-xs sm:text-sm text-[#7A6354] mt-1 font-medium flex items-center gap-2">
-                  <span>Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</span>
+                  <span suppressHydrationWarning>Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</span>
                   <span>•</span>
                   <span className="text-[#221814] font-bold">{order.items?.length || 1} Masterpiece Item(s)</span>
                 </p>

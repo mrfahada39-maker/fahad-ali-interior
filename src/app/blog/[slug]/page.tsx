@@ -100,7 +100,7 @@ export default async function BlogDetailPage({ params }: RouteProps) {
               {article.author}
             </span>
             <span>•</span>
-            <span className="inline-flex items-center gap-1.5">
+            <span suppressHydrationWarning className="inline-flex items-center gap-1.5">
               <Calendar size={13} className="text-[#B88E4B]" />
               {new Date(article.createdAt).toLocaleDateString('en-GB', {
                 day: 'numeric',

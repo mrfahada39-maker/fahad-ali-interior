@@ -263,7 +263,7 @@ export default function OrdersPageClient() {
                           {order.paymentMethod || 'COD'}
                         </span>
                       </div>
-                      <p className="text-xs text-[#7A6354] mt-0.5 font-medium">
+                      <p suppressHydrationWarning className="text-xs text-[#7A6354] mt-0.5 font-medium">
                         Placed on {orderDate} • Delivery to {order.shippingCity || 'Pakistan'}
                       </p>
                     </div>

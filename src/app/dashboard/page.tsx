@@ -2,16 +2,22 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import UserDashboard from '@/components/UserDashboard';
 
 export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
 
   const role = (session?.user as { role?: string })?.role;
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     if (status === 'unauthenticated') {
       router.replace('/?auth=login&next=/dashboard');
     } else if (status === 'authenticated') {
@@ -20,9 +26,9 @@ export default function DashboardPage() {
         router.replace('/admin');
       }
     }
-  }, [status, role, router]);
+  }, [mounted, status, role, router]);
 
-  if (status === 'loading' || status === 'unauthenticated') {
+  if (!mounted || status === 'loading' || status === 'unauthenticated') {
     return null;
   }
 

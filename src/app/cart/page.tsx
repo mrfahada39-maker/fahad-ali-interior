@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Minus, Plus, X } from 'lucide-react';
@@ -9,9 +9,14 @@ import { useCartStore } from '@/store';
 import { resolveImageUrl } from '@/lib/images';
 
 export default function CartPage() {
+  const [mounted, setMounted] = useState(false);
   const { items, updateQuantity, removeItem, getSubtotal, appliedCoupon, setAppliedCoupon } = useCartStore();
   const [coupon, setCoupon] = useState('');
   const [couponError, setCouponError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const subtotal = getSubtotal();
   const shipping = 0;
@@ -60,7 +65,12 @@ export default function CartPage() {
             <h1 className="font-serif text-3xl text-theme-dark">Your Cart</h1>
           </div>
 
-          {items.length === 0 ? (
+          {!mounted ? (
+            <div className="text-center py-24">
+              <div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-theme-muted text-sm font-serif">Loading your cart...</p>
+            </div>
+          ) : items.length === 0 ? (
             <div className="text-center py-24">
               <p className="font-serif text-2xl text-theme-dark mb-4">Your cart is empty</p>
               <p className="text-theme-muted text-sm mb-8">Looks like you haven't added anything yet.</p>

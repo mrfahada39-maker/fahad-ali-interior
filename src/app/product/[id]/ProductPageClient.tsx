@@ -769,7 +769,7 @@ export default function ProductPageClient({
                         </div>
                       </div>
 
-                      <span className="text-[10px] font-mono text-stone-400">
+                      <span suppressHydrationWarning className="text-[10px] font-mono text-stone-400">
                         {new Date(rev.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
                     </div>

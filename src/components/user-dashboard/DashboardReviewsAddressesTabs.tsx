@@ -240,7 +240,7 @@ export function DashboardReviewsTab({
                 </p>
 
                 <div className="flex items-center justify-between pt-1 border-t border-[#E7DDD0]/60 text-[10px] text-stone-400">
-                  <span>
+                  <span suppressHydrationWarning>
                     {new Date(rev.createdAt || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                   <button
