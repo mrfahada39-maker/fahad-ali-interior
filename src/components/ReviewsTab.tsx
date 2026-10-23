@@ -61,14 +61,15 @@ export default function ReviewsTab({
   const approvedCount = reviews.filter((r: any) => (r.status || '').toLowerCase() === 'approved').length;
   const avgRating = totalCount > 0
     ? (reviews.reduce((acc: number, r: any) => acc + (Number(r.rating) || 5), 0) / totalCount).toFixed(1)
-    : '4.9';
+    : '0.0';
+  const approvalRate = totalCount > 0 ? Number(((approvedCount / totalCount) * 100).toFixed(1)) : 0;
 
   const kpis = [
     {
       label: 'AVERAGE CLIENT RATING',
       numValue: parseFloat(avgRating),
-      suffix: ' ★',
-      sub: '⭐ 5-Star Premium Score',
+      suffix: totalCount > 0 ? ' ★' : '',
+      sub: totalCount > 0 ? 'Verified Client Score' : 'No Reviews Yet',
       icon: Star,
       color: 'text-amber-500',
       iconBg: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100/80 border-amber-300/70 text-amber-600 shadow-[0_3px_12px_rgba(245,158,11,0.2)]',
@@ -103,9 +104,9 @@ export default function ReviewsTab({
     },
     {
       label: 'PUBLIC APPROVAL RATE',
-      numValue: 98.2,
+      numValue: approvalRate,
       suffix: '%',
-      sub: '🛡ï¸ High Quality Feedback',
+      sub: totalCount > 0 ? 'Live Approved Ratio' : 'No Reviews Yet',
       icon: ShieldCheck,
       color: 'text-emerald-600',
       iconBg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
@@ -159,7 +160,9 @@ export default function ReviewsTab({
             </div>
             <div>
               <span className="text-[10px] sm:text-xs font-black text-[#1F1612] uppercase tracking-wider block">Reputation Score</span>
-              <span className="text-[8.5px] sm:text-[10px] font-bold text-amber-700 block">4.9 / 5.0 (Excellent)</span>
+              <span className="text-[8.5px] sm:text-[10px] font-bold text-amber-700 block">
+                {totalCount > 0 ? `${avgRating} / 5.0 (${parseFloat(avgRating) >= 4.5 ? 'Excellent' : 'Good'})` : 'No reviews in database'}
+              </span>
             </div>
           </div>
         </div>

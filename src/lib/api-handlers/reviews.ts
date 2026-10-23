@@ -192,14 +192,16 @@ export async function handleReviewRoutes(ctx: ApiDispatchContext): Promise<NextR
     const revToDelete = await db.review
       .findUnique({ where: { id }, select: { productId: true } })
       .catch(() => null);
-    await db.review
-      .update({
-        where: { id },
-        data: { deletedAt: new Date() },
-      })
-      .catch(async () => {
-        await db.review.delete({ where: { id } });
-      });
+    try {
+      await db.review.delete({ where: { id } });
+    } catch {
+      await db.review
+        .update({
+          where: { id },
+          data: { deletedAt: new Date() },
+        })
+        .catch(() => {});
+    }
 
     if (revToDelete?.productId) {
       revalidateProductCaches(revToDelete.productId);
@@ -229,14 +231,16 @@ export async function handleReviewRoutes(ctx: ApiDispatchContext): Promise<NextR
     const revToDelete = await db.review
       .findUnique({ where: { id: reviewId }, select: { productId: true } })
       .catch(() => null);
-    await db.review
-      .updateMany({
-        where: { id: reviewId, userId: user.id },
-        data: { deletedAt: new Date() },
-      })
-      .catch(async () => {
-        await db.review.deleteMany({ where: { id: reviewId, userId: user.id } });
-      });
+    try {
+      await db.review.deleteMany({ where: { id: reviewId, userId: user.id } });
+    } catch {
+      await db.review
+        .updateMany({
+          where: { id: reviewId, userId: user.id },
+          data: { deletedAt: new Date() },
+        })
+        .catch(() => {});
+    }
 
     if (revToDelete?.productId) {
       revalidateProductCaches(revToDelete.productId);

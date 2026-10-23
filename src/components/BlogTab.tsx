@@ -105,9 +105,9 @@ export default function BlogTab({
     },
     {
       label: 'EDITORIAL SEO HEALTH',
-      numValue: 98.6,
+      numValue: totalCount > 0 ? (publishedCount > 0 ? 100 : 0) : 0,
       suffix: '%',
-      sub: '⭐ High Google Ranking',
+      sub: totalCount > 0 ? 'SEO Articles Live' : 'No articles published',
       icon: Sparkles,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
@@ -430,7 +430,7 @@ export default function BlogTab({
                   <div>
                     <label htmlFor="fai-blogtab-field-4" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">Cover Image URL</label>
                     <input id="fai-blogtab-field-4" name="fai_blogtab_field_4"
-                      placeholder="https://images.unsplash.com/..."
+                      placeholder="https://res.cloudinary.com/... or paste image URL"
                       value={blogForm.image}
                       onChange={(e) => setBlogForm({ ...blogForm, image: e.target.value })}
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] rounded-xl h-9.5 px-3 text-xs focus:border-[#B88E4B] outline-none"

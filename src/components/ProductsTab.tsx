@@ -75,7 +75,7 @@ interface ProductsTabProps {
   setProductForm: React.Dispatch<React.SetStateAction<any>> | ((form: any) => void);
   addProduct: () => void;
   deleteProduct: (id: string) => void;
-  defaultProductImage: (cat: string) => string;
+  defaultProductImage?: (cat: string) => string;
   editingProductId: string | null;
   setEditingProductId: (id: string | null) => void;
 }
@@ -400,7 +400,7 @@ export default function ProductsTab({
                 <label htmlFor="fai-productstab-field-1" className="text-stone-600 text-[10px] uppercase font-black tracking-wider">Category *</label>
                 <select id="fai-productstab-field-1" name="fai_productstab_field_1"
                   value={productForm.category}
-                  onChange={(e) => setProductForm({ ...productForm, category: e.target.value, image: defaultProductImage(e.target.value) })}
+                  onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                   className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#221814] font-bold rounded-xl h-10 px-3 text-xs focus:border-[#B88E4B] outline-none"
                 >
                   <option value="">Select Category</option>

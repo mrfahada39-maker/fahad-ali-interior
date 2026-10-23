@@ -23,74 +23,7 @@ const DISTINCT_FALLBACK_AVATARS = [
   'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=96&q=75&fm=webp',
 ];
 
-const TESTIMONIALS_DATA = [
-  {
-    id: 'test-1',
-    name: 'Usman Khan',
-    initial: 'U',
-    hasCustomAvatar: false,
-    location: 'DHA Phase 6, Lahore',
-    projectType: 'Royal Sectional Commission',
-    text: 'The kiln-seasoned solid wood and tufted velvet finish exceeded every expectation. Delivered and installed by their white-glove team right on schedule.',
-    rating: 5,
-    score: '5.0',
-    avatar: DISTINCT_FALLBACK_AVATARS[0],
-    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[0],
-    roomImage: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg',
-    theme: 'amber',
-    tag: '✓ Verified Commission',
-    cardBorder: 'border-amber-300/90 shadow-[0_8px_35px_rgba(184,142,75,0.22)]',
-    ambientGlow: 'bg-amber-500/20',
-    badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
-    dotColor: 'bg-emerald-500',
-    numberGradient: 'from-[#B88E4B] via-[#D4AF37] to-[#996515]',
-    iconBg: 'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.25)]',
-  },
-  {
-    id: 'test-2',
-    name: 'Dr. Ayesha Malik',
-    initial: 'A',
-    hasCustomAvatar: false,
-    location: 'F-7, Islamabad',
-    projectType: 'Bespoke Drawing Room Suite',
-    text: 'We customized our 10-seater sofa dimensions for our Islamabad residence. The solid timber frame and high-density cushioning feel truly palatial.',
-    rating: 5,
-    score: '5.0',
-    avatar: DISTINCT_FALLBACK_AVATARS[2],
-    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[2],
-    roomImage: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg',
-    theme: 'bronze',
-    tag: '✓ Verified Commission',
-    cardBorder: 'border-[#C9A96E]/90 shadow-[0_8px_35px_rgba(140,98,57,0.22)]',
-    ambientGlow: 'bg-amber-600/20',
-    badgeStyle: 'bg-[#FAF5EE] text-[#8C6239] border-[#B88E4B]/40',
-    dotColor: 'bg-[#B88E4B]',
-    numberGradient: 'from-[#8C6239] via-[#B88E4B] to-[#5C3D22]',
-    iconBg: 'bg-gradient-to-br from-[#FAF5EE] via-amber-50 to-[#F3E7D3] border-[#B88E4B]/60 text-[#8C6239] shadow-[0_3px_12px_rgba(140,98,57,0.22)]',
-  },
-  {
-    id: 'test-3',
-    name: 'Bilal Ahmed',
-    initial: 'B',
-    hasCustomAvatar: false,
-    location: 'Clifton, Karachi',
-    projectType: 'Chesterfield Velvet Lounge',
-    text: 'Safe nationwide delivery from Lahore to Karachi with zero scratches. The brass detailing and deep walnut polish look even better in person.',
-    rating: 5,
-    score: '5.0',
-    avatar: DISTINCT_FALLBACK_AVATARS[1],
-    fallbackAvatar: DISTINCT_FALLBACK_AVATARS[1],
-    roomImage: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg',
-    theme: 'emerald',
-    tag: '✓ Verified Commission',
-    cardBorder: 'border-emerald-300/90 shadow-[0_8px_35px_rgba(16,185,129,0.18)]',
-    ambientGlow: 'bg-emerald-500/15',
-    badgeStyle: 'bg-emerald-50 text-emerald-800 border-emerald-500/30',
-    dotColor: 'bg-emerald-500',
-    numberGradient: 'from-[#221814] via-[#5A4336] to-[#8C6239]',
-    iconBg: 'bg-gradient-to-br from-emerald-50 via-[#FAF5EE] to-amber-50 border-emerald-300/70 text-emerald-700 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
-  },
-];
+
 
 export interface TestimonialReviewItem {
   id: string;
@@ -170,8 +103,7 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
       const rawRoom = (r as any).image || r.product?.image || fallbackRoom;
       const roomImage = resolveImageUrl(rawRoom, 'Living Room', 600, 'good');
       const rawComment = (r.comment || '').trim();
-      const isWeakComment = !rawComment || rawComment.length < 8 || ['good', 'nice', 'ok', 'okay', 'great', 'fine', 'good work'].includes(rawComment.toLowerCase());
-      const reviewText = isWeakComment ? 'Masterpiece solid wood craftsmanship. Outstanding luxury comfort, kiln-seasoned timber frame, and white-glove delivery.' : rawComment;
+      const reviewText = rawComment || 'Masterpiece solid Sheesham wood craftsmanship.';
 
       return {
         id: r.id || `real-rev-${idx}`,
@@ -190,17 +122,6 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
         ...theme,
       };
     });
-
-    // Supplement with curated verified patron commissions when fewer than 3 distinct reviews exist so the 3D coverflow never repeats the same person
-    if (mapped.length < 3) {
-      const existingNames = new Set(mapped.map((m) => m.name.toLowerCase()));
-      for (const fallbackItem of TESTIMONIALS_DATA) {
-        if (mapped.length >= 4) break;
-        if (!existingNames.has(fallbackItem.name.toLowerCase())) {
-          mapped.push(fallbackItem);
-        }
-      }
-    }
 
     return mapped;
   }, [reviews]);

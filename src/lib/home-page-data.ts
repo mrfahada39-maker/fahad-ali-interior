@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import { unstable_cache } from 'next/cache';
 import type { StorefrontProduct } from '@/lib/types';
@@ -288,18 +288,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
         uniqueCustomers: 0,
       },
       products: formattedProducts,
-      categories: formattedCategories.length > 0 ? formattedCategories : [
-        { name: 'Living Room', count: 1, items: '1 Masterpiece', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg', description: 'Solid Sheesham' },
-        { name: 'Bedroom', count: 2, items: '2 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg', description: 'Solid Sheesham' },
-        { name: 'Dining Room', count: 2, items: '2 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg', description: 'Solid Sheesham' },
-        { name: 'Office', count: 1, items: '1 Masterpiece', image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=600&q=80', description: 'Solid Sheesham' },
-        { name: 'Sofas', count: 1, items: '1 Masterpiece', image: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=600&q=80', description: 'Solid Sheesham' },
-        { name: 'Coffee Tables', count: 2, items: '2 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg', description: 'Solid Sheesham' },
-        { name: 'TV Units', count: 1, items: '1 Masterpiece', image: 'https://images.unsplash.com/photo-1593696140826-c58b021acf8b?auto=format&fit=crop&w=600&q=80', description: 'Solid Sheesham' },
-        { name: 'Storage', count: 3, items: '3 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg', description: 'Solid Sheesham' },
-        { name: 'Outdoor', count: 0, items: 'Bespoke Collection', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80', description: 'Solid Sheesham' },
-        { name: 'Accessories', count: 0, items: 'Bespoke Collection', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80', description: 'Solid Sheesham' },
-      ],
+      categories: formattedCategories,
       reviews: formattedReviews,
       settings: settings ? {
         siteName: settings.siteName || 'Fahad Ali Interior',

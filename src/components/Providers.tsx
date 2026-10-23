@@ -4,7 +4,7 @@
 import { SessionProvider } from 'next-auth/react';
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { useSiteSettingsStore, useClientCacheStore, type SiteSettings } from '@/store';
+import { useSiteSettingsStore, type SiteSettings } from '@/store';
 const TelemetryTracker = dynamic(() => import('@/components/TelemetryTracker'), { ssr: false });
 const NetworkWatcher = dynamic(() => import('@/components/NetworkWatcher'), { ssr: false });
 const Toaster = dynamic(() => import('sonner').then((m) => m.Toaster), { ssr: false });
@@ -18,7 +18,6 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
   const [interactive, setInteractive] = useState(false);
   const setSiteSettings = useSiteSettingsStore((s) => s.setSettings);
   const settings = useSiteSettingsStore((s) => s.settings);
-  const setCachedProducts = useClientCacheStore((s) => s.setProducts);
   const hasInitialized = useRef(false);
 
   useEffect(() => {

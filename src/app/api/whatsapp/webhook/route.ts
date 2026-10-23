@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import type { PrismaClient } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import { WhatsAppService } from '@/lib/whatsapp';
 
@@ -262,7 +263,7 @@ export async function POST(req: NextRequest) {
     } else if (action === 'reject') {
       // Revert stock atomically
       const runTx = db.$transaction.bind(db) as unknown as <T>(
-        fn: (tx: any) => Promise<T>,
+        fn: (tx: PrismaClient) => Promise<T>,
         options?: { maxWait?: number; timeout?: number }
       ) => Promise<T>;
       await runTx(

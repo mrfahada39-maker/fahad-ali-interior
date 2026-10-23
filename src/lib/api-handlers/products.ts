@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
+import { safeApiErrorResponse } from '@/lib/api-error';
 import { validateImageBuffer } from '@/lib/image-validator';
 import { moveToRecycleBin } from '@/lib/recycle-bin';
 import { createCategorySchema, createProductSchema, updateProductSchema } from '@/lib/validations/api-schemas';
@@ -9,7 +10,6 @@ import {
   ApiDispatchContext,
   DbProductRecord,
   DbReviewRecord,
-  fallbackCategories,
   getUserFromSessionOrToken,
   requireAdmin,
   revalidateProductCaches,
@@ -307,9 +307,19 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
           .catch(() => []),
       ]);
 
-      const listWithCounts = (categories as any[]).map((cat: any) => {
-        const count = (products as any[]).filter(
-          (p: any) =>
+      interface CategoryItem {
+        id: string;
+        name: string;
+        [key: string]: unknown;
+      }
+      interface ProductRelItem {
+        id: string;
+        category?: string | null;
+        categoryId?: string | null;
+      }
+      const listWithCounts = (categories as CategoryItem[]).map((cat) => {
+        const count = (products as ProductRelItem[]).filter(
+          (p) =>
             p.categoryId === cat.id ||
             (p.category && p.category.trim().toLowerCase() === cat.name.trim().toLowerCase())
         ).length;
@@ -534,14 +544,14 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
 
       if (!id) return NextResponse.json({ error: 'Blog post ID is required' }, { status: 400 });
 
-      await db.blogPost
-        .update({
+      try {
+        await db.blogPost.delete({ where: { id } });
+      } catch {
+        await db.blogPost.updateMany({
           where: { id },
           data: { deletedAt: new Date(), isActive: false },
-        })
-        .catch(async () => {
-          await db.blogPost.delete({ where: { id } });
         });
+      }
 
       return NextResponse.json({ success: true, deletedId: id });
     }
@@ -573,13 +583,20 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
         ? JSON.stringify(rawBody.specs)
         : rawBody.specs || null;
 
+    const matchingCategory = rawBody.category
+      ? await db.category.findFirst({
+          where: { name: { equals: String(rawBody.category).trim(), mode: 'insensitive' } },
+        })
+      : null;
+
     const product = await db.product.create({
       data: {
         name: rawBody.name.trim(),
         description: rawBody.description || '',
         price: safePrice,
-        category: rawBody.category || 'Living Room',
-        image: rawBody.image || '/images/placeholder.webp',
+        category: rawBody.category ? String(rawBody.category).trim() : 'Living Room',
+        categoryId: matchingCategory?.id || null,
+        image: rawBody.image ? String(rawBody.image).trim() : '',
         images: Array.isArray(rawBody.images) ? rawBody.images : [],
         material: rawBody.material || null,
         dimensions: rawBody.dimensions || null,
@@ -621,8 +638,14 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
     if (rest.price !== undefined) {
       updateData.price = parseSafePrice(rest.price);
     }
-    if (rest.category !== undefined) updateData.category = rest.category;
-    if (rest.image !== undefined) updateData.image = rest.image;
+    if (rest.category !== undefined) {
+      updateData.category = String(rest.category).trim();
+      const matchingCat = await db.category.findFirst({
+        where: { name: { equals: String(rest.category).trim(), mode: 'insensitive' } },
+      });
+      updateData.categoryId = matchingCat?.id || null;
+    }
+    if (rest.image !== undefined) updateData.image = String(rest.image).trim();
     if (rest.images !== undefined) updateData.images = Array.isArray(rest.images) ? rest.images : [];
     if (rest.material !== undefined) updateData.material = rest.material;
     if (rest.dimensions !== undefined) updateData.dimensions = rest.dimensions;
@@ -673,7 +696,11 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
     }
 
     const existingProduct = await db.product.findUnique({ where: { id } });
-    if (existingProduct) {
+    if (!existingProduct) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    try {
       await moveToRecycleBin({
         entityType: 'PRODUCT',
         entityId: existingProduct.id,
@@ -681,27 +708,30 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
         payload: existingProduct,
         deletedBy: user?.email || user?.id || null,
       });
+    } catch {
+      // Non-blocking recycle bin snapshot
     }
 
     try {
       await db.$transaction([
         db.wishlistItem.deleteMany({ where: { productId: id } }),
-        db.product.updateMany({
-          where: { id },
-          data: { deletedAt: new Date() },
-        }),
+        db.review.deleteMany({ where: { productId: id } }),
+        db.orderItem.deleteMany({ where: { productId: id } }),
+        db.product.delete({ where: { id } }),
       ]);
     } catch {
       try {
-        await db.product.updateMany({
-          where: { id },
-          data: { deletedAt: new Date() },
-        });
-      } catch {}
+        await db.wishlistItem.deleteMany({ where: { productId: id } }).catch(() => {});
+        await db.review.deleteMany({ where: { productId: id } }).catch(() => {});
+        await db.orderItem.deleteMany({ where: { productId: id } }).catch(() => {});
+        await db.product.delete({ where: { id } });
+      } catch (err: unknown) {
+        return safeApiErrorResponse(err, 'Failed to permanently delete product from database', 500, req);
+      }
     }
 
     revalidateProductCaches(id);
-    return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
+    return NextResponse.json({ success: true, deletedId: id, permanentlyDeleted: true });
   }
 
   return null;

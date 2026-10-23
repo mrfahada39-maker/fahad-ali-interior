@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Sparkles, Calendar, User, ArrowRight, BookOpen } from 'lucide-react';
 import StoreShell from '@/components/StoreShell';
 import { db } from '@/lib/db';
-import { FALLBACK_EDITORIAL_ARTICLES, EditorialArticle } from '@/lib/editorial-fallback';
+import type { EditorialArticle } from '@/lib/editorial-fallback';
 
 export const revalidate = 60;
 
@@ -26,34 +26,31 @@ export default async function BlogIndexPage() {
     })
     .catch(() => []);
 
-  const articles: EditorialArticle[] =
-    dbBlogs.length > 0
-      ? dbBlogs.map(
-          (b: {
-            id: string;
-            title: string;
-            slug: string;
-            excerpt?: string | null;
-            content: string;
-            image?: string | null;
-            author?: string | null;
-            tags?: string[];
-            createdAt?: Date | string;
-            isActive: boolean;
-          }) => ({
-            id: b.id,
-            title: b.title,
-            slug: b.slug,
-            excerpt: b.excerpt || b.content.slice(0, 160) + '...',
-            content: b.content,
-            image: b.image || '/hero-desktop.avif',
-            author: b.author || 'Fahad Ali Atelier',
-            tags: Array.isArray(b.tags) && b.tags.length > 0 ? b.tags : ['Atelier Journal'],
-            createdAt: b.createdAt ? new Date(b.createdAt).toISOString() : new Date().toISOString(),
-            isActive: b.isActive,
-          })
-        )
-      : FALLBACK_EDITORIAL_ARTICLES;
+  const articles: EditorialArticle[] = dbBlogs.map(
+    (b: {
+      id: string;
+      title: string;
+      slug: string;
+      excerpt?: string | null;
+      content: string;
+      image?: string | null;
+      author?: string | null;
+      tags?: string[];
+      createdAt?: Date | string;
+      isActive: boolean;
+    }) => ({
+      id: b.id,
+      title: b.title,
+      slug: b.slug,
+      excerpt: b.excerpt || b.content.slice(0, 160) + '...',
+      content: b.content,
+      image: b.image || '/hero-desktop.avif',
+      author: b.author || 'Fahad Ali Atelier',
+      tags: Array.isArray(b.tags) && b.tags.length > 0 ? b.tags : ['Atelier Journal'],
+      createdAt: b.createdAt ? new Date(b.createdAt).toISOString() : new Date().toISOString(),
+      isActive: b.isActive,
+    })
+  );
 
   return (
     <StoreShell showFooter={true}>
@@ -76,8 +73,19 @@ export default async function BlogIndexPage() {
           </div>
 
           {/* Articles Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-            {articles.map((article) => (
+          {articles.length === 0 ? (
+            <div className="bg-white border border-[#E7DDD0] rounded-[24px] p-16 text-center shadow-[0_4px_20px_rgba(44,30,24,0.015)] max-w-xl mx-auto">
+              <div className="w-16 h-16 rounded-2xl bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center mx-auto mb-3 text-[#B88E4B]">
+                <BookOpen size={32} />
+              </div>
+              <h3 className="text-xl font-serif font-black text-[#221814]">Journal Articles Coming Soon</h3>
+              <p className="text-stone-500 text-xs mt-1">
+                Our master craftsmen and interior concierges are preparing upcoming editorial pieces. Please check back soon.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+              {articles.map((article) => (
               <article
                 key={article.id}
                 className="bg-white border border-[#E7DDD0] hover:border-[#B88E4B]/60 rounded-[24px] overflow-hidden shadow-[0_6px_28px_rgba(44,30,24,0.04)] hover:shadow-[0_14px_38px_rgba(184,142,75,0.14)] transition-all flex flex-col justify-between group"
@@ -145,7 +153,8 @@ export default async function BlogIndexPage() {
                 </div>
               </article>
             ))}
-          </div>
+            </div>
+          )}
         </div>
       </main>
     </StoreShell>

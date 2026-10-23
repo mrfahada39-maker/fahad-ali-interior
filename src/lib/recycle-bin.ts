@@ -238,17 +238,24 @@ export async function restoreFromRecycleBin(recycleBinId: string, actorUserId?: 
  * Permanently delete a single item from the RecycleBin table.
  */
 export async function permanentlyDeleteFromRecycleBin(recycleBinId: string, actorUserId?: string) {
-  const item = await db.recycleBin.findUnique({
+  let item = await db.recycleBin.findUnique({
     where: { id: recycleBinId },
   });
 
   if (!item) {
-    throw new Error('Item not found in Recycle Bin');
+    item = await db.recycleBin.findFirst({
+      where: { entityId: recycleBinId },
+    });
+  }
+
+  if (!item) {
+    // Idempotent: If item is already erased or not found, return clean success so UI never crashes with 500
+    return { success: true, deletedId: recycleBinId, alreadyPurged: true };
   }
 
   await db.recycleBin.delete({
-    where: { id: recycleBinId },
-  });
+    where: { id: item.id },
+  }).catch(() => {});
 
   await recordAuditLog({
     userId: actorUserId || null,
@@ -256,13 +263,13 @@ export async function permanentlyDeleteFromRecycleBin(recycleBinId: string, acto
     entity: item.entityType,
     entityId: item.entityId,
     metadata: {
-      recycleBinId,
+      recycleBinId: item.id,
       name: item.name,
     },
-  });
+  }).catch(() => {});
 
   logger.info('recycle_bin.item_permanently_deleted', {
-    recycleBinId,
+    recycleBinId: item.id,
     entityType: item.entityType,
     name: item.name,
   });

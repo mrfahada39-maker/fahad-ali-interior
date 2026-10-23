@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import Link from 'next/link';
 import { ArrowRight, ChevronRight, Sparkles } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import type { StorefrontProduct } from '@/lib/types';
@@ -10,11 +9,6 @@ import { useUiNavigationStore } from '@/store';
 interface HomeSignatureCategoriesProps {
   products: StorefrontProduct[];
   categories?: { name: string; items?: string; image?: string }[];
-}
-
-function normalizeCategoryName(raw?: string | null): string {
-  if (!raw) return '';
-  return raw.trim();
 }
 
 function isProductInCategory(p: StorefrontProduct, catName: string): boolean {

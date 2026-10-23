@@ -3,7 +3,6 @@ import { MetadataRoute } from 'next';
 import { getStorefrontProducts } from '@/lib/catalog-api';
 import { getSiteUrl } from '@/lib/utils';
 import { db } from '@/lib/db';
-import { FALLBACK_EDITORIAL_ARTICLES } from '@/lib/editorial-fallback';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
@@ -50,19 +49,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
     if (dbBlogs && dbBlogs.length > 0) {
       blogArticles = dbBlogs;
-    } else {
-      blogArticles = FALLBACK_EDITORIAL_ARTICLES.map((a) => ({
-        slug: a.slug,
-        updatedAt: a.createdAt,
-        image: a.image,
-      }));
     }
   } catch {
-    blogArticles = FALLBACK_EDITORIAL_ARTICLES.map((a) => ({
-      slug: a.slug,
-      updatedAt: a.createdAt,
-      image: a.image,
-    }));
+    blogArticles = [];
   }
 
   const blogPages: MetadataRoute.Sitemap = blogArticles.map((article) => {

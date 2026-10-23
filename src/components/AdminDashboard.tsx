@@ -498,22 +498,30 @@ export default function AdminDashboard() {
   };
 
   const updateReviewStatus = async (id: string, status: string) => {
-    setReviews((prev: any[]) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-    toast.success(`Review ${status}`);
-    const res = await apiFetch('/api/admin/reviews', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
-    if (!res.ok) {
-      toast.error('Failed to update review');
-      loadAll();
+    try {
+      const res = await apiFetch('/api/admin/reviews', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
+      if (res.ok) {
+        setReviews((prev: any[]) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+        toast.success(`Review ${status}`);
+      } else {
+        toast.error('Failed to update review');
+      }
+    } catch {
+      toast.error('Network error updating review');
     }
   };
 
   const updateInquiryStatus = async (id: string, status: string) => {
-    setInquiries((prev: any[]) => prev.map((inq) => (inq.id === id ? { ...inq, status } : inq)));
-    toast.success('Inquiry updated');
-    const res = await apiFetch('/api/admin/inquiries', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
-    if (!res.ok) {
-      toast.error('Failed to update inquiry');
-      loadAll();
+    try {
+      const res = await apiFetch('/api/admin/inquiries', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
+      if (res.ok) {
+        setInquiries((prev: any[]) => prev.map((inq) => (inq.id === id ? { ...inq, status } : inq)));
+        toast.success('Inquiry updated');
+      } else {
+        toast.error('Failed to update inquiry');
+      }
+    } catch {
+      toast.error('Network error updating inquiry');
     }
   };
 
@@ -586,6 +594,10 @@ export default function AdminDashboard() {
   const addProduct = async () => {
     if (!productForm.name || !productForm.category) {
       toast.error('Product name and Category are required');
+      return;
+    }
+    if (!productForm.image?.trim()) {
+      toast.error('Primary product showcase image is required');
       return;
     }
     const specsObj = {
@@ -676,22 +688,24 @@ export default function AdminDashboard() {
   };
 
   const deleteProduct = async (id: string) => {
-    // 0ms instant optimistic removal from UI
-    setProducts((prev) => (Array.isArray(prev) ? prev.filter((p) => p.id !== id) : []));
-    setStats((prev: any) => ({ ...prev, totalProducts: Math.max(0, (prev?.totalProducts || 1) - 1) }));
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('fahad_catalog_updated', String(Date.now()));
-        window.dispatchEvent(new Event('fahad_catalog_updated'));
-      } catch { }
-    }
-    toast.success('Product permanently deleted');
-
-    const res = await apiFetch(`/api/admin/products?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      toast.error(data?.error || 'Failed to delete product');
-      loadAll();
+    try {
+      const res = await apiFetch(`/api/admin/products?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (res.ok) {
+        setProducts((prev) => (Array.isArray(prev) ? prev.filter((p) => p.id !== id) : []));
+        setStats((prev: any) => ({ ...prev, totalProducts: Math.max(0, (prev?.totalProducts || 1) - 1) }));
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('fahad_catalog_updated', String(Date.now()));
+            window.dispatchEvent(new Event('fahad_catalog_updated'));
+          } catch { }
+        }
+        toast.success('Product permanently deleted from database');
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || 'Failed to delete product from database');
+      }
+    } catch {
+      toast.error('Network error. Failed to delete product.');
     }
   };
 
@@ -734,12 +748,16 @@ export default function AdminDashboard() {
   };
 
   const deleteBlog = async (id: string) => {
-    setBlogs((prev: any[]) => prev.filter((b) => b.id !== id));
-    toast.success('Blog post deleted');
-    const res = await apiFetch(`/api/v1/blog/${id}`, { method: 'DELETE' });
-    if (!res.ok) {
-      toast.error('Failed to delete blog post');
-      loadAll();
+    try {
+      const res = await apiFetch(`/api/v1/blog/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setBlogs((prev: any[]) => prev.filter((b) => b.id !== id));
+        toast.success('Blog post permanently deleted');
+      } else {
+        toast.error('Failed to delete blog post');
+      }
+    } catch {
+      toast.error('Network error deleting blog post');
     }
   };
 
@@ -975,9 +993,17 @@ export default function AdminDashboard() {
               reviews={reviews}
               updateReviewStatus={updateReviewStatus}
               deleteReview={async (id: string) => {
-                await apiFetch('/api/admin/reviews', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-                toast.success('Review deleted');
-                loadAll();
+                try {
+                  const res = await apiFetch('/api/admin/reviews', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+                  if (res.ok) {
+                    setReviews((prev: any[]) => prev.filter((r) => r.id !== id));
+                    toast.success('Review permanently deleted');
+                  } else {
+                    toast.error('Failed to delete review');
+                  }
+                } catch {
+                  toast.error('Network error deleting review');
+                }
               }}
               statusColor={statusColor}
             />

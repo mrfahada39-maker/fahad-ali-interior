@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, Calendar, User, Sparkles, ArrowRight } from 'lucide-react';
 import StoreShell from '@/components/StoreShell';
 import { db } from '@/lib/db';
-import { FALLBACK_EDITORIAL_ARTICLES, EditorialArticle } from '@/lib/editorial-fallback';
+import type { EditorialArticle } from '@/lib/editorial-fallback';
 
 export const revalidate = 60;
 
@@ -34,7 +34,7 @@ async function getArticleBySlug(slug: string): Promise<EditorialArticle | null> 
     };
   }
 
-  return FALLBACK_EDITORIAL_ARTICLES.find((a) => a.slug === cleanSlug) || null;
+  return null;
 }
 
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
