@@ -36,28 +36,6 @@ import CloudinaryImageUpload from '@/components/CloudinaryImageUpload';
 import { resolveImageUrl } from '@/lib/images';
 import AnimatedCounter from '@/components/AnimatedCounter';
 
-const COLLECTION_BADGES = [
-  '👑 Royal Heritage',
-  '✦ Living Room Flagship',
-  '💎 Master Bedroom Suite',
-  '✨ Imperial Dining',
-  '📺 Modern Media & LED Walls',
-  '⚡ Luxury TV Consoles & Racks',
-  '🚪 Royal Walk-In Wardrobes',
-  '🛋ï¸ Bespoke Lounge',
-  '💼 Executive Study & Office',
-  '🪵 Seasoned Sheesham',
-];
-
-const PRESET_COLLECTION_IMAGES = [
-  { label: 'Living Room Chesterfield', url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=1000' },
-  { label: 'Royal Bed Chambers', url: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1000' },
-  { label: 'Imperial Dining Suite', url: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=1000' },
-  { label: 'LED Media Wall & Racks', url: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?q=80&w=1000' },
-  { label: 'Walk-In Wardrobe', url: 'https://images.unsplash.com/photo-1558997519-83ea9252def8?q=80&w=1000' },
-  { label: 'Artisan Coffee Lounge', url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=1000' },
-  { label: 'Executive Sheesham Desk', url: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1000' },
-];
 
 export default function CmsTab() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -75,7 +53,7 @@ export default function CmsTab() {
     items: '',
     order: 0,
     isActive: true,
-    badge: '👑 Royal Heritage',
+    badge: '',
     slug: '',
   });
 
@@ -161,16 +139,19 @@ export default function CmsTab() {
     });
   };
 
-  const handleMoveCategory = async (index: number, direction: 'up' | 'down') => {
-    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+  const handleMoveCategory = async (categoryId: string, direction: 'up' | 'down') => {
+    const currentIndex = categories.findIndex((c) => c.id === categoryId);
+    if (currentIndex === -1) return;
+
+    const targetIdx = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     if (targetIdx < 0 || targetIdx >= categories.length) return;
 
     // Create reordered clone
     const reordered = [...categories];
-    const [moved] = reordered.splice(index, 1);
+    const [moved] = reordered.splice(currentIndex, 1);
     reordered.splice(targetIdx, 0, moved);
 
-    // Optimistically update UI
+    // Optimistically update UI immediately
     setCategories(reordered);
 
     try {
@@ -185,7 +166,6 @@ export default function CmsTab() {
         )
       );
       toast.success('Collection sequence updated ✓');
-      loadCategories();
     } catch {
       toast.error('Failed to reorder collections');
       loadCategories();
@@ -194,15 +174,24 @@ export default function CmsTab() {
 
   const handleDeleteCategory = async (id: string) => {
     if (!confirm('Are you sure you want to delete this showroom collection?')) return;
+
+    const previousCategories = [...categories];
+    // Immediate optimistic removal from UI
+    setCategories((prev) => prev.filter((c) => c.id !== id));
+
     try {
-      const res = await apiFetch(`/api/admin/categories?id=${id}`, {
+      const res = await apiFetch(`/api/admin/categories?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
       if (res.ok) {
         toast.success('Showroom collection removed ✓');
-        loadCategories();
+      } else {
+        setCategories(previousCategories);
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || 'Failed to delete collection');
       }
     } catch {
+      setCategories(previousCategories);
       toast.error('Failed to delete collection');
     }
   };
@@ -451,6 +440,10 @@ export default function CmsTab() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4.5">
             {filteredCategories.map((c, index) => {
               const itemCount = c._count?.products || 0;
+              const actualIndex = categories.findIndex((cat) => cat.id === c.id);
+              const isFirst = actualIndex <= 0;
+              const isLast = actualIndex === -1 || actualIndex >= categories.length - 1;
+              const displaySeq = actualIndex !== -1 ? actualIndex + 1 : index + 1;
 
               return (
                 <motion.div
@@ -467,20 +460,20 @@ export default function CmsTab() {
                       {/* Sequence Number & Arrows */}
                       <div className="flex items-center gap-1.5 bg-[#FAF5EE] border border-[#E2D1BC] px-2.5 py-1 rounded-xl">
                         <span className="text-[11px] font-mono font-black text-[#8C6239]">
-                          #{index + 1}
+                          #{displaySeq}
                         </span>
                         <div className="flex items-center gap-0.5 border-l border-[#E2D1BC] pl-1.5 ml-0.5">
                           <button
-                            onClick={() => handleMoveCategory(index, 'up')}
-                            disabled={index === 0}
+                            onClick={() => handleMoveCategory(c.id, 'up')}
+                            disabled={isFirst}
                             className="p-1 rounded hover:bg-[#EBDDC8] disabled:opacity-20 text-stone-600 transition-colors cursor-pointer"
                             title="Move Sequence Up"
                           >
                             <ArrowUp size={11} />
                           </button>
                           <button
-                            onClick={() => handleMoveCategory(index, 'down')}
-                            disabled={index === categories.length - 1}
+                            onClick={() => handleMoveCategory(c.id, 'down')}
+                            disabled={isLast}
                             className="p-1 rounded hover:bg-[#EBDDC8] disabled:opacity-20 text-stone-600 transition-colors cursor-pointer"
                             title="Move Sequence Down"
                           >
@@ -667,12 +660,12 @@ export default function CmsTab() {
                         />
                       </div>
 
-                      {/* Custom Badge Tag Section with Direct Input & Quick Pills */}
+                      {/* Custom Badge Tag Section */}
                       <div className="space-y-2 bg-[#FCFAF7] border border-[#E7DDD0] p-3 rounded-2xl">
                         <div className="flex items-center justify-between">
                           <label htmlFor="fai-cmstab-field-3" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                             <Tag size={12} className="text-[#B88E4B]" />
-                            <span>Custom Badge Tag (Type Anything or Click Below)</span>
+                            <span>Custom Badge Tag (Optional)</span>
                           </label>
                           {categoryForm.badge && (
                             <button
@@ -688,47 +681,21 @@ export default function CmsTab() {
                         {/* Custom Input */}
                         <div className="relative">
                           <input id="fai-cmstab-field-3" name="fai_cmstab_field_3"
-                            placeholder="Type custom badge e.g. 📺 Modern Media & LED Walls..."
+                            placeholder="e.g. Featured Collection, Flagship, New Arrival..."
                             value={categoryForm.badge ?? ''}
                             onChange={(e) => setCategoryForm({ ...categoryForm, badge: e.target.value })}
                             className="w-full bg-white border border-[#E7DDD0] text-[#1F1612] font-black rounded-xl h-10 px-3 text-xs focus:border-[#B88E4B] outline-none shadow-2xs placeholder:text-stone-400"
                           />
-                        </div>
-
-                        {/* 1-Click Quick Suggestion Pills */}
-                        <div className="pt-1">
-                          <span className="text-[9.5px] font-bold text-stone-400 block mb-1.5 uppercase tracking-wider">
-                            Popular Luxury Badge Suggestions:
-                          </span>
-                          <div className="flex flex-wrap gap-1.5 max-h-[85px] overflow-y-auto pr-1">
-                            {COLLECTION_BADGES.map((badge) => {
-                              const isSelected = categoryForm.badge === badge;
-                              return (
-                                <button
-                                  key={badge}
-                                  type="button"
-                                  onClick={() => setCategoryForm({ ...categoryForm, badge })}
-                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer border ${
-                                    isSelected
-                                      ? 'bg-[#B88E4B] text-white border-[#B88E4B] shadow-2xs scale-102'
-                                      : 'bg-white text-stone-600 border-[#E7DDD0] hover:border-[#B88E4B] hover:bg-[#FAF5EE]'
-                                  }`}
-                                >
-                                  {badge}
-                                </button>
-                              );
-                            })}
-                          </div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label htmlFor="fai-cmstab-field-4" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
-                            Item Count Display Label
+                            Item Count Label Override (Optional)
                           </label>
                           <input id="fai-cmstab-field-4" name="fai_cmstab_field_4"
-                            placeholder="e.g. 25 Masterpieces or 10 Items"
+                            placeholder="Leave empty to use dynamic count (e.g. 3 Products)"
                             value={categoryForm.items ?? ''}
                             onChange={(e) => setCategoryForm({ ...categoryForm, items: e.target.value })}
                             className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono font-bold rounded-xl h-10 px-3 text-xs focus:border-[#B88E4B] outline-none shadow-2xs"
@@ -755,44 +722,53 @@ export default function CmsTab() {
                   )}
 
                   {/* TAB 2: HIGH-RES MEDIA & PRESETS */}
+                  {/* TAB 2: HIGH-RES MEDIA */}
                   {modalActiveTab === 'media' && (
-                    <div className="space-y-3">
-                      <div>
-                        <label htmlFor="fai-cmstab-field-6" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
-                          Collection Cover Image URL
-                        </label>
-                        <input id="fai-cmstab-field-6" name="fai_cmstab_field_6"
-                          placeholder="https://images.unsplash.com/..."
-                          value={categoryForm.image ?? ''}
-                          onChange={(e) => setCategoryForm({ ...categoryForm, image: e.target.value })}
-                          className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] rounded-xl h-10 px-3.5 text-xs focus:border-[#B88E4B] outline-none shadow-2xs mb-2"
-                        />
+                    <div className="space-y-4">
+                      <div className="bg-[#FCFAF7] border border-[#E7DDD0] p-4 rounded-2xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label htmlFor="fai-cmstab-field-6" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+                            <ImageIcon size={12} className="text-[#B88E4B]" />
+                            <span>Upload Real Cover Image via Cloudinary</span>
+                          </label>
+                          {categoryForm.image && (
+                            <button
+                              type="button"
+                              onClick={() => setCategoryForm((prev) => ({ ...prev, image: '' }))}
+                              className="text-[10.5px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer"
+                            >
+                              Remove Image
+                            </button>
+                          )}
+                        </div>
+
                         <CloudinaryImageUpload
-                          folder="fahad-ali-categories"
+                          folder="fahad-ali-interior/categories"
                           onUploadSuccess={(url) => setCategoryForm((prev) => ({ ...prev, image: url }))}
                         />
-                      </div>
 
-                      {/* 1-Click Curated Presets Picker */}
-                      <div>
-                        <span className="text-[10px] font-black text-[#8C6239] uppercase tracking-wider block mb-2 flex items-center gap-1">
-                          <Sparkles size={11} className="text-[#B88E4B]" /> 1-Click Curated Luxury Presets
-                        </span>
-                        <div className="grid grid-cols-3 gap-2">
-                          {PRESET_COLLECTION_IMAGES.map((preset) => (
-                            <button
-                              key={preset.label}
-                              type="button"
-                              onClick={() => setCategoryForm({ ...categoryForm, image: preset.url })}
-                              className="relative aspect-[16/9] rounded-xl overflow-hidden border border-[#E7DDD0] hover:border-[#B88E4B] transition-all group cursor-pointer"
-                            >
-                              <img src={preset.url} alt={preset.label} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-colors flex items-end p-1.5">
-                                <span className="text-[8.5px] font-black text-white truncate drop-shadow">{preset.label}</span>
-                              </div>
-                            </button>
-                          ))}
+                        <div>
+                          <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
+                            Or Direct Image URL
+                          </label>
+                          <input id="fai-cmstab-field-6" name="fai_cmstab_field_6"
+                            placeholder="https://res.cloudinary.com/... or paste image URL"
+                            value={categoryForm.image ?? ''}
+                            onChange={(e) => setCategoryForm({ ...categoryForm, image: e.target.value })}
+                            className="w-full bg-white border border-[#E7DDD0] text-[#1F1612] rounded-xl h-10 px-3.5 text-xs focus:border-[#B88E4B] outline-none shadow-2xs"
+                          />
                         </div>
+
+                        {categoryForm.image && (
+                          <div className="pt-2">
+                            <span className="text-[10px] font-black text-[#8C6239] uppercase tracking-wider block mb-1.5">
+                              Current Uploaded Cover:
+                            </span>
+                            <div className="relative aspect-[16/9] w-full max-h-48 rounded-xl overflow-hidden border border-[#E7DDD0]">
+                              <img src={categoryForm.image} alt="Cover preview" className="w-full h-full object-cover" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -861,7 +837,7 @@ export default function CmsTab() {
                           {categoryForm.name || 'Collection Title'}
                         </h4>
                         <span className="px-2 py-0.5 rounded-lg text-[9px] font-black font-mono bg-[#FAF5EE] text-[#8C6239] border border-[#E2D1BC] shrink-0">
-                          {categoryForm.items || '0 Products'}
+                          {categoryForm.items || (editingCategoryId ? `${categories.find((cat) => cat.id === editingCategoryId)?._count?.products || 0} Products` : '0 Products')}
                         </span>
                       </div>
 

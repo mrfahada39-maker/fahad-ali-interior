@@ -292,17 +292,37 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
     }
 
     if (method === 'GET') {
-      const categories = await db.category
-        .findMany({
-          where: { deletedAt: null },
-          orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-        })
-        .catch(() => []);
+      const [categories, products] = await Promise.all([
+        db.category
+          .findMany({
+            where: { deletedAt: null },
+            orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+          })
+          .catch(() => []),
+        db.product
+          .findMany({
+            where: { deletedAt: null },
+            select: { id: true, category: true, categoryId: true },
+          })
+          .catch(() => []),
+      ]);
 
-      if (categories.length === 0) {
-        return NextResponse.json(fallbackCategories);
-      }
-      return NextResponse.json(categories);
+      const listWithCounts = (categories as any[]).map((cat: any) => {
+        const count = (products as any[]).filter(
+          (p: any) =>
+            p.categoryId === cat.id ||
+            (p.category && p.category.trim().toLowerCase() === cat.name.trim().toLowerCase())
+        ).length;
+
+        return {
+          ...cat,
+          _count: {
+            products: count,
+          },
+        };
+      });
+
+      return NextResponse.json(listWithCounts);
     }
 
     const user = await getUserFromSessionOrToken(req);
@@ -320,30 +340,36 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
         return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
       }
       const body = rawBody;
+      const trimmedName = body.name.trim();
 
       const category = await db.category.upsert({
-        where: { name: body.name.trim() },
+        where: { name: trimmedName },
         create: {
-          name: body.name.trim(),
-          description: body.description || '',
-          image: body.image || '',
-          icon: body.icon || 'Sparkles',
-          items: body.items || '',
+          name: trimmedName,
+          description: body.description?.trim() || null,
+          image: body.image?.trim() || null,
+          icon: body.icon?.trim() || null,
+          items: body.items?.trim() || null,
           isPromo: Boolean(body.isPromo),
           order: Number(body.order) || 0,
           isActive: body.isActive !== undefined ? Boolean(body.isActive) : true,
         },
         update: {
-          description: body.description !== undefined ? body.description : undefined,
-          image: body.image !== undefined ? body.image : undefined,
-          icon: body.icon !== undefined ? body.icon : undefined,
-          items: body.items !== undefined ? body.items : undefined,
+          description: body.description !== undefined ? (body.description?.trim() || null) : undefined,
+          image: body.image !== undefined ? (body.image?.trim() || null) : undefined,
+          icon: body.icon !== undefined ? (body.icon?.trim() || null) : undefined,
+          items: body.items !== undefined ? (body.items?.trim() || null) : undefined,
           isPromo: body.isPromo !== undefined ? Boolean(body.isPromo) : undefined,
           order: body.order !== undefined ? Number(body.order) : undefined,
           isActive: body.isActive !== undefined ? Boolean(body.isActive) : undefined,
           deletedAt: null,
         },
       });
+
+      await db.product.updateMany({
+        where: { category: trimmedName, categoryId: null },
+        data: { categoryId: category.id },
+      }).catch(() => {});
 
       try {
         revalidatePath('/', 'layout');
@@ -359,10 +385,10 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
 
       const updateData: Record<string, unknown> = {};
       if (body.name !== undefined) updateData.name = String(body.name).trim();
-      if (body.description !== undefined) updateData.description = body.description;
-      if (body.image !== undefined) updateData.image = body.image;
-      if (body.icon !== undefined) updateData.icon = body.icon;
-      if (body.items !== undefined) updateData.items = body.items;
+      if (body.description !== undefined) updateData.description = body.description?.trim() || null;
+      if (body.image !== undefined) updateData.image = body.image?.trim() || null;
+      if (body.icon !== undefined) updateData.icon = body.icon?.trim() || null;
+      if (body.items !== undefined) updateData.items = body.items?.trim() || null;
       if (body.isPromo !== undefined) updateData.isPromo = Boolean(body.isPromo);
       if (body.order !== undefined) updateData.order = Number(body.order);
       if (body.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
@@ -373,6 +399,13 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
           where: { id },
           data: updateData,
         });
+
+        if (updateData.name) {
+          await db.product.updateMany({
+            where: { categoryId: id },
+            data: { category: String(updateData.name) },
+          }).catch(() => {});
+        }
       } else if (body.name) {
         updated = await db.category.update({
           where: { name: String(body.name).trim() },
@@ -399,28 +432,35 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
       }
 
       const existing = await db.category.findUnique({ where: { id } });
-      if (existing) {
-        await moveToRecycleBin({
-          entityType: 'CATEGORY',
-          entityId: existing.id,
-          name: existing.name,
-          payload: existing,
-          deletedBy: user?.email || user?.id || null,
-        });
-
-        await db.category.delete({ where: { id } }).catch(async () => {
-          await db.category.update({
-            where: { id },
-            data: { deletedAt: new Date(), isActive: false },
-          });
-        });
+      if (!existing) {
+        return NextResponse.json({ error: 'Category not found' }, { status: 404 });
       }
+
+      await moveToRecycleBin({
+        entityType: 'CATEGORY',
+        entityId: existing.id,
+        name: existing.name,
+        payload: existing,
+        deletedBy: user?.email || user?.id || null,
+      }).catch(() => {});
+
+      await db.product.updateMany({
+        where: { categoryId: id },
+        data: { categoryId: null },
+      }).catch(() => {});
+
+      await db.category.delete({ where: { id } }).catch(async () => {
+        await db.category.update({
+          where: { id },
+          data: { deletedAt: new Date(), isActive: false },
+        });
+      });
 
       try {
         revalidatePath('/', 'layout');
       } catch {}
 
-      return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
+      return NextResponse.json({ success: true, deletedId: id, message: 'Category deleted successfully' });
     }
   }
 

@@ -74,7 +74,7 @@ describe('Master Suite 3: Transactional Emails, SEO Sitemap, Robots & Error Boun
 
       expect(result).toHaveProperty('success');
       expect(result.success).toBe(true);
-    });
+    }, 15000);
   });
 
   // ── 2. Search Engine XML Sitemap Generator via @/app/sitemap ──

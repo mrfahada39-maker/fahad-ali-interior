@@ -23,18 +23,7 @@ function invalidateStorefrontCache() {
   }
 }
 
-const fallbackCategories = [
-  { id: 'cat_living', name: 'Living Room', slug: 'living-room', order: 1 },
-  { id: 'cat_bedroom', name: 'Bedroom', slug: 'bedroom', order: 2 },
-  { id: 'cat_dining', name: 'Dining Room', slug: 'dining-room', order: 3 },
-  { id: 'cat_office', name: 'Office', slug: 'office', order: 4 },
-  { id: 'cat_sofas', name: 'Sofas', slug: 'sofas', order: 5 },
-  { id: 'cat_coffee', name: 'Coffee Tables', slug: 'coffee-tables', order: 6 }, // Center Tables & Coffee Tables
-  { id: 'cat_tv', name: 'TV Units', slug: 'tv-units', order: 7 },
-  { id: 'cat_storage', name: 'Storage', slug: 'storage', order: 8 },
-  { id: 'cat_outdoor', name: 'Outdoor', slug: 'outdoor', order: 9 },
-  { id: 'cat_accessories', name: 'Accessories', slug: 'accessories', order: 10 },
-];
+// Showroom Taxonomy & Master Collections API (Standardized categories: Living Room, Bedroom, Dining Room, Center Tables & Coffee Tables, etc.)
 
 import { getVerifiedAdmin } from '@/lib/admin-auth';
 import { safeApiErrorResponse } from '@/lib/api-error';
@@ -50,24 +39,43 @@ export async function OPTIONS() {
   });
 }
 
-// GET /api/admin/categories
+// GET /api/admin/categories - Returns real database categories with dynamically calculated live product counts
 export async function GET(req: NextRequest) {
   try {
-    const categories = await db.category.findMany({
-      where: { deletedAt: null },
-      orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-    }).catch(() => []);
+    const [categories, products] = await Promise.all([
+      db.category.findMany({
+        where: { deletedAt: null },
+        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+      }).catch(() => []),
+      db.product.findMany({
+        where: { deletedAt: null },
+        select: { id: true, category: true, categoryId: true },
+      }).catch(() => []),
+    ]);
 
-    if (categories.length === 0) {
-      return NextResponse.json(fallbackCategories);
-    }
-    return NextResponse.json(categories);
+    // Attach dynamic real-time product count matching categoryId or category name
+    const listWithCounts = (categories as any[]).map((cat: any) => {
+      const count = (products as any[]).filter(
+        (p: any) =>
+          p.categoryId === cat.id ||
+          (p.category && p.category.trim().toLowerCase() === cat.name.trim().toLowerCase())
+      ).length;
+
+      return {
+        ...cat,
+        _count: {
+          products: count,
+        },
+      };
+    });
+
+    return NextResponse.json(listWithCounts);
   } catch (error: any) {
     return safeApiErrorResponse(error, 'Failed to fetch categories', 500, req);
   }
 }
 
-// POST /api/admin/categories
+// POST /api/admin/categories - Creates or updates category in real database
 export async function POST(req: NextRequest) {
   try {
     const user = await getVerifiedAdmin(req);
@@ -80,29 +88,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
     }
 
+    const trimmedName = body.name.trim();
+
     const category = await db.category.upsert({
-      where: { name: body.name.trim() },
+      where: { name: trimmedName },
       create: {
-        name: body.name.trim(),
-        description: body.description || '',
-        image: body.image || '',
-        icon: body.icon || 'Sparkles',
-        items: body.items || '',
+        name: trimmedName,
+        description: body.description?.trim() || null,
+        image: body.image?.trim() || null,
+        icon: body.icon?.trim() || null,
+        items: body.items?.trim() || null,
         isPromo: Boolean(body.isPromo),
         order: Number(body.order) || 0,
         isActive: body.isActive !== undefined ? Boolean(body.isActive) : true,
       },
       update: {
-        description: body.description !== undefined ? body.description : undefined,
-        image: body.image !== undefined ? body.image : undefined,
-        icon: body.icon !== undefined ? body.icon : undefined,
-        items: body.items !== undefined ? body.items : undefined,
+        description: body.description !== undefined ? (body.description?.trim() || null) : undefined,
+        image: body.image !== undefined ? (body.image?.trim() || null) : undefined,
+        icon: body.icon !== undefined ? (body.icon?.trim() || null) : undefined,
+        items: body.items !== undefined ? (body.items?.trim() || null) : undefined,
         isPromo: body.isPromo !== undefined ? Boolean(body.isPromo) : undefined,
         order: body.order !== undefined ? Number(body.order) : undefined,
         isActive: body.isActive !== undefined ? Boolean(body.isActive) : undefined,
         deletedAt: null,
       },
     });
+
+    // Automatically associate unlinked products matching this category name
+    await db.product.updateMany({
+      where: { category: trimmedName, categoryId: null },
+      data: { categoryId: category.id },
+    }).catch(() => {});
 
     invalidateStorefrontCache();
     return NextResponse.json({ success: true, data: category, category });
@@ -111,7 +127,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT /api/admin/categories
+// PUT /api/admin/categories - Updates category and reorders accurately
 export async function PUT(req: NextRequest) {
   try {
     const user = await getVerifiedAdmin(req);
@@ -125,10 +141,10 @@ export async function PUT(req: NextRequest) {
 
     const updateData: any = {};
     if (body.name !== undefined) updateData.name = body.name.trim();
-    if (body.description !== undefined) updateData.description = body.description;
-    if (body.image !== undefined) updateData.image = body.image;
-    if (body.icon !== undefined) updateData.icon = body.icon;
-    if (body.items !== undefined) updateData.items = body.items;
+    if (body.description !== undefined) updateData.description = body.description?.trim() || null;
+    if (body.image !== undefined) updateData.image = body.image?.trim() || null;
+    if (body.icon !== undefined) updateData.icon = body.icon?.trim() || null;
+    if (body.items !== undefined) updateData.items = body.items?.trim() || null;
     if (body.isPromo !== undefined) updateData.isPromo = Boolean(body.isPromo);
     if (body.order !== undefined) updateData.order = Number(body.order);
     if (body.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
@@ -139,6 +155,14 @@ export async function PUT(req: NextRequest) {
         where: { id },
         data: updateData,
       });
+
+      // If category name was renamed, sync products referencing this category
+      if (updateData.name) {
+        await db.product.updateMany({
+          where: { categoryId: id },
+          data: { category: updateData.name },
+        }).catch(() => {});
+      }
     } else if (body.name) {
       updated = await db.category.update({
         where: { name: body.name.trim() },
@@ -157,7 +181,7 @@ export async function PUT(req: NextRequest) {
 
 export const PATCH = PUT;
 
-// DELETE /api/admin/categories
+// DELETE /api/admin/categories - Deletes category from database with unlinked foreign key handling
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getVerifiedAdmin(req);
@@ -174,25 +198,36 @@ export async function DELETE(req: NextRequest) {
     }
 
     const existing = await db.category.findUnique({ where: { id } });
-    if (existing) {
-      await moveToRecycleBin({
-        entityType: 'CATEGORY',
-        entityId: existing.id,
-        name: existing.name,
-        payload: existing,
-        deletedBy: user?.email || user?.id || null,
-      });
-
-      await db.category.delete({ where: { id } }).catch(async () => {
-        await db.category.update({
-          where: { id },
-          data: { deletedAt: new Date(), isActive: false },
-        });
-      });
+    if (!existing) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
     }
 
+    // 1. Move snapshot to recycle bin for administrative audit trail
+    await moveToRecycleBin({
+      entityType: 'CATEGORY',
+      entityId: existing.id,
+      name: existing.name,
+      payload: existing,
+      deletedBy: user?.email || user?.id || null,
+    }).catch(() => {});
+
+    // 2. Dissociate foreign key references on products so foreign key constraints never block deletion
+    await db.product.updateMany({
+      where: { categoryId: id },
+      data: { categoryId: null },
+    }).catch(() => {});
+
+    // 3. Delete category from database
+    await db.category.delete({ where: { id } }).catch(async () => {
+      // Soft-delete fallback if hard deletion fails
+      await db.category.update({
+        where: { id },
+        data: { deletedAt: new Date(), isActive: false },
+      });
+    });
+
     invalidateStorefrontCache();
-    return NextResponse.json({ success: true, deletedId: id, archivedToRecycleBin: true });
+    return NextResponse.json({ success: true, deletedId: id, message: 'Category deleted successfully' });
   } catch (error: any) {
     return safeApiErrorResponse(error, 'Failed to delete category', 500, req);
   }
