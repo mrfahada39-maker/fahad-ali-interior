@@ -104,7 +104,50 @@ export async function POST(req: NextRequest) {
     }
 
     if (!buttonId) {
-      return NextResponse.json({ status: 'no_action_id' }, { status: 200 });
+      // Auto-reply to text messages / inquiries (e.g. "808", "hi", "salam", queries)
+      if (message.type === 'text') {
+        const userMsg = (message.text?.body || '').trim();
+        const accessToken = (
+          process.env.WHATSAPP_ACCESS_TOKEN ||
+          'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
+        )?.trim();
+        const phoneNumberId = (
+          process.env.WHATSAPP_PHONE_NUMBER_ID ||
+          '1404434616090105'
+        )?.trim();
+
+        const replyMsg =
+          `👋 Salam! *Fahad Ali Interior Executive Bot* Active hai.\n` +
+          `━━━━━━━━━━━━━━━━━━━━\n` +
+          `🤖 *System Status:* 100% Operational\n` +
+          `📩 *Received:* "${userMsg}"\n\n` +
+          `📌 *Quick Admin Commands:*\n` +
+          `• *verify* — Latest pending order verify & approve karein\n` +
+          `• *hold* — Latest order ko 24-48h hold par dalein\n` +
+          `• *reject* — Latest order reject / cancel karein\n\n` +
+          `🌐 *Live Dashboard:*\n` +
+          `👉 https://fahad-ali-interior.vercel.app/admin`;
+
+        if (accessToken && phoneNumberId) {
+          await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messaging_product: 'whatsapp',
+              recipient_type: 'individual',
+              to: senderPhone,
+              type: 'text',
+              text: { body: replyMsg },
+            }),
+          }).catch((err) => {
+            logger.warn('[WhatsApp AutoReply Dispatch Error]', { detail: String(err) });
+          });
+        }
+      }
+      return NextResponse.json({ status: 'auto_reply_sent' }, { status: 200 });
     }
 
     // Parse action and orderId e.g. "verify_ORD-12345" or "verify_latest"
