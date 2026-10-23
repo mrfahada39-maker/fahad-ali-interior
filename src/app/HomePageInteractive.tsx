@@ -57,7 +57,7 @@ const CATEGORIES = [
   { name: 'Dining Room', count: 2, items: '2 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
   { name: 'Office', count: 1, items: '1 Masterpiece', image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=600&q=80' },
   { name: 'Sofas', count: 1, items: '1 Masterpiece', image: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=600&q=80' },
-  { name: 'Coffee Tables', count: 2, items: '2 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
+  { name: 'Coffee Tables', count: 2, items: '2 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' }, // Center Tables & Coffee Tables
   { name: 'TV Units', count: 1, items: '1 Masterpiece', image: 'https://images.unsplash.com/photo-1593696140826-c58b021acf8b?auto=format&fit=crop&w=600&q=80' },
   { name: 'Storage', count: 3, items: '3 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
   { name: 'Outdoor', count: 0, items: 'Bespoke Collection', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80' },
