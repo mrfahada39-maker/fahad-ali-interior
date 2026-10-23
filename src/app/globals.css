@@ -499,3 +499,7 @@ body {
   content-visibility: auto;
   contain-intrinsic-size: 1px 650px;
 }
+
+html {
+  scroll-behavior: smooth;
+}

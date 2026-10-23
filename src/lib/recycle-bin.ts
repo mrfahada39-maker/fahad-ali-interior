@@ -2,6 +2,7 @@
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { recordAuditLog } from '@/lib/db-utils';
+import { revalidateProductCaches } from '@/lib/api-handlers/shared';
 
 export type RecycleBinEntityType = 'CATEGORY' | 'PRODUCT' | 'ORDER' | 'REVIEW';
 
@@ -29,6 +30,15 @@ export async function moveToRecycleBin(params: MoveToRecycleBinParams) {
 
   // Clean payload so non-serializable objects (Dates, Decimals) serialize cleanly to JSON
   const serializedPayload = JSON.parse(JSON.stringify(payload));
+
+  // Deduplicate: Clean up any previous recycle bin entry for this entityId so only 1 copy ever exists
+  try {
+    if (typeof db.recycleBin?.deleteMany === 'function') {
+      await db.recycleBin.deleteMany({
+        where: { entityId },
+      });
+    }
+  } catch {}
 
   const entry = await db.recycleBin.create({
     data: {
@@ -157,7 +167,7 @@ export async function restoreFromRecycleBin(recycleBinId: string, actorUserId?: 
         description: payload.description || null,
         price: payload.price,
         category: payload.category || 'General',
-        image: payload.image || '/images/placeholder.jpg',
+        image: payload.image || '/cat-thumb-sofas-2x.webp',
         material: payload.material || null,
         dimensions: payload.dimensions || null,
         stockCount: Number(payload.stockCount) || 0,
@@ -205,9 +215,22 @@ export async function restoreFromRecycleBin(recycleBinId: string, actorUserId?: 
   }
 
   // Once safely restored, permanently remove from RecycleBin table
-  await db.recycleBin.delete({
-    where: { id: recycleBinId },
-  });
+  try {
+    await db.recycleBin.delete({
+      where: { id: recycleBinId },
+    });
+  } catch {}
+  try {
+    if (typeof db.recycleBin?.deleteMany === 'function') {
+      await db.recycleBin.deleteMany({
+        where: { entityId: entry.entityId },
+      });
+    }
+  } catch {}
+
+  try {
+    revalidateProductCaches(entry.entityId);
+  } catch {}
 
   await recordAuditLog({
     userId: actorUserId || null,
@@ -273,6 +296,10 @@ export async function permanentlyDeleteFromRecycleBin(recycleBinId: string, acto
     entityType: item.entityType,
     name: item.name,
   });
+
+  try {
+    revalidateProductCaches(item.entityId);
+  } catch {}
 
   return { success: true, deletedId: recycleBinId };
 }

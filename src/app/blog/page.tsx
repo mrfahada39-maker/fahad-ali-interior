@@ -44,7 +44,7 @@ export default async function BlogIndexPage() {
       slug: b.slug,
       excerpt: b.excerpt || b.content.slice(0, 160) + '...',
       content: b.content,
-      image: b.image || '/hero-desktop.avif',
+      image: b.image || '/hero-living-room-img1-4k.webp',
       author: b.author || 'Fahad Ali Atelier',
       tags: Array.isArray(b.tags) && b.tags.length > 0 ? b.tags : ['Atelier Journal'],
       createdAt: b.createdAt ? new Date(b.createdAt).toISOString() : new Date().toISOString(),
@@ -93,7 +93,7 @@ export default async function BlogIndexPage() {
                 <div>
                   <Link href={`/blog/${article.slug}`} prefetch={false} className="block relative aspect-[16/10] bg-[#FAF5EE] overflow-hidden">
                     <Image
-                      src={article.image || '/hero-desktop.avif'}
+                      src={article.image || '/hero-living-room-img1-4k.webp'}
                       alt={article.title}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

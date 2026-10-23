@@ -46,6 +46,17 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
       }
     };
 
+    const purgeStaleCaches = () => {
+      if (typeof window !== 'undefined' && 'caches' in window) {
+        caches.delete('apis').catch(() => {});
+        caches.delete('fahad-pages').catch(() => {});
+        caches.delete('fahad-rsc-data').catch(() => {});
+        caches.delete('pages').catch(() => {});
+        caches.delete('pages-rsc').catch(() => {});
+      }
+    };
+    purgeStaleCaches();
+
     // Register service worker purely in idle time in production to protect TBT
     const swTimer = setTimeout(() => {
       if ('serviceWorker' in navigator) {
@@ -68,12 +79,16 @@ export default function Providers({ children, initialSettings }: ProvidersProps)
     window.addEventListener('pointerdown', onFirstInteraction, { once: true, passive: true });
     window.addEventListener('keydown', onFirstInteraction, { once: true, passive: true });
     window.addEventListener('touchstart', onFirstInteraction, { once: true, passive: true });
+    window.addEventListener('fahad_catalog_updated', purgeStaleCaches);
+    window.addEventListener('storage', purgeStaleCaches);
 
     return () => {
       clearTimeout(swTimer);
       window.removeEventListener('pointerdown', onFirstInteraction);
       window.removeEventListener('keydown', onFirstInteraction);
       window.removeEventListener('touchstart', onFirstInteraction);
+      window.removeEventListener('fahad_catalog_updated', purgeStaleCaches);
+      window.removeEventListener('storage', purgeStaleCaches);
     };
   }, [initialSettings, setSiteSettings]);
 

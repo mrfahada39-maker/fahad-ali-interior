@@ -193,12 +193,14 @@ export default async function RootLayout({
   ReactDOM.preconnect('https://res.cloudinary.com', { crossOrigin: 'anonymous' });
 
   return (
-    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <JsonLd data={organizationJsonLd} />
+      </head>
       <body
         suppressHydrationWarning
         className={`${playfair.variable} ${inter.variable} ${greatVibes.variable} antialiased bg-theme-bg text-theme-dark`}
       >
-        <JsonLd data={organizationJsonLd} />
         <Providers initialSettings={settings}>{children}</Providers>
         {process.env.NODE_ENV === 'production' && <SpeedInsights />}
       </body>

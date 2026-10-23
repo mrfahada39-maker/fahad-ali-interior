@@ -276,7 +276,7 @@ export async function handleSettingsAndBundleRoutes(
       return {
         name: c.name,
         count: liveCount,
-        image: c.image || '/images/placeholder.webp',
+        image: c.image || '/cat-thumb-sofas-2x.webp',
         description: c.description || 'Solid Sheesham Wood',
         items:
           liveCount > 0

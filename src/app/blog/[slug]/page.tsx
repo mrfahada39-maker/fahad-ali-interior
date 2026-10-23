@@ -26,7 +26,7 @@ async function getArticleBySlug(slug: string): Promise<EditorialArticle | null> 
       slug: dbArticle.slug,
       excerpt: dbArticle.excerpt || dbArticle.content.slice(0, 160),
       content: dbArticle.content,
-      image: dbArticle.image || '/hero-desktop.avif',
+      image: dbArticle.image || '/hero-living-room-img1-4k.webp',
       author: dbArticle.author || 'Fahad Ali Atelier',
       tags: Array.isArray(dbArticle.tags) && dbArticle.tags.length > 0 ? dbArticle.tags : ['Atelier Journal'],
       createdAt: dbArticle.createdAt ? new Date(dbArticle.createdAt).toISOString() : new Date().toISOString(),
@@ -112,7 +112,7 @@ export default async function BlogDetailPage({ params }: RouteProps) {
 
           <div className="relative aspect-[16/9] rounded-[24px] overflow-hidden border border-[#E7DDD0] bg-[#FAF5EE] mb-8 shadow-[0_10px_32px_rgba(44,30,24,0.08)]">
             <Image
-              src={article.image || '/hero-desktop.avif'}
+              src={article.image || '/hero-living-room-img1-4k.webp'}
               alt={article.title}
               fill
               priority

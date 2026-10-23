@@ -3,8 +3,9 @@ import StoreShell from '@/components/StoreShell';
 import HomePageInteractive from './HomePageInteractive';
 import { getHomePageData } from '@/lib/home-page-data';
 
-// Next.js ISR (Incremental Static Regeneration) — edge cached for 0ms TTFB
-export const revalidate = 60;
+// Force real-time dynamic rendering so product additions, deletions, and restores appear in 0ms
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   alternates: {

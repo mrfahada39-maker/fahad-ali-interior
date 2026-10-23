@@ -74,10 +74,10 @@ export default function SettingsTab({
 
     return (
       <div key={key} className="space-y-1">
-        <label htmlFor="fai-adminsettingstab-field-1" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">
+        <label htmlFor={`fai-settings-${key}`} className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">
           {label}
         </label>
-        <input id="fai-adminsettingstab-field-1" name="fai_adminsettingstab_field_1"
+        <input id={`fai-settings-${key}`} name={`fai_settings_${key}`}
           type={options?.type || 'text'}
           value={valStr}
           onChange={(e) => setSiteSettings({ ...safeSettings, [key]: e.target.value })}
@@ -95,17 +95,17 @@ export default function SettingsTab({
     return (
       <div key={key} className="flex items-center justify-between gap-4 py-2 border-b border-neutral-100 last:border-0">
         <div>
-          <label htmlFor="fai-adminsettingstab-field-2" className="text-[#1F1612] text-xs font-black block">{label}</label>
+          <label htmlFor={`fai-color-${key}`} className="text-[#1F1612] text-xs font-black block">{label}</label>
           <span className="text-[10px] text-stone-400 font-mono">{val}</span>
         </div>
         <div className="flex items-center gap-2">
-          <input id="fai-adminsettingstab-field-2" name="fai_adminsettingstab_field_2"
+          <input id={`fai-color-${key}`} name={`fai_color_${key}`}
             type="color"
             value={val}
             onChange={(e) => setSiteSettings({ ...safeSettings, [key]: e.target.value })}
             className="w-9 h-8 rounded-lg border border-[#E7DDD0] cursor-pointer bg-transparent"
           />
-          <input id="fai-adminsettingstab-field-3" name="fai_adminsettingstab_field_3"
+          <input id={`fai-hex-${key}`} name={`fai_hex_${key}`}
             value={val}
             onChange={(e) => setSiteSettings({ ...safeSettings, [key]: e.target.value })}
             className="w-20 bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] rounded-lg h-8 text-xs font-mono text-center font-bold"

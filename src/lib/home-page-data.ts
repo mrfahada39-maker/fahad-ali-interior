@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
-import { unstable_cache } from 'next/cache';
 import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
 
@@ -89,34 +88,17 @@ const empty: HomePageData = {
   },
 };
 
-let cachedHomeData: HomePageData | null = null;
-let lastCacheTimestamp = 0;
-const CACHE_LIFETIME = 300000; // 5m in-memory cache
-
 export function invalidateHomePageDataCache() {
-  cachedHomeData = null;
-  lastCacheTimestamp = 0;
+  // Real-time dynamic fetch active; no stale cache to clear
 }
 
-const getCachedHomePageDataNext = unstable_cache(
-  async () => fetchHomePageDataInternal(),
-  ['home-page-data-v3'],
-  { revalidate: 300, tags: ['home-data', 'products', 'categories', 'reviews', 'settings'] }
-);
-
 export async function getHomePageData(): Promise<HomePageData> {
-  const now = Date.now();
-  if (cachedHomeData && (now - lastCacheTimestamp) < CACHE_LIFETIME) {
-    return cachedHomeData;
-  }
   try {
-    const data = await getCachedHomePageDataNext();
-    cachedHomeData = data;
-    lastCacheTimestamp = now;
-    return data;
+    return await fetchHomePageDataInternal();
   } catch (err) {
-    logger.error('getHomePageData error:', err);
-    if (cachedHomeData) return cachedHomeData;
+    if (process.env.NEXT_PHASE !== 'phase-production-build') {
+      logger.error('getHomePageData error:', err);
+    }
     return empty;
   }
 }
@@ -256,7 +238,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       return {
         name: normalizedName,
         count: liveCount,
-        image: c.image || '/images/placeholder.webp',
+        image: c.image || '/cat-thumb-sofas-2x.webp',
         description: normalizeCatalogText(c.description, 'Solid Sheesham Wood'),
         items: liveCount > 0 
           ? `${liveCount} ${liveCount === 1 ? 'Item' : 'Items'} Available` 

@@ -91,7 +91,17 @@ export function resolveImageUrl(
     return image;
   }
 
-  if (image.startsWith('/images/3b894ebf') || image === '/logo.svg' || image === '/images/logo.svg') {
+  if (
+    image.startsWith('/cat-thumb-') ||
+    image.startsWith('/hero-') ||
+    image.startsWith('/icons/') ||
+    image.startsWith('/images/') ||
+    image.startsWith('/screenshots/') ||
+    image === '/logo.svg' ||
+    image === '/og-image.png' ||
+    image === '/favicon.ico' ||
+    image === '/apple-touch-icon.png'
+  ) {
     return image;
   }
 

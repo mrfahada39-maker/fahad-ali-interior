@@ -583,18 +583,36 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
         ? JSON.stringify(rawBody.specs)
         : rawBody.specs || null;
 
+    const trimmedName = rawBody.name.trim();
+    const targetCategory = rawBody.category ? String(rawBody.category).trim() : 'Living Room';
+
+    // Prevent duplicate product creation from rapid double-clicks or retries
+    const existingDuplicate = await db.product.findFirst({
+      where: {
+        name: { equals: trimmedName, mode: 'insensitive' },
+        category: { equals: targetCategory, mode: 'insensitive' },
+        createdAt: { gte: new Date(Date.now() - 15_000) },
+      },
+    });
+    if (existingDuplicate) {
+      return NextResponse.json({
+        ...existingDuplicate,
+        price: Number(existingDuplicate.price),
+      });
+    }
+
     const matchingCategory = rawBody.category
       ? await db.category.findFirst({
-          where: { name: { equals: String(rawBody.category).trim(), mode: 'insensitive' } },
+          where: { name: { equals: targetCategory, mode: 'insensitive' } },
         })
       : null;
 
     const product = await db.product.create({
       data: {
-        name: rawBody.name.trim(),
+        name: trimmedName,
         description: rawBody.description || '',
         price: safePrice,
-        category: rawBody.category ? String(rawBody.category).trim() : 'Living Room',
+        category: targetCategory,
         categoryId: matchingCategory?.id || null,
         image: rawBody.image ? String(rawBody.image).trim() : '',
         images: Array.isArray(rawBody.images) ? rawBody.images : [],

@@ -17,7 +17,6 @@ interface SessionUser {
 function invalidateStorefrontCache() {
   try {
     revalidatePath('/', 'layout');
-    revalidatePath('/', 'layout');
   } catch {
     // ignore in environments without revalidation context
   }

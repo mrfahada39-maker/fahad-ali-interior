@@ -242,7 +242,7 @@ export default function UserDashboard() {
             id: prodId,
             name: w.product.name || 'Bespoke Furniture',
             price: Number(w.product.price || 0),
-            image: w.product.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80',
+            image: w.product.image || '/cat-thumb-sofas-2x.webp',
             category: w.product.category || 'Living Room',
             material: w.product.material || 'Solid Sheesham Wood',
           },
@@ -258,7 +258,7 @@ export default function UserDashboard() {
             id: item.id,
             name: item.name || 'Bespoke Furniture',
             price: Number(item.price || 0),
-            image: item.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80',
+            image: item.image || '/cat-thumb-sofas-2x.webp',
             category: item.category || 'Living Room',
             material: item.material || 'Solid Sheesham Wood',
           },
@@ -390,7 +390,7 @@ export default function UserDashboard() {
       id: product.id,
       name: product.name,
       price: Number(product.price || 0),
-      image: product.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80',
+      image: product.image || '/cat-thumb-sofas-2x.webp',
       category: product.category || 'Furniture',
     });
     openCart();
@@ -727,7 +727,7 @@ export default function UserDashboard() {
             id: prod.id,
             name: prod.name,
             price: Number(prod.price || 0),
-            image: prod.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=400&q=80',
+            image: prod.image || '/cat-thumb-sofas-2x.webp',
             category: prod.category || 'Furniture',
           });
           openCart();

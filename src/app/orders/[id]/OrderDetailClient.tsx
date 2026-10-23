@@ -567,7 +567,7 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
                                   id: productId,
                                   name: productName,
                                   price: itemPrice,
-                                  image: imgUrl || '/images/sofa_beige.webp',
+                                  image: imgUrl || '/cat-thumb-sofas-2x.webp',
                                   category: item.product?.category || 'Furniture',
                                 });
                                 toast.success('Added to Cart', { description: productName });

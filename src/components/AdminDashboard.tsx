@@ -213,6 +213,8 @@ export default function AdminDashboard() {
   const [selectedThreadIndex, setSelectedThreadIndex] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [isSubmittingProduct, setIsSubmittingProduct] = useState(false);
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [showAddBlog, setShowAddBlog] = useState(false);
   const [productForm, setProductForm] = useState({
     name: '',
@@ -592,6 +594,7 @@ export default function AdminDashboard() {
   };
 
   const addProduct = async () => {
+    if (isSubmittingProduct) return;
     if (!productForm.name || !productForm.category) {
       toast.error('Product name and Category are required');
       return;
@@ -600,6 +603,7 @@ export default function AdminDashboard() {
       toast.error('Primary product showcase image is required');
       return;
     }
+    setIsSubmittingProduct(true);
     const specsObj = {
       compareAtPrice: productForm.compareAtPrice ? Number(productForm.compareAtPrice) : null,
       woodType: productForm.woodType || null,
@@ -663,7 +667,7 @@ export default function AdminDashboard() {
             if (editingId) {
               return arr.map((p) => (p.id === editingId ? { ...p, ...saved } : p));
             }
-            return [saved, ...arr];
+            return [saved, ...arr.filter((p) => p.id !== saved.id)];
           });
           if (!editingId) {
             setStats((prev: any) => ({ ...prev, totalProducts: (prev?.totalProducts || 0) + 1 }));
@@ -684,10 +688,14 @@ export default function AdminDashboard() {
     } catch {
       toast.error('Network error saving product');
       loadAll();
+    } finally {
+      setIsSubmittingProduct(false);
     }
   };
 
   const deleteProduct = async (id: string) => {
+    if (deletingProductId) return;
+    setDeletingProductId(id);
     try {
       const res = await apiFetch(`/api/admin/products?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
       if (res.ok) {
@@ -706,6 +714,8 @@ export default function AdminDashboard() {
       }
     } catch {
       toast.error('Network error. Failed to delete product.');
+    } finally {
+      setDeletingProductId(null);
     }
   };
 
@@ -930,6 +940,8 @@ export default function AdminDashboard() {
               setProductForm={setProductForm}
               addProduct={addProduct}
               deleteProduct={deleteProduct}
+              isSubmittingProduct={isSubmittingProduct}
+              deletingProductId={deletingProductId}
               defaultProductImage={defaultProductImage}
               editingProductId={editingProductId}
               setEditingProductId={setEditingProductId}

@@ -15,6 +15,11 @@ const WishlistDrawerPanel = dynamic(
 );
 const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false });
+const PWAInstallPrompt = dynamic(() => import('@/components/PWAInstallPrompt'), { ssr: false });
+const AiEmployeeWidget = dynamic(
+  () => import('@/components/AiEmployeeWidget').then((m) => m.AiEmployeeWidget),
+  { ssr: false }
+);
 
 // Read at module level (server-evaluated at build time in Next.js)
 const googleEnabled =
@@ -82,6 +87,8 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       {searchOpen && <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />}
       {authOpen && <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} googleEnabled={googleEnabled} />}
       <BackToTop />
+      <PWAInstallPrompt />
+      <AiEmployeeWidget />
     </div>
   );
 }

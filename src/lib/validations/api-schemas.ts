@@ -60,7 +60,7 @@ export const createProductSchema = z.object({
   description: z.string().optional().default(''),
   price: z.union([z.number(), z.string()]).optional().default(0),
   category: z.string().optional().default('Living Room'),
-  image: z.string().optional().default('/images/placeholder.webp'),
+  image: z.string().optional().default('/cat-thumb-sofas-2x.webp'),
   images: z.array(z.string()).optional().default([]),
   material: z.string().nullish(),
   dimensions: z.string().nullish(),

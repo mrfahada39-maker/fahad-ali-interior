@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '@/store';
 import { apiFetch } from '@/lib/api-client';
+import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 import {
   PAKISTAN_CITIES,
@@ -496,7 +497,7 @@ export default function Checkout() {
         toast.error(errMsg);
       }
     } catch (err: unknown) {
-      console.error('[Checkout Submission Error]:', err);
+      logger.error('[Checkout Submission Error]:', err);
       toast.error('Network error while placing order. Please check your connection and try again.');
     } finally {
       setPlacing(false);

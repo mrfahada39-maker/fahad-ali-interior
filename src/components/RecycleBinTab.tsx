@@ -151,6 +151,12 @@ export default function RecycleBinTab() {
         toast.success(`Restored "${item.name}" back to active database!`, {
           icon: <CheckCircle2 className="w-5 h-5 text-emerald-600" />,
         });
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('fahad_catalog_updated', String(Date.now()));
+            window.dispatchEvent(new Event('fahad_catalog_updated'));
+          } catch {}
+        }
         setItems((prev) => prev.filter((i) => i.id !== item.id));
         setCounts((prev) => {
           const type = item.entityType;

@@ -79,11 +79,8 @@ export async function handleCustomerAdminListRoutes(
       const avgOrderVal = orderCount > 0 ? Math.round(totalSpent / orderCount) : 0;
       const dynamicTier = computeLoyaltyTier(totalSpent, orderCount);
 
-      const isTest = u.email === 'test@example.com';
       let mappedSegment = 'Regular';
-      if (isTest) {
-        mappedSegment = 'VIP';
-      } else if (dynamicTier === 'PLATINUM') {
+      if (dynamicTier === 'PLATINUM') {
         mappedSegment = 'Platinum Elite';
       } else if (dynamicTier === 'GOLD') {
         mappedSegment = 'VIP Gold';
@@ -107,12 +104,12 @@ export async function handleCustomerAdminListRoutes(
         emailVerified: u.createdAt,
         lockedUntil: u.lockedUntil,
         loginAttempts: 0,
-        bio: 'VIP Client of Fahad Ali Interior',
-        avatar: null,
-        language: 'en',
-        darkMode: false,
-        segment: mappedSegment,
-        loyaltyTier: isTest ? 'BRONZE' : dynamicTier,
+        bio: (typeof (u as Record<string, unknown>).bio === 'string' ? (u as Record<string, unknown>).bio as string : null),
+        avatar: (typeof (u as Record<string, unknown>).avatar === 'string' ? (u as Record<string, unknown>).avatar as string : null),
+        language: (typeof (u as Record<string, unknown>).language === 'string' ? (u as Record<string, unknown>).language as string : 'en'),
+        darkMode: Boolean((u as Record<string, unknown>).darkMode),
+        segment: (typeof (u as Record<string, unknown>).segment === 'string' ? (u as Record<string, unknown>).segment as string : mappedSegment),
+        loyaltyTier: (typeof (u as Record<string, unknown>).loyaltyTier === 'string' ? (u as Record<string, unknown>).loyaltyTier as string : dynamicTier),
         loyaltyPoints: Math.floor(totalSpent / 1000),
         tags,
         lastLoginAt: u.updatedAt,

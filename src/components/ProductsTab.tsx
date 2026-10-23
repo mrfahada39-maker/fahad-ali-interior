@@ -75,6 +75,8 @@ interface ProductsTabProps {
   setProductForm: React.Dispatch<React.SetStateAction<any>> | ((form: any) => void);
   addProduct: () => void;
   deleteProduct: (id: string) => void;
+  isSubmittingProduct?: boolean;
+  deletingProductId?: string | null;
   defaultProductImage?: (cat: string) => string;
   editingProductId: string | null;
   setEditingProductId: (id: string | null) => void;
@@ -89,6 +91,8 @@ export default function ProductsTab({
   setProductForm,
   addProduct,
   deleteProduct,
+  isSubmittingProduct = false,
+  deletingProductId = null,
   defaultProductImage,
   editingProductId,
   setEditingProductId,
@@ -599,9 +603,10 @@ export default function ProductsTab({
             <div className="flex items-center gap-3 pt-2">
               <Button
                 onClick={addProduct}
-                className="bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white font-black rounded-xl text-xs px-7 py-2.5 shadow-[0_4px_16px_rgba(184,142,75,0.3)] transition-all cursor-pointer"
+                disabled={isSubmittingProduct}
+                className="bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white font-black rounded-xl text-xs px-7 py-2.5 shadow-[0_4px_16px_rgba(184,142,75,0.3)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {editingProductId ? 'Update Product in Registry' : 'Publish Product to Live Store'}
+                {isSubmittingProduct ? 'Saving...' : editingProductId ? 'Update Product in Registry' : 'Publish Product to Live Store'}
               </Button>
               <Button
                 onClick={handleCancel}
@@ -809,10 +814,11 @@ export default function ProductsTab({
                     </button>
                     <button
                       onClick={() => deleteProduct(p.id)}
-                      className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 hover:text-rose-800 hover:bg-rose-100 transition-all cursor-pointer"
+                      disabled={deletingProductId === p.id}
+                      className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 hover:text-rose-800 hover:bg-rose-100 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Delete Product"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={14} className={deletingProductId === p.id ? 'animate-pulse' : ''} />
                     </button>
                   </div>
 
@@ -916,10 +922,11 @@ export default function ProductsTab({
                       </button>
                       <button
                         onClick={() => deleteProduct(p.id)}
-                        className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 hover:text-rose-800 hover:bg-rose-100 transition-all cursor-pointer"
+                        disabled={deletingProductId === p.id}
+                        className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 hover:text-rose-800 hover:bg-rose-100 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Delete Product"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={13} className={deletingProductId === p.id ? 'animate-pulse' : ''} />
                       </button>
                     </div>
                   </div>

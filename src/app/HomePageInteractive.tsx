@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-import { logger } from '@/lib/logger';
 
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
@@ -89,24 +88,29 @@ export default function HomePageInteractive({
   );
 
   useEffect(() => {
-    // If products are already populated, skip re-fetching
-    if (productsList.length > 0) {
-      return;
-    }
-    const loadHomeBundle = async () => {
-      try {
-        const data = await apiFetchJson<any>('/api/public/home-bundle');
-        if (data) {
-          if (data.categories && data.categories.length > 0) setCategoriesList(data.categories);
-          if (data.reviews && Array.isArray(data.reviews)) setReviewsList(data.reviews);
-          if (data.products && Array.isArray(data.products) && data.products.length > 0) setProductsList(data.products);
-        }
-      } catch (err) {
-        logger.error('Failed to load home bundle:', err);
-      }
+    setProductsList(initialProducts || []);
+  }, [initialProducts]);
+
+  useEffect(() => {
+    setCategoriesList(initialCategories && initialCategories.length > 0 ? initialCategories : CATEGORIES);
+  }, [initialCategories]);
+
+  useEffect(() => {
+    const handleCatalogUpdated = () => {
+      apiFetchJson<any>('/api/public/home-bundle').then((data) => {
+        if (data?.products && Array.isArray(data.products)) setProductsList(data.products);
+        if (data?.categories && Array.isArray(data.categories)) setCategoriesList(data.categories);
+        if (data?.reviews && Array.isArray(data.reviews)) setReviewsList(data.reviews);
+      }).catch(() => {});
     };
-    loadHomeBundle();
-  }, [productsList.length]);
+
+    window.addEventListener('fahad_catalog_updated', handleCatalogUpdated);
+    window.addEventListener('storage', handleCatalogUpdated);
+    return () => {
+      window.removeEventListener('fahad_catalog_updated', handleCatalogUpdated);
+      window.removeEventListener('storage', handleCatalogUpdated);
+    };
+  }, []);
 
   return (
     <div className="contents">

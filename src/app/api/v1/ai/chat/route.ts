@@ -49,7 +49,7 @@ function generateDynamicResponse(
     name: p.name,
     price: Number(p.price),
     category: p.category || 'Furniture',
-    image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+    image: p.image || p.images?.[0] || '/cat-thumb-sofas-2x.webp',
     description: p.description || '100% Solid Seasoned Sheesham Wood furniture',
     dimensions: p.dimensions || 'Standard',
     material: p.material || '100% Solid Sheesham Wood',
@@ -170,7 +170,7 @@ function generateDynamicResponse(
       name: p.name,
       price: Number(p.price),
       category: p.category || 'Furniture',
-      image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+      image: p.image || p.images?.[0] || '/cat-thumb-sofas-2x.webp',
     }));
 
     return {
@@ -467,7 +467,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
               name: liveProd.name || doc.metadata.name,
               price: Number(liveProd.price || doc.metadata.price || 150000),
               category: liveProd.category || doc.metadata.category || 'Furniture',
-              image: liveProd.image || liveProd.images?.[0] || doc.metadata.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+              image: liveProd.image || liveProd.images?.[0] || doc.metadata.image || '/cat-thumb-sofas-2x.webp',
               description: liveProd.description || '100% Solid Seasoned Sheesham Wood',
               dimensions: liveProd.dimensions || 'Standard',
               material: liveProd.material || '100% Solid Sheesham Wood',
@@ -500,7 +500,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
             name: p.name,
             price: Number(p.price),
             category: p.category || 'Furniture',
-            image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+            image: p.image || p.images?.[0] || '/cat-thumb-sofas-2x.webp',
             description: p.description || '100% Solid Seasoned Sheesham Wood',
             dimensions: p.dimensions || 'Standard',
             material: p.material || '100% Solid Sheesham Wood',
