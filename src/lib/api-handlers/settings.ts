@@ -323,8 +323,8 @@ export async function handleSettingsAndBundleRoutes(
             : fallbackCategories.map((c) => ({
                 name: c.name,
                 count: 0,
-                image: '/images/placeholder.webp',
-                description: c.description,
+                image: null,
+                description: '',
               })),
         reviews: formattedReviews,
         settings: settings
