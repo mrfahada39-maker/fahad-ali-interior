@@ -61,7 +61,20 @@ export async function POST(req: NextRequest) {
       (p) => senderPhoneRaw === p || senderPhoneRaw.endsWith(p.slice(-10))
     );
 
-    if (!senderPhoneRaw || !isAuthorized) {
+    // Handle Meta Developer Portal "Test" button simulation
+    const isMetaTest =
+      !senderPhoneRaw ||
+      senderPhoneRaw === '0' ||
+      senderPhoneRaw === '123456789' ||
+      message.id === 'wamid.test' ||
+      body?.entry?.[0]?.id === '0';
+
+    if (isMetaTest) {
+      logger.info('[WhatsApp Webhook] Meta Dashboard test event received and verified.');
+      return NextResponse.json({ status: 'test_received_ok' }, { status: 200 });
+    }
+
+    if (!isAuthorized) {
       logger.warn('[WhatsApp Security Warning] Action attempted by unauthorized phone number:', {
         sender: senderPhoneRaw,
         allowed: Array.from(allowedAdminPhones),
