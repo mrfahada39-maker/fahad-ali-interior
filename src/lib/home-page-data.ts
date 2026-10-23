@@ -315,7 +315,9 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       })),
     };
   } catch (err) {
-    logger.error('fetchHomePageDataInternal direct DB query error:', err);
+    if (process.env.NEXT_PHASE !== 'phase-production-build') {
+      logger.error('fetchHomePageDataInternal direct DB query error:', err);
+    }
     return empty;
   }
 }

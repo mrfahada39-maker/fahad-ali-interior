@@ -75,7 +75,9 @@ export async function getStorefrontCategories(): Promise<string[]> {
       return names;
     }
   } catch (err) {
-    logger.error('Direct DB categories fetch error:', err);
+    if (process.env.NEXT_PHASE !== 'phase-production-build') {
+      logger.error('Direct DB categories fetch error:', err);
+    }
   }
 
   const fallback = [
@@ -141,7 +143,9 @@ export async function getStorefrontProducts(limit = 50): Promise<StorefrontProdu
     setCached(cacheKey, result, 60);
     return result;
   } catch (err) {
-    logger.error('Direct DB product fetch error:', err);
+    if (process.env.NEXT_PHASE !== 'phase-production-build') {
+      logger.error('Direct DB product fetch error:', err);
+    }
     return [];
   }
 }

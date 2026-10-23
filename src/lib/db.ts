@@ -42,6 +42,7 @@ try {
 } catch {
   throw new Error('DATABASE_URL is not a valid URL');
 }
+const isMockDatabase = databaseUrl.includes('test_mock');
 
 /**
  * Detect transient database connection errors (Neon serverless cold starts,
@@ -110,7 +111,7 @@ async function executeWithRetry<T>(
 
 function createClient(): PrismaClient {
   const client = new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    log: isMockDatabase ? [] : (process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error']),
   });
 
   // Slow-query extension + Transient connection retry extension
@@ -127,6 +128,15 @@ function createClient(): PrismaClient {
         args: any;
         query: (args: any) => Promise<any>;
       }) {
+        if (isMockDatabase) {
+          if (operation === 'findMany') return [];
+          if (operation === 'findFirst' || operation === 'findUnique') return null;
+          if (operation === 'count') return 0;
+          if (operation === 'groupBy') return [];
+          if (operation === 'aggregate') return { _count: 0, _sum: {}, _avg: {}, _min: {}, _max: {} };
+          return null;
+        }
+
         const start = Date.now();
         try {
           return await executeWithRetry(() => query(args), { model, operation });

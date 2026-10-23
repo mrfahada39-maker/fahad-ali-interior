@@ -20,7 +20,9 @@ const getCachedSettings = unstable_cache(
         adminEmail: s.adminEmail?.toLowerCase() === 'mrfahada39@gmail.com' ? 'concierge@fahadali.pk' : s.adminEmail,
       };
     } catch (e) {
-      logger.error('Failed to load site settings:', e);
+      if (process.env.NEXT_PHASE !== 'phase-production-build') {
+        logger.error('Failed to load site settings:', e);
+      }
       return null;
     }
   },
