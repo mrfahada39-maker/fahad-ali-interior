@@ -310,7 +310,7 @@ export default function HomeSignatureCategories({
 
       {/* ── CATEGORY-BY-CATEGORY PRODUCT SECTIONS (INSTANT SSR, 60FPS SCROLLSPY) ── */}
       <div className="space-y-14 sm:space-y-20">
-        {groupedCategories.map((group) => (
+        {groupedCategories.filter((group) => group.products.length > 0).map((group) => (
           <div
             key={group.slug}
             id={`cat-section-${group.slug}`}
@@ -341,33 +341,15 @@ export default function HomeSignatureCategories({
               const visibleProducts = isExpanded ? group.products : group.products.slice(0, 4);
               return (
                 <>
-                  {visibleProducts.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-amber-300/80 bg-[#FFFDF9] p-8 text-center flex flex-col items-center justify-center gap-3">
-                      <span className="text-[#8C6222] text-[11px] uppercase tracking-widest font-black">✦ Bespoke Commission Atelier</span>
-                      <p className="text-sm font-serif text-[#554032] max-w-md">
-                        Every {group.name} piece is handcrafted to order in 100% Seasoned Sheesham wood tailored precisely to your layout and architecture.
-                      </p>
-                      <a
-                        href={`https://wa.me/923213283301?text=Salam%20Fahad%20Ali%20Interior%2C%20I%20would%20like%20to%20commission%20a%20bespoke%20${encodeURIComponent(group.name)}%20piece.`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-1 inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#1B120E] text-amber-200 text-xs font-bold uppercase tracking-wider hover:bg-[#8C6222] transition-colors"
-                      >
-                        <span>Commission Bespoke {group.name}</span>
-                        <ArrowRight size={13} />
-                      </a>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                      {visibleProducts.map((product, idx) => (
-                        <ProductCard
-                          key={product.id || idx}
-                          product={product}
-                          index={idx}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                    {visibleProducts.map((product, idx) => (
+                      <ProductCard
+                        key={product.id || idx}
+                        product={product}
+                        index={idx}
+                      />
+                    ))}
+                  </div>
 
                   {group.products.length > 4 && !isExpanded && (
                     <div className="text-center mt-6 sm:mt-8">
