@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Cannot reject order in ${order.status} state` }, { status: 400 });
     }
     if (order.paymentStatus === 'PAID' && action === 'verify') {
+      await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'verify');
       return NextResponse.json({ message: 'Order is already marked as paid' }, { status: 200 });
     }
 

@@ -178,7 +178,10 @@ ${order.paymentScreenshot ? `🖼️ Slip Photo: ${order.paymentScreenshot}\n` :
       '923213283301';
     const adminPhone = adminPhoneRaw.replace(/\D/g, '');
 
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN?.trim();
+    const accessToken = (
+      process.env.WHATSAPP_ACCESS_TOKEN ||
+      'EAAQJJ9hjtQkBSZBceZBsyzJTlRaSyNBFQl0FaVTaEENQMZCcNYExi4JtgwKEZCDH5oI6PWpw5VZBi4ZBvwYWWj9OGrDtE5tC329uMzirlZBWI2SzoI83qCKr30SuQwHOirWZBKxHNZA3c22VGLgLPYdh5Ly9Gp26gqjCXbfOBsyQW9kCbinQClYEXgZAjx6ELpVZCqBjEZBMIdXBCSKxCfAUZCHZAVcXohWyCX8lZAkc5vVuUMQFWxwFxCLoYWHUfoSZBTtDljZCwpXXWSaJApcmpEXfZBOEtyXlm6AwZDZD'
+    )?.trim();
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim() || '1404434616090105';
 
     // ── Upload base64 screenshot to Cloudinary if needed to get public HTTPS image URL ──
@@ -350,7 +353,7 @@ ${order.paymentScreenshot ? `🖼️ Slip Photo: ${order.paymentScreenshot}\n` :
   ): Promise<void> {
     const accessToken = (
       process.env.WHATSAPP_ACCESS_TOKEN ||
-      'EAAQJJ9hjtQkBS3lCjvYAP94XZB2pphctp0v3QOaP5g6Ar5wsgMdjZAimZA9w8TYexxehLIuvRmy3UauLmQidGakNUNqTUplaxC0SgpFaQ7ZABLAaZBZC3oEZBlAdZAE4ZC37Mafdco5SFPe2Y3ZA4abB0cvv7cCxYa5ZAOTP2nQVyADgZCw2ZC9mFA7OKFvUTShkjDHVxTjtKo5ZBboQYQChpKc3V7g8OnPWRBy4fQFDMpGKOzHw7lmO9JZBWa1EdLzMiXi3KSZA6hibZA34JEGMOFbpVyZBPGoGR7'
+      'EAAQJJ9hjtQkBSZBceZBsyzJTlRaSyNBFQl0FaVTaEENQMZCcNYExi4JtgwKEZCDH5oI6PWpw5VZBi4ZBvwYWWj9OGrDtE5tC329uMzirlZBWI2SzoI83qCKr30SuQwHOirWZBKxHNZA3c22VGLgLPYdh5Ly9Gp26gqjCXbfOBsyQW9kCbinQClYEXgZAjx6ELpVZCqBjEZBMIdXBCSKxCfAUZCHZAVcXohWyCX8lZAkc5vVuUMQFWxwFxCLoYWHUfoSZBTtDljZCwpXXWSaJApcmpEXfZBOEtyXlm6AwZDZD'
     )?.trim();
     const phoneNumberId = (
       process.env.WHATSAPP_PHONE_NUMBER_ID ||
