@@ -139,39 +139,6 @@ export class WhatsAppService {
         ? '⚠️ AMOUNT MISMATCH'
         : '🔍 MANUAL VERIFICATION NEEDED';
 
-    const messageBody = `✦ FAHAD ALI INTERIOR — PAYMENT VERIFICATION ✦
-━━━━━━━━━━━━━━━━━━━━
-📦 Order ID: #${shortId}
-👤 Client: ${customerName}
-📞 Phone: ${customerPhone}
-📍 Delivery: ${customerCity}
-🛋️ Masterpieces:
-${itemsList}
-💰 Total Amount: PKR ${totalAmount}
-💳 Payment Method: ${order.paymentMethod || 'BANK'}
-
-────────────────────
-🤖 AI BOT AUDIT REPORT:
-• Verdict: ${auditBadge}
-• Extracted Amount: ${audit.extractedAmount ? `PKR ${audit.extractedAmount.toLocaleString()}` : 'Not Clear'}
-• Transaction ID (TID): ${audit.transactionId || 'Manual Screenshot'}
-• Duplicate TID Check: ${audit.isDuplicateTid ? '❌ FOUND IN PREVIOUS ORDER' : '✅ Clean'}
-• AI Confidence: ${audit.confidence}%
-• Bot Note: ${audit.summaryUrdu}
-────────────────────
-${order.paymentScreenshot ? `🖼️ Slip Photo: ${order.paymentScreenshot}\n` : ''}
-⚡ DIRECT 1-TAP ACTIONS (Tap link to execute):
-1️⃣ [✅ Verify Payment]:
-👉 ${verifyUrl}
-
-2️⃣ [⏳ Hold 24-48 Hours]:
-👉 ${holdUrl}
-
-3️⃣ [❌ Reject / Cancel Order]:
-👉 ${rejectUrl}
-━━━━━━━━━━━━━━━━━━━━
-⚠️ Note: Order confirmation is strictly locked until you or Admin Dashboard approves.`;
-
     const adminPhoneRaw =
       process.env.ADMIN_WHATSAPP_NUMBER ||
       process.env.WHATSAPP_NUM ||
@@ -184,7 +151,7 @@ ${order.paymentScreenshot ? `🖼️ Slip Photo: ${order.paymentScreenshot}\n` :
     )?.trim();
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim() || '1404434616090105';
 
-    // ── Upload base64 screenshot to Cloudinary if needed to get public HTTPS image URL ──
+    // ── Upload base64 screenshot to Cloudinary if needed to get clean public HTTPS image URL ──
     let publicScreenshotUrl: string | null = null;
     if (order.paymentScreenshot) {
       if (order.paymentScreenshot.startsWith('https://') || order.paymentScreenshot.startsWith('http://')) {
@@ -219,6 +186,38 @@ ${order.paymentScreenshot ? `🖼️ Slip Photo: ${order.paymentScreenshot}\n` :
         }
       }
     }
+
+    const messageBody = `✦ FAHAD ALI INTERIOR — PAYMENT VERIFICATION ✦
+━━━━━━━━━━━━━━━━━━━━
+📦 Order ID: #${shortId}
+👤 Client: ${customerName}
+📞 Phone: ${customerPhone}
+📍 Delivery: ${customerCity}
+🛋️ Masterpieces:
+${itemsList}
+💰 Total Amount: PKR ${totalAmount}
+💳 Payment Method: ${order.paymentMethod || 'BANK'}
+
+────────────────────
+🤖 AI BOT AUDIT REPORT:
+• Verdict: ${auditBadge}
+• Extracted Amount: ${audit.extractedAmount ? `PKR ${audit.extractedAmount.toLocaleString()}` : 'Not Clear'}
+• Transaction ID (TID): ${audit.transactionId || 'Manual Screenshot'}
+• Duplicate TID Check: ${audit.isDuplicateTid ? '❌ FOUND IN PREVIOUS ORDER' : '✅ Clean'}
+• AI Confidence: ${audit.confidence}%
+• Bot Note: ${audit.summaryUrdu}
+────────────────────
+${publicScreenshotUrl ? `🖼️ Slip Photo: Attached above 👆\n` : ''}⚡ DIRECT 1-TAP ACTIONS (Tap link to execute):
+1️⃣ [✅ Verify Payment]:
+👉 ${verifyUrl}
+
+2️⃣ [⏳ Hold 24-48 Hours]:
+👉 ${holdUrl}
+
+3️⃣ [❌ Reject / Cancel Order]:
+👉 ${rejectUrl}
+━━━━━━━━━━━━━━━━━━━━
+⚠️ Note: Order confirmation is strictly locked until you or Admin Dashboard approves.`;
 
     if (accessToken && phoneNumberId) {
       try {
