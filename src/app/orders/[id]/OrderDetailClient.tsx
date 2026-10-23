@@ -366,7 +366,7 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
   const progressPercent = currentStepIndex < 0 ? 0 : Math.min(100, Math.max(12, ((currentStepIndex + 1) / STATUS_STEPS.length) * 100));
 
   const whatsappMessage = encodeURIComponent(`Hello Fahad Ali Interior! I am inquiring regarding my Royal Order #${formattedId}.`);
-  const whatsappUrl = `https://wa.me/923207006110?text=${whatsappMessage}`;
+  const whatsappUrl = `https://wa.me/923213283301?text=${whatsappMessage}`;
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] font-sans pt-28 sm:pt-32 pb-28 sm:pb-32 lg:pb-20 relative overflow-hidden select-none">

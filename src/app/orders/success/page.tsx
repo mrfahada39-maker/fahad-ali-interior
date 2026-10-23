@@ -24,7 +24,7 @@ function SuccessContent() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const whatsappUrl = `https://wa.me/923207006110?text=${encodeURIComponent(`Hello Fahad Ali Interior! I just placed order #${displayId} and would like to confirm my delivery schedule.`)}`;
+  const whatsappUrl = `https://wa.me/923213283301?text=${encodeURIComponent(`Hello Fahad Ali Interior! I just placed order #${displayId} and would like to confirm my delivery schedule.`)}`;
 
   return (
     <main className="min-h-screen bg-[#FDFBF7] font-sans pt-28 sm:pt-32 pb-28 sm:pb-32 lg:pb-20 relative overflow-hidden select-none">

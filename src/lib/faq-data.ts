@@ -42,7 +42,7 @@ export const faqCategories = [
     questions: [
       {
         q: 'Can I customize dimensions, wood polish, or velvet fabric color?',
-        a: 'Yes! Every piece can be tailored to your room dimensions, polish tone (Natural Teak, Dark Walnut, Smoked Oak, Ebony, Mahogany), and upholstery (Royal Italian Velvet, Turkish Bouclé, Suede, or Leatherette). Contact our design concierge on WhatsApp (+92 320 7006110) or via the Custom Inquiry form.',
+        a: 'Yes! Every piece can be tailored to your room dimensions, polish tone (Natural Teak, Dark Walnut, Smoked Oak, Ebony, Mahogany), and upholstery (Royal Italian Velvet, Turkish Bouclé, Suede, or Leatherette). Contact our design concierge on WhatsApp (+92 321 3283301) or via the Custom Inquiry form.',
       },
       {
         q: 'What wood and materials do you use?',
@@ -67,7 +67,7 @@ export const faqCategories = [
       },
       {
         q: 'How do I contact customer support or book a showroom consultation?',
-        a: 'You can reach our Lahore Design Studio directly at +92 320 7006110 (Phone & WhatsApp) or email concierge@fahadali.pk, Monday to Saturday from 10:00 AM to 10:00 PM PKT.',
+        a: 'You can reach our Lahore Design Studio directly at +92 321 3283301 (Phone & WhatsApp) or email concierge@fahadali.pk, Monday to Saturday from 10:00 AM to 10:00 PM PKT.',
       },
     ],
   },

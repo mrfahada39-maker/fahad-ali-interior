@@ -18,13 +18,13 @@ export const BUSINESS_CONTACT = {
     return process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'concierge@fahadali.pk';
   },
   get phone(): string {
-    return process.env.NEXT_PUBLIC_CONTACT_PHONE || '+92 320 7006110';
+    return process.env.NEXT_PUBLIC_CONTACT_PHONE || '+92 321 3283301';
   },
   get phoneDial(): string {
-    return (process.env.NEXT_PUBLIC_CONTACT_PHONE || '+923207006110').replace(/\s+/g, '');
+    return (process.env.NEXT_PUBLIC_CONTACT_PHONE || '+923213283301').replace(/\s+/g, '');
   },
   get whatsapp(): string {
-    return (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '923207006110').replace(/\D/g, '');
+    return (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '923213283301').replace(/\D/g, '');
   },
   get address(): string {
     return (

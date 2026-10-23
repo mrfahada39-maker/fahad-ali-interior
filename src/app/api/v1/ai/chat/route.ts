@@ -532,7 +532,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
       })();
     }
 
-    const whatsAppNum = (process.env.WHATSAPP_NUM || '+923207006110').replace('+', '');
+    const whatsAppNum = (process.env.WHATSAPP_NUM || '+923213283301').replace('+', '');
     const waUrl = `https://wa.me/${whatsAppNum}?text=${encodeURIComponent(
       `Assalam-o-Alaikum! I have a question about: "${sanitizedUserQuery}". Please connect me with a Senior Specialist.`
     )}`;

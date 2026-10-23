@@ -71,7 +71,7 @@ function FAQItem({ question, answer, index }: { question: string; answer: string
 }
 
 export default function FAQPage() {
-  const [phone, setPhone] = useState('+923207006110');
+  const [phone, setPhone] = useState('+923213283301');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
@@ -292,7 +292,7 @@ export default function FAQPage() {
 
             <div className="flex flex-wrap gap-3.5 justify-center">
               <a
-                href="https://wa.me/923207006110?text=Hello%20Fahad%20Ali%20Interior%20Concierge,%20I%20have%20a%20question"
+                href="https://wa.me/923213283301?text=Hello%20Fahad%20Ali%20Interior%20Concierge,%20I%20have%20a%20question"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 sm:px-8 py-3.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-serif font-bold text-xs sm:text-sm uppercase tracking-wider rounded-xl hover:brightness-110 transition-all flex items-center gap-2 shadow-[0_4px_16px_rgba(37,211,102,0.3)] active:scale-95"

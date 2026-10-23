@@ -122,7 +122,7 @@ export function isValidPakistaniPhone(phone: string): boolean {
  */
 export const RAAST_SBP_DETAILS = {
   serviceName: 'Raast (State Bank of Pakistan)',
-  raastId: '03207006110',
+  raastId: '03213283301',
   accountTitle: 'Fahad Ali Interior (Pvt) Ltd',
   accountNumber: '00427992104803',
   iban: 'PK16MEZN0099340103248901',
