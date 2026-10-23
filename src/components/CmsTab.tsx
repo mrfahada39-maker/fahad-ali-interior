@@ -27,7 +27,8 @@ import {
   Globe,
   ImageIcon,
   SlidersHorizontal,
-  Bookmark
+  Bookmark,
+  Hash
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
@@ -131,7 +132,7 @@ export default function CmsTab() {
           items: '',
           order: 0,
           isActive: true,
-          badge: '👑 Royal Heritage',
+          badge: '',
           slug: '',
         });
         loadCategories();
@@ -155,7 +156,7 @@ export default function CmsTab() {
       items: c.items || '',
       order: c.order || 0,
       isActive: c.isActive !== false,
-      badge: c.badge || '👑 Royal Heritage',
+      badge: c.badge || '',
       slug: c.slug || (c.name ? c.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : ''),
     });
   };
@@ -216,6 +217,8 @@ export default function CmsTab() {
 
   const totalCount = categories.length;
   const activeCount = categories.filter((c) => c.isActive !== false).length;
+  const totalProducts = categories.reduce((acc, c) => acc + (c._count?.products || 0), 0);
+  const categoriesWithProducts = categories.filter((c) => (c._count?.products || 0) > 0).length;
 
   const kpis = [
     {
@@ -243,10 +246,10 @@ export default function CmsTab() {
       dotColor: 'bg-emerald-500',
     },
     {
-      label: 'PRESTIGE HERITAGE BADGES',
-      numValue: 6,
-      sub: '👑 Royal Collection Classifications',
-      icon: Crown,
+      label: 'CATALOG INVENTORY COUNT',
+      numValue: totalProducts,
+      sub: '📦 Total Live Masterpieces',
+      icon: Layers,
       color: 'text-purple-600',
       iconBg: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
       ambientGlow: 'bg-purple-500/10',
@@ -255,11 +258,11 @@ export default function CmsTab() {
       dotColor: 'bg-purple-500',
     },
     {
-      label: 'VISUAL ASSET OPTIMIZATION',
-      numValue: 100,
-      suffix: '%',
+      label: 'STOCKED ROOM SECTIONS',
+      numValue: categoriesWithProducts,
+      suffix: '',
       sub: '🛡ï¸ Cloudinary High-Res CDN',
-      icon: ShieldCheck,
+      icon: Zap,
       color: 'text-blue-600',
       iconBg: 'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
       ambientGlow: 'bg-blue-500/10',
@@ -328,7 +331,7 @@ export default function CmsTab() {
                 items: '',
                 order: categories.length,
                 isActive: true,
-                badge: '👑 Royal Heritage',
+                badge: '',
                 slug: '',
               });
               setShowCategoryForm(true);
@@ -447,114 +450,110 @@ export default function CmsTab() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4.5">
             {filteredCategories.map((c, index) => {
-              const catImg = resolveImageUrl(c.image);
               const itemCount = c._count?.products || 0;
-              const displayCount = c.items || (itemCount > 0 ? `${itemCount} Masterpieces` : 'Available');
 
               return (
                 <motion.div
                   key={c.id || index}
-                  whileHover={{ y: -4 }}
-                  className="bg-white border border-[#E7DDD0] hover:border-[#B88E4B] rounded-[24px] p-3.5 shadow-[0_4px_20px_rgba(44,30,24,0.02)] hover:shadow-[0_12px_35px_rgba(184,142,75,0.14)] transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
+                  whileHover={{ y: -3 }}
+                  className="bg-white border border-[#E7DDD0] hover:border-[#B88E4B] rounded-[22px] p-5 shadow-[0_4px_20px_rgba(44,30,24,0.02)] hover:shadow-[0_12px_32px_rgba(184,142,75,0.12)] transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
                 >
                   {/* Subtle luxury top gradient bar on hover */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                  {/* Top: Image Thumbnail Frame with Frosted Floating Controls */}
-                  <div className="relative aspect-[16/9] w-full rounded-[18px] overflow-hidden bg-[#FAF5EE] border border-[#E7DDD0]/80 shadow-2xs">
-                    {catImg ? (
-                      <img
-                        src={catImg}
-                        alt={c.name}
-                        className="w-full h-full object-cover group-hover:scale-106 transition-transform duration-700 ease-out"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#B88E4B] font-serif font-black text-3xl bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3]">
-                        {c.name?.slice(0, 2).toUpperCase()}
+                  {/* Top Bar: Sequence + Reordering Arrows + Storefront Status */}
+                  <div>
+                    <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-stone-100">
+                      {/* Sequence Number & Arrows */}
+                      <div className="flex items-center gap-1.5 bg-[#FAF5EE] border border-[#E2D1BC] px-2.5 py-1 rounded-xl">
+                        <span className="text-[11px] font-mono font-black text-[#8C6239]">
+                          #{index + 1}
+                        </span>
+                        <div className="flex items-center gap-0.5 border-l border-[#E2D1BC] pl-1.5 ml-0.5">
+                          <button
+                            onClick={() => handleMoveCategory(index, 'up')}
+                            disabled={index === 0}
+                            className="p-1 rounded hover:bg-[#EBDDC8] disabled:opacity-20 text-stone-600 transition-colors cursor-pointer"
+                            title="Move Sequence Up"
+                          >
+                            <ArrowUp size={11} />
+                          </button>
+                          <button
+                            onClick={() => handleMoveCategory(index, 'down')}
+                            disabled={index === categories.length - 1}
+                            className="p-1 rounded hover:bg-[#EBDDC8] disabled:opacity-20 text-stone-600 transition-colors cursor-pointer"
+                            title="Move Sequence Down"
+                          >
+                            <ArrowDown size={11} />
+                          </button>
+                        </div>
                       </div>
-                    )}
 
-                    {/* Dark subtle gradient bottom vignette */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none" />
-
-                    {/* Floating Top Badge */}
-                    <div className="absolute top-2.5 left-2.5">
-                      <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-black/65 backdrop-blur-md text-amber-300 border border-white/20 shadow-sm">
-                        {c.badge || '👑 Royal Heritage'}
+                      {/* Storefront Active Status */}
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 border shadow-2xs ${
+                          c.isActive !== false
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-500/30'
+                            : 'bg-stone-100 text-stone-500 border-stone-300'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${c.isActive !== false ? 'bg-emerald-500 animate-pulse' : 'bg-stone-400'}`} />
+                        <span>{c.isActive !== false ? 'Active on Storefront' : 'Hidden'}</span>
                       </span>
                     </div>
 
-                    {/* Floating Sequence & Reordering Controls */}
-                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-black/65 backdrop-blur-md p-1 rounded-xl border border-white/20 shadow-sm">
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black text-amber-300">
-                        #{index + 1}
-                      </span>
-                      <button
-                        onClick={() => handleMoveCategory(index, 'up')}
-                        disabled={index === 0}
-                        className="p-1 rounded-lg hover:bg-white/20 disabled:opacity-20 text-white transition-colors cursor-pointer"
-                        title="Move Sequence Up"
-                      >
-                        <ArrowUp size={11} />
-                      </button>
-                      <button
-                        onClick={() => handleMoveCategory(index, 'down')}
-                        disabled={index === categories.length - 1}
-                        className="p-1 rounded-lg hover:bg-white/20 disabled:opacity-20 text-white transition-colors cursor-pointer"
-                        title="Move Sequence Down"
-                      >
-                        <ArrowDown size={11} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Middle: Collection Metadata & Typography */}
-                  <div className="pt-3.5 px-1 space-y-2.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="text-[15px] font-black text-[#1F1612] font-serif tracking-tight leading-tight group-hover:text-[#8C6239] transition-colors">
+                    {/* Middle: Category Title, Slug, & Real Product Count */}
+                    <div className="pt-3.5 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-[17px] font-black text-[#1F1612] font-serif tracking-tight leading-snug group-hover:text-[#8C6239] transition-colors">
                           {c.name}
                         </h4>
-                        <p className="text-stone-400 text-[10px] font-mono mt-0.5">
-                          /#cat-section-{c.slug || c.name?.toLowerCase().replace(/\s+/g, '-')}
-                        </p>
-                      </div>
 
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black font-mono bg-[#FAF5EE] text-[#8C6239] border border-[#E2D1BC] shrink-0 shadow-2xs">
-                        {displayCount}
-                      </span>
-                    </div>
-
-                    <p className="text-stone-500 text-[11px] font-medium line-clamp-2 leading-relaxed min-h-[32px]">
-                      {c.description || 'Curated handcrafted solid Sheesham furniture collections built by master artisans in Lahore.'}
-                    </p>
-
-                    {/* Modern Micro-Metrics Density Bar */}
-                    <div className="bg-[#FCFAF7] border border-[#E7DDD0] p-2 rounded-xl space-y-1">
-                      <div className="flex justify-between items-center text-[9.5px]">
-                        <span className="font-black text-[#7A6354] uppercase tracking-wider">Catalog Allocation</span>
-                        <span className="font-mono font-bold text-[#8C6239]">
-                          {Math.min(100, Math.max(15, (itemCount || 10) * 4))}% Coverage
+                        <span className="px-2.5 py-1 rounded-xl text-[10px] font-black font-mono bg-[#FAF5EE] text-[#8C6239] border border-[#E2D1BC] shrink-0">
+                          {itemCount} {itemCount === 1 ? 'Product' : 'Products'}
                         </span>
                       </div>
-                      <div className="w-full h-1.5 rounded-full bg-[#E7DDD0]/60 overflow-hidden">
-                        <div
-                          style={{ width: `${Math.min(100, Math.max(15, (itemCount || 10) * 4))}%` }}
-                          className="h-full bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] rounded-full"
-                        />
+
+                      {/* Storefront Route Anchor */}
+                      <div className="inline-flex items-center gap-1.5 text-stone-400 font-mono text-[11px]">
+                        <Hash size={11} className="text-[#B88E4B]" />
+                        <span>cat-section-{c.slug || c.name?.toLowerCase().replace(/\s+/g, '-')}</span>
                       </div>
+
+                      {/* Real description (only if provided by admin, NO dummy text!) */}
+                      {c.description && (
+                        <p className="text-stone-600 text-[11.5px] font-medium leading-relaxed pt-1 line-clamp-2">
+                          {c.description}
+                        </p>
+                      )}
+
+                      {/* Real custom badge (only if provided by admin, NO dummy badge!) */}
+                      {c.badge && (
+                        <div className="pt-1">
+                          <span className="px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-300">
+                            {c.badge}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Real uploaded cover image (only if explicitly uploaded, NO dummy sofa!) */}
+                      {c.image && (
+                        <div className="mt-2 w-full h-24 rounded-xl overflow-hidden border border-[#E7DDD0]">
+                          <img src={c.image} alt={c.name} className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Bottom: Luxury Action Bar */}
-                  <div className="pt-3 px-1 mt-2 border-t border-neutral-100 flex items-center justify-between">
+                  <div className="pt-3.5 px-0.5 mt-4 border-t border-stone-100 flex items-center justify-between">
                     <a
-                      href="/#signature-categories"
+                      href={`/#cat-section-${c.slug || c.name?.toLowerCase().replace(/\s+/g, '-')}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-[11px] font-black text-stone-500 hover:text-[#1F1612] inline-flex items-center gap-1 transition-colors group/link"
+                      className="text-[11px] font-black text-[#8C6239] hover:text-[#1F1612] inline-flex items-center gap-1 transition-colors group/link"
                     >
-                      <span>View Live Shop</span>
+                      <span>View on Storefront</span>
                       <ExternalLink size={11} className="text-[#B88E4B] group-hover/link:translate-x-0.5 transition-transform" />
                     </a>
 
@@ -844,60 +843,63 @@ export default function CmsTab() {
                     </span>
                   </div>
 
-                  {/* Masterpiece Card Live Simulation */}
-                  <div className="bg-white border border-[#E7DDD0] rounded-[24px] p-3 shadow-md space-y-2.5">
-                    <div className="relative aspect-[16/9] w-full rounded-[16px] overflow-hidden bg-[#FAF5EE] border border-[#E7DDD0]/80">
-                      {categoryForm.image ? (
-                        <img src={resolveImageUrl(categoryForm.image)} alt={categoryForm.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[#B88E4B] font-serif font-black text-2xl bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3]">
-                          {categoryForm.name?.slice(0, 2).toUpperCase() || '✦'}
+                  {/* Clean Card Live Simulation matching real website design */}
+                  <div className="bg-white border border-[#E7DDD0] rounded-[22px] p-4 shadow-md space-y-3">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-stone-100">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-black text-[#8C6239] bg-[#FAF5EE] border border-[#E2D1BC]">
+                        #1
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-500/30 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        {categoryForm.isActive ? 'Active on Storefront' : 'Hidden'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-start justify-between gap-1.5">
+                        <h4 className="text-base font-black font-serif text-[#1F1612] truncate">
+                          {categoryForm.name || 'Collection Title'}
+                        </h4>
+                        <span className="px-2 py-0.5 rounded-lg text-[9px] font-black font-mono bg-[#FAF5EE] text-[#8C6239] border border-[#E2D1BC] shrink-0">
+                          {categoryForm.items || '0 Products'}
+                        </span>
+                      </div>
+
+                      <div className="text-stone-400 font-mono text-[10px]">
+                        /#cat-section-{categoryForm.slug || 'slug'}
+                      </div>
+
+                      {categoryForm.description && (
+                        <p className="text-stone-600 text-[11px] font-medium leading-relaxed pt-1 line-clamp-2">
+                          {categoryForm.description}
+                        </p>
+                      )}
+
+                      {categoryForm.badge && (
+                        <div className="pt-1">
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-300">
+                            {categoryForm.badge}
+                          </span>
                         </div>
                       )}
 
-                      <div className="absolute top-2 left-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-black/70 backdrop-blur-md text-amber-300 border border-white/20 shadow-xs">
-                          {categoryForm.badge || '👑 Royal Heritage'}
-                        </span>
-                      </div>
+                      {categoryForm.image && (
+                        <div className="mt-2 w-full h-20 rounded-lg overflow-hidden border border-[#E7DDD0]">
+                          <img src={categoryForm.image} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
 
-                    <div className="px-1 space-y-1.5">
-                      <div className="flex items-start justify-between gap-1.5">
-                        <h4 className="text-sm font-black font-serif text-[#1F1612] truncate">
-                          {categoryForm.name || 'Collection Title'}
-                        </h4>
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black font-mono bg-[#FAF5EE] text-[#8C6239] border border-[#E2D1BC] shrink-0">
-                          {categoryForm.items || '25 Items'}
-                        </span>
-                      </div>
-
-                      <p className="text-stone-500 text-[10.5px] font-medium line-clamp-2 min-h-[28px]">
-                        {categoryForm.description || 'Curated handcrafted solid Sheesham furniture collections built by master artisans in Lahore.'}
-                      </p>
-
-                      <div className="bg-[#FCFAF7] border border-[#E7DDD0] p-1.5 rounded-xl space-y-0.5">
-                        <div className="flex justify-between items-center text-[9px]">
-                          <span className="font-bold text-stone-400">Catalog Allocation</span>
-                          <span className="font-mono font-bold text-[#8C6239]">40% Coverage</span>
-                        </div>
-                        <div className="w-full h-1 rounded-full bg-[#E7DDD0]/60 overflow-hidden">
-                          <div className="h-full w-[40%] bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] rounded-full" />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-1.5 border-t border-neutral-100 text-[10px]">
-                        <span className="text-[#8C6239] font-black flex items-center gap-1">
-                          <span>View Live Shop</span>
-                          <ExternalLink size={10} />
-                        </span>
-                        <span className="font-mono text-stone-400">/#cat-section-{categoryForm.slug || 'category'}</span>
-                      </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-[10px]">
+                      <span className="text-[#8C6239] font-black flex items-center gap-1">
+                        <span>View on Storefront</span>
+                        <ExternalLink size={10} />
+                      </span>
                     </div>
                   </div>
 
                   <p className="text-[10px] text-stone-400 text-center font-medium">
-                    This is how your collection appears across the luxury catalog grid.
+                    This live preview dynamically reflects your changes in real-time.
                   </p>
                 </div>
 
