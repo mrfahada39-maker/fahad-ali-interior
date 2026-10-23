@@ -14,16 +14,7 @@ interface HomeSignatureCategoriesProps {
 
 function normalizeCategoryName(raw?: string | null): string {
   if (!raw) return '';
-  const trimmed = raw.trim();
-  const lower = trimmed.toLowerCase();
-  if (lower.includes('living')) return 'Living Room';
-  if (lower.includes('bed')) return 'Bedroom';
-  if (lower.includes('dining')) return 'Dining Room';
-  if (lower.includes('coffee chair') || (lower.includes('chair') && !lower.includes('dining'))) return 'Coffee Chairs';
-  if (lower.includes('center table') || lower.includes('table')) return 'Center Tables';
-  if (lower.includes('showcase')) return 'Luxury Showcase';
-  if (lower.includes('wardrobe') || lower.includes('closet')) return 'Luxury Wardrobes';
-  return trimmed;
+  return raw.trim();
 }
 
 function isProductInCategory(p: StorefrontProduct, catName: string): boolean {
@@ -31,29 +22,41 @@ function isProductInCategory(p: StorefrontProduct, catName: string): boolean {
   const cName = catName.toLowerCase().trim();
   if (!pCat) return false;
 
+  // Direct exact match
+  if (pCat === cName) return true;
+
   if (cName === 'living room') {
-    return pCat.includes('living') || pCat.includes('sofa') || (p.name || '').toLowerCase().includes('sofa');
+    return pCat === 'living room' || (pCat.includes('living') && !pCat.includes('dining'));
   }
   if (cName === 'bedroom') {
-    return pCat.includes('bed') || (p.name || '').toLowerCase().includes('bed');
+    return pCat === 'bedroom' || pCat.includes('bed') || (p.name || '').toLowerCase().includes('bed');
   }
   if (cName === 'dining room') {
-    return pCat.includes('dining') || (p.name || '').toLowerCase().includes('dining');
+    return pCat === 'dining room' || pCat.includes('dining') || (p.name || '').toLowerCase().includes('dining');
   }
-  if (cName === 'coffee chairs') {
-    return pCat.includes('coffee') || pCat.includes('chair') || (p.name || '').toLowerCase().includes('chair') || (p.name || '').toLowerCase().includes('lounge');
+  if (cName === 'office') {
+    return pCat === 'office' || pCat.includes('desk') || (p.name || '').toLowerCase().includes('desk');
   }
-  if (cName === 'center tables') {
-    return pCat.includes('center table') || pCat.includes('table') || (p.name || '').toLowerCase().includes('table');
+  if (cName === 'sofas') {
+    return pCat === 'sofas' || pCat.includes('sofa') || (p.name || '').toLowerCase().includes('sofa');
   }
-  if (cName === 'luxury showcase') {
-    return pCat.includes('showcase') || pCat.includes('console') || (p.name || '').toLowerCase().includes('showcase');
+  if (cName === 'coffee tables') {
+    return pCat === 'coffee tables' || pCat.includes('coffee') || pCat.includes('table') || pCat.includes('chair');
   }
-  if (cName === 'luxury wardrobes') {
-    return pCat.includes('wardrobe') || pCat.includes('closet') || (p.name || '').toLowerCase().includes('wardrobe');
+  if (cName === 'tv units') {
+    return pCat === 'tv units' || pCat.includes('tv') || pCat.includes('media') || (p.name || '').toLowerCase().includes('tv');
+  }
+  if (cName === 'storage') {
+    return pCat === 'storage' || pCat.includes('wardrobe') || pCat.includes('almirah') || pCat.includes('showcase') || pCat.includes('closet');
+  }
+  if (cName === 'outdoor') {
+    return pCat === 'outdoor' || pCat.includes('garden');
+  }
+  if (cName === 'accessories') {
+    return pCat === 'accessories' || pCat.includes('decor') || pCat.includes('lamp');
   }
 
-  return pCat === cName || pCat.includes(cName);
+  return pCat.includes(cName) || cName.includes(pCat);
 }
 
 function slugify(text: string): string {
@@ -64,10 +67,13 @@ const DEFAULT_CATEGORY_ORDER = [
   'Living Room',
   'Bedroom',
   'Dining Room',
-  'Coffee Chairs',
-  'Center Tables',
-  'Luxury Showcase',
-  'Luxury Wardrobes',
+  'Office',
+  'Sofas',
+  'Coffee Tables',
+  'TV Units',
+  'Storage',
+  'Outdoor',
+  'Accessories',
 ];
 
 export default function HomeSignatureCategories({
@@ -83,23 +89,23 @@ export default function HomeSignatureCategories({
   const isAutoScrolling = useRef(false);
   const scrollTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Determine category list in luxury editorial order (All canonical atelier categories always visible)
+  // Dynamic category list derived directly from Neon database categories
   const categoryNames = useMemo(() => {
     const list = ['All'];
     const seen = new Set<string>();
 
-    // 1. Prioritize canonical atelier order (always displayed in Category Pills Bar)
-    for (const name of DEFAULT_CATEGORY_ORDER) {
-      list.push(name);
-      seen.add(name.toLowerCase());
-    }
-
-    // 2. Add any custom categories from database if not already present
-    for (const c of categories) {
-      const normalized = normalizeCategoryName(c.name);
-      if (normalized && !seen.has(normalized.toLowerCase())) {
-        list.push(normalized);
-        seen.add(normalized.toLowerCase());
+    if (categories && categories.length > 0) {
+      for (const c of categories) {
+        const name = (c.name || '').trim();
+        if (name && !seen.has(name.toLowerCase())) {
+          list.push(name);
+          seen.add(name.toLowerCase());
+        }
+      }
+    } else {
+      for (const name of DEFAULT_CATEGORY_ORDER) {
+        list.push(name);
+        seen.add(name.toLowerCase());
       }
     }
 
@@ -335,15 +341,33 @@ export default function HomeSignatureCategories({
               const visibleProducts = isExpanded ? group.products : group.products.slice(0, 4);
               return (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {visibleProducts.map((product, idx) => (
-                      <ProductCard
-                        key={product.id || idx}
-                        product={product}
-                        index={idx}
-                      />
-                    ))}
-                  </div>
+                  {visibleProducts.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-amber-300/80 bg-[#FFFDF9] p-8 text-center flex flex-col items-center justify-center gap-3">
+                      <span className="text-[#8C6222] text-[11px] uppercase tracking-widest font-black">✦ Bespoke Commission Atelier</span>
+                      <p className="text-sm font-serif text-[#554032] max-w-md">
+                        Every {group.name} piece is handcrafted to order in 100% Seasoned Sheesham wood tailored precisely to your layout and architecture.
+                      </p>
+                      <a
+                        href={`https://wa.me/923213283301?text=Salam%20Fahad%20Ali%20Interior%2C%20I%20would%20like%20to%20commission%20a%20bespoke%20${encodeURIComponent(group.name)}%20piece.`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#1B120E] text-amber-200 text-xs font-bold uppercase tracking-wider hover:bg-[#8C6222] transition-colors"
+                      >
+                        <span>Commission Bespoke {group.name}</span>
+                        <ArrowRight size={13} />
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                      {visibleProducts.map((product, idx) => (
+                        <ProductCard
+                          key={product.id || idx}
+                          product={product}
+                          index={idx}
+                        />
+                      ))}
+                    </div>
+                  )}
 
                   {group.products.length > 4 && !isExpanded && (
                     <div className="text-center mt-6 sm:mt-8">

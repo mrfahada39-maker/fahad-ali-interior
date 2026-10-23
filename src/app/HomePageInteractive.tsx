@@ -52,13 +52,16 @@ function LazyTestimonials({ reviews, initialReviews }: { reviews: any[]; initial
 }
 
 const CATEGORIES = [
-  { name: 'Living Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
-  { name: 'Bedroom', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
-  { name: 'Dining Room', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
-  { name: 'Coffee Chairs', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784926669/fahad-ali-interior/categories/xqe9nnbcbvna9iqvnhpk.jpg' },
-  { name: 'Center Tables', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
-  { name: 'Luxury Showcase', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1785010771/fahad-ali-interior/categories/xpdpsxe6jvjs6ezukwmg.jpg' },
-  { name: 'Luxury Wardrobes', count: 0, items: 'View Collection', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
+  { name: 'Living Room', count: 1, items: '1 Masterpiece', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg' },
+  { name: 'Bedroom', count: 2, items: '2 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784918803/fahad-ali-interior/categories/gkz7dfmdgmhwjc1oq6i7.jpg' },
+  { name: 'Dining Room', count: 2, items: '2 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784924359/fahad-ali-interior/categories/l42atnfbez1wkqx7byy9.jpg' },
+  { name: 'Office', count: 1, items: '1 Masterpiece', image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=600&q=80' },
+  { name: 'Sofas', count: 1, items: '1 Masterpiece', image: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=600&q=80' },
+  { name: 'Coffee Tables', count: 2, items: '2 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1784927258/fahad-ali-interior/categories/b1v3zxrruuddtxkth1f9.jpg' },
+  { name: 'TV Units', count: 1, items: '1 Masterpiece', image: 'https://images.unsplash.com/photo-1593696140826-c58b021acf8b?auto=format&fit=crop&w=600&q=80' },
+  { name: 'Storage', count: 3, items: '3 Masterpieces', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/f_auto,q_auto:good,w_500/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg' },
+  { name: 'Outdoor', count: 0, items: 'Bespoke Collection', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80' },
+  { name: 'Accessories', count: 0, items: 'Bespoke Collection', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80' },
 ];
 
 const REVIEWS: any[] = [];
@@ -86,8 +89,8 @@ export default function HomePageInteractive({
   );
 
   useEffect(() => {
-    // Zero-network overhead: Skip client-side re-fetching when server already provided products or categories
-    if ((initialProducts && initialProducts.length > 0) || (initialCategories && initialCategories.length > 0)) {
+    // If products are already populated, skip re-fetching
+    if (productsList.length > 0) {
       return;
     }
     const loadHomeBundle = async () => {
@@ -96,14 +99,14 @@ export default function HomePageInteractive({
         if (data) {
           if (data.categories && data.categories.length > 0) setCategoriesList(data.categories);
           if (data.reviews && Array.isArray(data.reviews)) setReviewsList(data.reviews);
-          if (data.products && Array.isArray(data.products) && productsList.length === 0) setProductsList(data.products);
+          if (data.products && Array.isArray(data.products) && data.products.length > 0) setProductsList(data.products);
         }
       } catch (err) {
         logger.error('Failed to load home bundle:', err);
       }
     };
     loadHomeBundle();
-  }, [initialCategories, initialReviews, initialProducts, productsList.length]);
+  }, [productsList.length]);
 
   return (
     <div className="contents">
