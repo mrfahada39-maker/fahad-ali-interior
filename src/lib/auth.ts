@@ -274,19 +274,40 @@ export const authOptions: NextAuthOptions = {
       const now = Date.now();
       if (token.id && (!lastCheck || now - lastCheck > 5 * 60 * 1000 || trigger === 'update')) {
         try {
-          const dbUser = await db.user.findUnique({
+          let dbUser = await db.user.findUnique({
             where: { id: token.id as string },
-            select: { role: true, deletedAt: true, lockedUntil: true },
+            select: { id: true, role: true, deletedAt: true, lockedUntil: true },
           });
+
+          // Fallback if database was reset/migrated and user has a new ID by email:
+          if (!dbUser && token.email) {
+            dbUser = await db.user.findUnique({
+              where: { email: String(token.email).toLowerCase().trim() },
+              select: { id: true, role: true, deletedAt: true, lockedUntil: true },
+            });
+            if (dbUser) {
+              token.id = dbUser.id;
+            }
+          }
+
+          const isEmailAdmin = token.email && isAdminEmail(String(token.email));
+
           if (!dbUser || dbUser.deletedAt || (dbUser.lockedUntil && new Date(dbUser.lockedUntil) > new Date())) {
+            if (isEmailAdmin) {
+              token.role = 'ADMIN';
+              return token;
+            }
             extToken.revoked = true;
             extToken.role = undefined;
             return token;
           }
-          token.role = sessionRole(dbUser.role);
+          token.role = isEmailAdmin ? 'ADMIN' : sessionRole(dbUser.role);
           extToken.lastCheckedAt = now;
         } catch {
           // Preserve existing token on transient DB network error
+          if (token.email && isAdminEmail(String(token.email))) {
+            token.role = 'ADMIN';
+          }
         }
       }
       return token;
