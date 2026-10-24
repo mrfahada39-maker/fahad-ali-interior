@@ -113,10 +113,13 @@ export async function POST(req: NextRequest) {
           process.env.WHATSAPP_ACCESS_TOKEN ||
           'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
         )?.trim();
-        const phoneNumberId = (
+        let phoneNumberId = (
           process.env.WHATSAPP_PHONE_NUMBER_ID ||
           '1482842828238710'
         )?.trim();
+        if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
+          phoneNumberId = '1482842828238710';
+        }
 
         const replyMsg =
           `👋 Salam! *Fahad Ali Interior Executive Bot* Active hai.\n` +

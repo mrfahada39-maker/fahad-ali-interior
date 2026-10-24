@@ -163,7 +163,11 @@ export class WhatsAppService {
       process.env.WHATSAPP_ACCESS_TOKEN ||
       'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
     )?.trim();
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim() || '1482842828238710';
+    let phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim() || '1482842828238710';
+    // If Vercel env variable is still set to old test sandbox ID, force to live registered ID
+    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
+      phoneNumberId = '1482842828238710';
+    }
 
     // ── Upload base64 screenshot to Cloudinary if needed to get clean public HTTPS image URL ──
     let publicScreenshotUrl: string | null = null;
@@ -342,10 +346,13 @@ ${itemsList}
       process.env.WHATSAPP_ACCESS_TOKEN ||
       'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
     )?.trim();
-    const phoneNumberId = (
+    let phoneNumberId = (
       process.env.WHATSAPP_PHONE_NUMBER_ID ||
       '1482842828238710'
     )?.trim();
+    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
+      phoneNumberId = '1482842828238710';
+    }
     if (!accessToken || !phoneNumberId) return;
 
     const shortId = orderId.slice(-6).toUpperCase();
