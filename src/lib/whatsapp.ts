@@ -139,11 +139,17 @@ export class WhatsAppService {
         ? '⚠️ AMOUNT MISMATCH'
         : '🔍 MANUAL VERIFICATION NEEDED';
 
-    const adminPhoneRaw =
+    let adminPhone = (
       process.env.ADMIN_WHATSAPP_NUMBER ||
       process.env.WHATSAPP_NUM ||
-      '923213283301';
-    const adminPhone = adminPhoneRaw.replace(/\D/g, '');
+      '923344171450'
+    ).replace(/\D/g, '');
+
+    // The bot's own registered sender is 923213283301. Meta Cloud API rejects messages sent to oneself.
+    // If adminPhone is set to the bot's own number, forward to the Admin's personal WhatsApp phone (923344171450).
+    if (adminPhone === '923213283301' || !adminPhone) {
+      adminPhone = '923344171450';
+    }
 
     const accessToken = (
       process.env.WHATSAPP_ACCESS_TOKEN ||
@@ -344,6 +350,11 @@ ${itemsList}
       replyText = `❌ Cancelled: Order #${shortId} has been REJECTED. Payment marked as FAILED and inventory restored.`;
     }
 
+    let recipientPhone = adminPhone.replace(/\D/g, '');
+    if (recipientPhone === '923213283301' || !recipientPhone) {
+      recipientPhone = '923344171450';
+    }
+
     try {
       await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
         method: 'POST',
@@ -353,7 +364,7 @@ ${itemsList}
         },
         body: JSON.stringify({
           messaging_product: 'whatsapp',
-          to: adminPhone.replace(/\D/g, ''),
+          to: recipientPhone,
           type: 'text',
           text: { body: replyText },
         }),
