@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import type { PrismaClient } from '@prisma/client';
-import { verifyOrderActionToken } from '@/lib/whatsapp';
+import { verifyOrderActionToken, WhatsAppService } from '@/lib/whatsapp';
 import { logger } from '@/lib/logger';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
@@ -141,6 +141,7 @@ export async function GET(req: NextRequest) {
           },
         })
         ?.catch(() => {});
+      await WhatsAppService.sendCustomerOrderApproved(order).catch(() => {});
 
       return new NextResponse(
         renderHtmlPage(
@@ -175,6 +176,7 @@ export async function GET(req: NextRequest) {
           })
           ?.catch(() => {});
       }
+      await WhatsAppService.sendCustomerOrderHold(order).catch(() => {});
 
       return new NextResponse(
         renderHtmlPage(
@@ -226,6 +228,7 @@ export async function GET(req: NextRequest) {
           })
           ?.catch(() => {});
       }
+      await WhatsAppService.sendCustomerOrderRejected(order).catch(() => {});
 
       return new NextResponse(
         renderHtmlPage(

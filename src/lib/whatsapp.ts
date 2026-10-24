@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { PaymentAuditResult } from '@/lib/ai/payment-verifier';
 
@@ -375,7 +376,230 @@ ${itemsList}
     }
 
     try {
-      await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+      await this.sendTextMessage(recipientPhone, replyText);
+    } catch (e) {
+      logger.warn('[WhatsApp Ack Send Warning]', { detail: String(e) });
+    }
+  }
+
+  /**
+   * Sends an automated luxury WhatsApp approval notification to the Customer.
+   */
+  static async sendCustomerOrderApproved(orderInput: string | any): Promise<boolean> {
+    try {
+      const order = typeof orderInput === 'string'
+        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
+        : orderInput;
+
+      if (!order) return false;
+
+      const rawPhone = order.shippingPhone || order.user?.phone || '';
+      let customerPhone = rawPhone.replace(/\D/g, '');
+      if (customerPhone.startsWith('0')) customerPhone = '92' + customerPhone.slice(1);
+      if (!customerPhone.startsWith('92') && customerPhone.length === 10) customerPhone = '92' + customerPhone;
+
+      if (!customerPhone || customerPhone.length < 10) {
+        logger.warn('[WhatsApp Customer Alert] No valid customer phone found:', { orderId: order.id });
+        return false;
+      }
+
+      const shortId = order.id.slice(-8).toUpperCase();
+      const customerName = order.shippingName || 'Valued Client';
+      const totalAmount = Number(order.totalAmount).toLocaleString();
+      const itemsList = (order.items || [])
+        .map((i: any) => `  ▫️ ${i.name || i.productName || 'Piece'} (x${i.quantity || 1})`)
+        .join('\n') || '  ▫️ Bespoke Furniture Suite';
+
+      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+
+      const message = `🏛️ *FAHAD ALI INTERIOR — ORDER APPROVED*
+━━━━━━━━━━━━━━━━━━━━
+✨ *Salam, ${customerName}!*
+
+Mubarak ho! Aapke Order *#${shortId}* ki payment tasdeeq (verified) ho chuki hai.
+
+🛋️ *Bespoke Masterpieces:*
+${itemsList}
+💰 *Total Amount:* *PKR ${totalAmount}*
+📦 *Status:* 🔨 *In Master Artisan Production*
+
+Hamare master craftsmen ne aapke furniture par handcrafting shuru kar di hai. Har hissa 100% solid Sheesham wood aur luxury upholstery standard ke mutabiq tayyar kiya ja raha hai.
+
+🚚 *Estimated Completion:* 5–7 Working Days
+🌐 *Live Order Tracking:*
+👉 ${trackingUrl}
+
+_Shukriya for choosing Fahad Ali Interior._
+📞 *Client Concierge:* +92 321 3283301`;
+
+      return await this.sendTextMessage(customerPhone, message);
+    } catch (err) {
+      logger.warn('[WhatsApp Customer Approved Alert Error]:', { detail: String(err) });
+      return false;
+    }
+  }
+
+  /**
+   * Sends an automated luxury WhatsApp dispatch/shipping notice to the Customer.
+   */
+  static async sendCustomerOrderShipped(
+    orderInput: string | any,
+    trackingNumber?: string | null,
+    courier?: string | null
+  ): Promise<boolean> {
+    try {
+      const order = typeof orderInput === 'string'
+        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
+        : orderInput;
+
+      if (!order) return false;
+
+      const rawPhone = order.shippingPhone || order.user?.phone || '';
+      let customerPhone = rawPhone.replace(/\D/g, '');
+      if (customerPhone.startsWith('0')) customerPhone = '92' + customerPhone.slice(1);
+      if (!customerPhone.startsWith('92') && customerPhone.length === 10) customerPhone = '92' + customerPhone;
+
+      if (!customerPhone || customerPhone.length < 10) return false;
+
+      const shortId = order.id.slice(-8).toUpperCase();
+      const customerName = order.shippingName || 'Valued Client';
+      const itemsList = (order.items || [])
+        .map((i: any) => `  ▫️ ${i.name || i.productName || 'Piece'} (x${i.quantity || 1})`)
+        .join('\n') || '  ▫️ Bespoke Furniture Suite';
+
+      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+      const activeTracking = trackingNumber || order.trackingNumber || 'En Route (Dispatched)';
+
+      const message = `🏛️ *FAHAD ALI INTERIOR — DISPATCH NOTICE*
+━━━━━━━━━━━━━━━━━━━━
+🚚 *Salam, ${customerName}!*
+
+Aapka Order *#${shortId}* workshop se deliver hone ke liye nikal chuka hai!
+
+🛋️ *Furniture Pieces:*
+${itemsList}
+📦 *Dispatch Carrier:* ${courier || 'Dedicated White-Glove Transport'}
+🔖 *Tracking ID:* \`${activeTracking}\`
+
+Hamari delivery team pohnchne se pehle aapko direct call karegi aur safe in-room assembly provide karegi.
+
+🌐 *Live Tracking:*
+👉 ${trackingUrl}
+
+📞 *Concierge:* +92 321 3283301`;
+
+      return await this.sendTextMessage(customerPhone, message);
+    } catch (err) {
+      logger.warn('[WhatsApp Customer Shipped Alert Error]:', { detail: String(err) });
+      return false;
+    }
+  }
+
+  /**
+   * Sends an automated luxury WhatsApp hold notice to the Customer.
+   */
+  static async sendCustomerOrderHold(orderInput: string | any): Promise<boolean> {
+    try {
+      const order = typeof orderInput === 'string'
+        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
+        : orderInput;
+
+      if (!order) return false;
+
+      const rawPhone = order.shippingPhone || order.user?.phone || '';
+      let customerPhone = rawPhone.replace(/\D/g, '');
+      if (customerPhone.startsWith('0')) customerPhone = '92' + customerPhone.slice(1);
+      if (!customerPhone.startsWith('92') && customerPhone.length === 10) customerPhone = '92' + customerPhone;
+
+      if (!customerPhone || customerPhone.length < 10) return false;
+
+      const shortId = order.id.slice(-8).toUpperCase();
+      const customerName = order.shippingName || 'Valued Client';
+      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+
+      const message = `🏛️ *FAHAD ALI INTERIOR — PAYMENT STATUS*
+━━━━━━━━━━━━━━━━━━━━
+⏳ *Salam, ${customerName}!*
+
+Aapke Order *#${shortId}* ki transaction filhal bank 24–48 ghante interbank clearance mein hai.
+
+Jaise hi bank se clearance complete hogi, aapko notification mil jayegi aur production queue mein furniture add ho jayega.
+
+🌐 *Track Order:*
+👉 ${trackingUrl}
+
+— *Fahad Ali Interior Team*`;
+
+      return await this.sendTextMessage(customerPhone, message);
+    } catch (err) {
+      logger.warn('[WhatsApp Customer Hold Alert Error]:', { detail: String(err) });
+      return false;
+    }
+  }
+
+  /**
+   * Sends an automated luxury WhatsApp payment mismatch/rejection notice to the Customer.
+   */
+  static async sendCustomerOrderRejected(orderInput: string | any): Promise<boolean> {
+    try {
+      const order = typeof orderInput === 'string'
+        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
+        : orderInput;
+
+      if (!order) return false;
+
+      const rawPhone = order.shippingPhone || order.user?.phone || '';
+      let customerPhone = rawPhone.replace(/\D/g, '');
+      if (customerPhone.startsWith('0')) customerPhone = '92' + customerPhone.slice(1);
+      if (!customerPhone.startsWith('92') && customerPhone.length === 10) customerPhone = '92' + customerPhone;
+
+      if (!customerPhone || customerPhone.length < 10) return false;
+
+      const shortId = order.id.slice(-8).toUpperCase();
+      const customerName = order.shippingName || 'Valued Client';
+      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+
+      const message = `🏛️ *FAHAD ALI INTERIOR — PAYMENT ALERT*
+━━━━━━━━━━━━━━━━━━━━
+⚠️ *Salam, ${customerName}!*
+
+Order *#${shortId}* ki payment slip verify nahi ho saki.
+
+Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank slip is WhatsApp par humein reply karein taake hum manual check karke aapka order approve kar sakein.
+
+📞 *Direct WhatsApp Support:* +92 321 3283301
+🌐 *Order Details:*
+👉 ${trackingUrl}
+
+— *Fahad Ali Interior Team*`;
+
+      return await this.sendTextMessage(customerPhone, message);
+    } catch (err) {
+      logger.warn('[WhatsApp Customer Reject Alert Error]:', { detail: String(err) });
+      return false;
+    }
+  }
+
+  /**
+   * Sends a general WhatsApp text message using Meta Cloud API.
+   */
+  static async sendTextMessage(toPhone: string, textBody: string): Promise<boolean> {
+    const accessToken = (
+      process.env.WHATSAPP_ACCESS_TOKEN ||
+      'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
+    )?.trim();
+    let phoneNumberId = (
+      process.env.WHATSAPP_PHONE_NUMBER_ID ||
+      '1482842828238710'
+    )?.trim();
+    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
+      phoneNumberId = '1482842828238710';
+    }
+
+    if (!accessToken || !phoneNumberId) return false;
+
+    try {
+      const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -383,13 +607,17 @@ ${itemsList}
         },
         body: JSON.stringify({
           messaging_product: 'whatsapp',
-          to: recipientPhone,
+          recipient_type: 'individual',
+          to: toPhone.replace(/\D/g, ''),
           type: 'text',
-          text: { body: replyText },
+          text: { body: textBody },
         }),
       });
+
+      return res.ok;
     } catch (e) {
-      logger.warn('[WhatsApp Ack Send Warning]', { detail: String(e) });
+      logger.warn('[WhatsApp sendTextMessage Error]', { detail: String(e) });
+      return false;
     }
   }
 }

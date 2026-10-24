@@ -852,7 +852,20 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       const updated = await db.order.update({
         where: { id: rawBody.id },
         data: updateData,
+        include: { items: true },
       });
+
+      // Trigger automated WhatsApp notification to customer
+      if (updateData.paymentStatus === 'PAID') {
+        WhatsAppService.sendCustomerOrderApproved(updated).catch(() => { });
+      } else if (updateData.status === 'SHIPPED' || updateData.status === 'DELIVERED') {
+        const tracking = typeof updateData.trackingNumber === 'string' ? updateData.trackingNumber : (updated.trackingNumber ?? undefined);
+        WhatsAppService.sendCustomerOrderShipped(updated, tracking).catch(() => { });
+      } else if (updateData.paymentStatus === 'AWAITING_VERIFICATION') {
+        WhatsAppService.sendCustomerOrderHold(updated).catch(() => { });
+      } else if (updateData.paymentStatus === 'FAILED' || updateData.status === 'CANCELLED') {
+        WhatsAppService.sendCustomerOrderRejected(updated).catch(() => { });
+      }
 
       if (updated.userId && (updateData.status || updateData.paymentStatus)) {
         const shortId = updated.id.slice(-6).toUpperCase();

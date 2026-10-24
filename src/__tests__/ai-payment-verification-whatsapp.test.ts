@@ -159,4 +159,40 @@ describe('AI Payment Verification & WhatsApp Admin 3-Button Approval Suite', () 
       expect(genericResult.isDuplicateTid).toBe(false);
     });
   });
+
+  describe('5. Automated Customer WhatsApp Notifications (Approval & Dispatch)', () => {
+    const customerOrder = {
+      id: 'ord_cust_test_7788',
+      shippingName: 'Tariq Mehmood',
+      shippingPhone: '03001234567',
+      totalAmount: 185000,
+      trackingNumber: 'TCS_99210488',
+      items: [
+        { name: 'Royal Velvet Chesterfield Sofa', quantity: 1, price: 185000 },
+      ],
+    };
+
+    it('formats and dispatches customer order approved notification', async () => {
+      const result = await WhatsAppService.sendCustomerOrderApproved(customerOrder);
+      expect(typeof result).toBe('boolean');
+    });
+
+    it('formats and dispatches customer order shipped notification with tracking ID', async () => {
+      const result = await WhatsAppService.sendCustomerOrderShipped(
+        customerOrder,
+        'TCS_99210488',
+        'TCS Express'
+      );
+      expect(typeof result).toBe('boolean');
+    });
+
+    it('safely handles missing customer phone number without throwing', async () => {
+      const invalidOrder = { id: 'ord_no_phone', items: [] };
+      const resApprove = await WhatsAppService.sendCustomerOrderApproved(invalidOrder);
+      const resShip = await WhatsAppService.sendCustomerOrderShipped(invalidOrder);
+      expect(resApprove).toBe(false);
+      expect(resShip).toBe(false);
+    });
+  });
 });
+

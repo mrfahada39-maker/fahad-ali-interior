@@ -241,6 +241,7 @@ export async function POST(req: NextRequest) {
         ?.catch(() => { });
 
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'verify');
+      await WhatsAppService.sendCustomerOrderApproved(order).catch(() => { });
     } else if (action === 'hold') {
       await db.order.update({
         where: { id: order.id },
@@ -264,6 +265,7 @@ export async function POST(req: NextRequest) {
       }
 
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'hold');
+      await WhatsAppService.sendCustomerOrderHold(order).catch(() => { });
     } else if (action === 'reject') {
       // Revert stock atomically
       const runTx = db.$transaction.bind(db) as unknown as <T>(
@@ -304,6 +306,7 @@ export async function POST(req: NextRequest) {
       }
 
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'reject');
+      await WhatsAppService.sendCustomerOrderRejected(order).catch(() => { });
     }
 
     return NextResponse.json({ success: true, action, orderId: order.id });
