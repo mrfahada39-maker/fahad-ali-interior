@@ -553,8 +553,8 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       }).catch((err) => logger.error('[SMTP BACKGROUND ERROR]', err));
     };
 
-    // Execute background jobs without delaying customer response
-    runPostOrderTasks().catch((err) =>
+    // Await background tasks so serverless container does not exit before AI audit and WhatsApp dispatch
+    await runPostOrderTasks().catch((err) =>
       logger.error('[Post-Order Background Tasks Error]:', err)
     );
 

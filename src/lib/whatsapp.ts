@@ -139,17 +139,25 @@ export class WhatsAppService {
         ? '⚠️ AMOUNT MISMATCH'
         : '🔍 MANUAL VERIFICATION NEEDED';
 
-    let adminPhone = (
+    let rawAdmin = (
       process.env.ADMIN_WHATSAPP_NUMBER ||
       process.env.WHATSAPP_NUM ||
       '923344171450'
     ).replace(/\D/g, '');
 
+    if (rawAdmin.startsWith('0')) {
+      rawAdmin = '92' + rawAdmin.slice(1);
+    }
+    if (!rawAdmin.startsWith('92') && rawAdmin.length === 10) {
+      rawAdmin = '92' + rawAdmin;
+    }
+
     // The bot's own registered sender is 923213283301. Meta Cloud API rejects messages sent to oneself.
     // If adminPhone is set to the bot's own number, forward to the Admin's personal WhatsApp phone (923344171450).
-    if (adminPhone === '923213283301' || !adminPhone) {
-      adminPhone = '923344171450';
+    if (rawAdmin.endsWith('3213283301') || !rawAdmin) {
+      rawAdmin = '923344171450';
     }
+    const adminPhone = rawAdmin;
 
     const accessToken = (
       process.env.WHATSAPP_ACCESS_TOKEN ||
