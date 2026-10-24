@@ -4,8 +4,8 @@ import { WhatsAppService } from '../src/lib/whatsapp.ts';
 const prisma = new PrismaClient();
 
 async function main() {
-  const order = await prisma.order.findUnique({
-    where: { id: 'cmvkvrp3y0002ju07l0d54tq0' },
+  const order = await prisma.order.findFirst({
+    orderBy: { createdAt: 'desc' },
     include: { items: true }
   });
 

@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
     const allowedAdminPhones = new Set(
       [
         '923213283301',
+        '923344171450',
         (process.env.ADMIN_WHATSAPP_NUMBER || '').replace(/\D/g, ''),
         (process.env.WHATSAPP_NUM || '').replace(/\D/g, ''),
         (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '').replace(/\D/g, ''),
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
         )?.trim();
         const phoneNumberId = (
           process.env.WHATSAPP_PHONE_NUMBER_ID ||
-          '1404434616090105'
+          '1482842828238710'
         )?.trim();
 
         const replyMsg =
