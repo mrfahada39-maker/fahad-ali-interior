@@ -194,5 +194,21 @@ describe('AI Payment Verification & WhatsApp Admin 3-Button Approval Suite', () 
       expect(resShip).toBe(false);
     });
   });
+
+  describe('6. Daily Executive Sales & Stock Report', () => {
+    it('generates a formatted daily sales and stock report string', async () => {
+      const report = await WhatsAppService.generateDailyReport();
+      expect(typeof report).toBe('string');
+      expect(report).toContain('FAHAD ALI INTERIOR — DAILY EXECUTIVE REPORT');
+      expect(report).toContain('SALES & REVENUE SUMMARY');
+      expect(report).toContain('INVENTORY & STOCK STATUS');
+    });
+
+    it('dispatches the daily report to admin phone', async () => {
+      const dispatched = await WhatsAppService.sendDailyReport('923344171450');
+      expect(typeof dispatched).toBe('boolean');
+    });
+  });
 });
+
 

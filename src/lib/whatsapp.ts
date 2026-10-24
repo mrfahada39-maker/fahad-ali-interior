@@ -620,4 +620,120 @@ Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank s
       return false;
     }
   }
+
+  /**
+   * Generates a comprehensive real-time Daily Sales & Inventory briefing.
+   */
+  static async generateDailyReport(): Promise<string> {
+    try {
+      const todayStr = new Intl.DateTimeFormat('en-PK', {
+        timeZone: 'Asia/Karachi',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }).format(new Date());
+
+      // Start of day in PKT (UTC+5)
+      const pktOffset = 5 * 60 * 60 * 1000;
+      const pktNow = new Date(Date.now() + pktOffset);
+      const pktMidnight = new Date(Date.UTC(pktNow.getUTCFullYear(), pktNow.getUTCMonth(), pktNow.getUTCDate()));
+      const startOfDayUtc = new Date(pktMidnight.getTime() - pktOffset);
+
+      const [ordersToday, lowStockProducts] = await Promise.all([
+        db.order.findMany({
+          where: {
+            createdAt: { gte: startOfDayUtc },
+            deletedAt: null,
+          },
+          include: { items: true },
+        }),
+        db.product.findMany({
+          where: {
+            deletedAt: null,
+            stockCount: { lte: 5 },
+          },
+          orderBy: { stockCount: 'asc' },
+          take: 6,
+        }),
+      ]);
+
+      const totalOrders = ordersToday.length;
+      const paidOrders = ordersToday.filter((o: any) => o.paymentStatus === 'PAID');
+      const awaitingOrders = ordersToday.filter(
+        (o: any) => o.paymentStatus === 'PENDING' || o.paymentStatus === 'AWAITING_VERIFICATION'
+      );
+      const shippedOrders = ordersToday.filter(
+        (o: any) => o.status === 'SHIPPED' || o.status === 'DELIVERED'
+      );
+
+      const totalRevenue = paidOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
+
+      // Top products demanded
+      const itemCounts: Record<string, number> = {};
+      for (const order of ordersToday) {
+        for (const item of (order as any).items || []) {
+          const name = item.name || 'Piece';
+          itemCounts[name] = (itemCounts[name] || 0) + (item.quantity || 1);
+        }
+      }
+      const topProducts = Object.entries(itemCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([name, qty]) => `  ▫️ ${name} (x${qty})`);
+
+      const outOfStock = lowStockProducts.filter((p: any) => p.stockCount === 0);
+      const runningLow = lowStockProducts.filter((p: any) => p.stockCount > 0 && p.stockCount <= 5);
+
+      const stockSection = [
+        outOfStock.length > 0
+          ? `🔴 *Out of Stock (Zero Units):*\n` +
+            outOfStock.map((p: any) => `  • ${p.name} (0 stock)`).join('\n')
+          : '✅ *Out of Stock:* Koi item khatam nahi hui.',
+        runningLow.length > 0
+          ? `🟡 *Low Stock Alert (< 5 Units):*\n` +
+            runningLow.map((p: any) => `  • ${p.name} (${p.stockCount} baaqi)`).join('\n')
+          : '✅ *Low Stock:* Tamam items ka stock safe level par hai.',
+      ].join('\n\n');
+
+      return `🏛️ *FAHAD ALI INTERIOR — DAILY EXECUTIVE REPORT*
+━━━━━━━━━━━━━━━━━━━━
+📅 *Date:* ${todayStr} (Pakistan Time)
+⚡ *Automated Sales & Stock Dossier*
+
+💰 *SALES & REVENUE SUMMARY:*
+• *Gross Revenue:* *PKR ${totalRevenue.toLocaleString()}*
+• *Total Orders Placed:* *${totalOrders}*
+  ▫️ ✅ Verified & Paid: *${paidOrders.length}*
+  ▫️ ⏳ Awaiting Review: *${awaitingOrders.length}*
+  ▫️ 🚚 Dispatched: *${shippedOrders.length}*
+
+🛋️ *TODAY'S POPULAR PIECES:*
+${topProducts.length > 0 ? topProducts.join('\n') : '  ▫️ No pieces ordered in this cycle'}
+
+⚠️ *INVENTORY & STOCK STATUS:*
+${stockSection}
+
+━━━━━━━━━━━━━━━━━━━━
+🌐 *Live Admin Control Center:*
+👉 https://fahad-ali-interior.vercel.app/admin
+
+_Sent automatically by Fahad Ali Interior Executive AI Bot_`;
+    } catch (err) {
+      logger.warn('[WhatsApp Daily Report Generation Error]', { detail: String(err) });
+      return `🏛️ *FAHAD ALI INTERIOR — DAILY REPORT*\n\nReport generation mein temporary issue aaya. Live dashboard check karein:\nhttps://fahad-ali-interior.vercel.app/admin`;
+    }
+  }
+
+  /**
+   * Dispatches the daily sales & stock report to the Admin WhatsApp.
+   */
+  static async sendDailyReport(targetPhone?: string): Promise<boolean> {
+    const reportText = await this.generateDailyReport();
+    let recipient = (targetPhone || process.env.ADMIN_WHATSAPP_NUMBER || '923344171450').replace(/\D/g, '');
+    if (recipient === '923213283301' || !recipient) {
+      recipient = '923344171450';
+    }
+    return await this.sendTextMessage(recipient, reportText);
+  }
 }
+

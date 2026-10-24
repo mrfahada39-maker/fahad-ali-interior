@@ -96,6 +96,18 @@ export async function POST(req: NextRequest) {
       buttonId = message.button?.payload || message.button?.text || '';
     } else if (message.type === 'text') {
       const text = (message.text?.body || '').trim().toLowerCase();
+      // Handle on-demand sales and stock report command
+      if (
+        text.includes('report') ||
+        text.includes('sales') ||
+        text.includes('stock') ||
+        text.includes('hisaab') ||
+        text.includes('summary')
+      ) {
+        await WhatsAppService.sendDailyReport(senderPhone).catch(() => {});
+        return NextResponse.json({ status: 'daily_report_sent' }, { status: 200 });
+      }
+
       // Handle text command fallback e.g. "verify ord_123" or plain "verify"
       if (text.startsWith('verify ') || text.startsWith('approve ')) buttonId = `verify_${text.split(' ')[1]}`;
       else if (text.startsWith('hold ')) buttonId = `hold_${text.split(' ')[1]}`;
@@ -127,6 +139,7 @@ export async function POST(req: NextRequest) {
           `🤖 *System Status:* 100% Operational\n` +
           `📩 *Received:* "${userMsg}"\n\n` +
           `📌 *Quick Admin Commands:*\n` +
+          `• *report* ya *sales* — Rozana ki Sales & Stock report haasil karein\n` +
           `• *verify* — Latest pending order verify & approve karein\n` +
           `• *hold* — Latest order ko 24-48h hold par dalein\n` +
           `• *reject* — Latest order reject / cancel karein\n\n` +
