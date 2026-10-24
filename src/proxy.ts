@@ -263,7 +263,8 @@ export async function proxy(request: NextRequest) {
 
     const isWebhookOrPublicAction =
       pathname.startsWith('/api/whatsapp') ||
-      pathname.startsWith('/api/orders/action');
+      pathname.startsWith('/api/orders/action') ||
+      pathname.startsWith('/api/cron');
 
     if (isUnsafeMethod(request.method) && !isSameOriginRequest(request) && !isWebhookOrPublicAction) {
       return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });

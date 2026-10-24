@@ -214,6 +214,7 @@ export async function POST(req: NextRequest) {
     }
     if (order.paymentStatus === 'PAID' && action === 'verify') {
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'verify');
+      await WhatsAppService.sendCustomerOrderApproved(order).catch(() => {});
       return NextResponse.json({ message: 'Order is already marked as paid' }, { status: 200 });
     }
 

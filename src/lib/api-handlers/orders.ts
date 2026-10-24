@@ -529,6 +529,16 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
             },
             audit,
           });
+          // Send digital WhatsApp Order Slip to Customer
+          await WhatsAppService.sendCustomerOrderPlacedSlip({
+            ...newOrder,
+            totalAmount: Number(newOrder.totalAmount || totalAmount),
+            items: formattedItems,
+            shippingPhone: newOrder.shippingPhone || shippingPhone,
+            shippingName: newOrder.shippingName || shippingName,
+          }).catch((slipErr) => {
+            logger.warn('[Customer WhatsApp Slip Exception]:', { detail: String(slipErr) });
+          });
         } catch (auditErr) {
           logger.warn('[Payment Verifier & WhatsApp Dispatch Exception]:', {
             detail: String(auditErr),

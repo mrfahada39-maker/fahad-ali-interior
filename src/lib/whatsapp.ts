@@ -383,6 +383,64 @@ ${itemsList}
   }
 
   /**
+   * Sends an automated luxury WhatsApp digital Order Slip / Receipt to the Customer upon checkout.
+   */
+  static async sendCustomerOrderPlacedSlip(orderInput: string | any): Promise<boolean> {
+    try {
+      const order = typeof orderInput === 'string'
+        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
+        : orderInput;
+
+      if (!order) return false;
+
+      const rawPhone = order.shippingPhone || order.user?.phone || '';
+      let customerPhone = rawPhone.replace(/\D/g, '');
+      if (customerPhone.startsWith('0')) customerPhone = '92' + customerPhone.slice(1);
+      if (!customerPhone.startsWith('92') && customerPhone.length === 10) customerPhone = '92' + customerPhone;
+
+      if (!customerPhone || customerPhone.length < 10) {
+        logger.warn('[WhatsApp Customer Slip] No valid customer phone found:', { orderId: order.id });
+        return false;
+      }
+
+      const shortId = order.id.slice(-8).toUpperCase();
+      const customerName = order.shippingName || 'Valued Client';
+      const totalAmount = Number(order.totalAmount).toLocaleString();
+      const itemsList = (order.items || [])
+        .map((i: any) => `  ▫️ ${i.name || i.productName || 'Piece'} (x${i.quantity || 1})`)
+        .join('\n') || '  ▫️ Bespoke Furniture Suite';
+
+      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+      const paymentMethod = order.paymentMethod || 'Bank Transfer / JazzCash';
+
+      const message = `🏛️ *FAHAD ALI INTERIOR — OFFICIAL ORDER SLIP*
+━━━━━━━━━━━━━━━━━━━━
+✨ *Salam, ${customerName}!*
+
+Aapka Order *#${shortId}* kamyabi se receive ho gaya hai.
+
+🛋️ *Ordered Masterpieces:*
+${itemsList}
+💰 *Total Amount:* *PKR ${totalAmount}*
+💳 *Payment Mode:* ${paymentMethod}
+📦 *Current Status:* ⏳ *Under Verification*
+
+Jaise hi hamari executive team aapki transaction verify karegi, aapko approval notification aur production timeline mil jayegi.
+
+🌐 *Live Order Tracking:*
+👉 ${trackingUrl}
+
+_Shukriya for choosing Fahad Ali Interior._
+📞 *Client Concierge:* +92 321 3283301`;
+
+      return await this.sendTextMessage(customerPhone, message);
+    } catch (err) {
+      logger.warn('[WhatsApp Customer Slip Alert Error]:', { detail: String(err) });
+      return false;
+    }
+  }
+
+  /**
    * Sends an automated luxury WhatsApp approval notification to the Customer.
    */
   static async sendCustomerOrderApproved(orderInput: string | any): Promise<boolean> {
