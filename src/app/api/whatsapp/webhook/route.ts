@@ -97,10 +97,10 @@ export async function POST(req: NextRequest) {
     } else if (message.type === 'text') {
       const text = (message.text?.body || '').trim().toLowerCase();
       // Handle text command fallback e.g. "verify ord_123" or plain "verify"
-      if (text.startsWith('verify ')) buttonId = `verify_${text.split(' ')[1]}`;
+      if (text.startsWith('verify ') || text.startsWith('approve ')) buttonId = `verify_${text.split(' ')[1]}`;
       else if (text.startsWith('hold ')) buttonId = `hold_${text.split(' ')[1]}`;
       else if (text.startsWith('reject ') || text.startsWith('cancel ')) buttonId = `reject_${text.split(' ')[1]}`;
-      else if (text.includes('verify')) buttonId = 'verify_latest';
+      else if (text.includes('verify') || text.includes('approve')) buttonId = 'verify_latest';
       else if (text.includes('hold')) buttonId = 'hold_latest';
       else if (text.includes('reject') || text.includes('cancel')) buttonId = 'reject_latest';
     }
