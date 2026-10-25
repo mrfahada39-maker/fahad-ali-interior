@@ -406,6 +406,7 @@ ${itemsList}
       const shortId = order.id.slice(-8).toUpperCase();
       const customerName = order.shippingName || 'Valued Client';
       const totalAmount = Number(order.totalAmount).toLocaleString();
+      const paymentMethod = order.paymentMethod || 'JAZZCASH';
 
       const dateObj = order.createdAt ? new Date(order.createdAt) : new Date();
       const orderDateStr = new Intl.DateTimeFormat('en-PK', {
@@ -429,6 +430,15 @@ ${itemsList}
 
       const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
 
+      const addressParts = [
+        order.shippingAddress,
+        order.shippingCity,
+        order.shippingProvince,
+      ].filter(Boolean);
+      const deliveryAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Provided on Checkout';
+
+      const slipStatus = order.paymentScreenshot ? '✅ Attached & Under AI Verification' : 'Pending Verification';
+
       // 1. Try sending via Meta Approved Template (bypasses 24-hour window for new customers)
       const summaryItems = (order.items || [])
         .map((i: any) => `${i.name || 'Item'} (Qty: ${i.quantity || 1})`)
@@ -443,8 +453,8 @@ ${itemsList}
         trackingUrl,
       ]).catch(() => {});
 
-      // 2. Fallback / Rich WhatsApp Slip
-      const message = `🏛️ *FAHAD ALI INTERIOR — ORDER SLIP*
+      // 2. Rich WhatsApp Slip
+      const message = `🏛️ *FAHAD ALI INTERIOR — OFFICIAL ORDER SLIP*
 ━━━━━━━━━━━━━━━━━━━━
 Salam *${customerName}*! Your order *#${shortId}* for *PKR ${totalAmount}* has been successfully placed.
 
@@ -455,13 +465,43 @@ ${itemsList}
 
 💰 *Total Amount:* *PKR ${totalAmount}*
 📦 *Status:* ⏳ *Under Verification*
+💳 *Payment Method:* ${paymentMethod}
+🧾 *Payment Slip:* ${slipStatus}
 
-🌐 *Track order:*
+📍 *Delivery Address:*
+${deliveryAddress}
+👤 *Recipient Contact:* ${customerPhone}
+
+🏛️ *Official Settlement Account Details:*
+• *Bank:* Meezan Bank Limited
+• *Account Title:* Fahad Ali Interior
+• *Account Number:* \`00427992104803\`
+• *IBAN:* \`PK16MEZN0099340103248901\`
+• *JazzCash / Raast ID:* \`03213283301\`
+
+━━━━━━━━━━━━━━━━━━━━
+🌐 *Track order live:*
 👉 ${trackingUrl}
 
 📞 *For further details contact Admin:* +92 321 3283301`;
 
-      return await this.sendTextMessage(customerPhone, message);
+      const textSent = await this.sendTextMessage(customerPhone, message);
+
+      // If customer attached a public screenshot image URL, also deliver it to their WhatsApp
+      if (
+        order.paymentScreenshot &&
+        typeof order.paymentScreenshot === 'string' &&
+        order.paymentScreenshot.startsWith('http') &&
+        !order.paymentScreenshot.startsWith('data:')
+      ) {
+        await this.sendImageMessage(
+          customerPhone,
+          order.paymentScreenshot,
+          `🧾 Order #${shortId} Attached Payment Receipt`
+        ).catch(() => {});
+      }
+
+      return textSent;
     } catch (err) {
       logger.warn('[WhatsApp Customer Slip Alert Error]:', { detail: String(err) });
       return false;
@@ -492,6 +532,7 @@ ${itemsList}
       const shortId = order.id.slice(-8).toUpperCase();
       const customerName = order.shippingName || 'Valued Client';
       const totalAmount = Number(order.totalAmount).toLocaleString();
+      const paymentMethod = order.paymentMethod || 'JAZZCASH';
 
       const dateObj = order.createdAt ? new Date(order.createdAt) : new Date();
       const orderDateStr = new Intl.DateTimeFormat('en-PK', {
@@ -515,6 +556,13 @@ ${itemsList}
 
       const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
 
+      const addressParts = [
+        order.shippingAddress,
+        order.shippingCity,
+        order.shippingProvince,
+      ].filter(Boolean);
+      const deliveryAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Provided on Checkout';
+
       const message = `🏛️ *FAHAD ALI INTERIOR — ORDER APPROVED*
 ━━━━━━━━━━━━━━━━━━━━
 Salam *${customerName}*! Your order *#${shortId}* payment has been verified and approved.
@@ -526,8 +574,11 @@ ${itemsList}
 
 💰 *Total Amount:* *PKR ${totalAmount}*
 📦 *Status:* ✅ *Verified & In Production*
+💳 *Payment Method:* ${paymentMethod}
+📍 *Delivery Address:* ${deliveryAddress}
 
-🌐 *Track order:*
+━━━━━━━━━━━━━━━━━━━━
+🌐 *Track order live:*
 👉 ${trackingUrl}
 
 📞 *For further details contact Admin:* +92 321 3283301`;
@@ -771,6 +822,54 @@ Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank s
       return res.ok;
     } catch (e) {
       logger.warn('[WhatsApp sendTextMessage Error]', { detail: String(e) });
+      return false;
+    }
+  }
+
+  /**
+   * Sends an image message with optional caption to a phone number via Meta Cloud API.
+   */
+  static async sendImageMessage(
+    toPhone: string,
+    imageUrl: string,
+    caption?: string
+  ): Promise<boolean> {
+    const accessToken = (
+      process.env.WHATSAPP_ACCESS_TOKEN ||
+      'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
+    )?.trim();
+    let phoneNumberId = (
+      process.env.WHATSAPP_PHONE_NUMBER_ID ||
+      '1482842828238710'
+    )?.trim();
+    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
+      phoneNumberId = '1482842828238710';
+    }
+
+    if (!accessToken || !phoneNumberId) return false;
+
+    try {
+      const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: toPhone.replace(/\D/g, ''),
+          type: 'image',
+          image: {
+            link: imageUrl,
+            ...(caption ? { caption } : {}),
+          },
+        }),
+      });
+
+      return res.ok;
+    } catch (e) {
+      logger.warn('[WhatsApp sendImageMessage Error]', { detail: String(e) });
       return false;
     }
   }
