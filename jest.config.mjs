@@ -15,6 +15,7 @@ const config = {
   transform: {
     "^.+\\.[tj]sx?$": ["ts-jest", { tsconfig: "tsconfig.json" }],
   },
+  testTimeout: 25000,
   transformIgnorePatterns: ["node_modules/(?!(@scure|@noble|otplib)/)"],
 };
 

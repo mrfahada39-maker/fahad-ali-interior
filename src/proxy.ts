@@ -286,50 +286,56 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  const token =
-    (await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: false,
-    })) ||
-    (await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: true,
-    }));
+  const isAdminPath = pathname !== '/admin/login' && adminPages.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  const isDashboardPath = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
+  const isProtectedPath = protectedPages.some((p) => pathname === p || pathname.startsWith(p + '/'));
 
-  if (pathname !== '/admin/login' && adminPages.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    if (!token) {
-      const login = new URL('/admin/login', request.url);
-      login.searchParams.set('next', pathname);
-      return NextResponse.redirect(login);
-    }
-    const tokenRole = String(token.role ?? '').toUpperCase();
-    if (tokenRole !== 'ADMIN' && tokenRole !== 'SUPER_ADMIN') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-  }
+  if (isAdminPath || isDashboardPath || isProtectedPath) {
+    const token =
+      (await getToken({
+        req: request,
+        secret: process.env.NEXTAUTH_SECRET,
+        secureCookie: false,
+      })) ||
+      (await getToken({
+        req: request,
+        secret: process.env.NEXTAUTH_SECRET,
+        secureCookie: true,
+      }));
 
-  // ── Role-based dashboard redirect (runs at Proxy layer — no session cache issues) ──
-  if (pathname === '/dashboard') {
-    if (!token) {
-      const login = new URL('/', request.url);
-      login.searchParams.set('auth', 'login');
-      login.searchParams.set('next', '/dashboard');
-      return NextResponse.redirect(login);
+    if (isAdminPath) {
+      if (!token) {
+        const login = new URL('/admin/login', request.url);
+        login.searchParams.set('next', pathname);
+        return NextResponse.redirect(login);
+      }
+      const tokenRole = String(token.role ?? '').toUpperCase();
+      if (tokenRole !== 'ADMIN' && tokenRole !== 'SUPER_ADMIN') {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
     }
-    const tokenRole = String(token.role ?? '').toUpperCase();
-    if (tokenRole === 'ADMIN' || tokenRole === 'SUPER_ADMIN') {
-      return NextResponse.redirect(new URL('/admin', request.url));
-    }
-  }
 
-  if (protectedPages.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    if (!token) {
-      const login = new URL('/', request.url);
-      login.searchParams.set('auth', 'login');
-      login.searchParams.set('next', pathname);
-      return NextResponse.redirect(login);
+    // ── Role-based dashboard redirect (runs at Proxy layer — no session cache issues) ──
+    if (isDashboardPath) {
+      if (!token) {
+        const login = new URL('/', request.url);
+        login.searchParams.set('auth', 'login');
+        login.searchParams.set('next', '/dashboard');
+        return NextResponse.redirect(login);
+      }
+      const tokenRole = String(token.role ?? '').toUpperCase();
+      if (tokenRole === 'ADMIN' || tokenRole === 'SUPER_ADMIN') {
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+    }
+
+    if (isProtectedPath) {
+      if (!token) {
+        const login = new URL('/', request.url);
+        login.searchParams.set('auth', 'login');
+        login.searchParams.set('next', pathname);
+        return NextResponse.redirect(login);
+      }
     }
   }
 

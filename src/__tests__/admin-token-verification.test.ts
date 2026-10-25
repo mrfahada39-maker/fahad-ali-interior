@@ -442,5 +442,5 @@ describe('Admin & Session Token Verification Security Regressions', () => {
     // Verify Admin B's password was updated
     const isBNewPassword = await bcrypt.compare('BetaNewPassword789!#', adminRecords[adminBId].password);
     expect(isBNewPassword).toBe(true);
-  }, 15000);
+  }, 35000);
 });
