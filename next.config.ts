@@ -16,11 +16,28 @@ const withPWA = withSerwistInit({
   exclude: [/sw-push\.js$/, /\.mp4$/i, /\.webm$/i],
 });
 
-// Security headers (CDN/edge layer — CSP is nonce-based in middleware)
+const cspHeader = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://*.unsplash.com",
+  "media-src 'self' data: blob: https://res.cloudinary.com",
+  "connect-src 'self' https://api.cloudinary.com https://graph.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com wss:",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join('; ');
+
+// Comprehensive Edge & CDN Security Headers applied to every single page & route
 const securityHeaders = [
+  { key: 'Content-Security-Policy',      value: cspHeader },
   { key: 'X-DNS-Prefetch-Control',       value: 'on' },
   { key: 'X-Frame-Options',              value: 'DENY' },
   { key: 'X-Content-Type-Options',       value: 'nosniff' },
+  { key: 'X-XSS-Protection',             value: '1; mode=block' },
+  { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
   { key: 'Referrer-Policy',              value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy',           value: 'camera=(self), microphone=(self), geolocation=()' },
   { key: 'Cross-Origin-Opener-Policy',   value: 'same-origin-allow-popups' },
