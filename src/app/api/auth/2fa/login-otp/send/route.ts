@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const result = await sendOtpToPhone(user.phone, channel, 'Sign-In Security');
+    const result = await sendOtpToPhone(user.phone, channel, 'Sign-In Security', otp);
 
     if (!result.success) {
       return NextResponse.json(

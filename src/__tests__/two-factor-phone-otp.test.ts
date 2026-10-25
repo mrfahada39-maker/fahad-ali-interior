@@ -4,12 +4,15 @@ import { POST as handleSendOtp } from '@/app/api/auth/2fa/send-otp/route';
 import { POST as handleVerifyOtp } from '@/app/api/auth/2fa/verify-otp/route';
 import { GET as handleStatus } from '@/app/api/auth/2fa/status/route';
 import { POST as handleDisable } from '@/app/api/auth/2fa/disable/route';
+import { POST as handleLoginOtpSend } from '@/app/api/auth/2fa/login-otp/send/route';
+import { handleAuthRoutes } from '@/lib/api-handlers/auth';
 import { db } from '@/lib/db';
 
 jest.mock('@/lib/db', () => ({
   db: {
     user: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
     },
   },
@@ -171,5 +174,61 @@ describe('Two-Step Phone & WhatsApp Verification Endpoints', () => {
     const data = await res.json();
     expect(data.success).toBe(true);
     expect(data.disabled).toBe(true);
+  });
+
+  it('7. dispatches login OTP via direct POST to /api/auth/2fa/login-otp/send', async () => {
+    const phone = '03006666666';
+    (db.user.findFirst as any).mockResolvedValueOnce({
+      id: mockUserId,
+      email: 'client@interior.pk',
+      phone,
+      totpEnabled: true,
+    });
+    (db.user.update as any).mockResolvedValueOnce({ id: mockUserId });
+
+    const req = new NextRequest('http://localhost:3000/api/auth/2fa/login-otp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'client@interior.pk', channel: 'SMS' }),
+    });
+
+    const res = await handleLoginOtpSend(req);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.success).toBe(true);
+    expect(data.channel).toBeDefined();
+    expect(data.maskedPhone).toContain('••••');
+  });
+
+  it('8. dispatches auth/2fa/login-otp/send via handleAuthRoutes dispatcher', async () => {
+    const phone = '03007777777';
+    (db.user.findFirst as any).mockResolvedValueOnce({
+      id: mockUserId,
+      email: 'admin@interior.pk',
+      phone,
+      totpEnabled: true,
+    });
+    (db.user.update as any).mockResolvedValueOnce({ id: mockUserId });
+
+    const req = new NextRequest('http://localhost:3000/api/v1/auth/2fa/login-otp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'admin@interior.pk', channel: 'WHATSAPP' }),
+    });
+
+    const res = await handleAuthRoutes({
+      method: 'POST',
+      segment: 'auth/2fa/login-otp/send',
+      normalizedSegment: 'auth/2fa/login-otp/send',
+      pathParts: ['auth', '2fa', 'login-otp', 'send'],
+      req,
+      ip: '127.0.0.1',
+    });
+
+    expect(res).not.toBeNull();
+    expect(res?.status).toBe(200);
+    const data = await res?.json();
+    expect(data.success).toBe(true);
+    expect(data.maskedPhone).toContain('••••');
   });
 });

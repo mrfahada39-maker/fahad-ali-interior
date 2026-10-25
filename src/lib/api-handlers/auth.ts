@@ -25,6 +25,7 @@ import { POST as handleVerifyEmail } from '@/app/api/auth/verify-email/route';
 import { POST as handleResendVerification } from '@/app/api/auth/resend-verification/route';
 import { POST as handle2FaSendOtp } from '@/app/api/auth/2fa/send-otp/route';
 import { POST as handle2FaVerifyOtp } from '@/app/api/auth/2fa/verify-otp/route';
+import { POST as handle2FaLoginOtpSend } from '@/app/api/auth/2fa/login-otp/send/route';
 import { maskPakistaniPhone } from '@/lib/phone-otp';
 import { revokeAllUserTokensAsync } from '@/lib/admin-auth';
 import { ApiDispatchContext, getUserFromSessionOrToken, requireAdmin } from './shared';
@@ -124,6 +125,19 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
       return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
     }
     return handle2FaVerifyOtp(req);
+  }
+
+  const is2faLoginOtpSend =
+    normalizedSegment === 'auth/2fa/login-otp/send' ||
+    segment === 'auth/2fa/login-otp/send' ||
+    segment === 'v1/auth/2fa/login-otp/send' ||
+    segment === 'api/auth/2fa/login-otp/send';
+
+  if (is2faLoginOtpSend) {
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+    return handle2FaLoginOtpSend(req);
   }
 
   if (is2faStatus) {
