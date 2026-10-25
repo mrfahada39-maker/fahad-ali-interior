@@ -90,7 +90,12 @@ export interface SendAdminOrderAlertParams {
     shippingEmail?: string | null;
     shippingAddress?: string | null;
     shippingCity?: string | null;
+    shippingProvince?: string | null;
+    shippingNotes?: string | null;
     paymentMethod?: string | null;
+    paymentGatewayRef?: string | null;
+    status?: string | null;
+    paymentStatus?: string | null;
     totalAmount: number | string;
     items?: Array<{ name?: string; productName?: string; quantity?: number; price?: number }>;
     paymentScreenshot?: string | null;
@@ -100,35 +105,50 @@ export interface SendAdminOrderAlertParams {
 
 export class WhatsAppService {
   /**
-   * Dispatches the full order verification slip to Admin's personal WhatsApp phone.
-   * Sends Meta Interactive Buttons [Verify], [Hold], [Reject], plus direct 1-tap links.
+   * Dispatches the simple order verification alert to Admin's personal WhatsApp phone.
+   * Sends Meta Interactive Buttons [Verify], [Hold], [Restocked], plus direct 1-tap links.
    */
   static async sendAdminOrderVerificationAlert(
     params: SendAdminOrderAlertParams
   ): Promise<{ success: boolean; mode: 'META_CLOUD_API' | 'LOCAL_LOG' }> {
     const { order, audit } = params;
 
-    const shortId = order.id.slice(-8).toUpperCase();
-    const customerName = order.shippingName || 'Valued Customer';
+    const shortId = order.id.slice(-6).toUpperCase();
+    const customerName = order.shippingName || 'Valued Client';
     const customerPhone = order.shippingPhone || 'N/A';
-    const deliveryAddress = [order.shippingAddress, order.shippingCity || 'Pakistan'].filter(Boolean).join(', ');
-    const totalAmount = Number(order.totalAmount).toLocaleString();
-    const itemsList = (order.items || [])
-      .map((i) => `  ▫️ ${i.name || i.productName || 'Custom Masterpiece'} x${i.quantity || 1} • Rs. ${Number(i.price || 0).toLocaleString()}`)
-      .join('\n') || '  ▫️ Luxury Furniture Commission';
-    const paymentMethod = (order.paymentMethod || 'JAZZCASH').toUpperCase();
-    const orderDate = new Date().toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
+    
+    // Clean deduplicated address
+    const addressParts = [
+      order.shippingAddress,
+      order.shippingCity,
+      order.shippingProvince,
+    ].filter((part, idx, arr) => part && (!arr[idx - 1] || String(part).toLowerCase() !== String(arr[idx - 1]).toLowerCase()));
+    const deliveryAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Provided on Checkout';
 
-    const duplicateCheck = audit.isDuplicateTid ? '❌ Duplicate Found' : '🟢 Clean (No Duplicate)';
-    const confidenceText = `${audit.confidence || 98.5}% High Confidence`;
-    const tidText = audit.transactionId || 'Manual Screenshot';
-    const urduNote = audit.summaryUrdu || 'Slip Asli Hai: Poori raqam aur TID match ho gayi.';
+    // Customer TID
+    const tidMatch = (order.shippingNotes || '').match(/TxID:\s*([^\s,;.]+)/i);
+    const extractedTid = tidMatch && tidMatch[1] && !['N/A', 'NA', 'NONE', 'N'].includes(tidMatch[1].toUpperCase())
+      ? tidMatch[1]
+      : null;
+    const customerTid = audit.transactionId || order.paymentGatewayRef || extractedTid || (order.paymentScreenshot ? 'Attached on Receipt' : 'N/A');
+
+    // Order Items with Name, Qty, and Amount
+    const itemsList = (order.items || [])
+      .map((i) => {
+        const name = i.name || i.productName || 'Item';
+        const qty = i.quantity || 1;
+        const price = i.price ? ` | PKR ${Number(i.price * qty).toLocaleString()}` : '';
+        return `▫️ ${name} | Qty: ${qty}${price}`;
+      })
+      .join('\n') || '▫️ Furniture Suite | Qty: 1';
+
+    const totalAmount = Number(order.totalAmount).toLocaleString();
+    const rawMethod = (order.paymentMethod || 'BANK_TRANSFER').toUpperCase().replace(/_/g, ' ');
+    const methodMatch = (order.shippingNotes || '').match(/Method:\s*([^.\n]+)/i);
+    const paymentMethod = methodMatch && methodMatch[1] ? methodMatch[1].trim() : rawMethod;
+    const status = order.status === 'PENDING' || order.paymentStatus === 'AWAITING_VERIFICATION'
+      ? '⏳ Under Verification'
+      : '⏳ Awaiting Verification';
 
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
@@ -144,29 +164,28 @@ export class WhatsAppService {
     const holdUrl = `${baseUrl}/api/orders/action?id=${order.id}&action=hold&token=${holdToken}`;
     const rejectUrl = `${baseUrl}/api/orders/action?id=${order.id}&action=reject&token=${rejectToken}`;
 
-    const messageBody = `🏛️ *FAHAD ALI INTERIOR — EXECUTIVE DOSSIER*
+    const messageBody = `🏛️ *FAHAD ALI INTERIOR*
 ━━━━━━━━━━━━━━━━━━━━
-📋 *Order #${shortId}*  •  _${orderDate}_
-💳 *Method:* *${paymentMethod}*  |  🟡 _Awaiting Slip Verification_
-
-📍 *CLIENT & DELIVERY DOSSIER*
-👤 *Customer:* *${customerName}*
+👤 *Name:* ${customerName}
 📞 *Phone:* ${customerPhone}
-🏠 *Address:* ${deliveryAddress}
-🛋️ *Ordered Furniture:*
+📍 *Delivery Address:* ${deliveryAddress}
+📋 *Order #:* #${shortId}
+💳 *Customer TID:* \`${customerTid}\`
+
+🛋️ *Order Details:*
 ${itemsList}
 
-💵 *Total Amount to Verify:* *PKR ${totalAmount}*
+💰 *Total Amount:* *PKR ${totalAmount}*
+📦 *Status:* ${status}
+💳 *Payment Method:* ${paymentMethod}
+
 ━━━━━━━━━━━━━━━━━━━━
-✨ *AI BOT FORENSIC AUDIT*  \`[ SBP COMPLIANT ]\`
-• *Customer TID:* \`${tidText}\`
-• *Expected:* *PKR ${totalAmount}*
-• *Duplicate Check:* ${duplicateCheck}
-• *Forensic Confidence:* *${confidenceText}*
-• *AI Verdict:* _${urduNote}_
-━━━━━━━━━━━━━━━━━━━━
-⚡ *DIRECT 1-TAP ACTION (Instant Sync):*
-👉 ${verifyUrl}`;
+⚡ *Executive Actions:*
+✅ Verify
+⏳ Hold 24-48h
+❌ Restocked
+
+👉 Quick Verify Link: ${verifyUrl}`;
 
     let rawAdmin = (
       process.env.ADMIN_WHATSAPP_NUMBER ||
@@ -269,7 +288,7 @@ ${itemsList}
                   type: 'reply',
                   reply: {
                     id: `verify_${order.id}`,
-                    title: '✅ Verify Payment',
+                    title: '✅ Verify',
                   },
                 },
                 {
@@ -283,7 +302,7 @@ ${itemsList}
                   type: 'reply',
                   reply: {
                     id: `reject_${order.id}`,
-                    title: '❌ Reject Payment',
+                    title: '❌ Restocked',
                   },
                 },
               ],
