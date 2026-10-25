@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { Home, Settings, LogOut } from 'lucide-react';
 import { DASHBOARD_TABS } from './dashboard-kpis';
+import { DashboardStoreNavbar } from '@/components/shared/DashboardStoreNavbar';
 
 export function DashboardSidebarAndMobileNav({
   activeTab,
@@ -114,27 +115,8 @@ export function DashboardSidebarAndMobileNav({
 
       {/* ── MOBILE DUAL FLOATING LUXURY CARDS ── */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 p-2 sm:p-3 flex flex-col gap-2 bg-gradient-to-b from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent pointer-events-none">
-        <div className="bg-gradient-to-r from-white via-[#FCFAF7] to-white backdrop-blur-2xl border border-[#E7DDD0] rounded-2xl sm:rounded-[22px] shadow-[0_8px_25px_rgba(44,30,24,0.04)] px-4 py-3 flex items-center justify-between pointer-events-auto">
-          <Link href="/" className="w-10 h-10 flex items-center justify-center text-[#8C6239] hover:text-[#B88E4B]">
-            <Home size={18} className="stroke-[2.5]" />
-          </Link>
-
-          <div className="flex flex-col items-center text-center">
-            <span className="font-serif font-black text-[17px] tracking-tight text-[#1F1612] uppercase leading-none">
-              FAHAD ALI <span className="font-serif italic font-normal text-[#C9A24D]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">INTERIOR</span>
-            </span>
-            <div className="flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-[#FAF5EE] border border-[#E7DDD0]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[8.5px] font-mono font-black text-[#8C6239] uppercase tracking-widest">
-                VIP LIVING SUITE
-              </span>
-            </div>
-          </div>
-
-          <button onClick={() => signOut({ callbackUrl: '/' })} className="w-10 h-10 flex items-center justify-center text-rose-500">
-            <LogOut size={18} className="stroke-[2.5]" />
-          </button>
-        </div>
+        {/* ── IMAGE 1 NAVBAR: STORE MOBILE PILL NAVBAR ── */}
+        <DashboardStoreNavbar />
 
         <div className="bg-white/95 backdrop-blur-2xl border border-[#E7DDD0] rounded-2xl shadow-[0_4px_20px_rgba(44,30,24,0.035)] p-1.5 flex items-center gap-1.5 overflow-x-auto scrollbar-hide pointer-events-auto">
           {DASHBOARD_TABS.map((tab) => {

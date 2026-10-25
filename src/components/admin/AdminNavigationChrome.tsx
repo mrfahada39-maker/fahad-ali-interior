@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Home, Settings, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { tabs } from '@/components/admin-tab-types';
+import { DashboardStoreNavbar } from '@/components/shared/DashboardStoreNavbar';
 
 export interface AdminNavigationChromeProps {
   activeTab: string;
@@ -127,42 +128,8 @@ export function AdminNavigationChrome({
 
       {/* ── MOBILE & TABLET DUAL FLOATING LUXURY CARDS ── */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 p-2 sm:p-3 flex flex-col gap-2 bg-gradient-to-b from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent pointer-events-none">
-        <div className="bg-gradient-to-r from-white via-[#FCFAF7] to-white backdrop-blur-2xl border border-[#E7DDD0] rounded-2xl sm:rounded-[22px] shadow-[0_8px_25px_rgba(44,30,24,0.04)] px-4 py-3 sm:py-3.5 flex items-center justify-between pointer-events-auto relative overflow-hidden group">
-          <div className="absolute -top-12 -left-12 w-32 h-32 bg-[#B88E4B]/5 rounded-full blur-xl pointer-events-none" />
-          <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-rose-500/5 rounded-full blur-xl pointer-events-none" />
-
-          <Link
-            href="/"
-            className="w-10 h-10 flex items-center justify-center text-[#8C6239] hover:text-[#B88E4B] transition-all duration-200 active:scale-90 group cursor-pointer shrink-0 relative z-10"
-            title="Go to Storefront Website"
-          >
-            <Home size={18} className="stroke-[2.5] text-[#8C6239] group-hover:text-[#B88E4B] group-hover:scale-115 transition-transform drop-shadow-[0_0_8px_rgba(184,142,75,0.6)]" />
-          </Link>
-
-          <Link href="/admin" className="flex flex-col items-center text-center px-2 group relative z-10">
-            <span className="font-serif font-black text-[17px] sm:text-[19px] tracking-tight text-[#1F1612] uppercase leading-none whitespace-nowrap">
-              FAHAD ALI <span className="font-serif italic font-normal text-[#C9A24D] text-sm sm:text-base">&</span>{' '}
-              <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">INTERIOR</span>
-            </span>
-            <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-[#FAF5EE]/90 border border-[#E7DDD0] shadow-2xs">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-              </span>
-              <span className="text-[8.5px] sm:text-[9.5px] tracking-[0.25em] font-mono font-black text-[#8C6239] uppercase whitespace-nowrap">
-                EXECUTIVE SUITE
-              </span>
-            </div>
-          </Link>
-
-          <button
-            onClick={() => signOut({ callbackUrl: '/' })}
-            className="w-10 h-10 flex items-center justify-center text-rose-500 hover:text-rose-600 transition-all duration-200 active:scale-90 group cursor-pointer shrink-0 relative z-10"
-            title="Sign Out"
-          >
-            <LogOut size={18} className="stroke-[2.5] text-rose-500 group-hover:scale-115 transition-transform drop-shadow-[0_0_8px_rgba(244,63,94,0.7)]" />
-          </button>
-        </div>
+        {/* ── IMAGE 1 NAVBAR: STORE MOBILE PILL NAVBAR ── */}
+        <DashboardStoreNavbar />
 
         <div className="bg-white/95 backdrop-blur-2xl border border-[#E7DDD0] rounded-2xl shadow-[0_4px_20px_rgba(44,30,24,0.035)] p-1 sm:p-1.5 flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-hide pointer-events-auto relative">
           {tabs.map((tab) => {
