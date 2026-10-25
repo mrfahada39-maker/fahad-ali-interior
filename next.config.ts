@@ -18,13 +18,13 @@ const withPWA = withSerwistInit({
 
 const cspHeader = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://apis.google.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://*.firebaseapp.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://apis.google.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://*.unsplash.com https://*.googleusercontent.com",
   "media-src 'self' data: blob: https://res.cloudinary.com",
-  "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://api.cloudinary.com https://graph.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss:",
-  "frame-src 'self' https://*.firebaseapp.com https://www.google.com/recaptcha/ https://recaptcha.google.com/",
+  "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://api.cloudinary.com https://graph.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://*.googleapis.com wss:",
+  "frame-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

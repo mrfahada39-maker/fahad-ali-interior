@@ -24,8 +24,6 @@ import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { apiFetchJsonWithStatus, setEnterpriseTokens } from '@/lib/api-client';
-import { initPhoneRecaptcha, sendFirebasePhoneOtp } from '@/lib/firebase';
-import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -118,33 +116,6 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
         setTwoFactorCooldown(data.cooldownSeconds || 30);
         if (data.maskedPhone) setTwoFactorMaskedPhone(data.maskedPhone);
         if (data.devCode) setTwoFactorDevCode(data.devCode);
-
-        // If SMS requested, dispatch via Google Firebase Phone Auth for cellular delivery
-        if (channel === 'SMS' && typeof window !== 'undefined') {
-          try {
-            const raw = data.phone || data.maskedPhone;
-            if (raw) {
-              const clean = String(raw).replace(/\D/g, '');
-              const e164 = clean.startsWith('92')
-                ? `+${clean}`
-                : clean.startsWith('0')
-                ? `+92${clean.slice(1)}`
-                : `+92${clean}`;
-              const verifier =
-                (window as unknown as { recaptchaVerifier?: RecaptchaVerifier }).recaptchaVerifier ||
-                initPhoneRecaptcha('firebase-recaptcha-container');
-              if (verifier) {
-                (window as unknown as { recaptchaVerifier?: RecaptchaVerifier }).recaptchaVerifier = verifier;
-                const confirmation = await sendFirebasePhoneOtp(e164, verifier);
-                (window as unknown as { firebaseConfirmation?: ConfirmationResult }).firebaseConfirmation =
-                  confirmation;
-                toast.success(`Google Firebase SMS OTP sent to ${e164}!`);
-              }
-            }
-          } catch (fbErr: unknown) {
-            console.warn('[Firebase Phone Auth]:', (fbErr as Error)?.message);
-          }
-        }
 
         toast.success(`6-digit code sent via ${channel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}!`);
       } else {

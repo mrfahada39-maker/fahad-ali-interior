@@ -20,8 +20,6 @@ import { Button } from '@/components/button';
 import { Input } from '@/components/input';
 import { toast } from 'sonner';
 import { apiFetchJson } from '@/lib/api-client';
-import { initPhoneRecaptcha, sendFirebasePhoneOtp } from '@/lib/firebase';
-import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 
 interface TwoFactorStatusResponse {
   enabled: boolean;
@@ -67,7 +65,6 @@ export default function TwoFactorSetup() {
   const [otpCode, setOtpCode] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const [devCode, setDevCode] = useState<string | null>(null);
-  const [firebaseConfirmation, setFirebaseConfirmation] = useState<ConfirmationResult | null>(null);
 
   // Verification & Disable state
   const [verifying, setVerifying] = useState(false);
@@ -149,31 +146,6 @@ export default function TwoFactorSetup() {
       setOtpCode('');
       setSetupStep('verify');
 
-      // If SMS requested, dispatch via Google Firebase Phone Auth for cellular delivery
-      if (channel === 'SMS' && typeof window !== 'undefined') {
-        try {
-          const raw = data.phone || targetPhone;
-          const clean = String(raw).replace(/\D/g, '');
-          const e164 = clean.startsWith('92')
-            ? `+${clean}`
-            : clean.startsWith('0')
-            ? `+92${clean.slice(1)}`
-            : `+92${clean}`;
-
-          const verifier =
-            (window as unknown as { recaptchaVerifierSetup?: RecaptchaVerifier }).recaptchaVerifierSetup ||
-            initPhoneRecaptcha('firebase-recaptcha-container-setup');
-          if (verifier) {
-            (window as unknown as { recaptchaVerifierSetup?: RecaptchaVerifier }).recaptchaVerifierSetup = verifier;
-            const confirmation = await sendFirebasePhoneOtp(e164, verifier);
-            setFirebaseConfirmation(confirmation);
-            toast.success(`Google Firebase SMS OTP sent to ${e164}!`);
-          }
-        } catch (fbErr: unknown) {
-          console.warn('[Firebase Phone Auth Setup]:', (fbErr as Error)?.message);
-        }
-      }
-
       const channelName = channel === 'SMS' ? 'Cellular SMS' : 'WhatsApp';
       toast.success(`6-digit code ${channelName} par bhej diya gaya hai!`);
 
@@ -201,16 +173,6 @@ export default function TwoFactorSetup() {
     setErrorMessage('');
 
     const targetPhone = customPhoneInput.trim() || registeredPhone.trim();
-    let firebaseVerified = false;
-
-    if (firebaseConfirmation && selectedChannel === 'SMS') {
-      try {
-        await firebaseConfirmation.confirm(otpCode.trim());
-        firebaseVerified = true;
-      } catch (fbErr) {
-        console.warn('[Firebase Confirmation Check]:', (fbErr as Error)?.message);
-      }
-    }
 
     try {
       const data = await apiFetchJson<VerifyOtpResponse>('/api/auth/2fa/verify-otp', {
@@ -221,7 +183,6 @@ export default function TwoFactorSetup() {
           token: challengeToken,
           code: otpCode.trim(),
           channel: selectedChannel,
-          firebaseVerified,
         }),
       });
 
@@ -814,9 +775,6 @@ export default function TwoFactorSetup() {
           )}
         </AnimatePresence>
       </div>
-
-      {/* Google Firebase Invisible reCAPTCHA Anchor for SMS */}
-      <div id="firebase-recaptcha-container-setup" />
     </div>
   );
 }
