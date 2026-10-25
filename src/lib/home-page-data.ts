@@ -88,18 +88,33 @@ const empty: HomePageData = {
   },
 };
 
+let cachedHomePageData: { data: HomePageData; expiresAt: number } | null = null;
+const CACHE_TTL_MS = 45 * 1000; // 45 seconds high-speed RAM cache
+
 export function invalidateHomePageDataCache() {
-  // Real-time dynamic fetch active; no stale cache to clear
+  cachedHomePageData = null;
 }
 
 export async function getHomePageData(): Promise<HomePageData> {
+  const now = Date.now();
+  if (cachedHomePageData && cachedHomePageData.expiresAt > now) {
+    return cachedHomePageData.data;
+  }
+
   try {
-    return await fetchHomePageDataInternal();
+    const data = await fetchHomePageDataInternal();
+    if (data && (data.products?.length > 0 || data.categories?.length > 0)) {
+      cachedHomePageData = {
+        data,
+        expiresAt: now + CACHE_TTL_MS,
+      };
+    }
+    return data;
   } catch (err) {
     if (process.env.NEXT_PHASE !== 'phase-production-build') {
       logger.error('getHomePageData error:', err);
     }
-    return empty;
+    return cachedHomePageData?.data || empty;
   }
 }
 

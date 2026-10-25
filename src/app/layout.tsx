@@ -35,14 +35,14 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "700"],
-  preload: false,
+  preload: true,
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
-  preload: false,
+  preload: true,
 });
 
 const greatVibes = Great_Vibes({
@@ -191,6 +191,10 @@ export default async function RootLayout({
 }>) {
   const settings = await getCachedSettings();
   ReactDOM.preconnect('https://res.cloudinary.com', { crossOrigin: 'anonymous' });
+  ReactDOM.preconnect('https://images.unsplash.com', { crossOrigin: 'anonymous' });
+  ReactDOM.dnsPrefetch('https://res.cloudinary.com');
+  ReactDOM.dnsPrefetch('https://images.unsplash.com');
+  ReactDOM.dnsPrefetch('https://fonts.gstatic.com');
 
   return (
     <html lang="en" suppressHydrationWarning>

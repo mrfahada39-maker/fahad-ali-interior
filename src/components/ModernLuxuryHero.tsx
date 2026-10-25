@@ -220,6 +220,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                 src="/hero-living-room-img1-4k.webp"
                 alt="Fahad Ali Interior Luxury Living Room Showcase"
                 fill
+                priority
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover object-center transform hover:scale-102 transition-transform duration-700"
               />
