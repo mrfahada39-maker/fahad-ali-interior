@@ -816,7 +816,7 @@ export default function TwoFactorSetup() {
       </div>
 
       {/* Google Firebase Invisible reCAPTCHA Anchor for SMS */}
-      <div id="firebase-recaptcha-container-setup" className="hidden" />
+      <div id="firebase-recaptcha-container-setup" />
     </div>
   );
 }
