@@ -70,6 +70,14 @@ export async function handleSettingsAndBundleRoutes(
     method === 'GET' &&
     (segment === 'admin/dashboard-bundle' || segment === 'v1/admin/dashboard-bundle')
   ) {
+    const user = await getUserFromSessionOrToken(req);
+    if (!requireAdmin(user)) {
+      return NextResponse.json(
+        { error: 'Forbidden. Executive admin credentials required.' },
+        { status: 403 }
+      );
+    }
+
     const [products, orders, users, settingsRaw, reviews, inquiries, usersWithMessages] =
       await Promise.all([
         db.product.findMany({ where: { deletedAt: null } }),

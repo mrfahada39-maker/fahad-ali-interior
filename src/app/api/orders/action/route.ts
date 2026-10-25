@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!order) {
-      return new NextResponse(renderHtmlPage('Order Not Found', `No active order found with ID: ${orderId}`, 'error'), {
+      return new NextResponse(renderHtmlPage('Order Not Found', `No active order found with ID: ${escapeHtml(orderId)}`, 'error'), {
         status: 404,
         headers: { 'Content-Type': 'text/html; charset=utf-8' },
       });
@@ -252,6 +252,15 @@ export async function GET(req: NextRequest) {
   }
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function renderHtmlPage(
   title: string,
   message: string,
@@ -265,13 +274,17 @@ function renderHtmlPage(
   const icon = isSuccess ? '✓' : isWarning ? '⏳' : '✕';
   const color = isSuccess ? '#10B981' : isWarning ? '#F59E0B' : '#EF4444';
   const bgLight = isSuccess ? '#ECFDF5' : isWarning ? '#FFFBEB' : '#FEF2F2';
+  const safeTitle = escapeHtml(title);
+  const safeOrderRef = orderRef ? escapeHtml(orderRef) : '';
+  const safeAmount = amount ? escapeHtml(amount) : '';
+  const safeActionName = actionName ? escapeHtml(actionName) : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} | Fahad Ali Interior</title>
+  <title>${safeTitle} | Fahad Ali Interior</title>
   <style>
     body {
       margin: 0;
@@ -355,23 +368,23 @@ function renderHtmlPage(
 <body>
   <div class="card">
     <div class="badge-icon">${icon}</div>
-    <h1>${title}</h1>
+    <h1>${safeTitle}</h1>
     <p>${message}</p>
     ${
-      orderRef
+      safeOrderRef
         ? `
     <div class="details">
       <div class="details-row">
         <span style="color:#8C6239;font-weight:bold;">Order ID:</span>
-        <span style="font-weight:900;">#${orderRef}</span>
+        <span style="font-weight:900;">#${safeOrderRef}</span>
       </div>
       <div class="details-row">
         <span style="color:#8C6239;font-weight:bold;">Settlement:</span>
-        <span style="font-weight:900;">PKR ${amount}</span>
+        <span style="font-weight:900;">PKR ${safeAmount}</span>
       </div>
       <div class="details-row">
         <span style="color:#8C6239;font-weight:bold;">Status:</span>
-        <span style="color:${color};font-weight:900;text-transform:uppercase;">${actionName || type}</span>
+        <span style="color:${color};font-weight:900;text-transform:uppercase;">${safeActionName || type}</span>
       </div>
     </div>`
         : ''

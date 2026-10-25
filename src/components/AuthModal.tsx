@@ -44,6 +44,15 @@ function GoogleButton({
   );
 }
 
+function getSafeRedirectUrl(rawUrl: string | null | undefined, fallback: string = '/dashboard'): string {
+  if (!rawUrl || typeof rawUrl !== 'string') return fallback;
+  const trimmed = rawUrl.trim();
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//') && !trimmed.startsWith('/\\') && !trimmed.includes(':')) {
+    return trimmed;
+  }
+  return fallback;
+}
+
 export default function AuthModal({ isOpen, onClose, googleEnabled = true }: AuthModalProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -98,7 +107,8 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
         toast.success('Welcome back to Fahad Ali Interior!');
         onClose();
         const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-        const nextUrl = searchParams?.get('next') || (typeof window !== 'undefined' && window.location.pathname === '/checkout' ? window.location.href : '/dashboard');
+        const fallback = typeof window !== 'undefined' && window.location.pathname === '/checkout' ? '/checkout' : '/dashboard';
+        const nextUrl = getSafeRedirectUrl(searchParams?.get('next'), fallback);
         if (typeof window !== 'undefined') {
           window.location.href = nextUrl;
         } else {
@@ -131,7 +141,8 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
         toast.success('Welcome back!');
         onClose();
         const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-        const nextUrl = searchParams?.get('next') || (typeof window !== 'undefined' && window.location.pathname === '/checkout' ? window.location.href : '/dashboard');
+        const fallback = typeof window !== 'undefined' && window.location.pathname === '/checkout' ? '/checkout' : '/dashboard';
+        const nextUrl = getSafeRedirectUrl(searchParams?.get('next'), fallback);
         if (typeof window !== 'undefined') {
           window.location.href = nextUrl;
         } else {
