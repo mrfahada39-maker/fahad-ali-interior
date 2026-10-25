@@ -151,7 +151,7 @@ export class WhatsAppService {
       : '⏳ Awaiting Verification';
 
     const messageBody = `🏛️ *FAHAD ALI INTERIOR*
-━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 👤 *Name:* ${customerName}
 📞 *Phone:* ${customerPhone}
 📍 *Delivery Address:* ${deliveryAddress}
@@ -165,7 +165,7 @@ ${itemsList}
 📦 *Status:* ${status}
 💳 *Payment Method:* ${paymentMethod}
 
-━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚡ *Executive Actions:*
 ✅ Verify
 ⏳ Hold 24-48h
@@ -258,7 +258,7 @@ ${itemsList}
                 }
               : {
                   type: 'text',
-                  text: `✦ ORDER #${shortId} VERIFICATION ✦`,
+                  text: '✦ FAHAD ALI INTERIOR — ORDER VERIFICATION ✦',
                 },
             body: {
               text: messageBody.slice(0, 1024), // Meta character limit
@@ -469,7 +469,7 @@ ${itemsList}
 
       // 2. Rich WhatsApp Slip (Customer Payment Details)
       const message = `🏛️ *FAHAD ALI INTERIOR — OFFICIAL ORDER SLIP*
-━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Salam *${customerName}*! Your order *#${shortId}* for *PKR ${totalAmount}* has been successfully placed.
 
 📅 *Date & Time:* ${orderDateStr}
@@ -490,7 +490,7 @@ ${itemsList}
 ${deliveryAddress}
 👤 *Recipient Contact:* ${customerPhone}
 
-━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🌐 *Track order live:*
 👉 ${trackingUrl}
 
@@ -575,7 +575,7 @@ ${deliveryAddress}
       const deliveryAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Provided on Checkout';
 
       const message = `🏛️ *FAHAD ALI INTERIOR — ORDER APPROVED*
-━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Salam *${customerName}*! Your order *#${shortId}* payment has been verified and approved.
 
 📅 *Date & Time:* ${orderDateStr}
