@@ -16,29 +16,32 @@ export async function GET() {
     );
   }
 
-  let userId = (session.user as { id?: string }).id;
-  if (!userId) {
-    const row = await db.user.findUnique({
-      where: { email: session.user.email.toLowerCase().trim() },
-      select: { id: true },
-    });
-    userId = row?.id;
-  }
-  if (!userId) {
+  const row = await db.user.findUnique({
+    where: { email: session.user.email.toLowerCase().trim() },
+    select: { id: true, role: true, deletedAt: true },
+  });
+
+  if (!row || row.deletedAt) {
     return NextResponse.json(
-      { authenticated: false, error: 'User not found' },
+      { authenticated: false, error: 'User not found or deactivated' },
       { status: 200, headers: { 'Cache-Control': 'private, no-store' } }
     );
   }
 
-  const signedToken = createAdminToken(userId);
+  const role = String(row.role || '').toUpperCase();
+  const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+
+  // Only mint signed admin token for accounts with active database ADMIN role
+  const signedToken = isAdmin ? createAdminToken(row.id) : undefined;
+
   return NextResponse.json(
     {
       accessToken: signedToken,
       user: {
-        id: userId,
+        id: row.id,
         email: session.user.email,
         name: session.user.name,
+        role,
       },
     },
     { headers: { 'Cache-Control': 'private, no-store' } }

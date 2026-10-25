@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WhatsAppService } from '@/lib/whatsapp';
 import { logger } from '@/lib/logger';
+import { getVerifiedAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    // Optional CRON_SECRET verification for secure Vercel Cron invocation
+    // Enforce CRON_SECRET verification for Vercel Cron, or Admin Session for manual trigger
     const authHeader = req.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      logger.warn('[Daily Report Cron] Invocation without matching CRON_SECRET');
+    if (cronSecret) {
+      if (authHeader !== `Bearer ${cronSecret}`) {
+        logger.warn('[Daily Report Cron] Unauthorized invocation attempt rejected');
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    } else {
+      const admin = await getVerifiedAdmin(req).catch(() => null);
+      if (!admin) {
+        return NextResponse.json(
+          { error: 'Unauthorized. CRON_SECRET or Admin authentication required.' },
+          { status: 401 }
+        );
+      }
     }
 
     const success = await WhatsAppService.sendDailyReport();
