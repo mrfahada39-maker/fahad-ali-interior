@@ -109,8 +109,11 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
         body: JSON.stringify({ email: loginData.email, channel }),
       });
       const data = await res.json().catch(() => ({}));
+      if (data?.cooldownSeconds) {
+        setTwoFactorCooldown(data.cooldownSeconds);
+      }
       if (res.ok && data?.success) {
-        setTwoFactorCooldown(data.cooldownSeconds || 45);
+        setTwoFactorCooldown(data.cooldownSeconds || 30);
         if (data.maskedPhone) setTwoFactorMaskedPhone(data.maskedPhone);
         if (data.devCode) setTwoFactorDevCode(data.devCode);
         toast.success(`6-digit code sent via ${channel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}!`);
@@ -331,8 +334,8 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                     <button
                       type="button"
                       onClick={() => handleSendLoginOtp('SMS')}
-                      disabled={sendingChannel !== null}
-                      className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                      disabled={sendingChannel !== null || twoFactorCooldown > 0}
+                      className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
                         twoFactorChannel === 'SMS'
                           ? 'border-[#B88E4B] bg-amber-50/60 text-[#1F1612] shadow-xs'
                           : 'border-[#E2D6C8] bg-white text-stone-600 hover:border-[#B88E4B]'
@@ -349,8 +352,8 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                     <button
                       type="button"
                       onClick={() => handleSendLoginOtp('WHATSAPP')}
-                      disabled={sendingChannel !== null}
-                      className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                      disabled={sendingChannel !== null || twoFactorCooldown > 0}
+                      className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
                         twoFactorChannel === 'WHATSAPP'
                           ? 'border-emerald-500 bg-emerald-50/60 text-emerald-900 shadow-xs'
                           : 'border-[#E2D6C8] bg-white text-stone-600 hover:border-emerald-500'

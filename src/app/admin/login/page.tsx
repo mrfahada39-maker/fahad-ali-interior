@@ -40,8 +40,11 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email: email.trim().toLowerCase(), channel }),
       });
       const data = await res.json().catch(() => ({}));
+      if (data?.cooldownSeconds) {
+        setCooldown(data.cooldownSeconds);
+      }
       if (res.ok && data?.success) {
-        setCooldown(data.cooldownSeconds || 45);
+        setCooldown(data.cooldownSeconds || 30);
         if (data.maskedPhone) setMaskedPhone(data.maskedPhone);
         if (data.devCode) setDevCode(data.devCode);
         toast.success(`6-digit code sent via ${channel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}!`);

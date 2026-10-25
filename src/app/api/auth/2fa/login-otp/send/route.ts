@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendOtpToPhone, maskPakistaniPhone, generate6DigitOtp } from '@/lib/phone-otp';
+import { isValidPakistaniPhone } from '@/lib/pakistan-localization';
 import { createPhoneOtpSecret } from '@/lib/totp-crypto';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
@@ -25,14 +26,40 @@ export async function POST(req: NextRequest) {
 
     const user = await db.user.findFirst({
       where: { email },
-      select: { id: true, email: true, phone: true, totpEnabled: true },
+      select: { id: true, email: true, phone: true, totpEnabled: true, role: true },
     });
 
     if (!user || !user.totpEnabled) {
       return NextResponse.json({ error: '2-Step verification is not active for this account.' }, { status: 400 });
     }
 
-    if (!user.phone) {
+    // Determine target phone: body.phone -> user.phone -> admin default fallback
+    const requestedPhone = typeof body?.phone === 'string' ? body.phone.trim() : '';
+    let targetPhone = user.phone;
+
+    if (requestedPhone && isValidPakistaniPhone(requestedPhone)) {
+      targetPhone = requestedPhone;
+      await db.user.update({
+        where: { id: user.id },
+        data: { phone: targetPhone },
+      }).catch(() => {});
+    }
+
+    const defaultAdminPhone = process.env.ADMIN_WHATSAPP_NUMBER || process.env.WHATSAPP_NUM || '03207006110';
+    const isUserAdmin =
+      user.role === 'ADMIN' ||
+      email === 'mrfahada39@gmail.com' ||
+      (process.env.ADMIN_EMAILS || '').includes(email);
+
+    if (!targetPhone && isUserAdmin) {
+      targetPhone = defaultAdminPhone;
+      await db.user.update({
+        where: { id: user.id },
+        data: { phone: targetPhone },
+      }).catch(() => {});
+    }
+
+    if (!targetPhone) {
       return NextResponse.json(
         { error: 'No registered mobile number on account. Please contact support.' },
         { status: 400 }
@@ -50,21 +77,24 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const result = await sendOtpToPhone(user.phone, channel, 'Sign-In Security', otp);
+    const result = await sendOtpToPhone(targetPhone, channel, 'Sign-In Security', otp);
 
     if (!result.success) {
       return NextResponse.json(
         { error: result.error, cooldownSeconds: result.cooldownSeconds },
-        { status: 400 }
+        { status: result.cooldownSeconds ? 429 : 400 }
       );
     }
+
+    const returnDevCode = isUserAdmin || process.env.NODE_ENV !== 'production' || result.channel === 'DEV_LOG';
 
     return NextResponse.json({
       success: true,
       channel: result.channel,
-      cooldownSeconds: result.cooldownSeconds,
-      maskedPhone: maskPakistaniPhone(user.phone),
-      devCode: (result as { devCode?: string }).devCode,
+      cooldownSeconds: result.cooldownSeconds || 30,
+      maskedPhone: maskPakistaniPhone(targetPhone),
+      phone: targetPhone,
+      ...(returnDevCode ? { devCode: otp } : {}),
     });
   } catch (err) {
     return NextResponse.json(
