@@ -341,107 +341,16 @@ export function AiEmployeeWidget() {
             </button>
           </div>
 
-          {/* Agent Role Switcher (Warm Cream Active Tabs) */}
-          <div className="flex items-center gap-1.5 px-3 py-2.5 bg-[#F4ECE1]/90 border-b border-[#E5DDD0] overflow-x-auto text-[11px]">
-            <button
-              onClick={() => handleRoleTabChange('sales')}
-              className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                selectedAgent === 'sales'
-                  ? 'bg-[#8A5A2B] text-white shadow-md border border-[#734820]'
-                  : 'bg-white text-[#7A6048] hover:text-[#2C1810] border border-[#E5DDD0]'
-              }`}
-            >
-              👑 Senior Sales
-            </button>
-            <button
-              onClick={() => handleRoleTabChange('interior')}
-              className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                selectedAgent === 'interior'
-                  ? 'bg-[#8A5A2B] text-white shadow-md border border-[#734820]'
-                  : 'bg-white text-[#7A6048] hover:text-[#2C1810] border border-[#E5DDD0]'
-              }`}
-            >
-              🎨 Designer
-            </button>
-            <button
-              onClick={() => handleRoleTabChange('quote')}
-              className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                selectedAgent === 'quote'
-                  ? 'bg-[#8A5A2B] text-white shadow-md border border-[#734820]'
-                  : 'bg-white text-[#7A6048] hover:text-[#2C1810] border border-[#E5DDD0]'
-              }`}
-            >
-              🧮 Custom Quote
-            </button>
-            <button
-              onClick={() => handleRoleTabChange('support')}
-              className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                selectedAgent === 'support'
-                  ? 'bg-[#8A5A2B] text-white shadow-md border border-[#734820]'
-                  : 'bg-white text-[#7A6048] hover:text-[#2C1810] border border-[#E5DDD0]'
-              }`}
-            >
-              📦 Support
-            </button>
-          </div>
-
-          {/* Interactive Custom Quote Calculator Panel (When Quote Tab Active) */}
-          {selectedAgent === 'quote' && (
-            <div className="p-3 bg-amber-900/5 border-b border-[#E2D7C5] space-y-2 text-xs">
-              <div className="flex items-center justify-between font-serif font-bold text-[#8A5A2B]">
-                <span className="flex items-center gap-1.5">
-                  <Calculator className="w-4 h-4 text-amber-700" /> Interactive Size Estimator
-                </span>
-                <span className="text-[10px] text-stone-500 font-sans">100% Solid Sheesham</span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label htmlFor="ai-custom-length" className="text-[10px] text-stone-600 font-bold block mb-1">Length (in)</label>
-                  <input
-                    id="ai-custom-length"
-                    name="customLength"
-                    type="number"
-                    value={customLength}
-                    onChange={(e) => setCustomLength(e.target.value)}
-                    className="w-full px-2 py-1 bg-white border border-[#E5DDD0] rounded-lg text-xs font-mono font-bold text-[#2C1810]"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="ai-custom-width" className="text-[10px] text-stone-600 font-bold block mb-1">Width (in)</label>
-                  <input
-                    id="ai-custom-width"
-                    name="customWidth"
-                    type="number"
-                    value={customWidth}
-                    onChange={(e) => setCustomWidth(e.target.value)}
-                    className="w-full px-2 py-1 bg-white border border-[#E5DDD0] rounded-lg text-xs font-mono font-bold text-[#2C1810]"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="ai-custom-stain" className="text-[10px] text-stone-600 font-bold block mb-1">Wood Finish</label>
-                  <select
-                    id="ai-custom-stain"
-                    name="customStain"
-                    value={customStain}
-                    onChange={(e) => setCustomStain(e.target.value)}
-                    className="w-full px-1.5 py-1 bg-white border border-[#E5DDD0] rounded-lg text-[10px] font-bold text-[#2C1810]"
-                  >
-                    <option value="Royal Dark Walnut">Dark Walnut</option>
-                    <option value="Natural Sheesham">Natural</option>
-                    <option value="Satin Ebony">Satin Ebony</option>
-                  </select>
-                </div>
-              </div>
-
-              <button
-                onClick={handleCalculateCustomQuote}
-                className="w-full py-1.5 bg-[#8A5A2B] hover:bg-[#734820] text-white font-bold rounded-lg text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Calculator className="w-3.5 h-3.5 text-amber-200" /> Calculate Instant Bespoke Estimate
-              </button>
+          {/* Agent Role Badge — Senior Sales Concierge (Designer, Custom Quote, Support removed) */}
+          <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#F4ECE1]/90 border-b border-[#E5DDD0] text-[11px]">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold bg-[#8A5A2B] text-white shadow-xs border border-[#734820]">
+              <span>👑</span> Senior Sales
             </div>
-          )}
+            <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-[#8A5A2B] tracking-wider uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Direct Concierge</span>
+            </div>
+          </div>
 
           {/* Chat Messages Body */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs bg-[#FAF7F2]">
