@@ -150,20 +150,6 @@ export class WhatsAppService {
       ? '⏳ Under Verification'
       : '⏳ Awaiting Verification';
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      'https://fahad-ali-interior.vercel.app';
-
-    // Generate 1-Tap Direct Action Links (Fallback & Direct Access)
-    const verifyToken = generateOrderActionToken(order.id, 'verify');
-    const holdToken = generateOrderActionToken(order.id, 'hold');
-    const rejectToken = generateOrderActionToken(order.id, 'reject');
-
-    const verifyUrl = `${baseUrl}/api/orders/action?id=${order.id}&action=verify&token=${verifyToken}`;
-    const holdUrl = `${baseUrl}/api/orders/action?id=${order.id}&action=hold&token=${holdToken}`;
-    const rejectUrl = `${baseUrl}/api/orders/action?id=${order.id}&action=reject&token=${rejectToken}`;
-
     const messageBody = `🏛️ *FAHAD ALI INTERIOR*
 ━━━━━━━━━━━━━━━━━━━━
 👤 *Name:* ${customerName}
@@ -183,9 +169,7 @@ ${itemsList}
 ⚡ *Executive Actions:*
 ✅ Verify
 ⏳ Hold 24-48h
-❌ Restocked
-
-👉 Quick Verify Link: ${verifyUrl}`;
+❌ Restocked`;
 
     let rawAdmin = (
       process.env.ADMIN_WHATSAPP_NUMBER ||
