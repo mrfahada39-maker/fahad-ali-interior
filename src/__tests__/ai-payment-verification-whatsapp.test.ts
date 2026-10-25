@@ -5,6 +5,36 @@ import {
 } from '@/lib/whatsapp';
 import { PaymentVerifier, PaymentAuditResult } from '@/lib/ai/payment-verifier';
 
+jest.mock('@/lib/db', () => ({
+  db: {
+    order: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([
+        {
+          id: 'ord_sample_1',
+          totalAmount: 250000,
+          paymentStatus: 'PAID',
+          status: 'PROCESSING',
+          items: [{ name: 'Royal Velvet Chesterfield', quantity: 1, price: 250000 }],
+        },
+      ]),
+      findUnique: jest.fn().mockResolvedValue(null),
+      update: jest.fn().mockResolvedValue({ id: 'ord_sample_1' }),
+    },
+    product: {
+      findMany: jest.fn().mockResolvedValue([
+        { id: 'prod_1', name: 'Royal Velvet Chesterfield', stockCount: 1 },
+      ]),
+    },
+    auditLog: {
+      create: jest.fn().mockResolvedValue({ id: 'audit_1' }),
+    },
+    notification: {
+      create: jest.fn().mockResolvedValue({ id: 'notif_1' }),
+    },
+  },
+}));
+
 describe('AI Payment Verification & WhatsApp Admin 3-Button Approval Suite', () => {
   describe('1. 1-Tap Cryptographic Token Security', () => {
     const orderId = 'ORD_TEST_99214';

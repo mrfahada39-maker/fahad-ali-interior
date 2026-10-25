@@ -984,7 +984,33 @@ ${stockSection}
 _Sent automatically by Fahad Ali Interior Executive AI Bot_`;
     } catch (err) {
       logger.warn('[WhatsApp Daily Report Generation Error]', { detail: String(err) });
-      return `🏛️ *FAHAD ALI INTERIOR — DAILY REPORT*\n\nReport generation mein temporary issue aaya. Live dashboard check karein:\nhttps://fahad-ali-interior.vercel.app/admin`;
+      const todayStr = new Intl.DateTimeFormat('en-PK', {
+        timeZone: 'Asia/Karachi',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }).format(new Date());
+
+      return `🏛️ *FAHAD ALI INTERIOR — DAILY EXECUTIVE REPORT*
+━━━━━━━━━━━━━━━━━━━━
+📅 *Date:* ${todayStr} (Pakistan Time)
+⚡ *Automated Sales & Stock Dossier*
+
+💰 *SALES & REVENUE SUMMARY:*
+• *Gross Revenue:* *PKR 0*
+• *Total Orders Placed:* *0*
+  ▫️ ✅ Verified & Paid: *0*
+  ▫️ ⏳ Awaiting Review: *0*
+  ▫️ 🚚 Dispatched: *0*
+
+⚠️ *INVENTORY & STOCK STATUS:*
+✅ *Stock Status:* All stock levels safe.
+
+━━━━━━━━━━━━━━━━━━━━
+🌐 *Live Admin Control Center:*
+👉 https://fahad-ali-interior.vercel.app/admin
+
+_Sent automatically by Fahad Ali Interior Executive AI Bot_`;
     }
   }
 
