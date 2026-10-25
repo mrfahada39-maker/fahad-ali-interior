@@ -23,6 +23,7 @@ const OverviewTab = dynamic(() => import('./OverviewTab'), { ssr: false });
 const AnalyticsTab = dynamic(() => import('./AnalyticsTab'), { ssr: false });
 const AiChatbotTab = dynamic(() => import('./AiChatbotTab'), { ssr: false });
 const AiRadarTab = dynamic(() => import('./AiRadarTab'), { ssr: false });
+const DiscountsTab = dynamic(() => import('./DiscountsTab'), { ssr: false });
 const LuxuryCallModal = dynamic(() => import('@/components/LuxuryCallModal'), { ssr: false });
 import { useAdminCall } from '@/hooks/use-admin-call';
 import { AdminNavigationChrome } from '@/components/admin/AdminNavigationChrome';
@@ -963,6 +964,11 @@ export default function AdminDashboard() {
               updateOrderStatus={updateOrderStatus}
               onRefresh={loadAll}
             />
+          )}
+
+          {/* DISCOUNTS & PROMOTIONAL COUPONS */}
+          {activeTab === 'discounts' && (
+            <DiscountsTab />
           )}
 
           {/* CUSTOMERS */}

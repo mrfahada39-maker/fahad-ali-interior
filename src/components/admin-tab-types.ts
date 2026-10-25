@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { LayoutDashboard, Package, ShoppingBag, Users, MessageSquare, Star, BarChart3, FileText, FolderSync, Settings, Sparkles, Radio, Trash2, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, MessageSquare, Star, BarChart3, FileText, FolderSync, Settings, Sparkles, Radio, Trash2, ShieldCheck, BadgePercent } from 'lucide-react';
 
 export const tabs = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -7,6 +7,7 @@ export const tabs = [
   { id: 'products', label: 'Products', icon: Package },
   { id: 'orders', label: 'Orders', icon: ShoppingBag },
   { id: 'payment-verifications', label: 'Payment Verifications', icon: ShieldCheck },
+  { id: 'discounts', label: 'Discounts & Promos', icon: BadgePercent },
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
   { id: 'ai-chatbot', label: 'AI Chatbot', icon: Sparkles },

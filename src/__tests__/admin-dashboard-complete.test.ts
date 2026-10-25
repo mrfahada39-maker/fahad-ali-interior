@@ -254,8 +254,8 @@ describe('AdminDashboard High-Level Comprehensive Testing Suite', () => {
 
   // ── Tab Registry Verification ──
   describe('Admin Tab Configuration & Status Styles Registry', () => {
-    it('contains all 14 required dashboard tabs with valid icons and unique IDs', () => {
-      expect(tabs.length).toBe(15);
+    it('contains all dashboard tabs with valid icons and unique IDs including discounts', () => {
+      expect(tabs.length).toBe(16);
       const ids = tabs.map(t => t.id);
       expect(ids).toEqual([
         'overview',
@@ -263,6 +263,7 @@ describe('AdminDashboard High-Level Comprehensive Testing Suite', () => {
         'products',
         'orders',
         'payment-verifications',
+        'discounts',
         'customers',
         'messages',
         'ai-chatbot',
@@ -275,7 +276,7 @@ describe('AdminDashboard High-Level Comprehensive Testing Suite', () => {
         'settings',
       ]);
       const uniqueIds = new Set(ids);
-      expect(uniqueIds.size).toBe(15);
+      expect(uniqueIds.size).toBe(16);
     });
 
     it('verifies statusStyles map covers all order and moderation statuses', () => {
