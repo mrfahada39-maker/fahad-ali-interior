@@ -65,7 +65,6 @@ export default function TwoFactorSetup() {
   const [challengeToken, setChallengeToken] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [cooldown, setCooldown] = useState(0);
-  const [devCode, setDevCode] = useState<string | null>(null);
 
   // Verification & Disable state
   const [verifying, setVerifying] = useState(false);
@@ -143,7 +142,6 @@ export default function TwoFactorSetup() {
       setCooldown(data.cooldownSeconds || 45);
       if (data.maskedPhone) setMaskedPhone(data.maskedPhone);
       if (data.phone) setRegisteredPhone(data.phone);
-      if (data.devCode) setDevCode(data.devCode);
       setOtpCode('');
       setSetupStep('verify');
 
@@ -199,7 +197,6 @@ export default function TwoFactorSetup() {
       setEditingPhone(false);
       setOtpCode('');
       setChallengeToken('');
-      setDevCode(null);
       if (data.maskedPhone) setMaskedPhone(data.maskedPhone);
       if (data.phone) setRegisteredPhone(data.phone);
 
@@ -644,26 +641,6 @@ export default function TwoFactorSetup() {
                       via SIM text SMS
                     </p>
                   </div>
-                </div>
-              )}
-
-              {/* Instant Verification Code Helper */}
-              {devCode && (
-                <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3 flex items-center justify-between text-xs shadow-xs">
-                  <div className="flex items-center gap-2 text-amber-900">
-                    <Sparkles size={14} className="text-[#B88E4B] shrink-0" />
-                    <span>
-                      Instant Code (Live / Backup):{' '}
-                      <strong className="font-mono text-sm tracking-widest text-[#5A3A1A]">{devCode}</strong>
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setOtpCode(devCode)}
-                    className="text-[11px] font-bold bg-[#B88E4B]/15 hover:bg-[#B88E4B]/25 text-[#5A3A1A] px-2.5 py-1 rounded-md transition-colors cursor-pointer"
-                  >
-                    Auto-Fill
-                  </button>
                 </div>
               )}
 

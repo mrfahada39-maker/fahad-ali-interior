@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const returnDevCode = isUserAdmin || process.env.NODE_ENV !== 'production' || result.channel === 'DEV_LOG';
+    const returnDevCode = process.env.NODE_ENV === 'test';
 
     return NextResponse.json({
       success: true,

@@ -431,23 +431,6 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                     </button>
                   </div>
 
-                  {/* Dev Testing Helper (in non-production) */}
-                  {twoFactorDevCode && (
-                    <div className="bg-amber-50/80 border border-amber-200 rounded-lg p-2 flex items-center justify-between text-xs">
-                      <span className="text-amber-800 font-medium">
-                        🧪 Dev Testing Code:{' '}
-                        <strong className="font-mono text-sm tracking-widest">{twoFactorDevCode}</strong>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setTwoFactorCode(twoFactorDevCode)}
-                        className="text-[11px] font-bold text-[#8C6239] hover:underline cursor-pointer"
-                      >
-                        Auto-Fill
-                      </button>
-                    </div>
-                  )}
-
                   {/* 6-Digit Code Input */}
                   <div className="space-y-1">
                     <label htmlFor="twoFactorCode" className="sr-only">

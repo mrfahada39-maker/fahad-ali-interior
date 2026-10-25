@@ -66,7 +66,9 @@ export async function POST(req: NextRequest) {
       cooldownSeconds: result.cooldownSeconds,
       maskedPhone: maskPakistaniPhone(normPhone),
       phone: normPhone,
-      devCode: (result as { devCode?: string }).devCode,
+      ...(process.env.NODE_ENV === 'test' && (result as { devCode?: string }).devCode
+        ? { devCode: (result as { devCode?: string }).devCode }
+        : {}),
     });
   } catch (err) {
     return NextResponse.json(
