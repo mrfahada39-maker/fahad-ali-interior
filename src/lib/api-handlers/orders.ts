@@ -22,8 +22,15 @@ import {
   getUserFromSessionOrToken,
   requireAdmin,
 } from './shared';
-import { PaymentVerifier } from '@/lib/ai/payment-verifier';
+import { PaymentVerifier, type PaymentAuditResult } from '@/lib/ai/payment-verifier';
 import { WhatsAppService } from '@/lib/whatsapp';
+import {
+  sendOtpToPhone,
+  verifyOtpChallengeToken,
+  normalizePakistaniPhone,
+  signVerifiedPhoneToken,
+  isPhoneVerifiedTokenValid,
+} from '@/lib/phone-otp';
 
 export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextResponse | null> {
   const { method, segment, normalizedSegment, req } = ctx;
@@ -164,6 +171,75 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       return NextResponse.json({ valid: false, error: result.error }, { status: result.status });
     }
     return NextResponse.json(result);
+  }
+
+  // 2.7 POST /checkout/otp/send or /v1/checkout/otp/send
+  if (
+    method === 'POST' &&
+    (normalizedSegment === 'checkout/otp/send' ||
+      segment === 'checkout/otp/send' ||
+      segment === 'v1/checkout/otp/send')
+  ) {
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const phone = typeof body?.phone === 'string' ? body.phone.trim() : '';
+    if (!phone) {
+      return NextResponse.json(
+        { error: 'Valid Pakistani mobile number is required.' },
+        { status: 400 }
+      );
+    }
+    const result = await sendOtpToPhone(phone);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error, cooldownSeconds: result.cooldownSeconds },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json({
+      success: true,
+      message:
+        result.channel === 'WHATSAPP'
+          ? '6-digit verification code sent to your WhatsApp number.'
+          : 'Verification code generated.',
+      token: result.token,
+      cooldownSeconds: result.cooldownSeconds,
+      channel: result.channel,
+      ...(result.devCode ? { devCode: result.devCode } : {}),
+    });
+  }
+
+  // 2.8 POST /checkout/otp/verify or /v1/checkout/otp/verify
+  if (
+    method === 'POST' &&
+    (normalizedSegment === 'checkout/otp/verify' ||
+      segment === 'checkout/otp/verify' ||
+      segment === 'v1/checkout/otp/verify')
+  ) {
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const phone = typeof body?.phone === 'string' ? body.phone.trim() : '';
+    const otp = typeof body?.otp === 'string' ? body.otp.trim() : '';
+    const token = typeof body?.token === 'string' ? body.token.trim() : '';
+    if (!phone || !otp || !token) {
+      return NextResponse.json(
+        { error: 'Phone number, 6-digit OTP code, and verification token are required.' },
+        { status: 400 }
+      );
+    }
+    const check = verifyOtpChallengeToken(phone, otp, token);
+    if (!check.valid) {
+      return NextResponse.json(
+        { error: check.error || 'Invalid or expired verification code.' },
+        { status: 400 }
+      );
+    }
+    const normPhone = normalizePakistaniPhone(phone);
+    const verifiedPhoneToken = signVerifiedPhoneToken(normPhone);
+    return NextResponse.json({
+      success: true,
+      message: 'Mobile number verified successfully via WhatsApp.',
+      verifiedPhoneToken,
+      normalizedPhone: normPhone,
+    });
   }
 
   // 2.92 POST /orders or /v1/orders (Create Order / Checkout)
@@ -479,9 +555,27 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
 
     // ── Asynchronous Background Processing: AI Screenshot Verifier, WhatsApp Admin Alert & Email ──
     const runPostOrderTasks = async () => {
+      let audit: PaymentAuditResult = {
+        isAuthentic: true,
+        confidence: 100,
+        extractedAmount: Number(totalAmount),
+        expectedAmount: Number(totalAmount),
+        amountMatches: true,
+        transactionId: validPaymentMethod === 'COD' ? 'COD-DOORSTEP' : null,
+        isDuplicateTid: false,
+        receiverAccount: 'DOORSTEP_CASH',
+        senderName: shippingName,
+        bankOrProvider: validPaymentMethod,
+        paymentDate: new Date().toISOString(),
+        tamperingSuspected: false,
+        verdict: 'AUTHENTIC_MATCH',
+        summaryUrdu: validPaymentMethod === 'COD' ? 'Cash on Delivery — Doorstep Settlement' : 'Direct Transfer',
+        summaryEnglish: validPaymentMethod === 'COD' ? 'Cash on Delivery — Doorstep Payment' : 'Direct Payment',
+      };
+
       if (body.paymentScreenshot || validPaymentMethod !== 'COD') {
         try {
-          const audit = await PaymentVerifier.verifyScreenshot({
+          audit = await PaymentVerifier.verifyScreenshot({
             orderId: newOrder.id,
             screenshotUrlOrBase64: body.paymentScreenshot || '',
             expectedAmount: Number(totalAmount),
@@ -517,33 +611,35 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
               },
             })
             .catch(() => null);
+        } catch (auditErr) {
+          logger.warn('[Payment Verifier Exception]:', { detail: String(auditErr) });
+        }
+      }
 
-          // Send WhatsApp alert to Admin phone with the 3 Native Interactive Buttons
-          await WhatsAppService.sendAdminOrderVerificationAlert({
-            order: {
-              ...newOrder,
-              totalAmount: Number(newOrder.totalAmount || totalAmount),
-              paymentScreenshot:
-                typeof body.paymentScreenshot === 'string' ? body.paymentScreenshot : null,
-              items: formattedItems,
-            },
-            audit,
-          });
-          // Send digital WhatsApp Order Slip to Customer
-          await WhatsAppService.sendCustomerOrderPlacedSlip({
+      // Always dispatch WhatsApp alerts to Admin and Customer (including COD!)
+      try {
+        await WhatsAppService.sendAdminOrderVerificationAlert({
+          order: {
             ...newOrder,
             totalAmount: Number(newOrder.totalAmount || totalAmount),
+            paymentScreenshot:
+              typeof body.paymentScreenshot === 'string' ? body.paymentScreenshot : null,
             items: formattedItems,
-            shippingPhone: newOrder.shippingPhone || shippingPhone,
-            shippingName: newOrder.shippingName || shippingName,
-          }).catch((slipErr) => {
-            logger.warn('[Customer WhatsApp Slip Exception]:', { detail: String(slipErr) });
-          });
-        } catch (auditErr) {
-          logger.warn('[Payment Verifier & WhatsApp Dispatch Exception]:', {
-            detail: String(auditErr),
-          });
-        }
+          },
+          audit,
+        });
+
+        await WhatsAppService.sendCustomerOrderPlacedSlip({
+          ...newOrder,
+          totalAmount: Number(newOrder.totalAmount || totalAmount),
+          items: formattedItems,
+          shippingPhone: newOrder.shippingPhone || shippingPhone,
+          shippingName: newOrder.shippingName || shippingName,
+        }).catch((slipErr) => {
+          logger.warn('[Customer WhatsApp Slip Exception]:', { detail: String(slipErr) });
+        });
+      } catch (dispatchErr) {
+        logger.warn('[WhatsApp Alert Dispatch Exception]:', { detail: String(dispatchErr) });
       }
 
       await sendOrderConfirmationEmail({

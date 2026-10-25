@@ -9,6 +9,8 @@ export interface CheckoutFormState {
   country: string;
   saveAddress: boolean;
   notes: string;
+  phoneVerified?: boolean;
+  phoneVerifiedToken?: string;
 }
 
 export interface AppliedCoupon {

@@ -124,6 +124,25 @@ export default function Checkout() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
 
+  // Phone OTP Verification State (Prevents Fake Orders)
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [phoneVerifiedToken, setPhoneVerifiedToken] = useState<string | null>(null);
+  const [otpToken, setOtpToken] = useState<string | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+
+  // Countdown timer for OTP resend cooldown
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setOtpCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [otpCooldown]);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -250,6 +269,12 @@ export default function Checkout() {
       const checked = (e.target as HTMLInputElement).checked;
       setForm((prev) => ({ ...prev, [name]: checked }));
     } else {
+      if (name === 'phone' && value !== form.phone && isPhoneVerified) {
+        setIsPhoneVerified(false);
+        setPhoneVerifiedToken(null);
+        setOtpSent(false);
+        setOtpCode('');
+      }
       setForm((prev) => ({ ...prev, [name]: value }));
     }
   };
@@ -363,6 +388,89 @@ export default function Checkout() {
     toast.success('Voucher removed');
   };
 
+  const handleSendOtp = async () => {
+    if (!form.phone.trim() || !isPhoneValid) {
+      toast.error('Please enter a valid Pakistani mobile number (e.g. 0300 1234567).');
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const res = await apiFetch('/api/checkout/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: form.phone }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        toast.error(data.error || 'Failed to send WhatsApp verification code.');
+        if (data.cooldownSeconds) setOtpCooldown(data.cooldownSeconds);
+        return;
+      }
+      setOtpToken(data.token);
+      setOtpSent(true);
+      setOtpCooldown(data.cooldownSeconds || 45);
+      toast.success('✦ 6-digit verification code sent via WhatsApp!');
+      if (data.devCode) {
+        toast.info(`Local Dev OTP Code: ${data.devCode}`, { duration: 10000 });
+      }
+    } catch {
+      toast.error('Unable to send verification code. Please check your network connection.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const clean = otpCode.replace(/\D/g, '');
+    if (clean.length !== 6) {
+      toast.error('Please enter the complete 6-digit verification code.');
+      return;
+    }
+    if (!otpToken) {
+      toast.error('Verification session expired. Please request a new code.');
+      return;
+    }
+    setOtpVerifying(true);
+    try {
+      const res = await apiFetch('/api/checkout/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: form.phone, otp: clean, token: otpToken }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        toast.error(data.error || 'Invalid verification code.');
+        return;
+      }
+      setIsPhoneVerified(true);
+      setPhoneVerifiedToken(data.verifiedPhoneToken);
+      setForm((prev) => ({
+        ...prev,
+        phoneVerified: true,
+        phoneVerifiedToken: data.verifiedPhoneToken,
+      }));
+      toast.success('✓ Mobile Number Authenticated via WhatsApp!');
+    } catch {
+      toast.error('Verification failed. Please try again.');
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
+  const handleResetPhoneVerification = () => {
+    setIsPhoneVerified(false);
+    setPhoneVerifiedToken(null);
+    setOtpToken(null);
+    setOtpCode('');
+    setOtpSent(false);
+    setOtpCooldown(0);
+    setForm((prev) => ({
+      ...prev,
+      phoneVerified: false,
+      phoneVerifiedToken: undefined,
+    }));
+  };
+
   const goToNextSection = () => {
     if (currentSection === 1) {
       if (activeItems.length === 0) {
@@ -377,6 +485,13 @@ export default function Checkout() {
       }
       if (!isPhoneValid) {
         toast.error('Please enter a valid Pakistani mobile number (e.g. 0300 1234567)');
+        return;
+      }
+      if (!isPhoneVerified) {
+        toast.error('Please verify your mobile number with the 6-digit WhatsApp OTP before proceeding to shipping address.');
+        if (!otpSent) {
+          handleSendOtp();
+        }
         return;
       }
       setCurrentSection(3);
@@ -400,6 +515,12 @@ export default function Checkout() {
 
     if (!isPhoneValid) {
       toast.error('Please enter a valid Pakistani mobile number (e.g. 0320 7006110)');
+      setCurrentSection(2);
+      return;
+    }
+
+    if (!isPhoneVerified) {
+      toast.error('Please verify your mobile number with the 6-digit WhatsApp OTP before placing order.');
       setCurrentSection(2);
       return;
     }
@@ -451,6 +572,7 @@ export default function Checkout() {
           transactionId: digitalPaymentDetails.transactionId || undefined,
           couponCode: appliedCoupon?.code,
           paymentScreenshot: digitalPaymentDetails.screenshotUrl || undefined,
+          verifiedPhoneToken: phoneVerifiedToken || undefined,
           shippingName: form.name,
           shippingPhone: form.phone,
           shippingEmail: form.email,
@@ -633,6 +755,11 @@ export default function Checkout() {
                       setCurrentSection(2);
                       return;
                     }
+                    if (sec.id > 2 && !isPhoneVerified) {
+                      toast.error('Please verify your phone number with the 6-digit WhatsApp OTP first');
+                      setCurrentSection(2);
+                      return;
+                    }
                     if (currentSection <= 3 && sec.id === 4 && (!form.address.trim() || !form.city.trim())) {
                       toast.error('Please enter complete Street Address and City first');
                       setCurrentSection(3);
@@ -711,6 +838,16 @@ export default function Checkout() {
               grandTotal={grandTotal}
               setCurrentSection={setCurrentSection}
               goToNextSection={goToNextSection}
+              isPhoneVerified={isPhoneVerified}
+              otpCode={otpCode}
+              setOtpCode={setOtpCode}
+              otpSent={otpSent}
+              otpLoading={otpLoading}
+              otpVerifying={otpVerifying}
+              otpCooldown={otpCooldown}
+              handleSendOtp={handleSendOtp}
+              handleVerifyOtp={handleVerifyOtp}
+              handleResetPhoneVerification={handleResetPhoneVerification}
             />
           )}
 
