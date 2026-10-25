@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield,
   Smartphone,
-  MessageSquare,
   MessageCircle,
   Check,
   RefreshCw,
@@ -264,7 +263,7 @@ export default function TwoFactorSetup() {
             Security Settings
           </h2>
           <p className="text-stone-500 text-xs mt-0.5">
-            Two-Step Mobile OTP Verification (Cellular SMS &amp; WhatsApp)
+            Two-Step Mobile OTP Verification (Official WhatsApp OTP)
           </p>
         </div>
         <span
@@ -338,7 +337,7 @@ export default function TwoFactorSetup() {
                       </span>
                     </div>
                     <p className="text-xs text-stone-500 mt-0.5">
-                      Account is secured with instant 6-digit WhatsApp &amp; SIM SMS OTP codes.
+                      Account is secured with instant 6-digit WhatsApp OTP verification.
                     </p>
                   </div>
                 </div>
@@ -359,9 +358,9 @@ export default function TwoFactorSetup() {
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold bg-amber-50 text-[#8C6239] border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
-                  <Sparkles size={11} className="text-[#B88E4B]" />
-                  WhatsApp &amp; SMS
+                <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <Sparkles size={11} className="text-emerald-600" />
+                  WhatsApp OTP
                 </span>
               </div>
 
@@ -399,9 +398,8 @@ export default function TwoFactorSetup() {
                     Two-Step Mobile Verification
                   </h3>
                   <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
-                    Customer registration number per 6-digit OTP code bhej kar account ko protect
-                    karein. Aap SIM text message ya WhatsApp kisi bhi channel se code mangwa sakte
-                    hain.
+                    Customer registration number per 6-digit WhatsApp OTP code bhej kar account ko protect
+                    karein. Fahad Ali Interior ke official WhatsApp se instant code aayega.
                   </p>
                 </div>
               </div>
@@ -465,87 +463,52 @@ export default function TwoFactorSetup() {
                 )}
               </div>
 
-              {/* ── THE 2 CHANNEL OPTIONS (USER REQUIREMENT) ── */}
+              {/* ── WHATSAPP VERIFICATION ACTIVATION (USER REQUIREMENT) ── */}
               <div className="space-y-2">
                 <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">
-                  Select Verification Channel (Kis par code mangwana hai?):
+                  Verification Channel:
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* OPTION 1: SIM TEXT MASSAGE (SMS) */}
-                  <button
-                    type="button"
-                    onClick={() => handleSendOtp('SMS')}
-                    disabled={sendingChannel !== null}
-                    className="group relative text-left p-4 rounded-xl border border-[#E7DDD0] bg-white hover:border-[#B88E4B] hover:shadow-md transition-all cursor-pointer disabled:opacity-50 overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-amber-200/20 to-transparent rounded-bl-full pointer-events-none" />
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8C6239] to-[#5A3A1A] text-white flex items-center justify-center shadow-xs">
-                        {sendingChannel === 'SMS' ? (
-                          <Loader2 size={18} className="animate-spin text-amber-200" />
-                        ) : (
-                          <MessageSquare size={18} className="text-amber-100" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-xs sm:text-sm text-[#1F1612] group-hover:text-[#B88E4B] transition-colors">
-                          SIM Text Message
+                {/* WHATSAPP OTP EXCLUSIVE CHANNEL */}
+                <button
+                  type="button"
+                  onClick={() => handleSendOtp('WHATSAPP')}
+                  disabled={sendingChannel !== null}
+                  className="w-full group relative text-left p-4 sm:p-5 rounded-2xl border-2 border-emerald-500/80 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 hover:border-emerald-600 hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-400/15 rounded-full blur-xl pointer-events-none" />
+                  <div className="flex items-center gap-3.5 mb-2 relative z-10">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white flex items-center justify-center shadow-md shadow-emerald-700/20 shrink-0">
+                      {sendingChannel === 'WHATSAPP' ? (
+                        <Loader2 size={20} className="animate-spin text-emerald-200" />
+                      ) : (
+                        <MessageCircle size={22} className="text-emerald-100" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-sm sm:text-base text-[#1F1612] group-hover:text-emerald-800 transition-colors">
+                          Send Verification Code via WhatsApp
                         </h4>
-                        <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">
-                          Cellular SMS OTP
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-700 text-white px-2.5 py-0.5 rounded-full shadow-2xs">
+                          Instant OTP
                         </span>
                       </div>
+                      <p className="text-xs text-stone-500 mt-0.5 leading-snug">
+                        Aapke registered WhatsApp number par Fahad Ali Interior ka official 6-digit OTP code bhej kar verify karein.
+                      </p>
                     </div>
-                    <p className="text-[11px] text-stone-500 leading-snug">
-                      Aapke registered SIM number par instant 6-digit text SMS bheja jayega.
-                    </p>
-                    <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-[#8C6239] group-hover:text-[#5A3A1A]">
-                      <span>{sendingChannel === 'SMS' ? 'Sending SMS...' : 'Send via SIM SMS'}</span>
-                      <span className="text-sm font-black transition-transform group-hover:translate-x-1">
-                        →
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* OPTION 2: WHATSAPP OTP */}
-                  <button
-                    type="button"
-                    onClick={() => handleSendOtp('WHATSAPP')}
-                    disabled={sendingChannel !== null}
-                    className="group relative text-left p-4 rounded-xl border border-emerald-200/80 bg-white hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer disabled:opacity-50 overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-emerald-200/20 to-transparent rounded-bl-full pointer-events-none" />
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white flex items-center justify-center shadow-xs">
-                        {sendingChannel === 'WHATSAPP' ? (
-                          <Loader2 size={18} className="animate-spin text-emerald-200" />
-                        ) : (
-                          <MessageCircle size={18} className="text-emerald-100" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-xs sm:text-sm text-[#1F1612] group-hover:text-emerald-700 transition-colors">
-                          WhatsApp Message
-                        </h4>
-                        <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">
-                          Instant WhatsApp OTP
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-stone-500 leading-snug">
-                      Aapke WhatsApp account par Fahad Ali Interior ka official 6-digit code aayega.
-                    </p>
-                    <div className="mt-3 pt-2.5 border-t border-emerald-50 flex items-center justify-between text-xs font-bold text-emerald-700 group-hover:text-emerald-900">
-                      <span>
-                        {sendingChannel === 'WHATSAPP' ? 'Sending WhatsApp...' : 'Send via WhatsApp'}
-                      </span>
-                      <span className="text-sm font-black transition-transform group-hover:translate-x-1">
-                        →
-                      </span>
-                    </div>
-                  </button>
-                </div>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-emerald-100 flex items-center justify-between text-xs font-bold text-emerald-800 group-hover:text-emerald-950 relative z-10">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      {sendingChannel === 'WHATSAPP' ? 'Sending WhatsApp...' : 'Send via WhatsApp'}
+                    </span>
+                    <span className="text-sm font-black transition-transform group-hover:translate-x-1.5">
+                      →
+                    </span>
+                  </div>
+                </button>
               </div>
             </motion.div>
           )}
@@ -561,88 +524,65 @@ export default function TwoFactorSetup() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-4"
             >
-              {/* Dynamic Animated Channel Notification Card */}
-              {selectedChannel === 'WHATSAPP' ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-50 via-emerald-100/40 to-white p-4 sm:p-5 shadow-sm"
-                >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
+              {/* Animated WhatsApp Notification Card */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-50 via-emerald-100/40 to-white p-4 sm:p-5 shadow-sm"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
 
-                  <div className="flex items-start gap-3.5 relative z-10">
-                    {/* Animated Pulsing WhatsApp Icon */}
-                    <div className="relative shrink-0 mt-0.5">
-                      <motion.div
-                        animate={{ scale: [1, 1.08, 1] }}
-                        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-                        className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 flex items-center justify-center text-white shadow-lg shadow-emerald-700/30"
-                      >
-                        <MessageCircle size={24} />
-                      </motion.div>
-                      <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-xs" />
-                      </span>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-700 text-white px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-200 animate-pulse" />
-                          Code Sent to WhatsApp
-                        </span>
-                        <span className="text-xs font-mono font-bold text-emerald-950">
-                          {maskedPhone || registeredPhone}
-                        </span>
-                      </div>
-
-                      <h4 className="font-bold text-sm sm:text-base text-emerald-950 mt-1.5 leading-snug">
-                        Apna WhatsApp Kholiye — Code Wahan Aaya Hai!
-                      </h4>
-
-                      <p className="text-xs text-emerald-800/95 mt-1 leading-relaxed">
-                        Fahad Ali Interior ka official <strong>6-digit verification code</strong> aapke WhatsApp message me send ho chuka hai. WhatsApp khol kar code check karein aur niche enter karein.
-                      </p>
-
-                      <div className="mt-2.5 pt-2 border-t border-emerald-200/60 flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-emerald-800 flex items-center gap-1">
-                          💬 Sender: <strong>Fahad Ali Interior Official</strong>
-                        </span>
-                        <a
-                          href="https://wa.me/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-900 bg-emerald-200/70 hover:bg-emerald-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
-                        >
-                          Open WhatsApp <ExternalLink size={11} />
-                        </a>
-                      </div>
-                    </div>
+                <div className="flex items-start gap-3.5 relative z-10">
+                  {/* Animated Pulsing WhatsApp Icon */}
+                  <div className="relative shrink-0 mt-0.5">
+                    <motion.div
+                      animate={{ scale: [1, 1.08, 1] }}
+                      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                      className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 flex items-center justify-center text-white shadow-lg shadow-emerald-700/30"
+                    >
+                      <MessageCircle size={24} />
+                    </motion.div>
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-xs" />
+                    </span>
                   </div>
-                </motion.div>
-              ) : (
-                <div className="bg-white border border-[#E7DDD0] rounded-xl p-4 flex items-center gap-3 shadow-xs">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 bg-gradient-to-br from-[#8C6239] to-[#5A3A1A]">
-                    <MessageSquare size={20} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-[#5A3A1A] px-2 py-0.5 rounded-full">
-                        Cellular SMS Text
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-700 text-white px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-200 animate-pulse" />
+                        Code Sent to WhatsApp
                       </span>
-                    </div>
-                    <h4 className="font-bold text-sm text-[#1F1612] mt-0.5">Enter 6-Digit Code</h4>
-                    <p className="text-xs text-stone-500 truncate">
-                      Code sent to{' '}
-                      <span className="font-mono font-bold text-[#1F1612]">
+                      <span className="text-xs font-mono font-bold text-emerald-950">
                         {maskedPhone || registeredPhone}
-                      </span>{' '}
-                      via SIM text SMS
+                      </span>
+                    </div>
+
+                    <h4 className="font-bold text-sm sm:text-base text-emerald-950 mt-1.5 leading-snug">
+                      Apna WhatsApp Kholiye — Code Wahan Aaya Hai!
+                    </h4>
+
+                    <p className="text-xs text-emerald-800/95 mt-1 leading-relaxed">
+                      Fahad Ali Interior ka official <strong>6-digit verification code</strong> aapke WhatsApp message me send ho chuka hai. WhatsApp khol kar code check karein aur niche enter karein.
                     </p>
+
+                    <div className="mt-2.5 pt-2 border-t border-emerald-200/60 flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-emerald-800 flex items-center gap-1">
+                        💬 Sender: <strong>Fahad Ali Interior Official</strong>
+                      </span>
+                      <a
+                        href="https://wa.me/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-900 bg-emerald-200/70 hover:bg-emerald-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                      >
+                        Open WhatsApp <ExternalLink size={11} />
+                      </a>
+                    </div>
                   </div>
                 </div>
-              )}
+              </motion.div>
 
               {/* 6-Digit Code Input */}
               <div className="space-y-1.5">
@@ -705,7 +645,7 @@ export default function TwoFactorSetup() {
                 </Button>
               </div>
 
-              {/* Resend / Switch Channel Options */}
+              {/* Resend Action */}
               <div className="pt-2 border-t border-[#E7DDD0]/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-stone-500">
                 <div>
                   {cooldown > 0 ? (
@@ -715,30 +655,19 @@ export default function TwoFactorSetup() {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => handleSendOtp(selectedChannel)}
+                      onClick={() => handleSendOtp('WHATSAPP')}
                       disabled={sendingChannel !== null}
-                      className="font-bold text-[#8C6239] hover:text-[#5A3A1A] flex items-center gap-1 cursor-pointer"
+                      className="font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 cursor-pointer"
                     >
                       <RefreshCw size={12} />
-                      Resend Code via {selectedChannel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}
+                      Resend Code via WhatsApp
                     </button>
                   )}
                 </div>
 
-                {/* Option to switch between SMS and WhatsApp */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const alternate = selectedChannel === 'WHATSAPP' ? 'SMS' : 'WHATSAPP';
-                    handleSendOtp(alternate);
-                  }}
-                  disabled={sendingChannel !== null}
-                  className="font-bold text-stone-700 hover:text-[#8C6239] underline cursor-pointer"
-                >
-                  {selectedChannel === 'WHATSAPP'
-                    ? 'Didn’t receive? Send via SIM SMS instead'
-                    : 'Didn’t receive? Send via WhatsApp instead (Instant Delivery)'}
-                </button>
+                <span className="text-[11px] text-stone-400">
+                  Official WhatsApp Delivery (Fahad Ali Interior)
+                </span>
               </div>
             </motion.div>
           )}

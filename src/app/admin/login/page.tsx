@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ShieldCheck, Lock, Mail, ArrowRight, Sparkles, Home, MessageSquare, MessageCircle, Loader2, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowRight, Sparkles, Home, MessageCircle, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminLoginPage() {
@@ -18,7 +18,6 @@ export default function AdminLoginPage() {
   const [sendingChannel, setSendingChannel] = useState<'WHATSAPP' | 'SMS' | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const [maskedPhone, setMaskedPhone] = useState('');
-  const [devCode, setDevCode] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,8 +45,7 @@ export default function AdminLoginPage() {
       if (res.ok && data?.success) {
         setCooldown(data.cooldownSeconds || 30);
         if (data.maskedPhone) setMaskedPhone(data.maskedPhone);
-        if (data.devCode) setDevCode(data.devCode);
-        toast.success(`6-digit code sent via ${channel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}!`);
+        toast.success('6-digit code sent to your WhatsApp!');
       } else {
         toast.error(data.error || 'Failed to dispatch verification code');
       }
@@ -179,72 +177,32 @@ export default function AdminLoginPage() {
 
             {requires2FA && (
               <div className="space-y-3 pt-1">
-                <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 text-xs text-[#7A6354]">
-                  <p className="font-bold text-[#1F1612] mb-0.5">Two-Step Security Verification</p>
-                  <p className="text-[11px] leading-relaxed">
-                    Code sent via{' '}
-                    <strong className="text-[#8C6239]">
-                      {activeChannel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}
-                    </strong>
-                    {maskedPhone ? <> to <span className="font-mono font-bold text-[#1F1612]">{maskedPhone}</span></> : null}
-                    .
-                  </p>
-                </div>
-
-                {/* Channel Switch Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleSendAdminOtp('SMS')}
-                    disabled={sendingChannel !== null}
-                    className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] font-bold transition-all cursor-pointer ${
-                      activeChannel === 'SMS'
-                        ? 'border-[#B88E4B] bg-white text-[#1F1612] shadow-xs'
-                        : 'border-amber-200/60 bg-white/70 text-stone-600 hover:border-[#B88E4B]'
-                    }`}
-                  >
-                    {sendingChannel === 'SMS' ? (
-                      <Loader2 size={12} className="animate-spin text-[#B88E4B]" />
-                    ) : (
-                      <MessageSquare size={12} className="text-[#8C6239]" />
-                    )}
-                    <span>Send via SMS</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSendAdminOtp('WHATSAPP')}
-                    disabled={sendingChannel !== null}
-                    className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] font-bold transition-all cursor-pointer ${
-                      activeChannel === 'WHATSAPP'
-                        ? 'border-emerald-500 bg-white text-emerald-900 shadow-xs'
-                        : 'border-amber-200/60 bg-white/70 text-stone-600 hover:border-emerald-500'
-                    }`}
-                  >
-                    {sendingChannel === 'WHATSAPP' ? (
-                      <Loader2 size={12} className="animate-spin text-emerald-600" />
-                    ) : (
-                      <MessageCircle size={12} className="text-emerald-600" />
-                    )}
-                    <span>Send via WhatsApp</span>
-                  </button>
-                </div>
-
-                {/* Dev Testing Helper (in non-production) */}
-                {devCode && (
-                  <div className="bg-amber-50 border border-amber-300 rounded-lg p-2 flex items-center justify-between text-xs">
-                    <span className="text-amber-900 font-medium">
-                      🧪 Dev Code: <strong className="font-mono text-sm tracking-widest">{devCode}</strong>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setTotpCode(devCode)}
-                      className="text-[11px] font-bold text-[#8C6239] hover:underline cursor-pointer"
-                    >
-                      Auto-Fill
-                    </button>
+                {/* Official WhatsApp Notification Card */}
+                <div className="relative overflow-hidden rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-50 via-emerald-100/30 to-white p-3.5 shadow-2xs">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <MessageCircle size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-700 text-white px-2 py-0.5 rounded-full">
+                          WhatsApp OTP
+                        </span>
+                        {maskedPhone ? (
+                          <span className="text-[11px] font-mono font-bold text-emerald-950">
+                            {maskedPhone}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="text-xs font-bold text-emerald-950 mt-1">
+                        Code Sent via WhatsApp!
+                      </p>
+                      <p className="text-[11px] text-emerald-800/90 mt-0.5 leading-snug">
+                        Fahad Ali Interior ka official 6-digit verification code aapke WhatsApp par send ho chuka hai.
+                      </p>
+                    </div>
                   </div>
-                )}
+                </div>
 
                 <div>
                   <label htmlFor="admin-totp" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1.5">
@@ -273,11 +231,11 @@ export default function AdminLoginPage() {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => handleSendAdminOtp(activeChannel)}
+                          onClick={() => handleSendAdminOtp('WHATSAPP')}
                           disabled={sendingChannel !== null}
-                          className="font-bold text-[#8C6239] hover:underline flex items-center gap-1 cursor-pointer"
+                          className="font-bold text-emerald-700 hover:underline flex items-center gap-1 cursor-pointer"
                         >
-                          <RefreshCw size={10} /> Resend Code
+                          <RefreshCw size={10} /> Resend WhatsApp Code
                         </button>
                       )}
                     </span>
