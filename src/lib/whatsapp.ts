@@ -406,32 +406,60 @@ ${itemsList}
       const shortId = order.id.slice(-8).toUpperCase();
       const customerName = order.shippingName || 'Valued Client';
       const totalAmount = Number(order.totalAmount).toLocaleString();
+
+      const dateObj = order.createdAt ? new Date(order.createdAt) : new Date();
+      const orderDateStr = new Intl.DateTimeFormat('en-PK', {
+        timeZone: 'Asia/Karachi',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }).format(dateObj);
+
       const itemsList = (order.items || [])
-        .map((i: any) => `  ▫️ ${i.name || i.productName || 'Piece'} (x${i.quantity || 1})`)
-        .join('\n') || '  ▫️ Bespoke Furniture Suite';
+        .map((i: any) => {
+          const name = i.name || i.productName || 'Item';
+          const qty = i.quantity || 1;
+          const price = i.price ? `PKR ${Number(i.price * qty).toLocaleString()}` : '';
+          return `  ▫️ *${name}* | Qty: ${qty}${price ? ` | ${price}` : ''}`;
+        })
+        .join('\n') || '  ▫️ Furniture Suite';
 
       const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
-      const paymentMethod = order.paymentMethod || 'Bank Transfer / JazzCash';
 
-      const message = `🏛️ *FAHAD ALI INTERIOR — OFFICIAL ORDER SLIP*
+      // 1. Try sending via Meta Approved Template (bypasses 24-hour window for new customers)
+      const summaryItems = (order.items || [])
+        .map((i: any) => `${i.name || 'Item'} (Qty: ${i.quantity || 1})`)
+        .join(', ') || 'Furniture Suite';
+
+      await this.sendTemplateMessage(customerPhone, 'customer_order_slip_v2', [
+        customerName,
+        shortId,
+        totalAmount,
+        orderDateStr,
+        summaryItems,
+        trackingUrl,
+      ]).catch(() => {});
+
+      // 2. Fallback / Rich WhatsApp Slip
+      const message = `🏛️ *FAHAD ALI INTERIOR — ORDER SLIP*
 ━━━━━━━━━━━━━━━━━━━━
-✨ *Salam, ${customerName}!*
+Salam *${customerName}*! Your order *#${shortId}* for *PKR ${totalAmount}* has been successfully placed.
 
-Aapka Order *#${shortId}* kamyabi se receive ho gaya hai.
+📅 *Date & Time:* ${orderDateStr}
 
-🛋️ *Ordered Masterpieces:*
+🛋️ *Order Details:*
 ${itemsList}
+
 💰 *Total Amount:* *PKR ${totalAmount}*
-💳 *Payment Mode:* ${paymentMethod}
-📦 *Current Status:* ⏳ *Under Verification*
+📦 *Status:* ⏳ *Under Verification*
 
-Jaise hi hamari executive team aapki transaction verify karegi, aapko approval notification aur production timeline mil jayegi.
-
-🌐 *Live Order Tracking:*
+🌐 *Track order:*
 👉 ${trackingUrl}
 
-_Shukriya for choosing Fahad Ali Interior._
-📞 *Client Concierge:* +92 321 3283301`;
+📞 *For further details contact Admin:* +92 321 3283301`;
 
       return await this.sendTextMessage(customerPhone, message);
     } catch (err) {
@@ -464,31 +492,45 @@ _Shukriya for choosing Fahad Ali Interior._
       const shortId = order.id.slice(-8).toUpperCase();
       const customerName = order.shippingName || 'Valued Client';
       const totalAmount = Number(order.totalAmount).toLocaleString();
+
+      const dateObj = order.createdAt ? new Date(order.createdAt) : new Date();
+      const orderDateStr = new Intl.DateTimeFormat('en-PK', {
+        timeZone: 'Asia/Karachi',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }).format(dateObj);
+
       const itemsList = (order.items || [])
-        .map((i: any) => `  ▫️ ${i.name || i.productName || 'Piece'} (x${i.quantity || 1})`)
-        .join('\n') || '  ▫️ Bespoke Furniture Suite';
+        .map((i: any) => {
+          const name = i.name || i.productName || 'Item';
+          const qty = i.quantity || 1;
+          const price = i.price ? `PKR ${Number(i.price * qty).toLocaleString()}` : '';
+          return `  ▫️ *${name}* | Qty: ${qty}${price ? ` | ${price}` : ''}`;
+        })
+        .join('\n') || '  ▫️ Furniture Suite';
 
       const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
 
       const message = `🏛️ *FAHAD ALI INTERIOR — ORDER APPROVED*
 ━━━━━━━━━━━━━━━━━━━━
-✨ *Salam, ${customerName}!*
+Salam *${customerName}*! Your order *#${shortId}* payment has been verified and approved.
 
-Mubarak ho! Aapke Order *#${shortId}* ki payment tasdeeq (verified) ho chuki hai.
+📅 *Date & Time:* ${orderDateStr}
 
-🛋️ *Bespoke Masterpieces:*
+🛋️ *Order Details:*
 ${itemsList}
+
 💰 *Total Amount:* *PKR ${totalAmount}*
-📦 *Status:* 🔨 *In Master Artisan Production*
+📦 *Status:* ✅ *Verified & In Production*
 
-Hamare master craftsmen ne aapke furniture par handcrafting shuru kar di hai. Har hissa 100% solid Sheesham wood aur luxury upholstery standard ke mutabiq tayyar kiya ja raha hai.
-
-🚚 *Estimated Completion:* 5–7 Working Days
-🌐 *Live Order Tracking:*
+🌐 *Track order:*
 👉 ${trackingUrl}
 
-_Shukriya for choosing Fahad Ali Interior._
-📞 *Client Concierge:* +92 321 3283301`;
+📞 *For further details contact Admin:* +92 321 3283301`;
 
       return await this.sendTextMessage(customerPhone, message);
     } catch (err) {
@@ -634,6 +676,60 @@ Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank s
       return await this.sendTextMessage(customerPhone, message);
     } catch (err) {
       logger.warn('[WhatsApp Customer Reject Alert Error]:', { detail: String(err) });
+      return false;
+    }
+  }
+
+  /**
+   * Sends a Meta Cloud API approved template message (bypasses 24-hour window for uninitiated chats).
+   */
+  static async sendTemplateMessage(
+    toPhone: string,
+    templateName: string,
+    parameters: string[]
+  ): Promise<boolean> {
+    const accessToken = (
+      process.env.WHATSAPP_ACCESS_TOKEN ||
+      'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
+    )?.trim();
+    let phoneNumberId = (
+      process.env.WHATSAPP_PHONE_NUMBER_ID ||
+      '1482842828238710'
+    )?.trim();
+    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
+      phoneNumberId = '1482842828238710';
+    }
+
+    if (!accessToken || !phoneNumberId) return false;
+
+    try {
+      const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: toPhone.replace(/\D/g, ''),
+          type: 'template',
+          template: {
+            name: templateName,
+            language: { code: 'en_US' },
+            components: [
+              {
+                type: 'body',
+                parameters: parameters.map((text) => ({ type: 'text', text })),
+              },
+            ],
+          },
+        }),
+      });
+
+      return res.ok;
+    } catch (e) {
+      logger.warn('[WhatsApp sendTemplateMessage Error]', { detail: String(e) });
       return false;
     }
   }
