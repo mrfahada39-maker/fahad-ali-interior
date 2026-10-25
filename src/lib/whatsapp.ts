@@ -2,11 +2,7 @@ import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { PaymentAuditResult } from '@/lib/ai/payment-verifier';
-
-const ADMIN_TOKEN_SECRET =
-  process.env.ADMIN_TOKEN_SECRET ||
-  process.env.NEXTAUTH_SECRET ||
-  'fahad_ali_luxury_interior_default_secret_2026';
+import { getAdminTokenSecret } from '@/lib/admin-auth';
 
 /**
  * Generate a tamper-proof HMAC-SHA256 token for 1-Tap WhatsApp action links.
@@ -18,8 +14,9 @@ export function generateOrderActionToken(
 ): string {
   const timestamp = Math.floor(Date.now() / 1000);
   const payload = `${orderId}:${action}:${timestamp}`;
+  const secret = getAdminTokenSecret();
   const hmac = crypto
-    .createHmac('sha256', ADMIN_TOKEN_SECRET)
+    .createHmac('sha256', secret)
     .update(payload)
     .digest('hex');
   return `${timestamp}.${hmac}`;
@@ -51,7 +48,7 @@ export function verifyOrderActionToken(
         [
           process.env.ADMIN_TOKEN_SECRET,
           process.env.NEXTAUTH_SECRET,
-          'fahad_ali_luxury_interior_default_secret_2026',
+          getAdminTokenSecret(),
         ].filter(Boolean) as string[]
       )
     );

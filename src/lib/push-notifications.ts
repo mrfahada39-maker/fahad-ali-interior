@@ -3,16 +3,18 @@ import { logger } from '@/lib/logger';
 import webPush from 'web-push';
 import { db } from '@/lib/db';
 
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || 'UUxI4Owt1qGEkJMYvlKblMVvnpHkxvK6MvYc3k1iA68';
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@fahadali.com';
 
 let isConfigured = false;
-try {
-  webPush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-  isConfigured = true;
-} catch (err) {
-  logger.warn('[PUSH_NOTIFICATIONS_CONFIG_WARNING]', { detail: String(err) });
+if (vapidPublicKey && vapidPrivateKey) {
+  try {
+    webPush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+    isConfigured = true;
+  } catch (err) {
+    logger.warn('[PUSH_NOTIFICATIONS_CONFIG_WARNING]', { detail: String(err) });
+  }
 }
 
 export interface PushNotificationPayload {
