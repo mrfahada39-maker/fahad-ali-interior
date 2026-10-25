@@ -13,6 +13,7 @@ import { handleReviewRoutes } from '@/lib/api-handlers/reviews';
 import { handleCustomerRoutes } from '@/lib/api-handlers/customers';
 import { handleMessageRoutes } from '@/lib/api-handlers/messages';
 import { handleSettingsAndBundleRoutes } from '@/lib/api-handlers/settings';
+import { handleCouponRoutes } from '@/lib/api-handlers/coupons';
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
@@ -24,6 +25,7 @@ const RESOURCE_HANDLERS = [
   handleOrderRoutes,
   handleCustomerRoutes,
   handleMessageRoutes,
+  handleCouponRoutes,
 ];
 
 /**

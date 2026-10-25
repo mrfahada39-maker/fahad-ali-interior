@@ -104,4 +104,36 @@ describe('Admin Discounts & Promotional Coupons Engine Suite', () => {
       }
     });
   });
+
+  describe('API v1 Coupons Dispatcher & Guard', () => {
+    it('returns null for unrelated segments so other handlers can process', async () => {
+      const { handleCouponRoutes } = await import('@/lib/api-handlers/coupons');
+      const req = new Request('http://localhost:3000/api/v1/products') as any;
+      const result = await handleCouponRoutes({
+        method: 'GET',
+        segment: 'products',
+        normalizedSegment: 'products',
+        pathParts: ['products'],
+        req,
+        ip: '127.0.0.1',
+      });
+      expect(result).toBeNull();
+    });
+
+    it('blocks unauthenticated requests to admin/coupons with 403 Forbidden', async () => {
+      const { handleCouponRoutes } = await import('@/lib/api-handlers/coupons');
+      const { NextRequest } = await import('next/server');
+      const req = new NextRequest('http://localhost:3000/api/v1/admin/coupons');
+      const response = await handleCouponRoutes({
+        method: 'GET',
+        segment: 'admin/coupons',
+        normalizedSegment: 'admin/coupons',
+        pathParts: ['admin', 'coupons'],
+        req,
+        ip: '127.0.0.1',
+      });
+      expect(response).not.toBeNull();
+      expect(response?.status).toBe(403);
+    });
+  });
 });
