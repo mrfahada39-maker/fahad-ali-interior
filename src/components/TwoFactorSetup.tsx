@@ -15,6 +15,7 @@ import {
   Edit3,
   Phone,
   Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
@@ -563,32 +564,88 @@ export default function TwoFactorSetup() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-4"
             >
-              {/* Channel Notification Header */}
-              <div className="bg-white border border-[#E7DDD0] rounded-xl p-4 flex items-center gap-3 shadow-xs">
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 ${
-                    selectedChannel === 'WHATSAPP'
-                      ? 'bg-gradient-to-br from-emerald-600 to-emerald-800'
-                      : 'bg-gradient-to-br from-[#8C6239] to-[#5A3A1A]'
-                  }`}
+              {/* Dynamic Animated Channel Notification Card */}
+              {selectedChannel === 'WHATSAPP' ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-50 via-emerald-100/40 to-white p-4 sm:p-5 shadow-sm"
                 >
-                  {selectedChannel === 'WHATSAPP' ? (
-                    <MessageCircle size={20} />
-                  ) : (
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
+
+                  <div className="flex items-start gap-3.5 relative z-10">
+                    {/* Animated Pulsing WhatsApp Icon */}
+                    <div className="relative shrink-0 mt-0.5">
+                      <motion.div
+                        animate={{ scale: [1, 1.08, 1] }}
+                        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                        className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-800 flex items-center justify-center text-white shadow-lg shadow-emerald-700/30"
+                      >
+                        <MessageCircle size={24} />
+                      </motion.div>
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-xs" />
+                      </span>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-700 text-white px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-200 animate-pulse" />
+                          Code Sent to WhatsApp
+                        </span>
+                        <span className="text-xs font-mono font-bold text-emerald-950">
+                          {maskedPhone || registeredPhone}
+                        </span>
+                      </div>
+
+                      <h4 className="font-bold text-sm sm:text-base text-emerald-950 mt-1.5 leading-snug">
+                        Apna WhatsApp Kholiye — Code Wahan Aaya Hai!
+                      </h4>
+
+                      <p className="text-xs text-emerald-800/95 mt-1 leading-relaxed">
+                        Fahad Ali Interior ka official <strong>6-digit verification code</strong> aapke WhatsApp message me send ho chuka hai. WhatsApp khol kar code check karein aur niche enter karein.
+                      </p>
+
+                      <div className="mt-2.5 pt-2 border-t border-emerald-200/60 flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-emerald-800 flex items-center gap-1">
+                          💬 Sender: <strong>Fahad Ali Interior Official</strong>
+                        </span>
+                        <a
+                          href="https://wa.me/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-900 bg-emerald-200/70 hover:bg-emerald-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        >
+                          Open WhatsApp <ExternalLink size={11} />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="bg-white border border-[#E7DDD0] rounded-xl p-4 flex items-center gap-3 shadow-xs">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 bg-gradient-to-br from-[#8C6239] to-[#5A3A1A]">
                     <MessageSquare size={20} />
-                  )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-[#5A3A1A] px-2 py-0.5 rounded-full">
+                        Cellular SMS Text
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-sm text-[#1F1612] mt-0.5">Enter 6-Digit Code</h4>
+                    <p className="text-xs text-stone-500 truncate">
+                      Code sent to{' '}
+                      <span className="font-mono font-bold text-[#1F1612]">
+                        {maskedPhone || registeredPhone}
+                      </span>{' '}
+                      via SIM text SMS
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-bold text-sm text-[#1F1612]">Enter 6-Digit Code</h4>
-                  <p className="text-xs text-stone-500 truncate">
-                    Code sent to{' '}
-                    <span className="font-mono font-bold text-[#1F1612]">
-                      {maskedPhone || registeredPhone}
-                    </span>{' '}
-                    via {selectedChannel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}
-                  </p>
-                </div>
-              </div>
+              )}
 
               {/* Instant Verification Code Helper */}
               {devCode && (
