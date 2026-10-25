@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       channel: result.channel,
       ...(result.devCode ? { devCode: result.devCode } : {}),
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to process verification code. Please try again.' },
       { status: 500 }

@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       verifiedPhoneToken,
       normalizedPhone: normPhone,
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to verify OTP code. Please try again.' },
       { status: 500 }

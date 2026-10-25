@@ -423,7 +423,13 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
     const shippingCity = body.shippingCity || shippingInfo.city || body.city || 'Lahore';
     const shippingProvince =
       body.shippingProvince || shippingInfo.province || body.province || 'Punjab';
-    const shippingNotes = body.shippingNotes || shippingInfo.notes || body.notes || '';
+    const isPhoneVerified = isPhoneVerifiedTokenValid(
+      shippingPhone,
+      String(body.verifiedPhoneToken || '')
+    );
+    const verifiedTag = isPhoneVerified ? ' [PHONE_VERIFIED_WHATSAPP]' : '';
+    const rawNotes = body.shippingNotes || shippingInfo.notes || body.notes || '';
+    const shippingNotes = rawNotes ? `${rawNotes}${verifiedTag}` : verifiedTag.trim();
 
     let newOrder: {
       id: string;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -442,7 +443,6 @@ ${itemsList}
       const shortId = order.id.slice(-8).toUpperCase();
       const customerName = order.shippingName || 'Valued Client';
       const totalAmount = Number(order.totalAmount).toLocaleString();
-      const paymentMethod = order.paymentMethod || 'JAZZCASH';
 
       const dateObj = order.createdAt ? new Date(order.createdAt) : new Date();
       const orderDateStr = new Intl.DateTimeFormat('en-PK', {
