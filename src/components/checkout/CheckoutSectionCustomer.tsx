@@ -13,7 +13,6 @@ import {
   Zap,
   ArrowRight,
   MessageSquare,
-  CheckCircle2,
   Loader2,
 } from 'lucide-react';
 import { CartItem } from '@/store';
@@ -203,35 +202,118 @@ export function CheckoutSectionCustomer({
                             exit={{ rotateY: 90, opacity: 0, scale: 0.96 }}
                             transition={{
                               type: 'spring',
-                              stiffness: 260,
-                              damping: 22,
+                              stiffness: 280,
+                              damping: 24,
                               mass: 0.8,
                             }}
                             style={{
                               transformStyle: 'preserve-3d',
                               backfaceVisibility: 'hidden',
                             }}
-                            className="w-full max-w-full overflow-hidden bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/70 border border-emerald-300/80 rounded-xl p-2 sm:p-2.5 shadow-2xs relative"
+                            className="w-full max-w-full overflow-hidden bg-gradient-to-r from-emerald-500/[0.09] via-emerald-500/[0.04] to-white border-2 border-emerald-500/35 rounded-2xl p-3 sm:p-3.5 shadow-sm relative"
                           >
-                            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400" />
-                            <div className="flex items-center justify-between gap-2.5">
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs ring-2 ring-emerald-200">
-                                  <CheckCircle2 size={14} />
+                            {/* iPhone Apple Card Luxury Shimmer Sheen */}
+                            <motion.div
+                              initial={{ x: '-100%', opacity: 0.7 }}
+                              animate={{ x: '250%', opacity: 0 }}
+                              transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.25 }}
+                              className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none transform -skew-x-12 z-0"
+                            />
+
+                            {/* Top Accent Bar */}
+                            <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400" />
+
+                            <div className="flex items-center justify-between gap-3 relative z-10">
+                              <div className="flex items-center gap-3 min-w-0">
+                                {/* iPhone / Apple Pay Animated Success Checkmark */}
+                                <div className="relative shrink-0 flex items-center justify-center">
+                                  {/* Radar Glow Pulse Ring */}
+                                  <motion.span
+                                    initial={{ scale: 0.8, opacity: 0.8 }}
+                                    animate={{ scale: [0.8, 1.8], opacity: [0.7, 0] }}
+                                    transition={{
+                                      duration: 1.8,
+                                      repeat: Infinity,
+                                      ease: 'easeOut',
+                                      delay: 0.3,
+                                    }}
+                                    className="absolute inset-0 rounded-full bg-emerald-500/50"
+                                  />
+                                  <motion.div
+                                    initial={{ scale: 0, rotate: -45 }}
+                                    animate={{ scale: [0, 1.25, 1], rotate: 0 }}
+                                    transition={{
+                                      type: 'spring',
+                                      stiffness: 380,
+                                      damping: 18,
+                                      delay: 0.15,
+                                    }}
+                                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-[#25D366] via-emerald-600 to-emerald-700 text-white flex items-center justify-center shrink-0 shadow-md ring-2 ring-emerald-200/80 z-10"
+                                  >
+                                    {/* iPhone Animated Checkmark Draw Path */}
+                                    <svg
+                                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="3.2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <motion.path
+                                        d="M5 13l4 4L19 7"
+                                        initial={{ pathLength: 0, opacity: 0 }}
+                                        animate={{ pathLength: 1, opacity: 1 }}
+                                        transition={{
+                                          duration: 0.5,
+                                          ease: 'easeOut',
+                                          delay: 0.28,
+                                        }}
+                                      />
+                                    </svg>
+                                  </motion.div>
                                 </div>
-                                <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                                  <span className="text-xs sm:text-sm font-black text-emerald-950 tracking-tight">
-                                    Phone Verified via WhatsApp
-                                  </span>
-                                  <span className="text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-300 shrink-0">
-                                    Authentic
-                                  </span>
+
+                                {/* Text & Badges (No awkward truncation) */}
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <motion.span
+                                      initial={{ opacity: 0, x: -6 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      transition={{ delay: 0.2, duration: 0.3 }}
+                                      className="text-xs sm:text-sm font-black text-emerald-950 tracking-tight leading-snug"
+                                    >
+                                      Phone Verified via WhatsApp
+                                    </motion.span>
+                                    <motion.span
+                                      initial={{ scale: 0 }}
+                                      animate={{ scale: 1 }}
+                                      transition={{
+                                        delay: 0.35,
+                                        type: 'spring',
+                                        stiffness: 350,
+                                        damping: 20,
+                                      }}
+                                      className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-300/80 shadow-2xs shrink-0"
+                                    >
+                                      Authentic Buyer
+                                    </motion.span>
+                                  </div>
+                                  <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="text-[10px] text-emerald-700 font-medium leading-tight mt-0.5"
+                                  >
+                                    Order authenticity confirmed • Protected against fake orders
+                                  </motion.p>
                                 </div>
                               </div>
+
                               <button
                                 type="button"
                                 onClick={handleResetPhoneVerification}
-                                className="text-xs font-bold text-stone-500 hover:text-stone-800 underline cursor-pointer shrink-0"
+                                className="text-xs font-bold text-stone-500 hover:text-stone-800 underline cursor-pointer shrink-0 px-2 py-1 rounded-lg hover:bg-emerald-100/60 transition-colors"
                               >
                                 Change
                               </button>
