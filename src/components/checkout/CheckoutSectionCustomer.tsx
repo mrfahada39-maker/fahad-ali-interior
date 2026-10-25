@@ -223,8 +223,8 @@ export function CheckoutSectionCustomer({
                             {/* Top Accent Bar */}
                             <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400" />
 
-                            <div className="flex items-center justify-between gap-3 relative z-10">
-                              <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-center justify-between gap-2.5 relative z-10 w-full min-w-0">
+                              <div className="flex items-center gap-2.5 min-w-0">
                                 {/* iPhone / Apple Pay Animated Success Checkmark */}
                                 <div className="relative shrink-0 flex items-center justify-center">
                                   {/* Radar Glow Pulse Ring */}
@@ -274,46 +274,36 @@ export function CheckoutSectionCustomer({
                                   </motion.div>
                                 </div>
 
-                                {/* Text & Badges (No awkward truncation) */}
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <motion.span
-                                      initial={{ opacity: 0, x: -6 }}
-                                      animate={{ opacity: 1, x: 0 }}
-                                      transition={{ delay: 0.2, duration: 0.3 }}
-                                      className="text-xs sm:text-sm font-black text-emerald-950 tracking-tight leading-snug"
-                                    >
-                                      Phone Verified via WhatsApp
-                                    </motion.span>
-                                    <motion.span
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      transition={{
-                                        delay: 0.35,
-                                        type: 'spring',
-                                        stiffness: 350,
-                                        damping: 20,
-                                      }}
-                                      className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-300/80 shadow-2xs shrink-0"
-                                    >
-                                      Authentic Buyer
-                                    </motion.span>
-                                  </div>
-                                  <motion.p
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.4 }}
-                                    className="text-[10px] text-emerald-700 font-medium leading-tight mt-0.5"
+                                {/* 1-Line: Title + Authentic Buyer badge */}
+                                <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                                  <motion.span
+                                    initial={{ opacity: 0, x: -6 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.2, duration: 0.3 }}
+                                    className="text-xs sm:text-sm font-black text-emerald-950 tracking-tight whitespace-nowrap"
                                   >
-                                    Order authenticity confirmed • Protected against fake orders
-                                  </motion.p>
+                                    Phone Verified via WhatsApp
+                                  </motion.span>
+                                  <motion.span
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{
+                                      delay: 0.35,
+                                      type: 'spring',
+                                      stiffness: 350,
+                                      damping: 20,
+                                    }}
+                                    className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-300/80 shadow-2xs shrink-0 whitespace-nowrap"
+                                  >
+                                    Authentic Buyer
+                                  </motion.span>
                                 </div>
                               </div>
 
                               <button
                                 type="button"
                                 onClick={handleResetPhoneVerification}
-                                className="text-xs font-bold text-stone-500 hover:text-stone-800 underline cursor-pointer shrink-0 px-2 py-1 rounded-lg hover:bg-emerald-100/60 transition-colors"
+                                className="text-xs font-bold text-stone-500 hover:text-stone-800 underline cursor-pointer shrink-0 px-2 py-1 rounded-lg hover:bg-emerald-100/60 transition-colors whitespace-nowrap"
                               >
                                 Change
                               </button>
