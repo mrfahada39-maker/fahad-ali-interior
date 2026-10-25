@@ -51,7 +51,6 @@ export function verifyOrderActionToken(
         [
           process.env.ADMIN_TOKEN_SECRET,
           process.env.NEXTAUTH_SECRET,
-          '574b2e813539ba3517cbffe5ba1cdef52aaf68efc50ea06ac3789a321e0ab502',
           'fahad_ali_luxury_interior_default_secret_2026',
         ].filter(Boolean) as string[]
       )
@@ -148,6 +147,18 @@ export interface SendAdminOrderAlertParams {
 
 export class WhatsAppService {
   /**
+   * Retrieves sanitized Meta Cloud API credentials from environment variables.
+   */
+  public static getCredentials(): { accessToken: string; phoneNumberId: string } {
+    const accessToken = (process.env.WHATSAPP_ACCESS_TOKEN || '').trim();
+    let phoneNumberId = (process.env.WHATSAPP_PHONE_NUMBER_ID || '1482842828238710').trim();
+    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
+      phoneNumberId = '1482842828238710';
+    }
+    return { accessToken, phoneNumberId };
+  }
+
+  /**
    * Dispatches the simple order verification alert to Admin's personal WhatsApp phone.
    * Sends Meta Interactive Buttons [Verify], [Hold], [Restocked], plus direct 1-tap links.
    */
@@ -232,15 +243,7 @@ ${itemsList}
     }
     const adminPhone = rawAdmin;
 
-    const accessToken = (
-      process.env.WHATSAPP_ACCESS_TOKEN ||
-      'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
-    )?.trim();
-    let phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim() || '1482842828238710';
-    // If Vercel env variable is still set to old test sandbox ID, force to live registered ID
-    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
-      phoneNumberId = '1482842828238710';
-    }
+    const { accessToken, phoneNumberId } = WhatsAppService.getCredentials();
 
     // ── Upload base64 screenshot to Cloudinary if needed to get clean public HTTPS image URL ──
     let publicScreenshotUrl: string | null = null;
@@ -249,28 +252,30 @@ ${itemsList}
         publicScreenshotUrl = order.paymentScreenshot;
       } else if (order.paymentScreenshot.startsWith('data:image/')) {
         try {
-          const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dfd8rzojj';
-          const apiKey = process.env.CLOUDINARY_API_KEY || '349178888815894';
-          const apiSecret = process.env.CLOUDINARY_API_SECRET || 'ZeZe39YqYU2RgC_JBEkWC3AO_Js';
-          const timestamp = Math.round(Date.now() / 1000);
-          const folder = 'fahad-ali-interior/payment-slips';
-          const paramsToSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
-          const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
+          const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+          const apiKey = process.env.CLOUDINARY_API_KEY;
+          const apiSecret = process.env.CLOUDINARY_API_SECRET;
+          if (cloudName && apiKey && apiSecret) {
+            const timestamp = Math.round(Date.now() / 1000);
+            const folder = 'fahad-ali-interior/payment-slips';
+            const paramsToSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+            const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
 
-          const formData = new FormData();
-          formData.append('file', order.paymentScreenshot);
-          formData.append('api_key', apiKey);
-          formData.append('timestamp', String(timestamp));
-          formData.append('folder', folder);
-          formData.append('signature', signature);
+            const formData = new FormData();
+            formData.append('file', order.paymentScreenshot);
+            formData.append('api_key', apiKey);
+            formData.append('timestamp', String(timestamp));
+            formData.append('folder', folder);
+            formData.append('signature', signature);
 
-          const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-            method: 'POST',
-            body: formData,
-          });
-          if (cRes.ok) {
-            const cData = await cRes.json();
-            publicScreenshotUrl = cData.secure_url || cData.url;
+            const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+              method: 'POST',
+              body: formData,
+            });
+            if (cRes.ok) {
+              const cData = await cRes.json();
+              publicScreenshotUrl = cData.secure_url || cData.url;
+            }
           }
         } catch (uploadErr) {
           logger.warn('[WhatsApp Cloudinary Upload Warning]', { detail: String(uploadErr) });
@@ -391,17 +396,7 @@ ${itemsList}
     orderId: string,
     action: 'verify' | 'hold' | 'reject'
   ): Promise<void> {
-    const accessToken = (
-      process.env.WHATSAPP_ACCESS_TOKEN ||
-      'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
-    )?.trim();
-    let phoneNumberId = (
-      process.env.WHATSAPP_PHONE_NUMBER_ID ||
-      '1482842828238710'
-    )?.trim();
-    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
-      phoneNumberId = '1482842828238710';
-    }
+    const { accessToken, phoneNumberId } = WhatsAppService.getCredentials();
     if (!accessToken || !phoneNumberId) return;
 
     const shortId = orderId.slice(-6).toUpperCase();
@@ -789,18 +784,7 @@ Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank s
     templateName: string,
     parameters: string[]
   ): Promise<boolean> {
-    const accessToken = (
-      process.env.WHATSAPP_ACCESS_TOKEN ||
-      'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
-    )?.trim();
-    let phoneNumberId = (
-      process.env.WHATSAPP_PHONE_NUMBER_ID ||
-      '1482842828238710'
-    )?.trim();
-    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
-      phoneNumberId = '1482842828238710';
-    }
-
+    const { accessToken, phoneNumberId } = WhatsAppService.getCredentials();
     if (!accessToken || !phoneNumberId) return false;
 
     try {
@@ -839,18 +823,7 @@ Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank s
    * Sends a general WhatsApp text message using Meta Cloud API.
    */
   static async sendTextMessage(toPhone: string, textBody: string): Promise<boolean> {
-    const accessToken = (
-      process.env.WHATSAPP_ACCESS_TOKEN ||
-      'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
-    )?.trim();
-    let phoneNumberId = (
-      process.env.WHATSAPP_PHONE_NUMBER_ID ||
-      '1482842828238710'
-    )?.trim();
-    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
-      phoneNumberId = '1482842828238710';
-    }
-
+    const { accessToken, phoneNumberId } = WhatsAppService.getCredentials();
     if (!accessToken || !phoneNumberId) return false;
 
     try {
@@ -884,18 +857,7 @@ Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank s
     imageUrl: string,
     caption?: string
   ): Promise<boolean> {
-    const accessToken = (
-      process.env.WHATSAPP_ACCESS_TOKEN ||
-      'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
-    )?.trim();
-    let phoneNumberId = (
-      process.env.WHATSAPP_PHONE_NUMBER_ID ||
-      '1482842828238710'
-    )?.trim();
-    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
-      phoneNumberId = '1482842828238710';
-    }
-
+    const { accessToken, phoneNumberId } = WhatsAppService.getCredentials();
     if (!accessToken || !phoneNumberId) return false;
 
     try {

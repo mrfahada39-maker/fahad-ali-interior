@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const senderPhoneRaw = message.from ? String(message.from).replace(/\D/g, '') : '';
 
-    // Whitelist authorized Admin number: strictly 03213283301 (+92 321 3283301)
+    // Whitelist authorized Admin number: strictly 03213283301 (+92 321 3283301) & 03344171450
     const allowedAdminPhones = new Set(
       [
         '923213283301',
@@ -75,18 +75,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ status: 'test_received_ok' }, { status: 200 });
     }
 
-    if (!isAuthorized && allowedAdminPhones.size > 0) {
-      logger.warn('[WhatsApp Security Warning] Action attempted by unauthorized phone number:', {
-        sender: senderPhoneRaw,
-        allowed: Array.from(allowedAdminPhones),
-      });
-      // Fallback: If button payload matches a valid order, allow it with warning
-      const hasValidButton = Boolean(message.interactive?.button_reply?.id || message.button?.payload);
-      if (!hasValidButton) {
-        return NextResponse.json({ error: 'Forbidden: Unauthorized phone number' }, { status: 403 });
-      }
-    }
-
     const senderPhone = senderPhoneRaw || '923213283301';
     let buttonId = '';
 
@@ -96,55 +84,85 @@ export async function POST(req: NextRequest) {
       buttonId = message.button?.payload || message.button?.text || '';
     } else if (message.type === 'text') {
       const text = (message.text?.body || '').trim().toLowerCase();
-      // Handle on-demand sales and stock report command
-      if (
+
+      // Check if text is an administrative action or command
+      const isAdminCommand =
         text.includes('report') ||
         text.includes('sales') ||
         text.includes('stock') ||
         text.includes('hisaab') ||
-        text.includes('summary')
-      ) {
-        await WhatsAppService.sendDailyReport(senderPhone).catch(() => {});
-        return NextResponse.json({ status: 'daily_report_sent' }, { status: 200 });
-      }
+        text.includes('summary') ||
+        text.startsWith('verify') ||
+        text.startsWith('approve') ||
+        text.startsWith('hold') ||
+        text.startsWith('reject') ||
+        text.startsWith('cancel');
 
-      // Handle text command fallback e.g. "verify ord_123" or plain "verify"
-      if (text.startsWith('verify ') || text.startsWith('approve ')) buttonId = `verify_${text.split(' ')[1]}`;
-      else if (text.startsWith('hold ')) buttonId = `hold_${text.split(' ')[1]}`;
-      else if (text.startsWith('reject ') || text.startsWith('cancel ')) buttonId = `reject_${text.split(' ')[1]}`;
-      else if (text.includes('verify') || text.includes('approve')) buttonId = 'verify_latest';
-      else if (text.includes('hold')) buttonId = 'hold_latest';
-      else if (text.includes('reject') || text.includes('cancel')) buttonId = 'reject_latest';
+      if (isAdminCommand) {
+        if (!isAuthorized) {
+          logger.warn('[WhatsApp Security Alert] Unauthorized user attempted admin command:', {
+            sender: senderPhoneRaw,
+            command: text,
+          });
+          return NextResponse.json({ error: 'Forbidden: Unauthorized phone number' }, { status: 403 });
+        }
+
+        // Handle on-demand sales and stock report command
+        if (
+          text.includes('report') ||
+          text.includes('sales') ||
+          text.includes('stock') ||
+          text.includes('hisaab') ||
+          text.includes('summary')
+        ) {
+          await WhatsAppService.sendDailyReport(senderPhone).catch(() => {});
+          return NextResponse.json({ status: 'daily_report_sent' }, { status: 200 });
+        }
+
+        // Handle text command fallback e.g. "verify ord_123" or plain "verify"
+        if (text.startsWith('verify ') || text.startsWith('approve ')) buttonId = `verify_${text.split(' ')[1]}`;
+        else if (text.startsWith('hold ')) buttonId = `hold_${text.split(' ')[1]}`;
+        else if (text.startsWith('reject ') || text.startsWith('cancel ')) buttonId = `reject_${text.split(' ')[1]}`;
+        else if (text.includes('verify') || text.includes('approve')) buttonId = 'verify_latest';
+        else if (text.includes('hold')) buttonId = 'hold_latest';
+        else if (text.includes('reject') || text.includes('cancel')) buttonId = 'reject_latest';
+      }
+    }
+
+    // If an action button was pressed by an unauthorized phone, reject immediately
+    if (buttonId && !isAuthorized) {
+      logger.warn('[WhatsApp Security Alert] Unauthorized user attempted button action:', {
+        sender: senderPhoneRaw,
+        buttonId,
+      });
+      return NextResponse.json({ error: 'Forbidden: Unauthorized phone number' }, { status: 403 });
     }
 
     if (!buttonId) {
-      // Auto-reply to text messages / inquiries (e.g. "808", "hi", "salam", queries)
+      // Auto-reply to text inquiries
       if (message.type === 'text') {
         const userMsg = (message.text?.body || '').trim();
-        const accessToken = (
-          process.env.WHATSAPP_ACCESS_TOKEN ||
-          'EAAQJJ9hjtQkBS2ymskmMBSWLSqMSHIZCXhSDH0KdfuvElp9aNfLJYhx7XZBwZAFZC7HkkVJYyPevHMMSS2xAEpeXxSLIDsNjDYm65nGrTCUJFAkLmZAAq7tYAiPXLNKqdn7reINBo30tGIiD4ZBZAy4AgiNS3nXGOZC8EUNZBeryeZBDBZCr0laUoxLewZA1nmW4219ASAZDZD'
-        )?.trim();
-        let phoneNumberId = (
-          process.env.WHATSAPP_PHONE_NUMBER_ID ||
-          '1482842828238710'
-        )?.trim();
-        if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
-          phoneNumberId = '1482842828238710';
-        }
+        const { accessToken, phoneNumberId } = WhatsAppService.getCredentials();
 
-        const replyMsg =
-          `👋 Salam! *Fahad Ali Interior Executive Bot* Active hai.\n` +
-          `━━━━━━━━━━━━━━━━━━━━\n` +
-          `🤖 *System Status:* 100% Operational\n` +
-          `📩 *Received:* "${userMsg}"\n\n` +
-          `📌 *Quick Admin Commands:*\n` +
-          `• *report* ya *sales* — Rozana ki Sales & Stock report haasil karein\n` +
-          `• *verify* — Latest pending order verify & approve karein\n` +
-          `• *hold* — Latest order ko 24-48h hold par dalein\n` +
-          `• *reject* — Latest order reject / cancel karein\n\n` +
-          `🌐 *Live Dashboard:*\n` +
-          `👉 https://fahad-ali-interior.vercel.app/admin`;
+        // Admin gets the Executive Bot console, customers get a polite inquiry response
+        const replyMsg = isAuthorized
+          ? `👋 Salam! *Fahad Ali Interior Executive Bot* Active hai.\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+            `🤖 *System Status:* 100% Operational & Secure\n` +
+            `📩 *Received:* "${userMsg}"\n\n` +
+            `📌 *Admin Commands:*\n` +
+            `• *report* ya *sales* — Rozana ki Sales & Stock report\n` +
+            `• *verify* — Latest pending order verify karein\n` +
+            `• *hold* — Latest order ko 24-48h hold par dalein\n` +
+            `• *reject* — Latest order reject karein\n\n` +
+            `🌐 *Live Dashboard:*\n` +
+            `👉 https://fahad-ali-interior.vercel.app/admin`
+          : `👋 Salam! *Fahad Ali Interior* mein khushamdeed.\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+            `Aapki inquiry hum tak pohanch chuki hai. Hamari team jald aap se rabta karegi.\n\n` +
+            `🛋️ *Official Catalog & Online Orders:*\n` +
+            `👉 https://fahad-ali-interior.vercel.app\n\n` +
+            `📞 *Direct Helpline:* +92 321 3283301`;
 
         if (accessToken && phoneNumberId) {
           await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
