@@ -214,24 +214,24 @@ export function CheckoutSectionCustomer({
                             className="w-full max-w-full overflow-hidden bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/70 border border-emerald-300/80 rounded-xl p-2 sm:p-2.5 shadow-2xs relative"
                           >
                             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400" />
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                                  <CheckCircle2 size={12} />
+                            <div className="flex items-center justify-between gap-2.5">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs ring-2 ring-emerald-200">
+                                  <CheckCircle2 size={14} />
                                 </div>
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  <span className="text-[11px] font-black text-emerald-950 truncate">
+                                <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                                  <span className="text-xs sm:text-sm font-black text-emerald-950 tracking-tight">
                                     Phone Verified via WhatsApp
                                   </span>
-                                  <span className="text-[8.5px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-full border border-emerald-300 shrink-0">
-                                    AUTHENTIC
+                                  <span className="text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-300 shrink-0">
+                                    Authentic
                                   </span>
                                 </div>
                               </div>
                               <button
                                 type="button"
                                 onClick={handleResetPhoneVerification}
-                                className="text-[10px] font-bold text-stone-500 hover:text-stone-800 underline cursor-pointer shrink-0"
+                                className="text-xs font-bold text-stone-500 hover:text-stone-800 underline cursor-pointer shrink-0"
                               >
                                 Change
                               </button>
