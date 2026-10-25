@@ -99,7 +99,7 @@ function buildContentSecurityPolicy(
     "media-src 'self' data: blob: https://res.cloudinary.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "manifest-src 'self' data: blob:",
-    `connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com https://res.cloudinary.com https://images.unsplash.com ${wsHosts}`,
+    `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://va.vercel-scripts.com https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com ${wsHosts}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

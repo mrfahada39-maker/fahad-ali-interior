@@ -23,7 +23,7 @@ const cspHeader = [
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://*.unsplash.com",
   "media-src 'self' data: blob: https://res.cloudinary.com",
-  "connect-src 'self' https://api.cloudinary.com https://graph.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com wss:",
+  "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://api.cloudinary.com https://graph.facebook.com https://va.vercel-scripts.com https://vitals.vercel-insights.com wss:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
