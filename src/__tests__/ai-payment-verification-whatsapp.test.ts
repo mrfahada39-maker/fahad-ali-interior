@@ -2,6 +2,7 @@ import {
   generateOrderActionToken,
   verifyOrderActionToken,
   WhatsAppService,
+  formatPaymentMethodDisplay,
 } from '@/lib/whatsapp';
 import { PaymentVerifier, PaymentAuditResult } from '@/lib/ai/payment-verifier';
 
@@ -237,6 +238,40 @@ describe('AI Payment Verification & WhatsApp Admin 3-Button Approval Suite', () 
     it('dispatches the daily report to admin phone', async () => {
       const dispatched = await WhatsAppService.sendDailyReport('923344171450');
       expect(typeof dispatched).toBe('boolean');
+    });
+  });
+
+  describe('7. Clean Payment Method Normalization', () => {
+    it('normalizes JazzCash and strips extraneous bank names', () => {
+      expect(
+        formatPaymentMethodDisplay({
+          paymentMethod: 'JAZZCASH',
+          shippingNotes: 'Method: JAZZCASH (Meezan Bank). TxID: N/A.',
+        })
+      ).toBe('JAZZCASH');
+    });
+
+    it('normalizes EasyPaisa and strips extraneous bank names', () => {
+      expect(
+        formatPaymentMethodDisplay({
+          paymentMethod: 'EASYPAISA',
+          shippingNotes: 'Method: EASYPAISA (Meezan Bank). TxID: 98124.',
+        })
+      ).toBe('EASYPAISA');
+    });
+
+    it('preserves bank name for genuine Bank Transfers', () => {
+      expect(
+        formatPaymentMethodDisplay({
+          paymentMethod: 'BANK',
+          shippingNotes: 'Method: BANK TRANSFER (Meezan Bank). TxID: 12345.',
+        })
+      ).toBe('BANK TRANSFER (Meezan Bank)');
+    });
+
+    it('handles Cash on Delivery and Cards cleanly', () => {
+      expect(formatPaymentMethodDisplay({ paymentMethod: 'cod' })).toBe('CASH ON DELIVERY');
+      expect(formatPaymentMethodDisplay({ paymentMethod: 'card' })).toBe('CREDIT / DEBIT CARD');
     });
   });
 });

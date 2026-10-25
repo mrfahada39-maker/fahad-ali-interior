@@ -469,7 +469,7 @@ export default function Checkout() {
             postalCode: form.postalCode,
             country: form.country,
             saveAddress: form.saveAddress,
-            notes: `Method: ${paymentMethod.toUpperCase()} (${selectedBank.name}). TxID: ${digitalPaymentDetails.transactionId || 'N/A'}. Notes: ${form.notes}`,
+            notes: `Method: ${paymentMethod === 'bank' ? `BANK TRANSFER (${selectedBank.name})` : paymentMethod === 'jazzcash' ? 'JAZZCASH' : paymentMethod === 'easypaisa' ? 'EASYPAISA' : paymentMethod === 'card' ? 'CARD' : 'CASH ON DELIVERY'}. TxID: ${digitalPaymentDetails.transactionId || 'N/A'}. Notes: ${form.notes}`,
           },
         }),
       });

@@ -82,6 +82,49 @@ export function verifyOrderActionToken(
   }
 }
 
+/**
+ * Normalizes payment method text to ensure clean display without double names
+ * (e.g. cleans "JAZZCASH (Meezan Bank)" to "JAZZCASH").
+ */
+export function formatPaymentMethodDisplay(order: { paymentMethod?: string | null; shippingNotes?: string | null }): string {
+  const notes = order.shippingNotes || '';
+  const methodMatch = notes.match(/Method:\s*([^.\n]+)/i);
+  const matchedMethod = methodMatch && methodMatch[1] ? methodMatch[1].trim() : '';
+  const raw = (order.paymentMethod || '').trim().toUpperCase();
+
+  // 1. JazzCash
+  if (raw === 'JAZZCASH' || matchedMethod.toUpperCase().includes('JAZZCASH')) {
+    return 'JAZZCASH';
+  }
+
+  // 2. EasyPaisa
+  if (raw === 'EASYPAISA' || matchedMethod.toUpperCase().includes('EASYPAISA')) {
+    return 'EASYPAISA';
+  }
+
+  // 3. Cash on Delivery
+  if (raw === 'COD' || matchedMethod.toUpperCase().includes('COD') || matchedMethod.toUpperCase().includes('CASH ON DELIVERY')) {
+    return 'CASH ON DELIVERY';
+  }
+
+  // 4. Card
+  if (raw === 'CARD' || matchedMethod.toUpperCase().includes('CARD')) {
+    return 'CREDIT / DEBIT CARD';
+  }
+
+  // 5. Bank Transfer
+  if (matchedMethod.toUpperCase().includes('BANK') || raw.includes('BANK')) {
+    const bankMatch = matchedMethod.match(/\(([^)]+)\)/);
+    if (bankMatch && bankMatch[1] && !['JAZZCASH', 'EASYPAISA', 'CARD', 'COD'].includes(bankMatch[1].toUpperCase())) {
+      return `BANK TRANSFER (${bankMatch[1].trim()})`;
+    }
+    return 'BANK TRANSFER';
+  }
+
+  // Fallback
+  return raw.replace(/_/g, ' ') || 'BANK TRANSFER';
+}
+
 export interface SendAdminOrderAlertParams {
   order: {
     id: string;
@@ -143,9 +186,7 @@ export class WhatsAppService {
       .join('\n') || '▫️ Furniture Suite | Qty: 1';
 
     const totalAmount = Number(order.totalAmount).toLocaleString();
-    const rawMethod = (order.paymentMethod || 'BANK_TRANSFER').toUpperCase().replace(/_/g, ' ');
-    const methodMatch = (order.shippingNotes || '').match(/Method:\s*([^.\n]+)/i);
-    const paymentMethod = methodMatch && methodMatch[1] ? methodMatch[1].trim() : rawMethod;
+    const paymentMethod = formatPaymentMethodDisplay(order);
     const status = order.status === 'PENDING' || order.paymentStatus === 'AWAITING_VERIFICATION'
       ? '⏳ Under Verification'
       : '⏳ Awaiting Verification';
@@ -443,14 +484,12 @@ ${itemsList}
       const slipStatus = order.paymentScreenshot ? '✅ Attached & Under AI Verification' : 'Pending Verification';
 
       // Extract customer payment info
-      const rawMethod = (order.paymentMethod || 'BANK_TRANSFER').toUpperCase().replace(/_/g, ' ');
       const tidMatch = (order.shippingNotes || '').match(/TxID:\s*([^\s,;.]+)/i);
       const extractedTid = tidMatch && tidMatch[1] && !['N/A', 'NA', 'NONE', 'N'].includes(tidMatch[1].toUpperCase())
         ? tidMatch[1]
         : null;
       const transactionId = order.paymentGatewayRef || extractedTid;
-      const methodMatch = (order.shippingNotes || '').match(/Method:\s*([^.\n]+)/i);
-      const paymentChannel = methodMatch && methodMatch[1] ? methodMatch[1].trim() : rawMethod;
+      const paymentChannel = formatPaymentMethodDisplay(order);
       const tidDisplay = transactionId ? `\`${transactionId}\`` : (order.paymentScreenshot ? 'Attached on Receipt' : 'Pending Verification');
 
       // 1. Try sending via Meta Approved Template (bypasses 24-hour window for new customers)
@@ -543,7 +582,7 @@ ${deliveryAddress}
       const shortId = order.id.slice(-8).toUpperCase();
       const customerName = order.shippingName || 'Valued Client';
       const totalAmount = Number(order.totalAmount).toLocaleString();
-      const paymentMethod = order.paymentMethod || 'JAZZCASH';
+      const paymentMethod = formatPaymentMethodDisplay(order);
 
       const dateObj = order.createdAt ? new Date(order.createdAt) : new Date();
       const orderDateStr = new Intl.DateTimeFormat('en-PK', {
