@@ -434,10 +434,21 @@ ${itemsList}
         order.shippingAddress,
         order.shippingCity,
         order.shippingProvince,
-      ].filter(Boolean);
+      ].filter((part, idx, arr) => part && (!arr[idx - 1] || part.toLowerCase() !== arr[idx - 1].toLowerCase()));
       const deliveryAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Provided on Checkout';
 
       const slipStatus = order.paymentScreenshot ? '✅ Attached & Under AI Verification' : 'Pending Verification';
+
+      // Extract customer payment info
+      const rawMethod = (order.paymentMethod || 'BANK_TRANSFER').toUpperCase().replace(/_/g, ' ');
+      const tidMatch = (order.shippingNotes || '').match(/TxID:\s*([^\s,;.]+)/i);
+      const extractedTid = tidMatch && tidMatch[1] && !['N/A', 'NA', 'NONE', 'N'].includes(tidMatch[1].toUpperCase())
+        ? tidMatch[1]
+        : null;
+      const transactionId = order.paymentGatewayRef || extractedTid;
+      const methodMatch = (order.shippingNotes || '').match(/Method:\s*([^.\n]+)/i);
+      const paymentChannel = methodMatch && methodMatch[1] ? methodMatch[1].trim() : rawMethod;
+      const tidDisplay = transactionId ? `\`${transactionId}\`` : (order.paymentScreenshot ? 'Attached on Receipt' : 'Pending Verification');
 
       // 1. Try sending via Meta Approved Template (bypasses 24-hour window for new customers)
       const summaryItems = (order.items || [])
@@ -453,7 +464,7 @@ ${itemsList}
         trackingUrl,
       ]).catch(() => {});
 
-      // 2. Rich WhatsApp Slip
+      // 2. Rich WhatsApp Slip (Customer Payment Details)
       const message = `🏛️ *FAHAD ALI INTERIOR — OFFICIAL ORDER SLIP*
 ━━━━━━━━━━━━━━━━━━━━
 Salam *${customerName}*! Your order *#${shortId}* for *PKR ${totalAmount}* has been successfully placed.
@@ -465,19 +476,16 @@ ${itemsList}
 
 💰 *Total Amount:* *PKR ${totalAmount}*
 📦 *Status:* ⏳ *Under Verification*
-💳 *Payment Method:* ${paymentMethod}
-🧾 *Payment Slip:* ${slipStatus}
+
+💳 *Customer Payment Details:*
+• *Payment Method:* ${paymentChannel}
+• *Paid By:* ${customerName}
+• *Transaction ID / Ref:* ${tidDisplay}
+• *Payment Slip / Proof:* ${slipStatus}
 
 📍 *Delivery Address:*
 ${deliveryAddress}
 👤 *Recipient Contact:* ${customerPhone}
-
-🏛️ *Official Settlement Account Details:*
-• *Bank:* Meezan Bank Limited
-• *Account Title:* Fahad Ali Interior
-• *Account Number:* \`00427992104803\`
-• *IBAN:* \`PK16MEZN0099340103248901\`
-• *JazzCash / Raast ID:* \`03213283301\`
 
 ━━━━━━━━━━━━━━━━━━━━
 🌐 *Track order live:*
