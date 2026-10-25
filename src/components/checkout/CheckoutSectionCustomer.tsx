@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   User,
   Mail,
@@ -183,112 +183,215 @@ export function CheckoutSectionCustomer({
                   </p>
                 )}
 
-                {/* ── WhatsApp 6-Digit OTP Verification Box ── */}
-                {form.phone && isPhoneValid && (
-                  <div className="mt-2.5 font-sans">
-                    {isPhoneVerified ? (
-                      <div className="bg-emerald-50/90 border border-emerald-300/80 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-2xs">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                            <CheckCircle2 size={14} />
-                          </div>
-                          <div>
-                            <span className="text-[11px] font-bold text-emerald-950 block leading-tight">
-                              Phone Number Verified via WhatsApp ✓
-                            </span>
-                            <span className="text-[9.5px] text-emerald-700 font-medium">
-                              Genuine buyer authenticated — Protected against fake orders
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleResetPhoneVerification}
-                          className="text-[10px] font-bold text-stone-500 hover:text-stone-800 underline cursor-pointer"
-                        >
-                          Change
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="bg-gradient-to-br from-[#FAF7F2] via-white to-[#FAF5EE] border border-[#E2D9CD] rounded-xl p-3 shadow-2xs space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <MessageSquare size={14} className="text-[#25D366]" />
-                            <span className="text-[11px] font-black text-[#221814] uppercase tracking-wider">
-                              Verify Mobile Number (WhatsApp OTP)
-                            </span>
-                          </div>
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300">
-                            Required to Proceed
-                          </span>
-                        </div>
-
-                        {!otpSent ? (
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-0.5">
-                            <p className="text-[10.5px] text-[#7A6354] leading-relaxed">
-                              Send an instant 6-digit WhatsApp OTP to confirm order authenticity.
-                            </p>
+                {/* ── WhatsApp 6-Digit OTP Verification Box with 3D Flip Rotation ── */}
+                <AnimatePresence>
+                  {form.phone && isPhoneValid && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                      transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+                      className="mt-3 font-sans w-full"
+                      style={{ perspective: 1200 }}
+                    >
+                      <AnimatePresence mode="wait" initial={false}>
+                        {isPhoneVerified ? (
+                          <motion.div
+                            key="card-otp-verified"
+                            initial={{ rotateY: -90, opacity: 0, scale: 0.96 }}
+                            animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                            exit={{ rotateY: 90, opacity: 0, scale: 0.96 }}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 260,
+                              damping: 22,
+                              mass: 0.8,
+                            }}
+                            style={{
+                              transformStyle: 'preserve-3d',
+                              backfaceVisibility: 'hidden',
+                            }}
+                            className="w-full max-w-full overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-emerald-50/70 border border-emerald-300/80 rounded-2xl p-3.5 shadow-sm flex items-center justify-between gap-3 relative"
+                          >
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400" />
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center shrink-0 shadow-sm ring-2 ring-emerald-200">
+                                <CheckCircle2 size={16} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[11.5px] font-black text-emerald-950 leading-tight">
+                                    Phone Number Verified via WhatsApp ✓
+                                  </span>
+                                  <span className="text-[9px] bg-emerald-100 text-emerald-800 font-black px-1.5 py-0.5 rounded-full border border-emerald-300">
+                                    AUTHENTIC BUYER
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-emerald-700 font-medium block truncate mt-0.5">
+                                  Genuine customer authenticated — Protected against fake orders
+                                </span>
+                              </div>
+                            </div>
                             <button
                               type="button"
-                              onClick={handleSendOtp}
-                              disabled={otpLoading}
-                              className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:brightness-105 text-white font-serif font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 shrink-0 transition-all cursor-pointer disabled:opacity-50"
+                              onClick={handleResetPhoneVerification}
+                              className="text-[10px] font-bold text-stone-500 hover:text-stone-800 underline cursor-pointer shrink-0 px-2 py-1 rounded-lg hover:bg-stone-100/60 transition-colors"
                             >
-                              {otpLoading ? (
-                                <Loader2 size={13} className="animate-spin text-white" />
-                              ) : (
-                                <MessageSquare size={13} />
-                              )}
-                              <span>{otpLoading ? 'Sending...' : 'Send WhatsApp Code'}</span>
+                              Change
                             </button>
-                          </div>
-                        ) : (
-                          <div className="space-y-2 pt-0.5">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
-                              <span className="text-stone-600 font-medium">
-                                Enter the 6-digit code sent to <strong className="font-bold text-[#1F1612]">{form.phone}</strong>:
+                          </motion.div>
+                        ) : !otpSent ? (
+                          <motion.div
+                            key="card-otp-send"
+                            initial={{ rotateY: -80, opacity: 0, scale: 0.96 }}
+                            animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                            exit={{ rotateY: 80, opacity: 0, scale: 0.96 }}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 260,
+                              damping: 22,
+                              mass: 0.8,
+                            }}
+                            style={{
+                              transformStyle: 'preserve-3d',
+                              backfaceVisibility: 'hidden',
+                            }}
+                            className="w-full max-w-full overflow-hidden bg-gradient-to-br from-[#FAF7F2] via-white to-[#FAF5EE] border border-[#E2D9CD] rounded-2xl p-3.5 shadow-sm space-y-3 relative"
+                          >
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#25D366] via-[#B88E4B] to-[#25D366]" />
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-6 h-6 rounded-lg bg-[#25D366]/15 flex items-center justify-center text-[#25D366] shrink-0 border border-[#25D366]/30">
+                                  <MessageSquare size={13} className="fill-[#25D366]" />
+                                </div>
+                                <span className="text-[11px] font-black text-[#221814] uppercase tracking-wider truncate">
+                                  Verify Mobile Number (WhatsApp OTP)
+                                </span>
+                              </div>
+                              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 shrink-0">
+                                Required to Proceed
                               </span>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-0.5">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[11px] text-[#7A6354] leading-relaxed">
+                                  Send an instant 6-digit WhatsApp OTP to confirm order authenticity.
+                                </p>
+                                <div className="flex items-center gap-1.5 mt-1 text-[10px] text-stone-500">
+                                  <ShieldCheck size={12} className="text-emerald-600 shrink-0" />
+                                  <span>Instant 1-click verification code</span>
+                                </div>
+                              </div>
                               <button
                                 type="button"
                                 onClick={handleSendOtp}
-                                disabled={otpCooldown > 0 || otpLoading}
-                                className="text-[10px] font-bold text-[#8C6239] hover:underline cursor-pointer disabled:opacity-50 text-left"
+                                disabled={otpLoading}
+                                className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:brightness-105 active:scale-98 text-white font-serif font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 shrink-0 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
                               >
-                                {otpCooldown > 0 ? `Resend in ${otpCooldown}s` : 'Resend Code via WhatsApp'}
+                                {otpLoading ? (
+                                  <Loader2 size={13} className="animate-spin text-white" />
+                                ) : (
+                                  <MessageSquare size={13} className="fill-white" />
+                                )}
+                                <span>{otpLoading ? 'Sending...' : 'Send WhatsApp Code'}</span>
                               </button>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="card-otp-verify"
+                            initial={{ rotateY: 80, opacity: 0, scale: 0.96 }}
+                            animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                            exit={{ rotateY: -80, opacity: 0, scale: 0.96 }}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 260,
+                              damping: 22,
+                              mass: 0.8,
+                            }}
+                            style={{
+                              transformStyle: 'preserve-3d',
+                              backfaceVisibility: 'hidden',
+                            }}
+                            className="w-full max-w-full overflow-hidden bg-gradient-to-br from-[#FAF7F2] via-white to-[#FAF5EE] border border-[#E2D9CD] rounded-2xl p-3.5 shadow-sm space-y-3 relative"
+                          >
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#B88E4B] via-[#25D366] to-[#B88E4B]" />
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-6 h-6 rounded-lg bg-[#25D366]/15 flex items-center justify-center text-[#25D366] shrink-0 border border-[#25D366]/30">
+                                  <MessageSquare size={13} className="fill-[#25D366]" />
+                                </div>
+                                <span className="text-[11px] font-black text-[#221814] uppercase tracking-wider truncate">
+                                  Verify Mobile Number (WhatsApp OTP)
+                                </span>
+                              </div>
+                              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 shrink-0">
+                                Required to Proceed
+                              </span>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              <input
-                                id="fai-checkout-otp-input"
-                                type="text"
-                                inputMode="numeric"
-                                maxLength={6}
-                                value={otpCode}
-                                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                placeholder="• • • • • •"
-                                className="flex-1 bg-white border border-[#E2D9CD] focus:border-[#25D366] rounded-xl px-4 py-2 text-center font-mono font-black text-base sm:text-lg tracking-[0.35em] text-[#1F1612] outline-none shadow-2xs"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleVerifyOtp}
-                                disabled={otpVerifying || otpCode.replace(/\D/g, '').length !== 6}
-                                className="px-5 py-2.5 bg-gradient-to-r from-[#2A170D] via-[#1A0E07] to-[#0D0603] hover:brightness-110 text-[#FFEAA0] font-serif font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 shrink-0 transition-all cursor-pointer disabled:opacity-50 active:scale-98"
-                              >
-                                {otpVerifying ? (
-                                  <Loader2 size={13} className="animate-spin text-[#FFEAA0]" />
-                                ) : (
-                                  <ShieldCheck size={14} className="text-[#FFEAA0]" />
-                                )}
-                                <span>{otpVerifying ? 'Verifying...' : 'Verify Code'}</span>
-                              </button>
+                            <div className="space-y-2.5 pt-0.5">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]">
+                                <span className="text-stone-600 font-medium truncate">
+                                  Enter the 6-digit code sent to <strong className="font-bold text-[#1F1612]">{form.phone}</strong>:
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={handleSendOtp}
+                                  disabled={otpCooldown > 0 || otpLoading}
+                                  className="text-[10px] font-bold text-[#8C6239] hover:underline cursor-pointer disabled:opacity-50 text-left shrink-0"
+                                >
+                                  {otpCooldown > 0 ? `Resend in ${otpCooldown}s` : 'Resend Code via WhatsApp'}
+                                </button>
+                              </div>
+
+                              {/* Input + Verify Button (Fixed Overflow) */}
+                              <div className="w-full min-w-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                <div className="relative flex-1 min-w-0">
+                                  <input
+                                    id="fai-checkout-otp-input"
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={6}
+                                    value={otpCode}
+                                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                    placeholder="• • • • • •"
+                                    className="w-full min-w-0 bg-white border border-[#E2D9CD] focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 rounded-xl px-3 py-2 sm:py-2.5 text-center font-mono font-black text-base sm:text-lg tracking-[0.3em] text-[#1F1612] outline-none shadow-2xs transition-all"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handleVerifyOtp}
+                                  disabled={otpVerifying || otpCode.replace(/\D/g, '').length !== 6}
+                                  className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#2A170D] via-[#1A0E07] to-[#0D0603] hover:brightness-110 active:scale-98 text-[#FFEAA0] font-serif font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 shrink-0 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                                >
+                                  {otpVerifying ? (
+                                    <Loader2 size={13} className="animate-spin text-[#FFEAA0]" />
+                                  ) : (
+                                    <ShieldCheck size={14} className="text-[#FFEAA0]" />
+                                  )}
+                                  <span>{otpVerifying ? 'Verifying...' : 'Verify Code'}</span>
+                                </button>
+                              </div>
+
+                              <div className="flex items-center justify-between pt-0.5 text-[10px] text-stone-500">
+                                <span className="truncate">Didn't receive code? Check your WhatsApp app.</span>
+                                <button
+                                  type="button"
+                                  onClick={handleResetPhoneVerification}
+                                  className="font-bold text-stone-600 hover:text-stone-900 underline cursor-pointer shrink-0 ml-2"
+                                >
+                                  Change Number
+                                </button>
+                              </div>
                             </div>
-                          </div>
+                          </motion.div>
                         )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                      </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
