@@ -1,9 +1,25 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Phone, Shield, Loader2, Eye, EyeOff, ArrowRight, CheckCircle2 } from 'lucide-react';
+import {
+  X,
+  Mail,
+  Lock,
+  User,
+  Phone,
+  Shield,
+  Loader2,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  CheckCircle2,
+  MessageSquare,
+  MessageCircle,
+  RefreshCw,
+  Sparkles,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -67,6 +83,46 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
   const [twoFactorToken, setTwoFactorToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
+  const [twoFactorChannel, setTwoFactorChannel] = useState<'WHATSAPP' | 'SMS'>('WHATSAPP');
+  const [sendingChannel, setSendingChannel] = useState<'WHATSAPP' | 'SMS' | null>(null);
+  const [twoFactorCooldown, setTwoFactorCooldown] = useState(0);
+  const [twoFactorMaskedPhone, setTwoFactorMaskedPhone] = useState('');
+  const [twoFactorDevCode, setTwoFactorDevCode] = useState<string | null>(null);
+
+  // Cooldown timer ticker
+  useEffect(() => {
+    if (twoFactorCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setTwoFactorCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [twoFactorCooldown]);
+
+  async function handleSendLoginOtp(channel: 'WHATSAPP' | 'SMS') {
+    if (!loginData.email) return;
+    setSendingChannel(channel);
+    setTwoFactorChannel(channel);
+    try {
+      const res = await fetch('/api/auth/2fa/login-otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginData.email, channel }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.success) {
+        setTwoFactorCooldown(data.cooldownSeconds || 45);
+        if (data.maskedPhone) setTwoFactorMaskedPhone(data.maskedPhone);
+        if (data.devCode) setTwoFactorDevCode(data.devCode);
+        toast.success(`6-digit code sent via ${channel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}!`);
+      } else {
+        toast.error(data.error || 'Failed to dispatch verification code');
+      }
+    } catch {
+      toast.error('Network error dispatching verification code');
+    } finally {
+      setSendingChannel(null);
+    }
+  }
 
   async function handleGoogleSignIn() {
     setLoading(true);
@@ -95,6 +151,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
       if (authRes?.error) {
         if (authRes.error.includes('2FA_REQUIRED')) {
           setTwoFactorStep(true);
+          handleSendLoginOtp('WHATSAPP');
           return;
         }
         if (authRes.error.toLowerCase().includes('verify')) {
@@ -246,18 +303,86 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
             {/* Modal Body */}
             <div className="overflow-y-auto overscroll-contain pr-0.5 space-y-4">
               {twoFactorStep ? (
-                /* ── 2FA Screen ── */
-                <div className="space-y-4 py-1">
+                /* ── 2FA Screen with SMS & WhatsApp OTP ── */
+                <div className="space-y-3.5 py-1">
                   <div className="flex flex-col items-center text-center gap-1.5">
                     <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center text-[#B88E4B]">
                       <Shield size={24} />
                     </div>
-                    <h3 className="font-serif font-bold text-sm sm:text-base text-[#221814]">Enter Two-Factor Code</h3>
+                    <h3 className="font-serif font-bold text-sm sm:text-base text-[#221814]">
+                      Two-Step Security Verification
+                    </h3>
                     <p className="text-[11px] sm:text-xs text-[#7A6354] leading-relaxed max-w-xs">
-                      Enter the 6-digit verification code from your authenticator app to access your VIP account.
+                      Enter the 6-digit verification code sent via{' '}
+                      <span className="font-bold text-[#221814]">
+                        {twoFactorChannel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}
+                      </span>
+                      {twoFactorMaskedPhone ? (
+                        <>
+                          {' '}to <span className="font-mono font-bold text-[#221814]">{twoFactorMaskedPhone}</span>
+                        </>
+                      ) : null}
+                      .
                     </p>
                   </div>
 
+                  {/* Channel Switch Buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSendLoginOtp('SMS')}
+                      disabled={sendingChannel !== null}
+                      className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                        twoFactorChannel === 'SMS'
+                          ? 'border-[#B88E4B] bg-amber-50/60 text-[#1F1612] shadow-xs'
+                          : 'border-[#E2D6C8] bg-white text-stone-600 hover:border-[#B88E4B]'
+                      }`}
+                    >
+                      {sendingChannel === 'SMS' ? (
+                        <Loader2 size={13} className="animate-spin text-[#B88E4B]" />
+                      ) : (
+                        <MessageSquare size={13} className="text-[#8C6239]" />
+                      )}
+                      <span>Send via SMS</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSendLoginOtp('WHATSAPP')}
+                      disabled={sendingChannel !== null}
+                      className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
+                        twoFactorChannel === 'WHATSAPP'
+                          ? 'border-emerald-500 bg-emerald-50/60 text-emerald-900 shadow-xs'
+                          : 'border-[#E2D6C8] bg-white text-stone-600 hover:border-emerald-500'
+                      }`}
+                    >
+                      {sendingChannel === 'WHATSAPP' ? (
+                        <Loader2 size={13} className="animate-spin text-emerald-600" />
+                      ) : (
+                        <MessageCircle size={13} className="text-emerald-600" />
+                      )}
+                      <span>Send via WhatsApp</span>
+                    </button>
+                  </div>
+
+                  {/* Dev Testing Helper (in non-production) */}
+                  {twoFactorDevCode && (
+                    <div className="bg-amber-50/80 border border-amber-200 rounded-lg p-2 flex items-center justify-between text-xs">
+                      <span className="text-amber-800 font-medium">
+                        🧪 Dev Testing Code:{' '}
+                        <strong className="font-mono text-sm tracking-widest">{twoFactorDevCode}</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setTwoFactorCode(twoFactorDevCode)}
+                        className="text-[11px] font-bold text-[#8C6239] hover:underline cursor-pointer"
+                      >
+                        Auto-Fill
+                      </button>
+                    </div>
+                  )}
+
+                  {/* 6-Digit Code Input */}
                   <div className="space-y-1">
                     <label htmlFor="twoFactorCode" className="sr-only">
                       Two-Factor Authentication Code
@@ -273,7 +398,26 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                       className="w-full bg-white border-2 border-[#E2D6C8] focus:border-[#B88E4B] text-[#221814] rounded-xl sm:rounded-2xl text-center text-xl sm:text-2xl tracking-[0.45em] font-mono font-black h-12 sm:h-13 outline-none shadow-2xs transition-colors"
                       autoFocus
                     />
-                    <p className="text-[#8C7667] text-[10px] text-center font-medium">6-digit security code or 8-character backup code</p>
+                    <div className="flex items-center justify-between text-[10px] text-[#8C7667] px-1 pt-0.5">
+                      <span>
+                        {twoFactorCooldown > 0 ? (
+                          <>
+                            Resend code in{' '}
+                            <strong className="font-mono text-[#8C6239]">{twoFactorCooldown}s</strong>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSendLoginOtp(twoFactorChannel)}
+                            disabled={sendingChannel !== null}
+                            className="font-bold text-[#8C6239] hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <RefreshCw size={10} /> Resend Code
+                          </button>
+                        )}
+                      </span>
+                      <span>Backup codes also accepted</span>
+                    </div>
                   </div>
 
                   <button
@@ -297,6 +441,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                       setTwoFactorStep(false);
                       setTwoFactorToken('');
                       setTwoFactorCode('');
+                      setTwoFactorDevCode(null);
                     }}
                     className="w-full text-center text-[11px] sm:text-xs font-bold text-[#8C6239] hover:text-[#221814] tracking-wider uppercase transition-colors pt-1 cursor-pointer"
                   >

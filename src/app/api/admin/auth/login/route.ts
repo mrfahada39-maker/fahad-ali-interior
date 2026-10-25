@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import { verifySync } from 'otplib';
 import { db } from '@/lib/db';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
-import { decryptTotpSecret, verifyBackupCode } from '@/lib/totp-crypto';
+import { decryptTotpSecret, verifyBackupCode, verifyPhoneOtpSecret } from '@/lib/totp-crypto';
 import { getAdminTokenSecret } from '@/lib/admin-auth';
 import { runDummyBcryptCompare } from '@/lib/password-policy';
 
@@ -90,6 +90,12 @@ export async function POST(req: NextRequest) {
             backupCodes: (user.backupCodes || []).filter((c: string) => c !== matchedBackup),
           },
         }).catch(() => {});
+      } else if (user.totpSecret?.startsWith('phone_otp:v1:')) {
+        const isValidPhoneOtp = verifyPhoneOtpSecret(user.id, totpCode, user.totpSecret);
+        if (!isValidPhoneOtp) {
+          await recordFailed2Fa();
+          return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
+        }
       } else if (!user.totpSecret) {
         // H3: Fail closed — if totpSecret missing, fail login (no 6-digit wildcard)
         await recordFailed2Fa();

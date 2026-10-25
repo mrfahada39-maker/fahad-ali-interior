@@ -6,7 +6,7 @@ import { verifySync } from 'otplib';
 import { db } from '@/lib/db';
 import { sessionRole } from '@/lib/enums';
 import { shouldSkipEmailVerification } from '@/lib/utils';
-import { decryptTotpSecret, verifyBackupCode } from '@/lib/totp-crypto';
+import { decryptTotpSecret, verifyBackupCode, verifyPhoneOtpSecret } from '@/lib/totp-crypto';
 import { runDummyBcryptCompare } from '@/lib/password-policy';
 import { logger } from '@/lib/logger';
 
@@ -129,6 +129,12 @@ const providers: NextAuthOptions['providers'] = [
               backupCodes: (user.backupCodes || []).filter((c: string) => c !== matchedBackup),
             },
           });
+        } else if (user.totpSecret?.startsWith('phone_otp:v1:')) {
+          const isValidPhoneOtp = verifyPhoneOtpSecret(user.id, totpCode, user.totpSecret);
+          if (!isValidPhoneOtp) {
+            await recordFailed2Fa();
+            throw new Error('INVALID_2FA_CODE');
+          }
         } else if (!user.totpSecret) {
           // H3: Fail closed — missing totpSecret fails login (no 6-digit wildcard)
           await recordFailed2Fa();

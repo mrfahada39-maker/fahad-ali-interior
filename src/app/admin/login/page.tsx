@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ShieldCheck, Lock, Mail, ArrowRight, Sparkles, Home } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowRight, Sparkles, Home, MessageSquare, MessageCircle, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminLoginPage() {
@@ -14,7 +14,46 @@ export default function AdminLoginPage() {
   const [totpCode, setTotpCode] = useState('');
   const [requires2FA, setRequires2FA] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [activeChannel, setActiveChannel] = useState<'WHATSAPP' | 'SMS'>('WHATSAPP');
+  const [sendingChannel, setSendingChannel] = useState<'WHATSAPP' | 'SMS' | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+  const [maskedPhone, setMaskedPhone] = useState('');
+  const [devCode, setDevCode] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const handleSendAdminOtp = async (channel: 'WHATSAPP' | 'SMS') => {
+    if (!email) return;
+    setSendingChannel(channel);
+    setActiveChannel(channel);
+    try {
+      const res = await fetch('/api/auth/2fa/login-otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), channel }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.success) {
+        setCooldown(data.cooldownSeconds || 45);
+        if (data.maskedPhone) setMaskedPhone(data.maskedPhone);
+        if (data.devCode) setDevCode(data.devCode);
+        toast.success(`6-digit code sent via ${channel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}!`);
+      } else {
+        toast.error(data.error || 'Failed to dispatch verification code');
+      }
+    } catch {
+      toast.error('Network error dispatching code');
+    } finally {
+      setSendingChannel(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +62,7 @@ export default function AdminLoginPage() {
       return;
     }
     if (requires2FA && totpCode.trim().length < 6) {
-      toast.error('Please enter your 6-digit authenticator code or 8-character backup code');
+      toast.error('Please enter your 6-digit verification code or backup code');
       return;
     }
     setLoading(true);
@@ -38,6 +77,7 @@ export default function AdminLoginPage() {
       if (res?.error) {
         if (res.error.includes('2FA_REQUIRED')) {
           setRequires2FA(true);
+          handleSendAdminOtp('WHATSAPP');
           toast.info('Please enter your 2FA verification code to continue');
         } else {
           toast.error(res.error || 'Invalid credentials');
@@ -135,25 +175,111 @@ export default function AdminLoginPage() {
             </div>
 
             {requires2FA && (
-              <div>
-                <label htmlFor="admin-totp" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1.5">
-                  Two-Factor Security Code (2FA)
-                </label>
-                <div className="relative">
-                  <ShieldCheck size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B88E4B]" />
-                  <input
-                    id="admin-totp"
-                    name="totpCode"
-                    autoComplete="one-time-code"
-                    type="text"
-                    maxLength={8}
-                    value={totpCode}
-                    onChange={(e) => setTotpCode(e.target.value.replace(/\s/g, '').slice(0, 8))}
-                    placeholder="6-digit TOTP or 8-char backup code"
-                    required
-                    autoFocus
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border-2 border-[#B88E4B] focus:outline-none text-xs font-mono font-bold tracking-widest shadow-2xs transition-colors"
-                  />
+              <div className="space-y-3 pt-1">
+                <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 text-xs text-[#7A6354]">
+                  <p className="font-bold text-[#1F1612] mb-0.5">Two-Step Security Verification</p>
+                  <p className="text-[11px] leading-relaxed">
+                    Code sent via{' '}
+                    <strong className="text-[#8C6239]">
+                      {activeChannel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}
+                    </strong>
+                    {maskedPhone ? <> to <span className="font-mono font-bold text-[#1F1612]">{maskedPhone}</span></> : null}
+                    .
+                  </p>
+                </div>
+
+                {/* Channel Switch Buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSendAdminOtp('SMS')}
+                    disabled={sendingChannel !== null}
+                    className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+                      activeChannel === 'SMS'
+                        ? 'border-[#B88E4B] bg-white text-[#1F1612] shadow-xs'
+                        : 'border-amber-200/60 bg-white/70 text-stone-600 hover:border-[#B88E4B]'
+                    }`}
+                  >
+                    {sendingChannel === 'SMS' ? (
+                      <Loader2 size={12} className="animate-spin text-[#B88E4B]" />
+                    ) : (
+                      <MessageSquare size={12} className="text-[#8C6239]" />
+                    )}
+                    <span>Send via SMS</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSendAdminOtp('WHATSAPP')}
+                    disabled={sendingChannel !== null}
+                    className={`p-2 rounded-xl border flex items-center justify-center gap-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+                      activeChannel === 'WHATSAPP'
+                        ? 'border-emerald-500 bg-white text-emerald-900 shadow-xs'
+                        : 'border-amber-200/60 bg-white/70 text-stone-600 hover:border-emerald-500'
+                    }`}
+                  >
+                    {sendingChannel === 'WHATSAPP' ? (
+                      <Loader2 size={12} className="animate-spin text-emerald-600" />
+                    ) : (
+                      <MessageCircle size={12} className="text-emerald-600" />
+                    )}
+                    <span>Send via WhatsApp</span>
+                  </button>
+                </div>
+
+                {/* Dev Testing Helper (in non-production) */}
+                {devCode && (
+                  <div className="bg-amber-50 border border-amber-300 rounded-lg p-2 flex items-center justify-between text-xs">
+                    <span className="text-amber-900 font-medium">
+                      🧪 Dev Code: <strong className="font-mono text-sm tracking-widest">{devCode}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setTotpCode(devCode)}
+                      className="text-[11px] font-bold text-[#8C6239] hover:underline cursor-pointer"
+                    >
+                      Auto-Fill
+                    </button>
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="admin-totp" className="block text-[11px] font-black uppercase tracking-wider text-[#7A6354] mb-1.5">
+                    6-Digit Verification Code
+                  </label>
+                  <div className="relative">
+                    <ShieldCheck size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B88E4B]" />
+                    <input
+                      id="admin-totp"
+                      name="totpCode"
+                      autoComplete="one-time-code"
+                      type="text"
+                      maxLength={8}
+                      value={totpCode}
+                      onChange={(e) => setTotpCode(e.target.value.replace(/\s/g, '').slice(0, 8))}
+                      placeholder="000000"
+                      required
+                      autoFocus
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border-2 border-[#B88E4B] focus:outline-none text-xs font-mono font-bold tracking-widest shadow-2xs transition-colors"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-stone-500 mt-1 px-1">
+                    <span>
+                      {cooldown > 0 ? (
+                        <>Resend code in <strong className="font-mono text-[#8C6239]">{cooldown}s</strong></>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSendAdminOtp(activeChannel)}
+                          disabled={sendingChannel !== null}
+                          className="font-bold text-[#8C6239] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <RefreshCw size={10} /> Resend Code
+                        </button>
+                      )}
+                    </span>
+                    <span>Backup codes accepted</span>
+                  </div>
                 </div>
               </div>
             )}

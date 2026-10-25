@@ -166,3 +166,56 @@ export function verifyBackupCode(inputCode: string, storedCodes: string[]): stri
 
   return null;
 }
+
+const PHONE_OTP_PREFIX = 'phone_otp:v1:';
+
+/**
+ * Creates a tamper-proof HMAC-signed secret storing an active 6-digit phone OTP challenge.
+ * Format: `phone_otp:v1:<expiresAt>:<hmacHex>`
+ */
+export function createPhoneOtpSecret(userId: string, otp: string, ttlMs: number = 10 * 60 * 1000): string {
+  const expiresAt = Date.now() + ttlMs;
+  const key = getEncryptionKey();
+  const cleanOtp = otp.replace(/\D/g, '').trim();
+  const hmacHex = crypto
+    .createHmac('sha256', key)
+    .update(`${userId}:${expiresAt}:${cleanOtp}`)
+    .digest('hex');
+  return `${PHONE_OTP_PREFIX}${expiresAt}:${hmacHex}`;
+}
+
+/**
+ * Verifies a 6-digit phone OTP against a stored `phone_otp:v1:` secret.
+ */
+export function verifyPhoneOtpSecret(userId: string, inputOtp: string, storedSecret: string): boolean {
+  if (!storedSecret || !storedSecret.startsWith(PHONE_OTP_PREFIX)) return false;
+  try {
+    const payload = storedSecret.slice(PHONE_OTP_PREFIX.length);
+    const colonIdx = payload.indexOf(':');
+    if (colonIdx === -1) return false;
+
+    const expiresAtStr = payload.slice(0, colonIdx);
+    const expectedHmacHex = payload.slice(colonIdx + 1);
+    const expiresAt = parseInt(expiresAtStr, 10);
+
+    if (isNaN(expiresAt) || Date.now() > expiresAt) {
+      return false; // Expired
+    }
+
+    const cleanInput = inputOtp.replace(/\D/g, '').trim();
+    if (cleanInput.length !== 6) return false;
+
+    const key = getEncryptionKey();
+    const computedHmacHex = crypto
+      .createHmac('sha256', key)
+      .update(`${userId}:${expiresAt}:${cleanInput}`)
+      .digest('hex');
+
+    const a = Buffer.from(expectedHmacHex, 'hex');
+    const b = Buffer.from(computedHmacHex, 'hex');
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
