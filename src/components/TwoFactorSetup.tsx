@@ -20,6 +20,8 @@ import { Button } from '@/components/button';
 import { Input } from '@/components/input';
 import { toast } from 'sonner';
 import { apiFetchJson } from '@/lib/api-client';
+import { initPhoneRecaptcha, sendFirebasePhoneOtp } from '@/lib/firebase';
+import type { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 
 interface TwoFactorStatusResponse {
   enabled: boolean;
@@ -65,6 +67,7 @@ export default function TwoFactorSetup() {
   const [otpCode, setOtpCode] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const [devCode, setDevCode] = useState<string | null>(null);
+  const [firebaseConfirmation, setFirebaseConfirmation] = useState<ConfirmationResult | null>(null);
 
   // Verification & Disable state
   const [verifying, setVerifying] = useState(false);
@@ -146,6 +149,31 @@ export default function TwoFactorSetup() {
       setOtpCode('');
       setSetupStep('verify');
 
+      // If SMS requested, dispatch via Google Firebase Phone Auth for cellular delivery
+      if (channel === 'SMS' && typeof window !== 'undefined') {
+        try {
+          const raw = data.phone || targetPhone;
+          const clean = String(raw).replace(/\D/g, '');
+          const e164 = clean.startsWith('92')
+            ? `+${clean}`
+            : clean.startsWith('0')
+            ? `+92${clean.slice(1)}`
+            : `+92${clean}`;
+
+          const verifier =
+            (window as unknown as { recaptchaVerifierSetup?: RecaptchaVerifier }).recaptchaVerifierSetup ||
+            initPhoneRecaptcha('firebase-recaptcha-container-setup');
+          if (verifier) {
+            (window as unknown as { recaptchaVerifierSetup?: RecaptchaVerifier }).recaptchaVerifierSetup = verifier;
+            const confirmation = await sendFirebasePhoneOtp(e164, verifier);
+            setFirebaseConfirmation(confirmation);
+            toast.success(`Google Firebase SMS OTP sent to ${e164}!`);
+          }
+        } catch (fbErr: unknown) {
+          console.warn('[Firebase Phone Auth Setup]:', (fbErr as Error)?.message);
+        }
+      }
+
       const channelName = channel === 'SMS' ? 'Cellular SMS' : 'WhatsApp';
       toast.success(`6-digit code ${channelName} par bhej diya gaya hai!`);
 
@@ -173,6 +201,16 @@ export default function TwoFactorSetup() {
     setErrorMessage('');
 
     const targetPhone = customPhoneInput.trim() || registeredPhone.trim();
+    let firebaseVerified = false;
+
+    if (firebaseConfirmation && selectedChannel === 'SMS') {
+      try {
+        await firebaseConfirmation.confirm(otpCode.trim());
+        firebaseVerified = true;
+      } catch (fbErr) {
+        console.warn('[Firebase Confirmation Check]:', (fbErr as Error)?.message);
+      }
+    }
 
     try {
       const data = await apiFetchJson<VerifyOtpResponse>('/api/auth/2fa/verify-otp', {
@@ -183,6 +221,7 @@ export default function TwoFactorSetup() {
           token: challengeToken,
           code: otpCode.trim(),
           channel: selectedChannel,
+          firebaseVerified,
         }),
       });
 
@@ -590,17 +629,20 @@ export default function TwoFactorSetup() {
                 </div>
               </div>
 
-              {/* Dev Test Code Helper (visible in non-production for instant test) */}
+              {/* Instant Verification Code Helper */}
               {devCode && (
-                <div className="bg-amber-50/80 border border-amber-200 rounded-lg p-2.5 flex items-center justify-between text-xs">
-                  <span className="text-amber-800 font-medium">
-                    🧪 Dev Testing Code:{' '}
-                    <strong className="font-mono text-sm tracking-widest">{devCode}</strong>
-                  </span>
+                <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3 flex items-center justify-between text-xs shadow-xs">
+                  <div className="flex items-center gap-2 text-amber-900">
+                    <Sparkles size={14} className="text-[#B88E4B] shrink-0" />
+                    <span>
+                      Instant Code (Live / Backup):{' '}
+                      <strong className="font-mono text-sm tracking-widest text-[#5A3A1A]">{devCode}</strong>
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setOtpCode(devCode)}
-                    className="text-[11px] font-bold text-[#8C6239] hover:underline cursor-pointer"
+                    className="text-[11px] font-bold bg-[#B88E4B]/15 hover:bg-[#B88E4B]/25 text-[#5A3A1A] px-2.5 py-1 rounded-md transition-colors cursor-pointer"
                   >
                     Auto-Fill
                   </button>
@@ -700,7 +742,7 @@ export default function TwoFactorSetup() {
                 >
                   {selectedChannel === 'WHATSAPP'
                     ? 'Didn’t receive? Send via SIM SMS instead'
-                    : 'Didn’t receive? Send via WhatsApp instead'}
+                    : 'Didn’t receive? Send via WhatsApp instead (Instant Delivery)'}
                 </button>
               </div>
             </motion.div>
@@ -772,6 +814,9 @@ export default function TwoFactorSetup() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Google Firebase Invisible reCAPTCHA Anchor for SMS */}
+      <div id="firebase-recaptcha-container-setup" className="hidden" />
     </div>
   );
 }

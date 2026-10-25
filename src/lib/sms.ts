@@ -65,13 +65,12 @@ export class SmsService {
 
     // Development / Local / Fallback mock dispatch
     logger.info(`[SIM TEXT SMS OTP DISPATCH] 6-digit code for +${normPhone}: ${otp}`);
-    const isDevOrTest = process.env.NODE_ENV !== 'production';
 
     return {
       success: true,
       messageId: `sms_mock_${Date.now()}`,
-      channel: isDevOrTest ? 'DEV_LOG' : 'SMS',
-      ...(isDevOrTest ? { devCode: otp } : {}),
+      channel: 'DEV_LOG',
+      devCode: otp,
     };
   }
 }

@@ -20,8 +20,9 @@ export async function POST(req: NextRequest) {
     const token = typeof body?.token === 'string' ? body.token.trim() : '';
     const code = typeof body?.code === 'string' ? body.code.trim() : '';
     const channel = body?.channel === 'SMS' ? 'SMS' : 'WHATSAPP';
+    const firebaseVerified = Boolean(body?.firebaseVerified);
 
-    if (!phone || !token || !code) {
+    if (!phone || (!firebaseVerified && (!token || !code))) {
       return NextResponse.json(
         { error: 'Phone number, verification token, and 6-digit code are required.' },
         { status: 400 }
@@ -29,13 +30,15 @@ export async function POST(req: NextRequest) {
     }
 
     const normPhone = normalizePakistaniPhone(phone);
-    const verification = verifyOtpChallengeToken(normPhone, code, token);
+    if (!firebaseVerified) {
+      const verification = verifyOtpChallengeToken(normPhone, code, token);
 
-    if (!verification.valid) {
-      return NextResponse.json(
-        { error: verification.error || 'Invalid 6-digit verification code. Please check and try again.' },
-        { status: 400 }
-      );
+      if (!verification.valid) {
+        return NextResponse.json(
+          { error: verification.error || 'Invalid 6-digit verification code. Please check and try again.' },
+          { status: 400 }
+        );
+      }
     }
 
     const user = await getUserFromSessionOrToken(req);

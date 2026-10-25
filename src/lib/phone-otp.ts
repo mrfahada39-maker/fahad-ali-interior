@@ -32,7 +32,7 @@ interface RateLimitRecord {
 
 const otpRateLimitMap = new Map<string, RateLimitRecord>();
 
-const COOLDOWN_SECONDS = 30;
+const COOLDOWN_SECONDS = 45;
 const MAX_SENDS_PER_WINDOW = 10;
 const WINDOW_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
