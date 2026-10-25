@@ -1,37 +1,102 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Shield, Smartphone, Copy, Check, Download, AlertTriangle, Loader2, KeyRound } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Shield,
+  Smartphone,
+  MessageSquare,
+  MessageCircle,
+  Check,
+  RefreshCw,
+  AlertTriangle,
+  Loader2,
+  Lock,
+  Edit3,
+  Phone,
+  Sparkles,
+} from 'lucide-react';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
 import { toast } from 'sonner';
 import { apiFetchJson } from '@/lib/api-client';
 
+interface TwoFactorStatusResponse {
+  enabled: boolean;
+  phone?: string | null;
+  maskedPhone?: string | null;
+  authenticated?: boolean;
+}
+
+interface SendOtpResponse {
+  success: boolean;
+  token: string;
+  channel: 'WHATSAPP' | 'SMS' | 'DEV_LOG';
+  cooldownSeconds: number;
+  maskedPhone: string;
+  phone: string;
+  devCode?: string;
+  error?: string;
+}
+
+interface VerifyOtpResponse {
+  success: boolean;
+  enabled: boolean;
+  channel: 'WHATSAPP' | 'SMS';
+  phone: string;
+  maskedPhone: string;
+  message?: string;
+  error?: string;
+}
+
 export default function TwoFactorSetup() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
-  const [setupMode, setSetupMode] = useState<'idle' | 'verify' | 'codes' | 'disable'>('idle');
-  const [qrCode, setQrCode] = useState('');
-  const [manualKey, setManualKey] = useState('');
-  const [token, setToken] = useState('');
-  const [disablePassword, setDisablePassword] = useState('');
-  const [disableToken, setDisableToken] = useState('');
-  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [registeredPhone, setRegisteredPhone] = useState<string>('');
+  const [maskedPhone, setMaskedPhone] = useState<string>('');
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [customPhoneInput, setCustomPhoneInput] = useState('');
+
+  // Active setup flow
+  const [setupStep, setSetupStep] = useState<'idle' | 'verify' | 'disable'>('idle');
+  const [selectedChannel, setSelectedChannel] = useState<'SMS' | 'WHATSAPP'>('WHATSAPP');
+  const [sendingChannel, setSendingChannel] = useState<'SMS' | 'WHATSAPP' | null>(null);
+  const [challengeToken, setChallengeToken] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+  const [devCode, setDevCode] = useState<string | null>(null);
+
+  // Verification & Disable state
   const [verifying, setVerifying] = useState(false);
   const [disabling, setDisabling] = useState(false);
-  const [settingUp, setSettingUp] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [codesSavedConfirmed, setCodesSavedConfirmed] = useState(false);
+  const [disablePassword, setDisablePassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // ── Cooldown timer ticker ──
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  // ── Load 2FA status and registered phone ──
   const loadStatus = useCallback(async () => {
     setLoading(true);
     setErrorMessage('');
     try {
-      const data = await apiFetchJson<{ enabled: boolean }>('/api/auth/2fa/status');
-      setEnabled(data?.enabled ?? false);
+      const data = await apiFetchJson<TwoFactorStatusResponse>('/api/auth/2fa/status');
+      setEnabled(Boolean(data?.enabled));
+      if (data?.phone) {
+        setRegisteredPhone(data.phone);
+        setCustomPhoneInput(data.phone);
+      }
+      if (data?.maskedPhone) {
+        setMaskedPhone(data.maskedPhone);
+      }
     } catch {
       setEnabled(false);
     } finally {
@@ -43,58 +108,101 @@ export default function TwoFactorSetup() {
     loadStatus();
   }, [loadStatus]);
 
-  const handleSetup = async () => {
-    setSettingUp(true);
+  // ── Send 6-digit OTP code via chosen channel ──
+  const handleSendOtp = async (channel: 'SMS' | 'WHATSAPP') => {
+    const targetPhone = customPhoneInput.trim() || registeredPhone.trim();
+    if (!targetPhone) {
+      toast.error('Baraye meherbani apna mobile number enter karein.');
+      setEditingPhone(true);
+      return;
+    }
+
+    setSendingChannel(channel);
+    setSelectedChannel(channel);
     setErrorMessage('');
+
     try {
-      const data = await apiFetchJson<{ qrCode: string; manualKey: string }>('/api/auth/2fa/setup', {
+      const data = await apiFetchJson<SendOtpResponse>('/api/auth/2fa/send-otp', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel,
+          phone: targetPhone,
+        }),
       });
-      if (!data?.qrCode) {
-        const err = 'Failed to start 2FA setup. Please try again.';
+
+      if (!data?.token) {
+        const err = data?.error || 'Failed to dispatch verification code. Please try again.';
         setErrorMessage(err);
         toast.error(err);
         return;
       }
-      setQrCode(data.qrCode);
-      setManualKey(data.manualKey);
-      setToken('');
-      setSetupMode('verify');
+
+      setChallengeToken(data.token);
+      setCooldown(data.cooldownSeconds || 45);
+      if (data.maskedPhone) setMaskedPhone(data.maskedPhone);
+      if (data.phone) setRegisteredPhone(data.phone);
+      if (data.devCode) setDevCode(data.devCode);
+      setOtpCode('');
+      setSetupStep('verify');
+
+      const channelName = channel === 'SMS' ? 'Cellular SMS' : 'WhatsApp';
+      toast.success(`6-digit code ${channelName} par bhej diya gaya hai!`);
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 200);
     } catch (err: unknown) {
-      const msg = (err as Error)?.message || 'Failed to start 2FA setup';
+      const msg = (err as Error)?.message || 'Failed to dispatch verification code.';
       setErrorMessage(msg);
       toast.error(msg);
     } finally {
-      setSettingUp(false);
+      setSendingChannel(null);
     }
   };
 
-  const handleEnable = async () => {
-    if (token.length !== 6) {
-      const msg = 'Please enter a valid 6-digit authentication code';
-      setErrorMessage(msg);
-      toast.error(msg);
+  // ── Verify 6-digit OTP and activate 2FA ──
+  const handleVerifyOtp = async () => {
+    if (otpCode.replace(/\D/g, '').length !== 6) {
+      setErrorMessage('Please enter the complete 6-digit verification code.');
+      toast.error('6-digit code enter karein');
       return;
     }
+
     setVerifying(true);
     setErrorMessage('');
+
+    const targetPhone = customPhoneInput.trim() || registeredPhone.trim();
+
     try {
-      const data = await apiFetchJson<{ enabled: boolean; backupCodes: string[] }>('/api/auth/2fa/enable', {
+      const data = await apiFetchJson<VerifyOtpResponse>('/api/auth/2fa/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({
+          phone: targetPhone,
+          token: challengeToken,
+          code: otpCode.trim(),
+          channel: selectedChannel,
+        }),
       });
-      if (!data?.enabled) {
-        const msg = 'Invalid authentication code. Please check your authenticator app.';
-        setErrorMessage(msg);
-        toast.error(msg);
+
+      if (!data?.success) {
+        const err = data?.error || 'Invalid verification code. Please check and try again.';
+        setErrorMessage(err);
+        toast.error(err);
         return;
       }
-      setBackupCodes(data.backupCodes || []);
-      setCodesSavedConfirmed(false);
-      setSetupMode('codes');
+
       setEnabled(true);
-      toast.success('2FA enabled successfully!');
+      setSetupStep('idle');
+      setEditingPhone(false);
+      setOtpCode('');
+      setChallengeToken('');
+      setDevCode(null);
+      if (data.maskedPhone) setMaskedPhone(data.maskedPhone);
+      if (data.phone) setRegisteredPhone(data.phone);
+
+      toast.success('Two-Step Verification successfully activated! 🎉');
     } catch (err: unknown) {
       const msg = (err as Error)?.message || 'Verification failed. Try again.';
       setErrorMessage(msg);
@@ -104,44 +212,32 @@ export default function TwoFactorSetup() {
     }
   };
 
-  const handleDisable = async () => {
-    if (!disablePassword) {
-      const msg = 'Account password is required to disable 2FA';
-      setErrorMessage(msg);
-      toast.error(msg);
-      return;
-    }
-    if (!disableToken.trim()) {
-      const msg = 'Current 2FA code or backup code is required';
-      setErrorMessage(msg);
-      toast.error(msg);
-      return;
-    }
-
+  // ── Disable 2FA ──
+  const handleDisable2Fa = async () => {
     setDisabling(true);
     setErrorMessage('');
     try {
-      const data = await apiFetchJson<{ disabled: boolean }>('/api/auth/2fa/disable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: disablePassword, token: disableToken.trim() }),
-      });
-      if (data?.disabled) {
+      const data = await apiFetchJson<{ success: boolean; disabled: boolean }>(
+        '/api/auth/2fa/disable',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: disablePassword }),
+        }
+      );
+
+      if (data?.disabled || data?.success) {
         setEnabled(false);
-        setSetupMode('idle');
-        setQrCode('');
-        setManualKey('');
-        setToken('');
+        setSetupStep('idle');
         setDisablePassword('');
-        setDisableToken('');
-        toast.success('Two-factor authentication disabled');
+        toast.success('Two-Step Verification has been disabled.');
       } else {
-        const msg = 'Failed to disable 2FA. Please verify your password and 2FA code.';
-        setErrorMessage(msg);
-        toast.error(msg);
+        const err = 'Failed to disable 2-Step Verification.';
+        setErrorMessage(err);
+        toast.error(err);
       }
     } catch (err: unknown) {
-      const msg = (err as Error)?.message || 'Failed to disable 2FA. Verify password and code.';
+      const msg = (err as Error)?.message || 'Failed to disable 2-step verification.';
       setErrorMessage(msg);
       toast.error(msg);
     } finally {
@@ -149,303 +245,533 @@ export default function TwoFactorSetup() {
     }
   };
 
-  const copyCodes = () => {
-    navigator.clipboard.writeText(backupCodes.join('\n'));
-    setCopied(true);
-    toast.success('Backup codes copied to clipboard');
-    setTimeout(() => setCopied(false), 2500);
-  };
-
-  const downloadCodes = () => {
-    const blob = new Blob([backupCodes.join('\n')], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'fahad-ali-interior-2fa-backup-codes.txt';
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Backup codes file downloaded');
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 text-theme-accent animate-spin" />
+        <Loader2 className="w-6 h-6 text-[#B88E4B] animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg space-y-6">
-      <h2 className="text-2xl font-bold text-theme-dark" style={{ fontFamily: 'Georgia, serif' }}>
-        Security Settings
-      </h2>
+    <div className="max-w-xl space-y-5">
+      {/* ── Section Title ── */}
+      <div className="flex items-center justify-between border-b border-[#E7DDD0] pb-3">
+        <div>
+          <h2
+            className="text-xl sm:text-2xl font-bold text-[#1F1612] flex items-center gap-2"
+            style={{ fontFamily: 'Georgia, serif' }}
+          >
+            <Shield className="w-5 h-5 text-[#B88E4B]" />
+            Security Settings
+          </h2>
+          <p className="text-stone-500 text-xs mt-0.5">
+            Two-Step Mobile OTP Verification (Cellular SMS &amp; WhatsApp)
+          </p>
+        </div>
+        <span
+          className={`text-[11px] font-bold px-3 py-1 rounded-full border transition-all ${
+            enabled
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs'
+              : 'bg-amber-50 text-amber-700 border-amber-200'
+          }`}
+        >
+          {enabled ? '● ACTIVE' : '○ OFF'}
+        </span>
+      </div>
 
+      {/* ── Error Banner ── */}
       {errorMessage && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
-          <AlertTriangle size={16} className="shrink-0 text-red-500" />
-          <span>{errorMessage}</span>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl text-xs flex items-center gap-2 shadow-xs"
+        >
+          <AlertTriangle size={15} className="shrink-0 text-rose-600" />
+          <span className="font-medium">{errorMessage}</span>
+        </motion.div>
       )}
 
-      {setupMode === 'codes' && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-green-50 border border-green-200 rounded-xl p-6 space-y-4"
-        >
-          <div className="flex items-center gap-2 text-green-700">
-            <Check size={20} />
-            <span className="font-semibold">2FA Enabled Successfully!</span>
-          </div>
-          <p className="text-green-700/80 text-sm">
-            Save these 8 backup codes in a safe place. Each code can be used once if you lose access to your authenticator app.
-          </p>
-          <div className="bg-white border border-green-200 rounded-lg p-4 font-mono text-sm text-green-800 grid grid-cols-2 gap-2">
-            {backupCodes.map((c, i) => (
-              <div key={i} className="p-1 bg-green-50/50 rounded text-center tracking-wider font-semibold">
-                {c}
+      {/* ── Main Two-Step Verification Card ── */}
+      <div className="bg-[#FAF5EE]/70 border border-[#E7DDD0] rounded-2xl p-5 sm:p-6 shadow-sm relative overflow-hidden">
+        {/* Subtle Luxury Gold Accent Line */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#8C6239]" />
+
+        <AnimatePresence mode="wait">
+          {/* ══════════════════════════════════════════════════════════
+              VIEW 1: ACTIVE / PROTECTED STATE
+          ══════════════════════════════════════════════════════════ */}
+          {enabled && setupStep === 'idle' && (
+            <motion.div
+              key="active-state"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="space-y-4"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-[#E7DDD0] rounded-xl p-4 shadow-xs">
+                <div className="flex items-center gap-3.5">
+                  <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white shadow-md shadow-emerald-700/20">
+                    <motion.svg
+                      viewBox="0 0 24 24"
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <motion.path
+                        d="M5 13l4 4L19 7"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                      />
+                    </motion.svg>
+                    <span className="absolute -inset-1 rounded-xl bg-emerald-400/20 animate-pulse pointer-events-none" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-sm sm:text-base text-[#1F1612]">
+                        Two-Step Verification is Active
+                      </h3>
+                      <span className="text-[10px] uppercase font-black tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
+                        PROTECTED
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      Account is secured with instant 6-digit WhatsApp &amp; SIM SMS OTP codes.
+                    </p>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={copyCodes} className="bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg">
-              {copied ? (
-                <>
-                  <Check size={14} className="mr-1" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy size={14} className="mr-1" />
-                  Copy Codes
-                </>
+
+              {/* Registered Phone Card */}
+              <div className="bg-white border border-[#E7DDD0] rounded-xl p-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600">
+                    <Phone size={15} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                      Registered Mobile Number
+                    </span>
+                    <span className="text-xs sm:text-sm font-mono font-bold text-[#1F1612]">
+                      {maskedPhone || registeredPhone || '+92 3XX •••••••'}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold bg-amber-50 text-[#8C6239] border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <Sparkles size={11} className="text-[#B88E4B]" />
+                  WhatsApp &amp; SMS
+                </span>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <Button
+                  onClick={() => setSetupStep('disable')}
+                  variant="outline"
+                  className="border-rose-200 text-rose-600 hover:bg-rose-50 text-xs rounded-xl font-bold transition-colors cursor-pointer"
+                >
+                  <Lock size={13} className="mr-1.5" />
+                  Disable Two-Step Verification
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════
+              VIEW 2: IDLE STATE — 2 OPTIONS (SMS & WHATSAPP)
+          ══════════════════════════════════════════════════════════ */}
+          {!enabled && setupStep === 'idle' && (
+            <motion.div
+              key="idle-state"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="space-y-5"
+            >
+              {/* Header inside card */}
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#B88E4B] to-[#5A3A1A] flex items-center justify-center text-white shadow-md shadow-[#B88E4B]/20 shrink-0">
+                  <Smartphone className="w-5 h-5 text-amber-100" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#1F1612]">
+                    Two-Step Mobile Verification
+                  </h3>
+                  <p className="text-xs text-stone-500 mt-0.5 leading-relaxed">
+                    Customer registration number per 6-digit OTP code bhej kar account ko protect
+                    karein. Aap SIM text message ya WhatsApp kisi bhi channel se code mangwa sakte
+                    hain.
+                  </p>
+                </div>
+              </div>
+
+              {/* Registered Phone Display / Edit */}
+              <div className="bg-white border border-[#E7DDD0] rounded-xl p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Phone size={12} className="text-[#B88E4B]" />
+                    Registered Mobile Number
+                  </span>
+                  {!editingPhone && registeredPhone && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingPhone(true)}
+                      className="text-[11px] font-bold text-[#8C6239] hover:text-[#5A3A1A] flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 size={11} />
+                      Change Number
+                    </button>
+                  )}
+                </div>
+
+                {!editingPhone && registeredPhone ? (
+                  <div className="flex items-center justify-between">
+                    <p className="font-mono text-sm sm:text-base font-bold text-[#1F1612] tracking-wider">
+                      {maskedPhone || registeredPhone}
+                    </p>
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
+                      Verified On File
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex gap-2">
+                      <Input
+                        type="tel"
+                        value={customPhoneInput}
+                        onChange={(e) => setCustomPhoneInput(e.target.value)}
+                        placeholder="0300 1234567 or +92 300 1234567"
+                        className="bg-[#FAF5EE] border-[#E7DDD0] text-xs font-mono font-bold text-[#1F1612] rounded-lg focus:border-[#B88E4B]"
+                      />
+                      {registeredPhone && (
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setCustomPhoneInput(registeredPhone);
+                            setEditingPhone(false);
+                          }}
+                          variant="outline"
+                          className="text-xs border-[#E7DDD0] text-stone-500 rounded-lg px-3"
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-stone-400">
+                      Yeh wahi Pakistani number hai jo aapne register karte waqt enter kiya tha.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* ── THE 2 CHANNEL OPTIONS (USER REQUIREMENT) ── */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">
+                  Select Verification Channel (Kis par code mangwana hai?):
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* OPTION 1: SIM TEXT MASSAGE (SMS) */}
+                  <button
+                    type="button"
+                    onClick={() => handleSendOtp('SMS')}
+                    disabled={sendingChannel !== null}
+                    className="group relative text-left p-4 rounded-xl border border-[#E7DDD0] bg-white hover:border-[#B88E4B] hover:shadow-md transition-all cursor-pointer disabled:opacity-50 overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-amber-200/20 to-transparent rounded-bl-full pointer-events-none" />
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8C6239] to-[#5A3A1A] text-white flex items-center justify-center shadow-xs">
+                        {sendingChannel === 'SMS' ? (
+                          <Loader2 size={18} className="animate-spin text-amber-200" />
+                        ) : (
+                          <MessageSquare size={18} className="text-amber-100" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-xs sm:text-sm text-[#1F1612] group-hover:text-[#B88E4B] transition-colors">
+                          SIM Text Message
+                        </h4>
+                        <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">
+                          Cellular SMS OTP
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-stone-500 leading-snug">
+                      Aapke registered SIM number par instant 6-digit text SMS bheja jayega.
+                    </p>
+                    <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between text-xs font-bold text-[#8C6239] group-hover:text-[#5A3A1A]">
+                      <span>{sendingChannel === 'SMS' ? 'Sending SMS...' : 'Send via SIM SMS'}</span>
+                      <span className="text-sm font-black transition-transform group-hover:translate-x-1">
+                        →
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* OPTION 2: WHATSAPP OTP */}
+                  <button
+                    type="button"
+                    onClick={() => handleSendOtp('WHATSAPP')}
+                    disabled={sendingChannel !== null}
+                    className="group relative text-left p-4 rounded-xl border border-emerald-200/80 bg-white hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer disabled:opacity-50 overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-emerald-200/20 to-transparent rounded-bl-full pointer-events-none" />
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white flex items-center justify-center shadow-xs">
+                        {sendingChannel === 'WHATSAPP' ? (
+                          <Loader2 size={18} className="animate-spin text-emerald-200" />
+                        ) : (
+                          <MessageCircle size={18} className="text-emerald-100" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-xs sm:text-sm text-[#1F1612] group-hover:text-emerald-700 transition-colors">
+                          WhatsApp Message
+                        </h4>
+                        <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">
+                          Instant WhatsApp OTP
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-stone-500 leading-snug">
+                      Aapke WhatsApp account par Fahad Ali Interior ka official 6-digit code aayega.
+                    </p>
+                    <div className="mt-3 pt-2.5 border-t border-emerald-50 flex items-center justify-between text-xs font-bold text-emerald-700 group-hover:text-emerald-900">
+                      <span>
+                        {sendingChannel === 'WHATSAPP' ? 'Sending WhatsApp...' : 'Send via WhatsApp'}
+                      </span>
+                      <span className="text-sm font-black transition-transform group-hover:translate-x-1">
+                        →
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════
+              VIEW 3: VERIFY 6-DIGIT CODE STEP
+          ══════════════════════════════════════════════════════════ */}
+          {setupStep === 'verify' && (
+            <motion.div
+              key="verify-step"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-4"
+            >
+              {/* Channel Notification Header */}
+              <div className="bg-white border border-[#E7DDD0] rounded-xl p-4 flex items-center gap-3 shadow-xs">
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 ${
+                    selectedChannel === 'WHATSAPP'
+                      ? 'bg-gradient-to-br from-emerald-600 to-emerald-800'
+                      : 'bg-gradient-to-br from-[#8C6239] to-[#5A3A1A]'
+                  }`}
+                >
+                  {selectedChannel === 'WHATSAPP' ? (
+                    <MessageCircle size={20} />
+                  ) : (
+                    <MessageSquare size={20} />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-bold text-sm text-[#1F1612]">Enter 6-Digit Code</h4>
+                  <p className="text-xs text-stone-500 truncate">
+                    Code sent to{' '}
+                    <span className="font-mono font-bold text-[#1F1612]">
+                      {maskedPhone || registeredPhone}
+                    </span>{' '}
+                    via {selectedChannel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Dev Test Code Helper (visible in non-production for instant test) */}
+              {devCode && (
+                <div className="bg-amber-50/80 border border-amber-200 rounded-lg p-2.5 flex items-center justify-between text-xs">
+                  <span className="text-amber-800 font-medium">
+                    🧪 Dev Testing Code:{' '}
+                    <strong className="font-mono text-sm tracking-widest">{devCode}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setOtpCode(devCode)}
+                    className="text-[11px] font-bold text-[#8C6239] hover:underline cursor-pointer"
+                  >
+                    Auto-Fill
+                  </button>
+                </div>
               )}
-            </Button>
-            <Button
-              onClick={downloadCodes}
-              variant="outline"
-              className="border-green-300 text-green-700 hover:bg-green-50 text-xs rounded-lg"
-            >
-              <Download size={14} className="mr-1" />
-              Download
-            </Button>
-          </div>
 
-          <div className="pt-3 border-t border-green-200 space-y-3">
-            <label className="flex items-center gap-2 text-xs text-green-900 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={codesSavedConfirmed}
-                onChange={(e) => setCodesSavedConfirmed(e.target.checked)}
-                className="rounded border-green-300 text-green-600 focus:ring-green-500"
-              />
-              <span className="font-medium">I have safely saved and stored these backup codes</span>
-            </label>
-            <Button
-              onClick={() => {
-                setBackupCodes([]);
-                setSetupMode('idle');
-                setCodesSavedConfirmed(false);
-              }}
-              disabled={!codesSavedConfirmed}
-              className="w-full bg-green-700 hover:bg-green-800 disabled:opacity-50 text-white text-xs rounded-lg py-2"
-            >
-              Finish Setup
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
-      {setupMode === 'verify' && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-theme-surface border border-theme-border rounded-xl p-6 space-y-5"
-        >
-          <h3 className="text-lg font-semibold text-theme-dark">Scan QR Code</h3>
-          <p className="text-theme-muted text-sm">
-            Scan this QR code with your authenticator app (Google Authenticator, Microsoft Authenticator, Authy), then enter the 6-digit code below.
-          </p>
-          {qrCode && (
-            <div className="flex justify-center p-2 bg-white rounded-lg border border-theme-border w-fit mx-auto">
-              <img src={qrCode} alt="2FA QR Code" className="w-48 h-48 rounded" />
-            </div>
-          )}
-          <div className="bg-theme-bg border border-theme-border rounded-lg p-3 text-center">
-            <p className="text-theme-muted text-xs mb-1">Can&apos;t scan? Enter this key manually:</p>
-            <div className="flex items-center justify-center gap-2">
-              <code className="text-theme-dark font-mono text-sm bg-theme-surface px-3 py-1 rounded border border-theme-border select-all">
-                {manualKey}
-              </code>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(manualKey);
-                  toast.success('Copied manual key!');
-                }}
-                className="text-theme-muted hover:text-theme-accent shrink-0"
-              >
-                <Copy size={14} />
-              </button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <span className="text-theme-muted text-xs uppercase tracking-wider">Verification Code</span>
-            <Input
-              value={token}
-              onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="000000"
-              maxLength={6}
-              className="bg-theme-bg border-theme-border text-theme-dark text-center text-2xl tracking-[0.5em] font-mono rounded-lg h-14 focus:border-theme-accent"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={handleEnable}
-              disabled={verifying || token.length !== 6}
-              className="bg-theme-brown hover:bg-theme-dark text-white rounded-lg text-sm font-semibold"
-            >
-              {verifying ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Shield size={16} className="mr-1" />}
-              {verifying ? 'Verifying...' : 'Enable 2FA'}
-            </Button>
-            <Button
-              onClick={() => {
-                setSetupMode('idle');
-                setToken('');
-                setErrorMessage('');
-              }}
-              variant="outline"
-              className="border-theme-border text-theme-muted rounded-lg text-sm"
-            >
-              Cancel
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
-      {setupMode === 'disable' && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-theme-surface border border-red-200 rounded-xl p-6 space-y-4"
-        >
-          <div className="flex items-center gap-2 text-red-600 font-semibold text-lg">
-            <AlertTriangle size={20} />
-            <h3>Disable Two-Factor Authentication</h3>
-          </div>
-          <p className="text-theme-muted text-sm">
-            To disable 2FA, enter your current account password and a 6-digit authenticator code (or one of your backup codes).
-          </p>
-
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-theme-muted block mb-1">Current Account Password</label>
-              <Input
-                type="password"
-                value={disablePassword}
-                onChange={(e) => setDisablePassword(e.target.value)}
-                placeholder="Enter account password"
-                className="bg-theme-bg border-theme-border text-theme-dark rounded-lg text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs text-theme-muted block mb-1">Current 2FA Code or Backup Code</label>
-              <Input
-                type="text"
-                value={disableToken}
-                onChange={(e) => setDisableToken(e.target.value.trim())}
-                placeholder="000000 or backup code"
-                className="bg-theme-bg border-theme-border text-theme-dark rounded-lg text-sm font-mono"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <Button
-              onClick={handleDisable}
-              disabled={disabling || !disablePassword || !disableToken}
-              className="bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold"
-            >
-              {disabling ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <AlertTriangle size={16} className="mr-1" />}
-              {disabling ? 'Disabling...' : 'Confirm Disable 2FA'}
-            </Button>
-            <Button
-              onClick={() => {
-                setSetupMode('idle');
-                setDisablePassword('');
-                setDisableToken('');
-                setErrorMessage('');
-              }}
-              variant="outline"
-              className="border-theme-border text-theme-muted rounded-lg text-sm"
-            >
-              Cancel
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
-      {setupMode === 'idle' && (
-        <div className="bg-theme-surface border border-theme-border rounded-xl p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  enabled ? 'bg-green-100' : 'bg-theme-border'
-                }`}
-              >
-                <Shield size={20} className={enabled ? 'text-green-600' : 'text-theme-muted'} />
+              {/* 6-Digit Code Input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
+                  6-Digit Verification Code
+                </label>
+                <div className="relative">
+                  <Input
+                    ref={inputRef}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={otpCode}
+                    onChange={(e) => {
+                      const clean = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setOtpCode(clean);
+                    }}
+                    placeholder="••••••"
+                    maxLength={6}
+                    className="bg-white border-[#E7DDD0] text-[#1F1612] text-center text-2xl sm:text-3xl tracking-[0.45em] font-mono font-black rounded-xl h-14 sm:h-16 shadow-inner focus:border-[#B88E4B]"
+                  />
+                  {otpCode.length === 6 && (
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                      <Check size={14} />
+                    </span>
+                  )}
+                </div>
               </div>
-              <div>
-                <p className="text-theme-dark font-medium text-sm">Two-Factor Authentication</p>
-                <p className="text-theme-muted text-xs">{enabled ? 'Enabled' : 'Not configured'}</p>
-              </div>
-            </div>
-            <span
-              className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                enabled ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-              }`}
-            >
-              {enabled ? 'ON' : 'OFF'}
-            </span>
-          </div>
 
-          {!enabled ? (
-            <div className="space-y-3">
-              <p className="text-theme-muted text-sm">
-                Add an extra layer of security to your account. Use an authenticator app to generate one-time codes.
-              </p>
-              <Button
-                onClick={handleSetup}
-                disabled={settingUp}
-                className="bg-theme-brown hover:bg-theme-dark text-white rounded-lg text-sm font-semibold"
-              >
-                {settingUp ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Smartphone size={16} className="mr-1" />}
-                {settingUp ? 'Preparing...' : 'Set Up 2FA'}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-theme-muted text-sm">
-                Two-factor authentication is active. Your account is protected with a time-based one-time password.
-              </p>
-              <Button
-                onClick={() => {
-                  setErrorMessage('');
-                  setDisablePassword('');
-                  setDisableToken('');
-                  setSetupMode('disable');
-                }}
-                variant="outline"
-                className="border-red-200 text-red-600 hover:bg-red-50 rounded-lg text-xs"
-              >
-                <KeyRound size={14} className="mr-1" /> Disable 2FA
-              </Button>
-            </div>
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+                <Button
+                  onClick={handleVerifyOtp}
+                  disabled={verifying || otpCode.length !== 6}
+                  className="flex-1 bg-gradient-to-r from-[#B88E4B] via-[#996515] to-[#5A3A1A] hover:brightness-110 text-white rounded-xl h-11 text-xs sm:text-sm font-bold shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {verifying ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Verifying Code...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Verify &amp; Activate 2FA
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    setSetupStep('idle');
+                    setOtpCode('');
+                    setErrorMessage('');
+                  }}
+                  variant="outline"
+                  className="border-[#E7DDD0] text-stone-600 hover:bg-stone-50 rounded-xl h-11 text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </Button>
+              </div>
+
+              {/* Resend / Switch Channel Options */}
+              <div className="pt-2 border-t border-[#E7DDD0]/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-stone-500">
+                <div>
+                  {cooldown > 0 ? (
+                    <span>
+                      Resend code in <strong className="font-mono text-[#8C6239]">{cooldown}s</strong>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleSendOtp(selectedChannel)}
+                      disabled={sendingChannel !== null}
+                      className="font-bold text-[#8C6239] hover:text-[#5A3A1A] flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw size={12} />
+                      Resend Code via {selectedChannel === 'WHATSAPP' ? 'WhatsApp' : 'SIM SMS'}
+                    </button>
+                  )}
+                </div>
+
+                {/* Option to switch between SMS and WhatsApp */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const alternate = selectedChannel === 'WHATSAPP' ? 'SMS' : 'WHATSAPP';
+                    handleSendOtp(alternate);
+                  }}
+                  disabled={sendingChannel !== null}
+                  className="font-bold text-stone-700 hover:text-[#8C6239] underline cursor-pointer"
+                >
+                  {selectedChannel === 'WHATSAPP'
+                    ? 'Didn’t receive? Send via SIM SMS instead'
+                    : 'Didn’t receive? Send via WhatsApp instead'}
+                </button>
+              </div>
+            </motion.div>
           )}
-        </div>
-      )}
+
+          {/* ══════════════════════════════════════════════════════════
+              VIEW 4: DISABLE 2FA CONFIRMATION
+          ══════════════════════════════════════════════════════════ */}
+          {setupStep === 'disable' && (
+            <motion.div
+              key="disable-step"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="space-y-4 bg-white border border-rose-200 rounded-xl p-5 shadow-xs"
+            >
+              <div className="flex items-center gap-2.5 text-rose-700">
+                <AlertTriangle size={18} />
+                <h3 className="font-bold text-sm sm:text-base">
+                  Disable Two-Step Verification?
+                </h3>
+              </div>
+              <p className="text-xs text-stone-500 leading-relaxed">
+                Disabling 2FA will remove the extra layer of security. Any future login will only
+                require your email and password without WhatsApp or SMS OTP.
+              </p>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
+                  Confirm Account Password
+                </label>
+                <Input
+                  type="password"
+                  value={disablePassword}
+                  onChange={(e) => setDisablePassword(e.target.value)}
+                  placeholder="Enter current account password"
+                  className="bg-[#FAF5EE] border-[#E7DDD0] text-xs text-[#1F1612] rounded-lg focus:border-rose-400"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button
+                  onClick={handleDisable2Fa}
+                  disabled={disabling}
+                  className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  {disabling ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                      Disabling...
+                    </>
+                  ) : (
+                    'Confirm Disable'
+                  )}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSetupStep('idle');
+                    setDisablePassword('');
+                    setErrorMessage('');
+                  }}
+                  variant="outline"
+                  className="border-stone-200 text-stone-600 rounded-xl text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

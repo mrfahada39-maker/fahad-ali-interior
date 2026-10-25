@@ -23,6 +23,9 @@ import { POST as handleForgotPassword } from '@/app/api/auth/forgot-password/rou
 import { POST as handleResetPassword } from '@/app/api/auth/reset-password/route';
 import { POST as handleVerifyEmail } from '@/app/api/auth/verify-email/route';
 import { POST as handleResendVerification } from '@/app/api/auth/resend-verification/route';
+import { POST as handle2FaSendOtp } from '@/app/api/auth/2fa/send-otp/route';
+import { POST as handle2FaVerifyOtp } from '@/app/api/auth/2fa/verify-otp/route';
+import { maskPakistaniPhone } from '@/lib/phone-otp';
 import { revokeAllUserTokensAsync } from '@/lib/admin-auth';
 import { ApiDispatchContext, getUserFromSessionOrToken, requireAdmin } from './shared';
 
@@ -99,17 +102,46 @@ export async function handleAuthRoutes(ctx: ApiDispatchContext): Promise<NextRes
     segment === 'auth/2fa/disable' ||
     segment === 'v1/auth/2fa/disable';
 
+  const is2faSendOtp =
+    normalizedSegment === 'auth/2fa/send-otp' ||
+    segment === 'auth/2fa/send-otp' ||
+    segment === 'v1/auth/2fa/send-otp';
+
+  if (is2faSendOtp) {
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+    return handle2FaSendOtp(req);
+  }
+
+  const is2faVerifyOtp =
+    normalizedSegment === 'auth/2fa/verify-otp' ||
+    segment === 'auth/2fa/verify-otp' ||
+    segment === 'v1/auth/2fa/verify-otp';
+
+  if (is2faVerifyOtp) {
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+    return handle2FaVerifyOtp(req);
+  }
+
   if (is2faStatus) {
     if (method !== 'GET') {
       return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
     }
     const user = await getUserFromSessionOrToken(req);
-    if (!user?.id) return NextResponse.json({ enabled: false });
+    if (!user?.id) return NextResponse.json({ enabled: false, phone: null, maskedPhone: null });
     const u = await db.user.findUnique({
       where: { id: user.id },
-      select: { totpEnabled: true },
+      select: { totpEnabled: true, phone: true },
     }).catch(() => null);
-    return NextResponse.json({ enabled: Boolean(u?.totpEnabled) });
+    const phone = u?.phone || null;
+    return NextResponse.json({
+      enabled: Boolean(u?.totpEnabled),
+      phone,
+      maskedPhone: phone ? maskPakistaniPhone(phone) : null,
+    });
   }
 
   if (is2faSetup) {

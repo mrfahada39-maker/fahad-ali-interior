@@ -1,7 +1,23 @@
 import crypto from 'crypto';
 import { WhatsAppService } from '@/lib/whatsapp';
+import { SmsService } from '@/lib/sms';
 import { logger } from '@/lib/logger';
 import { isValidPakistaniPhone } from '@/lib/pakistan-localization';
+
+/**
+ * Masks a Pakistani phone number for private display (e.g. +92 300 ••••567).
+ */
+export function maskPakistaniPhone(phone: string): string {
+  if (!phone) return '';
+  const norm = normalizePakistaniPhone(phone);
+  if (norm.length >= 10) {
+    const cc = norm.slice(0, 2);
+    const code = norm.slice(2, 5);
+    const suffix = norm.slice(-3);
+    return `+${cc} ${code} ••••${suffix}`;
+  }
+  return phone;
+}
 
 /**
  * In-memory rate limiting and attempt tracker for phone OTPs.
@@ -213,12 +229,20 @@ export function isPhoneVerifiedTokenValid(phone: string, token: string): boolean
 }
 
 /**
- * Sends a 6-digit OTP code to the customer via WhatsApp (with fallback logging for dev/testing).
+ * Sends a 6-digit OTP code to the customer via WhatsApp or cellular SMS text (with fallback logging for dev/testing).
  */
 export async function sendOtpToPhone(
-  phone: string
+  phone: string,
+  channelPref: 'WHATSAPP' | 'SMS' = 'WHATSAPP',
+  contextTitle: string = 'Security Verification'
 ): Promise<
-  | { success: true; token: string; cooldownSeconds: number; channel: 'WHATSAPP' | 'DEV_LOG'; devCode?: string }
+  | {
+      success: true;
+      token: string;
+      cooldownSeconds: number;
+      channel: 'WHATSAPP' | 'SMS' | 'DEV_LOG';
+      devCode?: string;
+    }
   | { success: false; error: string; cooldownSeconds?: number }
 > {
   if (!isValidPakistaniPhone(phone)) {
@@ -280,12 +304,26 @@ export async function sendOtpToPhone(
   // Reset verify attempts for this phone
   otpRateLimitMap.delete(`verify:${normPhone}`);
 
-  // Format professional message in Urdu/English
+  // ── Dispatch via Cellular SMS ──
+  if (channelPref === 'SMS') {
+    const smsRes = await SmsService.sendOtpMessage(normPhone, otp);
+    if (smsRes.success) {
+      return {
+        success: true,
+        token,
+        cooldownSeconds: COOLDOWN_SECONDS,
+        channel: smsRes.channel,
+        ...(smsRes.devCode ? { devCode: smsRes.devCode } : {}),
+      };
+    }
+  }
+
+  // ── Dispatch via WhatsApp Cloud API ──
   const messageBody = `🏛️ *FAHAD ALI INTERIOR*
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Assalam-o-Alaikum,
 
-Aapka Royal Furniture order authorize karne ke liye 6-digit verification code yeh hai:
+Aapka ${contextTitle} 6-digit verification code yeh hai:
 
 🔑 *${otp}*
 
@@ -293,13 +331,14 @@ Yeh code agle 10 minute ke liye valid hai. Baraye meherbani yeh code kisi ke sat
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✨ *Fahad Ali Interior — Haute Couture Handcrafted Luxury*`;
 
-  // Dispatch via WhatsApp Cloud API
   let sentViaWhatsApp = false;
   try {
     sentViaWhatsApp = await WhatsAppService.sendTextMessage(normPhone, messageBody);
   } catch (err) {
     logger.warn('[WhatsApp OTP Dispatch Failed]:', { detail: String(err) });
   }
+
+  const isDevOrTest = process.env.NODE_ENV !== 'production';
 
   if (sentViaWhatsApp) {
     logger.info(`[WhatsApp OTP Dispatched]: Sent 6-digit code to ${normPhone}`);
@@ -308,13 +347,12 @@ Yeh code agle 10 minute ke liye valid hai. Baraye meherbani yeh code kisi ke sat
       token,
       cooldownSeconds: COOLDOWN_SECONDS,
       channel: 'WHATSAPP',
+      ...(isDevOrTest ? { devCode: otp } : {}),
     };
   }
 
   // If WhatsApp API credentials are not set (e.g. localhost, testing, dev)
-  // log the OTP code cleanly and include devCode in non-production
-  logger.info(`[DEV / TEST OTP DISPATCH] 6-digit code for ${normPhone}: ${otp}`);
-  const isDevOrTest = process.env.NODE_ENV !== 'production';
+  logger.info(`[DEV / TEST OTP DISPATCH] 6-digit code for ${normPhone}: ${otp} (channel: ${channelPref})`);
 
   return {
     success: true,
@@ -324,3 +362,4 @@ Yeh code agle 10 minute ke liye valid hai. Baraye meherbani yeh code kisi ke sat
     ...(isDevOrTest ? { devCode: otp } : {}),
   };
 }
+
