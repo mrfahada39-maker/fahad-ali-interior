@@ -451,7 +451,6 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                   >
                     ← Back to Sign In
                   </button>
-                  <div id="firebase-recaptcha-container" />
                 </div>
               ) : (
                 /* ── Standard Auth Flow ── */
