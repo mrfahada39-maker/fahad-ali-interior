@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useSession, signOut } from 'next-auth/react';
 import {
@@ -42,8 +43,10 @@ export function DashboardStoreNavbar() {
   const [cartMounted, setCartMounted] = useState(false);
   const [wishlistMounted, setWishlistMounted] = useState(false);
 
+  const pathname = usePathname() || '';
   const roleUpper = (session?.user as { role?: string })?.role?.toUpperCase();
   const isAdmin = roleUpper === 'ADMIN' || roleUpper === 'SUPER_ADMIN';
+  const isAdminPage = pathname.startsWith('/admin');
 
   useEffect(() => {
     setMounted(true);
@@ -295,6 +298,108 @@ export function DashboardStoreNavbar() {
           </button>
         </div>
       </div>
+
+      {/* ── CLEAN LUXURY WHITE/IVORY BOTTOM NAVIGATION (FOR MOBILE DASHBOARDS) ── */}
+      <nav
+        suppressHydrationWarning
+        aria-label="Dashboard Mobile Bottom Navigation"
+        className="fixed bottom-0 left-0 right-0 w-full z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-[#EAE1D5] shadow-[0_-4px_25px_rgba(44,30,24,0.06)] px-2 pt-1.5 pb-2 h-[62px] flex items-center justify-around select-none pointer-events-auto"
+      >
+        {/* 1. Home */}
+        <Link
+          prefetch={false}
+          href="/"
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
+        >
+          <Home
+            size={20}
+            strokeWidth={pathname === '/' ? 2.2 : 1.8}
+            className={pathname === '/' ? 'text-[#8C6222]' : 'text-[#7D6F64]'}
+          />
+          <span className={`text-[10px] mt-0.5 tracking-wide ${pathname === '/' ? 'font-bold text-[#8C6222]' : 'font-medium text-[#7D6F64]'}`}>
+            Home
+          </span>
+          {pathname === '/' && (
+            <span className="w-5 h-0.5 rounded-full bg-[#B88E4B] mt-0.5" />
+          )}
+        </Link>
+
+        {/* 2. Shop */}
+        <Link
+          prefetch={false}
+          href="/#signature-categories"
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
+        >
+          <LayoutGrid size={20} strokeWidth={1.8} className="text-[#7D6F64]" />
+          <span className="text-[10px] mt-0.5 font-medium text-[#7D6F64] tracking-wide">
+            Shop
+          </span>
+        </Link>
+
+        {/* 3. Wishlist */}
+        <button
+          type="button"
+          onClick={() => {
+            setWishlistMounted(true);
+            useWishlistDrawerStore.getState().openDrawer();
+          }}
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
+          aria-label="Wishlist"
+        >
+          <Heart size={20} strokeWidth={1.8} className="text-[#7D6F64]" />
+          <span className="text-[10px] mt-0.5 font-medium text-[#7D6F64] tracking-wide">
+            Wishlist
+          </span>
+        </button>
+
+        {/* 4. Cart */}
+        <button
+          type="button"
+          onClick={() => {
+            setCartMounted(true);
+            openCart();
+          }}
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
+          aria-label="Shopping Cart"
+        >
+          <div className="relative">
+            <ShoppingBag size={20} strokeWidth={1.8} className="text-[#7D6F64]" />
+            {mounted && cartItemCount > 0 && (
+              <span className="absolute -top-1 -right-2 min-w-[15px] h-[15px] px-0.5 rounded-full bg-[#C59B4B] text-white text-[8.5px] font-bold flex items-center justify-center shadow-xs">
+                {cartItemCount}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] mt-0.5 font-medium text-[#7D6F64] tracking-wide">
+            Cart
+          </span>
+        </button>
+
+        {/* 5. Portal / Dashboard */}
+        <Link
+          prefetch={false}
+          href={isAdminPage ? '/admin' : '/dashboard'}
+          className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
+        >
+          {isAdminPage ? (
+            <ShieldCheck
+              size={20}
+              strokeWidth={2.2}
+              className="text-[#8C6222]"
+            />
+          ) : (
+            <User
+              size={20}
+              strokeWidth={2.2}
+              className="text-[#8C6222]"
+            />
+          )}
+          <span className="text-[10px] mt-0.5 tracking-wide font-bold text-[#8C6222]">
+            {isAdminPage ? 'Admin' : 'Dashboard'}
+          </span>
+          <span className="w-5 h-0.5 rounded-full bg-[#B88E4B] mt-0.5" />
+        </Link>
+      </nav>
 
       {/* ── MODALS & DRAWERS ── */}
       {cartMounted && <CartDrawer />}

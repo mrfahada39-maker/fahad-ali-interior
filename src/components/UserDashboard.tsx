@@ -595,7 +595,7 @@ export default function UserDashboard() {
       />
 
       <div className="flex-1 lg:pl-[108px] pt-[124px] lg:pt-0 flex flex-col min-w-0">
-        <main className="flex-1 flex flex-col min-w-0 p-3 sm:p-4 lg:p-5 gap-3.5 max-w-[1700px] w-full mx-auto">
+        <main className="flex-1 flex flex-col min-w-0 p-3 sm:p-4 lg:p-5 pb-24 lg:pb-5 gap-3.5 max-w-[1700px] w-full mx-auto">
           <DashboardTopTabDock
             activeTab={activeTab}
             setActiveTab={setActiveTab}

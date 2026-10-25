@@ -912,7 +912,7 @@ export default function AdminDashboard() {
           initial={{ opacity: 0.9 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.05 }}
-          className="flex-1 flex flex-col min-h-0 pb-3"
+          className="flex-1 flex flex-col min-h-0 pb-24 lg:pb-3"
         >
 
           {/* OVERVIEW */}
