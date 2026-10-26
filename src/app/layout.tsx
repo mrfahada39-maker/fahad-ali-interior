@@ -192,9 +192,9 @@ export default async function RootLayout({
   const settings = await getCachedSettings();
   ReactDOM.preconnect('https://res.cloudinary.com', { crossOrigin: 'anonymous' });
   ReactDOM.preconnect('https://images.unsplash.com', { crossOrigin: 'anonymous' });
-  ReactDOM.dnsPrefetch('https://res.cloudinary.com');
-  ReactDOM.dnsPrefetch('https://images.unsplash.com');
-  ReactDOM.dnsPrefetch('https://fonts.gstatic.com');
+  ReactDOM.prefetchDNS('https://res.cloudinary.com');
+  ReactDOM.prefetchDNS('https://images.unsplash.com');
+  ReactDOM.prefetchDNS('https://fonts.gstatic.com');
 
   return (
     <html lang="en" suppressHydrationWarning>
