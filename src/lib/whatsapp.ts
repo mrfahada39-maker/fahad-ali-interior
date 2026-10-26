@@ -224,7 +224,7 @@ ${itemsList}
     let rawAdmin = (
       process.env.ADMIN_WHATSAPP_NUMBER ||
       process.env.WHATSAPP_NUM ||
-      '923344171450'
+      '923207006110'
     ).replace(/\D/g, '');
 
     if (rawAdmin.startsWith('0')) {
@@ -235,9 +235,9 @@ ${itemsList}
     }
 
     // The bot's own registered sender is 923213283301. Meta Cloud API rejects messages sent to oneself.
-    // If adminPhone is set to the bot's own number, forward to the Admin's personal WhatsApp phone (923344171450).
+    // If adminPhone is set to the bot's own number, forward to the Admin's personal WhatsApp phone (923207006110).
     if (rawAdmin.endsWith('3213283301') || !rawAdmin) {
-      rawAdmin = '923344171450';
+      rawAdmin = '923207006110';
     }
     const adminPhone = rawAdmin;
 
@@ -409,7 +409,7 @@ ${itemsList}
 
     let recipientPhone = adminPhone.replace(/\D/g, '');
     if (recipientPhone === '923213283301' || !recipientPhone) {
-      recipientPhone = '923344171450';
+      recipientPhone = '923207006110';
     }
 
     try {
@@ -1017,9 +1017,9 @@ _Sent automatically by Fahad Ali Interior Executive AI Bot_`;
    */
   static async sendDailyReport(targetPhone?: string): Promise<boolean> {
     const reportText = await this.generateDailyReport();
-    let recipient = (targetPhone || process.env.ADMIN_WHATSAPP_NUMBER || '923344171450').replace(/\D/g, '');
+    let recipient = (targetPhone || process.env.ADMIN_WHATSAPP_NUMBER || '923207006110').replace(/\D/g, '');
     if (recipient === '923213283301' || !recipient) {
-      recipient = '923344171450';
+      recipient = '923207006110';
     }
     return await this.sendTextMessage(recipient, reportText);
   }

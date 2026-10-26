@@ -236,7 +236,7 @@ describe('AI Payment Verification & WhatsApp Admin 3-Button Approval Suite', () 
     });
 
     it('dispatches the daily report to admin phone', async () => {
-      const dispatched = await WhatsAppService.sendDailyReport('923344171450');
+      const dispatched = await WhatsAppService.sendDailyReport('923207006110');
       expect(typeof dispatched).toBe('boolean');
     });
   });
