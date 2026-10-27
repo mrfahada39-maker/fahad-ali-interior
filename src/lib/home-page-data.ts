@@ -156,6 +156,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
         select: {
           siteName: true,
           contactPhone: true,
+          adminEmail: true,
           storeAddress: true,
           socialInstagram: true,
           socialFacebook: true,
