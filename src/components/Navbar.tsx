@@ -102,23 +102,12 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           suppressHydrationWarning
           className="pointer-events-auto w-full max-w-[1550px] mx-auto bg-white/95 md:backdrop-blur-md rounded-[20px] sm:rounded-full border border-[#EBE1D3] shadow-[0_4px_25px_rgba(44,30,24,0.06)] px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between transition-all duration-300"
         >
-          {/* ── DESKTOP LEFT SECTION: BRAND LOGO WITH ICON ── */}
+          {/* ── DESKTOP LEFT SECTION: BRAND TITLE ── */}
           <div className="hidden lg:flex items-center">
-            <Link href="/" prefetch={false} className="flex items-center gap-2.5 group shrink-0">
-              <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-[#FAF5ED] border border-[#E8DFC8] flex items-center justify-center text-[#B88E4B] shrink-0">
-                <svg className="w-5 h-5 xl:w-6 xl:h-6 fill-none stroke-[#B88E4B] stroke-[1.8]" viewBox="0 0 24 24">
-                  <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
-                  <path d="M7 16h10M8 12h8" />
-                </svg>
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="font-serif font-black text-base xl:text-lg text-[#1F1A17] tracking-tight leading-none group-hover:text-[#B88E4B] transition-colors whitespace-nowrap">
-                  Fahad Ali Interior
-                </span>
-                <span className="text-[8px] xl:text-[9px] font-bold tracking-[0.2em] uppercase text-[#A67C37] mt-1 leading-none whitespace-nowrap">
-                  LUXURY FURNITURE • MODERN LIVING
-                </span>
-              </div>
+            <Link href="/" prefetch={false} className="flex items-center group shrink-0">
+              <span className="font-serif font-black text-lg xl:text-xl text-[#1F1A17] tracking-tight leading-none group-hover:text-[#B88E4B] transition-colors whitespace-nowrap">
+                Fahad Ali Interior
+              </span>
             </Link>
           </div>
 
