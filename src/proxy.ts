@@ -177,6 +177,30 @@ export async function proxy(request: NextRequest) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
+    // ── 3. High-Security DoS & Payload Memory Exhaustion Guard ──
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && isUnsafeMethod(request.method)) {
+      const bytes = parseInt(contentLength, 10);
+      const maxAllowedBytes = pathname.includes('/uploads') ? 15 * 1024 * 1024 : 1024 * 1024; // 15MB for uploads, 1MB for all other JSON APIs
+      if (!isNaN(bytes) && bytes > maxAllowedBytes) {
+        return NextResponse.json(
+          { error: 'Payload Too Large: Request body exceeds maximum allowed size', code: 'PAYLOAD_TOO_LARGE' },
+          { status: 413 }
+        );
+      }
+    }
+
+    // ── 4. Anti-HTTP Parameter Pollution (HPP) Defense ──
+    const sensitiveParams = ['role', 'admin', 'price', 'discount', 'userId', 'token'];
+    for (const param of sensitiveParams) {
+      if (request.nextUrl.searchParams.getAll(param).length > 1) {
+        return NextResponse.json(
+          { error: `Forbidden: Duplicate parameter '${param}' detected (HPP attack)`, code: 'PARAMETER_POLLUTION_BLOCKED' },
+          { status: 400 }
+        );
+      }
+    }
+
     const ip = getClientIp(request);
 
     if (isNextAuthInternalRoute(pathname)) {
@@ -304,7 +328,17 @@ export async function proxy(request: NextRequest) {
       return NextResponse.rewrite(rewriteUrl);
     }
 
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    const apiRes = NextResponse.next({ request: { headers: requestHeaders } });
+    if (
+      pathname.startsWith('/api/admin') ||
+      pathname.startsWith('/api/user') ||
+      pathname.startsWith('/api/v1/admin')
+    ) {
+      apiRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      apiRes.headers.set('Pragma', 'no-cache');
+      apiRes.headers.set('Expires', '0');
+    }
+    return apiRes;
   }
 
   const isAdminPath = pathname !== '/admin/login' && adminPages.some((p) => pathname === p || pathname.startsWith(p + '/'));
