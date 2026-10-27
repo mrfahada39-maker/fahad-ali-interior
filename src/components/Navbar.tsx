@@ -104,9 +104,12 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         >
           {/* ── DESKTOP LEFT SECTION: BRAND TITLE ── */}
           <div className="hidden lg:flex items-center">
-            <Link href="/" prefetch={false} className="flex items-center group shrink-0">
-              <span className="font-serif font-black text-lg xl:text-xl text-[#1F1A17] tracking-tight leading-none group-hover:text-[#B88E4B] transition-colors whitespace-nowrap">
-                Fahad Ali Interior
+            <Link href="/" prefetch={false} className="flex items-center gap-2 group shrink-0">
+              <span className="font-serif font-black text-lg xl:text-xl tracking-wider uppercase text-[#1F1A17] group-hover:text-[#B88E4B] transition-colors whitespace-nowrap">
+                FAHAD ALI
+              </span>
+              <span className="font-serif font-bold text-lg xl:text-xl tracking-wide bg-gradient-to-r from-[#B88E4B] via-[#E2C275] to-[#9E7333] bg-clip-text text-transparent drop-shadow-[0_1px_2px_rgba(184,142,75,0.2)] whitespace-nowrap">
+                Interior
               </span>
             </Link>
           </div>
@@ -231,7 +234,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               <span className="font-serif text-lg font-black tracking-wider uppercase text-[#1F1A17]">
                 FAHAD ALI
               </span>
-              <span className="text-[8px] tracking-[0.3em] font-medium uppercase text-[#8C6222] -mt-1">
+              <span className="text-[9px] tracking-[0.3em] font-bold uppercase bg-gradient-to-r from-[#B88E4B] via-[#E2C275] to-[#9E7333] bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(184,142,75,0.2)] -mt-1">
                 INTERIOR
               </span>
             </Link>
@@ -281,10 +284,10 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         <div className="flex items-start justify-between pt-1 pb-4">
           <div>
             <Link prefetch={false} href="/" onClick={() => setMobileOpen(false)} className="group flex flex-col">
-              <span className="font-serif text-2xl sm:text-3xl font-normal tracking-wider uppercase text-[#1C1410]">
+              <span className="font-serif text-2xl sm:text-3xl font-black tracking-wider uppercase text-[#1C1410]">
                 FAHAD ALI
               </span>
-              <span className="text-[9px] sm:text-[10px] tracking-[0.35em] font-light uppercase text-[#8C6222] -mt-0.5">
+              <span className="text-[10px] sm:text-[11px] tracking-[0.35em] font-bold uppercase bg-gradient-to-r from-[#B88E4B] via-[#E2C275] to-[#9E7333] bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(184,142,75,0.2)] -mt-0.5">
                 INTERIOR
               </span>
             </Link>
