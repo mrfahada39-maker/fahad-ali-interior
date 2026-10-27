@@ -132,7 +132,7 @@ export function CheckoutSectionPayment({
                   </h2>
                   <span className="px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-2xs font-sans">
                     <ShieldCheck size={12} className="text-emerald-700" />
-                    <span>SBP VERIFIED & 256-BIT ENCRYPTED</span>
+                    <span>END-TO-END 256-BIT ENCRYPTED • SBP VERIFIED</span>
                   </span>
                 </div>
 

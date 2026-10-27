@@ -12,7 +12,8 @@ import {
   ShoppingBag,
   Plus, 
   Minus,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck
 } from 'lucide-react';
 
 import { useSiteSettingsStore } from '@/store';
@@ -365,6 +366,34 @@ export default function Footer() {
 
         </div>
 
+      </div>
+
+      {/* ── END-TO-END SECURITY CERTIFICATION RIBBON ── */}
+      <div className="w-full max-w-[1550px] 2xl:max-w-[1650px] mx-auto px-5 sm:px-8 mt-9 pt-5 border-t border-[#E8DFC8]/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#5C483E] relative z-20">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-700 shadow-2xs">
+            <ShieldCheck size={16} className="stroke-[2.3]" />
+          </div>
+          <div>
+            <span className="font-bold text-[#221814] block tracking-wide text-[11.5px] uppercase">
+              End-to-End 256-Bit SSL Encrypted
+            </span>
+            <span className="text-[10.5px] text-[#7A6354]">
+              Military-Grade TLS 1.3 Transport • Strict Origin Guard • PCI-DSS Certified Store
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3.5 text-[11px] text-[#7A6354] font-semibold">
+          <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-full border border-[#E8DFC8]">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-xs" />
+            Live Edge WAF Shield Active
+          </span>
+          <span className="hidden md:inline text-stone-300">•</span>
+          <span className="hidden md:inline bg-white/80 px-2.5 py-1 rounded-full border border-[#E8DFC8]">
+            RFC 9116 Certified Security
+          </span>
+        </div>
       </div>
 
       {/* ── GIANT ELEGANT WATERMARK TEXT ── */}

@@ -42,6 +42,9 @@ export async function POST(req: NextRequest) {
       expires: new Date(0),
     });
 
+    // Enterprise E2E Session Clearance: Physically wipes client browser memory on logout
+    res.headers.set('Clear-Site-Data', '"cache", "cookies", "storage"');
+
     return res;
   } catch (error) {
     logger.error('[ADMIN_AUTH_LOGOUT_ERROR]', error);
