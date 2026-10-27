@@ -48,12 +48,9 @@ export async function POST(req: NextRequest) {
 
     const senderPhoneRaw = message.from ? String(message.from).replace(/\D/g, '') : '';
 
-    // Whitelist authorized Admin numbers: strictly 03213283301 (+92 321 3283301), 03207006110 & 03344171450
+    // Whitelist authorized Admin numbers strictly from environment variables (Zero hardcoded numbers)
     const allowedAdminPhones = new Set(
       [
-        '923213283301',
-        '923207006110',
-        '923344171450',
         (process.env.ADMIN_WHATSAPP_NUMBER || '').replace(/\D/g, ''),
         (process.env.WHATSAPP_NUM || '').replace(/\D/g, ''),
         (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '').replace(/\D/g, ''),

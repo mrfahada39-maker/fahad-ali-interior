@@ -57,12 +57,19 @@ export function normalizePakistaniPhone(phone: string): string {
  * Retrieves the cryptographic secret used to sign OTP challenge tokens.
  */
 function getPhoneOtpSecret(): string {
-  return (
+  const secret =
     process.env.ADMIN_TOKEN_SECRET ||
     process.env.AI_SESSION_SECRET ||
     process.env.NEXTAUTH_SECRET ||
-    'fahad-ali-interior-phone-otp-secret-2026'
-  );
+    process.env.DATABASE_URL;
+
+  if (secret && secret.length >= 16) {
+    return secret;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL: Phone OTP token signing secret is not configured in production.');
+  }
+  return 'dev-phone-otp-token-signing-key';
 }
 
 /**

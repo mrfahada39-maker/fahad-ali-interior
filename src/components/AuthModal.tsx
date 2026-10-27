@@ -623,7 +623,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                             type="tel"
                             value={registerData.phone}
                             onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
-                            placeholder="+92 320 7006110"
+                            placeholder="+92 300 1234567"
                             className="w-full bg-white border border-[#E2D6C8] focus:border-[#B88E4B] text-[#221814] placeholder:text-[#9C8272] rounded-xl pl-10 pr-4 h-10.5 sm:h-11 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-[#B88E4B]/15 transition-all shadow-2xs"
                           />
                         </div>

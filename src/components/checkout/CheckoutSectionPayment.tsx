@@ -107,8 +107,8 @@ export function CheckoutSectionPayment({
   handleInputChange,
 }: CheckoutSectionPaymentProps) {
   const siteSettings = useSiteSettingsStore((s) => s.settings);
-  const activeJazzcash = siteSettings?.jazzcashNumber || '0320 7006110';
-  const activeEasypaisa = siteSettings?.easypaisaNumber || '0320 7006110';
+  const activeJazzcash = siteSettings?.jazzcashNumber || process.env.NEXT_PUBLIC_JAZZCASH_NUMBER || '';
+  const activeEasypaisa = siteSettings?.easypaisaNumber || process.env.NEXT_PUBLIC_EASYPAISA_NUMBER || '';
   const activeBankName = siteSettings?.bankName || RAAST_SBP_DETAILS.bankName;
   const activeAccountTitle = siteSettings?.accountTitle || RAAST_SBP_DETAILS.accountTitle;
   const activeIban = siteSettings?.iban || RAAST_SBP_DETAILS.iban;

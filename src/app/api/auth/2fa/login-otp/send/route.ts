@@ -45,11 +45,10 @@ export async function POST(req: NextRequest) {
       }).catch(() => {});
     }
 
-    const defaultAdminPhone = process.env.ADMIN_WHATSAPP_NUMBER || process.env.WHATSAPP_NUM || '03207006110';
+    const defaultAdminPhone = process.env.ADMIN_WHATSAPP_NUMBER || process.env.WHATSAPP_NUM || '';
     const isUserAdmin =
       user.role === 'ADMIN' ||
-      email === 'mrfahada39@gmail.com' ||
-      (process.env.ADMIN_EMAILS || '').includes(email);
+      (process.env.ADMIN_EMAILS || '').toLowerCase().includes(email.toLowerCase());
 
     if (!targetPhone && isUserAdmin) {
       targetPhone = defaultAdminPhone;

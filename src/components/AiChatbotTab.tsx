@@ -872,7 +872,7 @@ export default function AiChatbotTab() {
             <div className="p-4 rounded-xl bg-[#FCFAF7] border border-[#E7DDD0] space-y-1.5">
               <span className="text-[10px] font-black uppercase text-[#8C6239] tracking-wider">Human Escalation</span>
               <h4 className="font-bold text-sm text-[#1F1612]">WhatsApp Sales Hotline</h4>
-              <p className="font-mono text-xs text-[#1F1612] font-bold">+92 320 7006110 / +92 321 3283301</p>
+              <p className="font-mono text-xs text-[#1F1612] font-bold">{process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_CONTACT_PHONE || 'Direct Helpline'}</p>
               <p className="text-stone-500 text-xs leading-relaxed">
                 Direct WhatsApp redirection when customers ask for human specialist or bespoke quote.
               </p>

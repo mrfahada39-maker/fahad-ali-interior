@@ -122,11 +122,11 @@ export function isValidPakistaniPhone(phone: string): boolean {
  */
 export const RAAST_SBP_DETAILS = {
   serviceName: 'Raast (State Bank of Pakistan)',
-  raastId: '03213283301',
-  accountTitle: 'Fahad Ali Interior (Pvt) Ltd',
-  accountNumber: '00427992104803',
-  iban: 'PK16MEZN0099340103248901',
-  bankName: 'Meezan Bank Limited',
+  raastId: process.env.NEXT_PUBLIC_RAAST_ID || process.env.NEXT_PUBLIC_CONTACT_PHONE || '',
+  accountTitle: process.env.NEXT_PUBLIC_BANK_ACCOUNT_TITLE || 'Fahad Ali Interior',
+  accountNumber: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || '',
+  iban: process.env.NEXT_PUBLIC_BANK_IBAN || '',
+  bankName: process.env.NEXT_PUBLIC_BANK_NAME || 'Meezan Bank Limited',
   fee: '0% (Zero Fee National Instant Transfer)',
   instructions: 'Open your banking app, select Raast / Send Money via Raast, enter our Raast ID or IBAN for instant 0ms settlement.',
 };

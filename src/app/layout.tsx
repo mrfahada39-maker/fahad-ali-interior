@@ -17,7 +17,7 @@ const getCachedSettings = unstable_cache(
       if (!s) return null;
       return {
         ...s,
-        adminEmail: s.adminEmail?.toLowerCase() === 'mrfahada39@gmail.com' ? 'concierge@fahadali.pk' : s.adminEmail,
+        adminEmail: (s.adminEmail && !/@(gmail|yahoo|hotmail)\.com$/i.test(s.adminEmail)) ? s.adminEmail : 'concierge@fahadali.pk',
       };
     } catch (e) {
       if (process.env.NEXT_PHASE !== 'phase-production-build') {

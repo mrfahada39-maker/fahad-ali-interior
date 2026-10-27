@@ -514,7 +514,7 @@ export default function Checkout() {
     }
 
     if (!isPhoneValid) {
-      toast.error('Please enter a valid Pakistani mobile number (e.g. 0320 7006110)');
+      toast.error('Please enter a valid Pakistani mobile number (e.g. 0300 1234567)');
       setCurrentSection(2);
       return;
     }

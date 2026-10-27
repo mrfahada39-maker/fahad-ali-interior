@@ -151,7 +151,7 @@ export default function ContactPageClient() {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="e.g. 0320 7006110"
+                      placeholder="e.g. 0300 1234567"
                       className="w-full h-11 px-3.5 rounded-xl bg-white border border-amber-300/60 focus:border-[#B88E4B] text-[#221814] font-medium text-xs sm:text-sm outline-none transition-colors shadow-2xs"
                     />
                   </div>

@@ -9,7 +9,7 @@
 export const BUSINESS_CONTACT = {
   get adminEmail(): string {
     const candidate = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim();
-    if (candidate && candidate.toLowerCase() !== 'mrfahada39@gmail.com') {
+    if (candidate && !/@(gmail|yahoo|hotmail)\.com$/i.test(candidate)) {
       return candidate;
     }
     return 'concierge@fahadali.pk';

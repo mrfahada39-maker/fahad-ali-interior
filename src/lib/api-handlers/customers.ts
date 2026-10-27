@@ -93,7 +93,7 @@ export async function handleCustomerRoutes(ctx: ApiDispatchContext): Promise<Nex
         data: {
           userId: user.id,
           name: body.name || user.email || 'Valued Client',
-          phone: body.phone || '+92 320 7006110',
+          phone: body.phone || (user as { phone?: string }).phone || '',
           address: body.address || '',
           city: body.city || 'Lahore',
           province: body.province || 'Punjab',

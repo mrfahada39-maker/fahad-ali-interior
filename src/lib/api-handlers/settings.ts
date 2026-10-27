@@ -341,7 +341,7 @@ export async function handleSettingsAndBundleRoutes(
               contactPhone: settings.contactPhone || BUSINESS_CONTACT.phone,
               adminEmail:
                 settings.adminEmail &&
-                settings.adminEmail.toLowerCase() !== 'mrfahada39@gmail.com'
+                !/@(gmail|yahoo|hotmail)\.com$/i.test(settings.adminEmail)
                   ? settings.adminEmail
                   : BUSINESS_CONTACT.supportEmail,
               storeAddress: settings.storeAddress || BUSINESS_CONTACT.address,
@@ -442,7 +442,7 @@ export async function handleSettingsAndBundleRoutes(
           adminEmail: isAdminSettingsRoute
             ? existing.adminEmail
             : existing.adminEmail &&
-                existing.adminEmail.toLowerCase() !== 'mrfahada39@gmail.com'
+                !/@(gmail|yahoo|hotmail)\.com$/i.test(existing.adminEmail)
               ? existing.adminEmail
               : BUSINESS_CONTACT.supportEmail,
         }
@@ -515,12 +515,12 @@ export async function handleSettingsAndBundleRoutes(
           socialWhatsapp: body.socialWhatsapp || BUSINESS_CONTACT.whatsapp,
           foundedYear: body.foundedYear || '2024',
           currency: body.currency || 'PKR',
-          bankName: body.bankName || 'Habib Bank Limited (HBL)',
-          accountTitle: body.accountTitle || 'FAHAD ALI INTERIOR',
-          accountNumber: body.accountNumber || '00427992104803',
-          iban: body.iban || 'PK36HABB0000427992104803',
-          jazzcashNumber: body.jazzcashNumber || '0320 7006110',
-          easypaisaNumber: body.easypaisaNumber || '0320 7006110',
+          bankName: body.bankName || process.env.NEXT_PUBLIC_BANK_NAME || 'Meezan Bank Limited',
+          accountTitle: body.accountTitle || process.env.NEXT_PUBLIC_BANK_ACCOUNT_TITLE || 'FAHAD ALI INTERIOR',
+          accountNumber: body.accountNumber || process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || '',
+          iban: body.iban || process.env.NEXT_PUBLIC_BANK_IBAN || '',
+          jazzcashNumber: body.jazzcashNumber || process.env.NEXT_PUBLIC_JAZZCASH_NUMBER || '',
+          easypaisaNumber: body.easypaisaNumber || process.env.NEXT_PUBLIC_EASYPAISA_NUMBER || '',
         },
       });
     }

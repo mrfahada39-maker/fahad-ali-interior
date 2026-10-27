@@ -157,6 +157,17 @@ export class WhatsAppService {
   }
 
   /**
+   * Retrieves sanitized Admin WhatsApp phone number strictly from environment variables.
+   */
+  public static getAdminPhoneNumber(): string {
+    let raw = (process.env.ADMIN_WHATSAPP_NUMBER || process.env.WHATSAPP_NUM || '').replace(/\D/g, '');
+    if (!raw) return '';
+    if (raw.startsWith('0')) raw = '92' + raw.slice(1);
+    if (!raw.startsWith('92') && raw.length === 10) raw = '92' + raw;
+    return raw;
+  }
+
+  /**
    * Dispatches the simple order verification alert to Admin's personal WhatsApp phone.
    * Sends Meta Interactive Buttons [Verify], [Hold], [Restocked], plus direct 1-tap links.
    */
@@ -221,25 +232,11 @@ ${itemsList}
 ⏳ Hold 24-48h
 ❌ Restocked`;
 
-    let rawAdmin = (
-      process.env.ADMIN_WHATSAPP_NUMBER ||
-      process.env.WHATSAPP_NUM ||
-      '923207006110'
-    ).replace(/\D/g, '');
-
-    if (rawAdmin.startsWith('0')) {
-      rawAdmin = '92' + rawAdmin.slice(1);
+    const adminPhone = WhatsAppService.getAdminPhoneNumber();
+    if (!adminPhone) {
+      logger.warn('[WhatsApp Admin Alert] ADMIN_WHATSAPP_NUMBER is not configured in environment.');
+      return { success: false, mode: 'LOCAL_LOG' };
     }
-    if (!rawAdmin.startsWith('92') && rawAdmin.length === 10) {
-      rawAdmin = '92' + rawAdmin;
-    }
-
-    // The bot's own registered sender is 923213283301. Meta Cloud API rejects messages sent to oneself.
-    // If adminPhone is set to the bot's own number, forward to the Admin's personal WhatsApp phone (923207006110).
-    if (rawAdmin.endsWith('3213283301') || !rawAdmin) {
-      rawAdmin = '923207006110';
-    }
-    const adminPhone = rawAdmin;
 
     const { accessToken, phoneNumberId } = WhatsAppService.getCredentials();
 
@@ -407,9 +404,13 @@ ${itemsList}
       replyText = `❌ Cancelled: Order #${shortId} has been REJECTED. Payment marked as FAILED and inventory restored.`;
     }
 
-    let recipientPhone = adminPhone.replace(/\D/g, '');
-    if (recipientPhone === '923213283301' || !recipientPhone) {
-      recipientPhone = '923207006110';
+    let recipientPhone = adminPhone ? adminPhone.replace(/\D/g, '') : WhatsAppService.getAdminPhoneNumber();
+    if (!recipientPhone) {
+      recipientPhone = WhatsAppService.getAdminPhoneNumber();
+    }
+    if (!recipientPhone) {
+      logger.warn('[WhatsApp Ack] No valid admin recipient phone found in environment.');
+      return;
     }
 
     try {
@@ -1045,9 +1046,10 @@ _Sent automatically by Fahad Ali Interior Executive AI Bot_`;
    */
   static async sendDailyReport(targetPhone?: string): Promise<boolean> {
     const reportText = await this.generateDailyReport();
-    let recipient = (targetPhone || process.env.ADMIN_WHATSAPP_NUMBER || '923207006110').replace(/\D/g, '');
-    if (recipient === '923213283301' || !recipient) {
-      recipient = '923207006110';
+    const recipient = (targetPhone ? targetPhone.replace(/\D/g, '') : '') || WhatsAppService.getAdminPhoneNumber();
+    if (!recipient) {
+      logger.warn('[WhatsApp Daily Report] No valid admin phone configured in environment.');
+      return false;
     }
     return await this.sendTextMessage(recipient, reportText);
   }
