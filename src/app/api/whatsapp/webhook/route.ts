@@ -41,6 +41,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ status: 'ignored' }, { status: 200 });
     }
 
+    // Immediately mark incoming message as read on Meta Cloud API (turns grey ticks into double blue ticks)
+    if (message.id && !message.id.startsWith('wamid.test')) {
+      WhatsAppService.markMessageAsRead(message.id).catch(() => {});
+    }
+
     const senderPhoneRaw = message.from ? String(message.from).replace(/\D/g, '') : '';
 
     // Whitelist authorized Admin numbers: strictly 03213283301 (+92 321 3283301), 03207006110 & 03344171450

@@ -847,6 +847,34 @@ Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank s
   }
 
   /**
+   * Marks an incoming WhatsApp message as "read" (turns grey ticks into double blue ticks).
+   */
+  static async markMessageAsRead(messageId: string): Promise<boolean> {
+    const { accessToken, phoneNumberId } = WhatsAppService.getCredentials();
+    if (!accessToken || !phoneNumberId || !messageId) return false;
+
+    try {
+      const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          status: 'read',
+          message_id: messageId,
+        }),
+      });
+
+      return res.ok;
+    } catch (e) {
+      logger.warn('[WhatsApp markMessageAsRead Error]', { detail: String(e) });
+      return false;
+    }
+  }
+
+  /**
    * Sends an image message with optional caption to a phone number via Meta Cloud API.
    */
   static async sendImageMessage(
