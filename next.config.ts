@@ -40,8 +40,10 @@ const securityHeaders = [
   { key: 'X-XSS-Protection',             value: '1; mode=block' },
   { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
   { key: 'Referrer-Policy',              value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy',           value: 'camera=(self), microphone=(self), geolocation=()' },
+  { key: 'Permissions-Policy',           value: 'camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), display-capture=(), midi=(), sync-xhr=()' },
   { key: 'Cross-Origin-Opener-Policy',   value: 'same-origin-allow-popups' },
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+  { key: 'X-Download-Options',           value: 'noopen' },
   // HSTS: enforce HTTPS for 2 years, include subdomains, allow preload
   { key: 'Strict-Transport-Security',    value: 'max-age=63072000; includeSubDomains; preload' },
 ];

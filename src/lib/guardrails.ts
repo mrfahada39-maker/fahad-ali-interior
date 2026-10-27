@@ -94,6 +94,112 @@ export class SecurityGuardrails {
   }
 
   /**
+   * Enterprise Web Application Firewall (WAF) Payload Inspector
+   * Detects SQL Injection, XSS, Path Traversal, Prototype Pollution, and RCE attempts.
+   */
+  static detectMaliciousPayload(input: string): { isMalicious: boolean; reason?: string } {
+    if (!input || typeof input !== 'string') return { isMalicious: false };
+
+    // Decode URI components to catch obfuscated bypasses like %27%20UNION
+    let decoded = input;
+    try {
+      decoded = decodeURIComponent(input);
+    } catch {
+      // If decoding fails, check raw input
+    }
+
+    // 1. SQL Injection (SQLi) patterns
+    const sqliPatterns = [
+      /\b(union\s+all\s+select|union\s+select)\b/i,
+      /\b(select\s+.+\s+from\s+information_schema)\b/i,
+      /\b(drop\s+table|truncate\s+table|alter\s+table)\b/i,
+      /(?:'|"|;)\s*(?:--|\/\*)/,
+      /\b(?:waitfor\s+delay\s+'[\d:]+'|pg_sleep\s*\(\s*\d+\s*\)|sleep\s*\(\s*\d+\s*\))/i,
+      /\bexec\s*\(\s*(?:xp_cmdshell|sp_executesql)\b/i,
+    ];
+    if (sqliPatterns.some((p) => p.test(decoded))) {
+      return { isMalicious: true, reason: 'SQL_INJECTION_DETECTED' };
+    }
+
+    // 2. Cross-Site Scripting (XSS) patterns
+    const xssPatterns = [
+      /<script[\s>]/i,
+      /javascript:\s*[^\s]/i,
+      /data:\s*text\/html/i,
+      /vbscript:\s*[^\s]/i,
+      /on(?:load|error|click|mouseover|focus|blur|submit)\s*=/i,
+      /<iframe[\s>]/i,
+      /<object[\s>]/i,
+      /<embed[\s>]/i,
+      /document\.(?:cookie|location|write)/i,
+    ];
+    if (xssPatterns.some((p) => p.test(decoded))) {
+      return { isMalicious: true, reason: 'XSS_PAYLOAD_DETECTED' };
+    }
+
+    // 3. Path Traversal & LFI / RFI
+    const pathTraversalPatterns = [
+      /(?:\.\.\/|\.\.\\|%2e%2e%2f|%2e%2e\/|\.\.%2f)/i,
+      /\/(etc\/(?:passwd|shadow|hosts)|boot\.ini|windows\/system32)/i,
+      /\/proc\/self\/(?:environ|cmdline|status)/i,
+    ];
+    if (pathTraversalPatterns.some((p) => p.test(decoded))) {
+      return { isMalicious: true, reason: 'PATH_TRAVERSAL_DETECTED' };
+    }
+
+    // 4. Remote Code Execution (RCE) / Log4j / Template Injection
+    const rcePatterns = [
+      /\${(?:jndi|env|lower|upper):/i,
+      /{{(?:\s*\d+\s*\*\s*\d+\s*|\s*config\s*)}}/i,
+      /(?:cmd\.exe|powershell(?:\.exe)?|\/bin\/sh|\/bin\/bash)\b/i,
+      /<\?php/i,
+    ];
+    if (rcePatterns.some((p) => p.test(decoded))) {
+      return { isMalicious: true, reason: 'RCE_OR_TEMPLATE_INJECTION_DETECTED' };
+    }
+
+    // 5. Prototype Pollution
+    if (/(?:__proto__|constructor\s*\.\s*prototype)/i.test(decoded)) {
+      return { isMalicious: true, reason: 'PROTOTYPE_POLLUTION_DETECTED' };
+    }
+
+    return { isMalicious: false };
+  }
+
+  /**
+   * Anti-Probing & Scanner Firewall
+   * Identifies automated vulnerability scanners, scrapers, and malicious reconnaissance requests.
+   */
+  static detectProbingOrScanner(pathname: string, userAgent?: string | null): { isBlocked: boolean; reason?: string } {
+    // 1. Known malicious vulnerability scanners and aggressive probe tools
+    if (userAgent) {
+      const scannerUaRegex = /(sqlmap|nikto|acunetix|masscan|zgrab|censys|dirbuster|gobuster|wpscan|nmap|nessus|openvas|arachni)/i;
+      if (scannerUaRegex.test(userAgent)) {
+        return { isBlocked: true, reason: 'MALICIOUS_SCANNER_USER_AGENT' };
+      }
+    }
+
+    // 2. Sensitive reconnaissance target paths
+    const lowerPath = (pathname || '').toLowerCase();
+    const probePathPatterns = [
+      /\/\.env(?:\..*)?$/i,
+      /\/\.git(?:\/.*)?$/i,
+      /\/\.aws(?:\/.*)?$/i,
+      /\/\.ssh(?:\/.*)?$/i,
+      /\/(?:wp-admin|wp-login\.php|xmlrpc\.php)$/i,
+      /\/(?:phpmyadmin|pma|phpinfo\.php|info\.php)$/i,
+      /\/(?:eval-stdin\.php|setup\.php|admin\.php)$/i,
+      /\/(?:actuator\/(?:health|env)|solr\/admin|swagger-ui)$/i,
+    ];
+
+    if (probePathPatterns.some((p) => p.test(lowerPath))) {
+      return { isBlocked: true, reason: 'SUSPICIOUS_PROBE_PATH' };
+    }
+
+    return { isBlocked: false };
+  }
+
+  /**
    * Verifies that prices mentioned in AI responses match live database pricing.
    */
   static validatePriceIntegrity(aiResponseText: string, knownProducts: { name: string; price: number }[]): boolean {

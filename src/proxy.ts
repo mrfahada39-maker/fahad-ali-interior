@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { isNextAuthInternalRoute, toV1ApiPath } from '@/lib/api-config';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { SecurityGuardrails } from '@/lib/guardrails';
 
 function generateRequestId(): string {
   return crypto.randomUUID();
@@ -126,11 +127,13 @@ function applyPageSecurityHeaders(
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(), payment=()');
+  response.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), display-capture=(), midi=(), sync-xhr=()');
   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   response.headers.set('X-Permitted-Cross-Domain-Policies', 'none');
   response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
   response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('X-DNS-Prefetch-Control', 'on');
+  response.headers.set('X-Download-Options', 'noopen');
   if (httpsOnly) {
     response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   }
@@ -141,6 +144,24 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isProduction = process.env.NODE_ENV === 'production';
   const nonce = btoa(crypto.randomUUID());
+
+  // ── 1. Enterprise Anti-Probing & Malicious Scanner Firewall ──
+  const userAgent = request.headers.get('user-agent') || '';
+  const probeCheck = SecurityGuardrails.detectProbingOrScanner(pathname, userAgent);
+  if (probeCheck.isBlocked) {
+    return NextResponse.json({ error: 'Access Denied: Reconnaissance scan intercepted' }, { status: 404 });
+  }
+
+  // ── 2. Enterprise WAF: Deep Query Parameter & Search Payload Inspection ──
+  if (request.nextUrl.search) {
+    const payloadCheck = SecurityGuardrails.detectMaliciousPayload(request.nextUrl.search);
+    if (payloadCheck.isMalicious) {
+      return NextResponse.json(
+        { error: 'Forbidden: Malicious pattern intercepted by security firewall', code: payloadCheck.reason },
+        { status: 403 }
+      );
+    }
+  }
 
   const requestId = request.headers.get('x-request-id') ?? generateRequestId();
   const requestHeaders = new Headers(request.headers);
