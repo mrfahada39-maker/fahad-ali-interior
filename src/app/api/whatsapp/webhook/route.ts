@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import type { PrismaClient } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import { WhatsAppService } from '@/lib/whatsapp';
+import { WhatsAppAdminCopilot } from '@/lib/whatsapp-admin-copilot';
 
 /**
  * Meta WhatsApp Cloud API Webhook:
@@ -82,47 +83,23 @@ export async function POST(req: NextRequest) {
     } else if (message.type === 'text') {
       const text = (message.text?.body || '').trim().toLowerCase();
 
-      // Check if text is an administrative action or command
-      const isAdminCommand =
-        text.includes('report') ||
-        text.includes('sales') ||
-        text.includes('stock') ||
-        text.includes('hisaab') ||
-        text.includes('summary') ||
-        text.startsWith('verify') ||
-        text.startsWith('approve') ||
-        text.startsWith('hold') ||
-        text.startsWith('reject') ||
-        text.startsWith('cancel');
-
-      if (isAdminCommand) {
+      // Check if text is a direct 1-tap verification or rejection command e.g. "verify ORD_123"
+      if (text.startsWith('verify ') || text.startsWith('approve ')) {
         if (!isAuthorized) {
-          logger.warn('[WhatsApp Security Alert] Unauthorized user attempted admin command:', {
-            sender: senderPhoneRaw,
-            command: text,
-          });
+          logger.warn('[WhatsApp Security Alert] Unauthorized user attempted admin command:', { sender: senderPhoneRaw, command: text });
           return NextResponse.json({ error: 'Forbidden: Unauthorized phone number' }, { status: 403 });
         }
-
-        // Handle on-demand sales and stock report command
-        if (
-          text.includes('report') ||
-          text.includes('sales') ||
-          text.includes('stock') ||
-          text.includes('hisaab') ||
-          text.includes('summary')
-        ) {
-          await WhatsAppService.sendDailyReport(senderPhone).catch(() => {});
-          return NextResponse.json({ status: 'daily_report_sent' }, { status: 200 });
+        buttonId = `verify_${text.split(' ')[1]}`;
+      } else if (text.startsWith('hold ')) {
+        if (!isAuthorized) {
+          return NextResponse.json({ error: 'Forbidden: Unauthorized phone number' }, { status: 403 });
         }
-
-        // Handle text command fallback e.g. "verify ord_123" or plain "verify"
-        if (text.startsWith('verify ') || text.startsWith('approve ')) buttonId = `verify_${text.split(' ')[1]}`;
-        else if (text.startsWith('hold ')) buttonId = `hold_${text.split(' ')[1]}`;
-        else if (text.startsWith('reject ') || text.startsWith('cancel ')) buttonId = `reject_${text.split(' ')[1]}`;
-        else if (text.includes('verify') || text.includes('approve')) buttonId = 'verify_latest';
-        else if (text.includes('hold')) buttonId = 'hold_latest';
-        else if (text.includes('reject') || text.includes('cancel')) buttonId = 'reject_latest';
+        buttonId = `hold_${text.split(' ')[1]}`;
+      } else if (text.startsWith('reject ') || text.startsWith('cancel ')) {
+        if (!isAuthorized) {
+          return NextResponse.json({ error: 'Forbidden: Unauthorized phone number' }, { status: 403 });
+        }
+        buttonId = `reject_${text.split(' ')[1]}`;
       }
     }
 
@@ -136,51 +113,34 @@ export async function POST(req: NextRequest) {
     }
 
     if (!buttonId) {
-      // Auto-reply to text inquiries
+      // Process text messages
       if (message.type === 'text') {
         const userMsg = (message.text?.body || '').trim();
-        const { accessToken, phoneNumberId } = WhatsAppService.getCredentials();
 
-        // Admin gets the Executive Bot console, customers get a polite inquiry response
-        const replyMsg = isAuthorized
-          ? `👋 Salam! *Fahad Ali Interior Executive Bot* Active hai.\n` +
+        if (isAuthorized) {
+          // Executive Admin Copilot: Interactive Question-Wise Menu & Live Database Actions
+          const replyMsg = await WhatsAppAdminCopilot.processAdminCommand(senderPhone, userMsg);
+          await WhatsAppService.sendTextMessage(senderPhone, replyMsg).catch((err) => {
+            logger.warn('[WhatsApp Copilot Dispatch Warning]', { detail: String(err) });
+          });
+          return NextResponse.json({ status: 'admin_copilot_dispatched' }, { status: 200 });
+        } else {
+          // Public Customers: Polite showroom inquiry response & official website catalog
+          const customerReply =
+            `👋 Salam! *Fahad Ali Interior* mein khushamdeed.\n` +
             `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `🤖 *System Status:* 100% Operational & Secure\n` +
-            `📩 *Received:* "${userMsg}"\n\n` +
-            `📌 *Admin Commands:*\n` +
-            `• *report* ya *sales* — Rozana ki Sales & Stock report\n` +
-            `• *verify* — Latest pending order verify karein\n` +
-            `• *hold* — Latest order ko 24-48h hold par dalein\n` +
-            `• *reject* — Latest order reject karein\n\n` +
-            `🌐 *Live Dashboard:*\n` +
-            `👉 https://fahad-ali-interior.vercel.app/admin`
-          : `👋 Salam! *Fahad Ali Interior* mein khushamdeed.\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `Aapki inquiry hum tak pohanch chuki hai. Hamari team jald aap se rabta karegi.\n\n` +
+            `Aapki inquiry hum tak pohanch chuki hai. Hamari concierge team jald aap se rabta karegi.\n\n` +
             `🛋️ *Official Catalog & Online Orders:*\n` +
             `👉 https://fahad-ali-interior.vercel.app\n\n` +
-            `📞 *Direct Helpline:* +92 321 3283301`;
+            `📞 *Direct Showroom Helpline:* +92 321 3283301`;
 
-        if (accessToken && phoneNumberId) {
-          await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              messaging_product: 'whatsapp',
-              recipient_type: 'individual',
-              to: senderPhone,
-              type: 'text',
-              text: { body: replyMsg },
-            }),
-          }).catch((err) => {
-            logger.warn('[WhatsApp AutoReply Dispatch Error]', { detail: String(err) });
+          await WhatsAppService.sendTextMessage(senderPhone, customerReply).catch((err) => {
+            logger.warn('[WhatsApp Customer AutoReply Dispatch Warning]', { detail: String(err) });
           });
+          return NextResponse.json({ status: 'customer_auto_reply_sent' }, { status: 200 });
         }
       }
-      return NextResponse.json({ status: 'auto_reply_sent' }, { status: 200 });
+      return NextResponse.json({ status: 'ignored_non_text' }, { status: 200 });
     }
 
     // Parse action and orderId e.g. "verify_ORD-12345" or "verify_latest"
