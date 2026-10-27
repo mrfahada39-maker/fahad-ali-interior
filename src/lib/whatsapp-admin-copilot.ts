@@ -48,7 +48,7 @@ export class WhatsAppAdminCopilot {
   /**
    * Handles Option 1: Sales & Hisaab Summary
    */
-  public static async handleSalesSummary(targetPhone: string): Promise<string> {
+  public static async handleSalesSummary(_targetPhone: string): Promise<string> {
     try {
       const report = await WhatsAppService.generateDailyReport();
       return report;
