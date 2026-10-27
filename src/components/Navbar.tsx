@@ -71,8 +71,6 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   const desktopNavLinks = [
     { label: 'Home', href: '/' },
     { label: 'Shop', href: '/#signature-categories' },
-    { label: 'Blog', href: '/blog' },
-    { label: 'Collection', href: '/#signature-categories' },
     { label: 'About', href: '/about' },
     { label: 'Service', href: '/faq#delivery' },
     { label: 'Contact', href: '/contact' },
