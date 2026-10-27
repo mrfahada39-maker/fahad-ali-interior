@@ -102,20 +102,8 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           suppressHydrationWarning
           className="pointer-events-auto w-full max-w-[1550px] mx-auto bg-white/95 md:backdrop-blur-md rounded-[20px] sm:rounded-full border border-[#EBE1D3] shadow-[0_4px_25px_rgba(44,30,24,0.06)] px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between transition-all duration-300"
         >
-          {/* ── DESKTOP LEFT SECTION: BRAND TITLE ── */}
-          <div className="hidden lg:flex items-center">
-            <Link href="/" prefetch={false} className="flex items-center gap-2 group shrink-0">
-              <span className="font-serif font-black text-lg xl:text-xl tracking-wider uppercase text-[#1F1A17] group-hover:text-[#B88E4B] transition-colors whitespace-nowrap">
-                FAHAD ALI
-              </span>
-              <span className="font-serif font-bold text-lg xl:text-xl tracking-wide bg-gradient-to-r from-[#B88E4B] via-[#E2C275] to-[#9E7333] bg-clip-text text-transparent drop-shadow-[0_1px_2px_rgba(184,142,75,0.2)] whitespace-nowrap">
-                Interior
-              </span>
-            </Link>
-          </div>
-
-          {/* ── DESKTOP CENTER SECTION: NAV LINKS ── */}
-          <div className="hidden lg:flex items-center gap-1 xl:gap-2">
+          {/* ── DESKTOP LEFT SECTION: NAV LINKS ── */}
+          <div className="hidden lg:flex items-center gap-1 xl:gap-2 flex-1 justify-start min-w-0">
             {desktopNavLinks.map((link) => {
               const isActive = (link.href === '/' && pathname === '/') || (link.href !== '/' && !link.href.startsWith('/#') && pathname === link.href);
               return (
@@ -126,8 +114,8 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                   onClick={(e) => handleNavClick(e, link.href)}
                   className={`text-xs xl:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive
-                      ? 'bg-[#C59B4B] text-white px-4.5 py-1.5 rounded-full shadow-xs'
-                      : 'text-[#4A3E38] hover:text-[#C59B4B] px-3 py-1.5 rounded-full hover:bg-[#FAF5ED]'
+                      ? 'bg-[#C59B4B] text-white px-3.5 xl:px-4 py-1.5 rounded-full shadow-xs'
+                      : 'text-[#4A3E38] hover:text-[#C59B4B] px-2.5 xl:px-3 py-1.5 rounded-full hover:bg-[#FAF5ED]'
                   }`}
                 >
                   {link.label}
@@ -136,8 +124,20 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             })}
           </div>
 
+          {/* ── DESKTOP CENTER SECTION: BRAND TITLE (FAHAD ALI ON TOP, INTERIOR GOLD SHINE UNDERNEATH) ── */}
+          <div className="hidden lg:flex items-center justify-center shrink-0 px-3 xl:px-6">
+            <Link href="/" prefetch={false} className="flex flex-col items-center group py-0.5 text-center">
+              <span className="font-serif font-black text-xl xl:text-2xl tracking-[0.08em] uppercase text-[#1F1A17] group-hover:text-[#B88E4B] transition-colors whitespace-nowrap leading-tight">
+                FAHAD ALI
+              </span>
+              <span className="font-serif font-bold text-[9.5px] xl:text-[11px] tracking-[0.35em] uppercase bg-gradient-to-r from-[#B88E4B] via-[#E2C275] to-[#9E7333] bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(184,142,75,0.25)] -mt-0.5 leading-none whitespace-nowrap">
+                INTERIOR
+              </span>
+            </Link>
+          </div>
+
           {/* ── DESKTOP RIGHT SECTION: SEARCH, WISHLIST, CART, ALERTS, PROFILE ── */}
-          <div className="hidden lg:flex items-center gap-2 xl:gap-2.5">
+          <div className="hidden lg:flex items-center gap-2 xl:gap-2.5 flex-1 justify-end min-w-0">
             {/* 1. Search */}
             <button 
               onClick={onSearchOpen} 
