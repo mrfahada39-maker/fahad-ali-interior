@@ -334,7 +334,7 @@ describe('PHASE 3: Medium & Low Security Regressions', () => {
   // ── 9: Hardcoded Personal Data Removal ──────────────────────────────────
   describe('M9: Centralized Business Contact Configuration', () => {
     it('provides consistent business contact details without personal email or placeholder phone', () => {
-      expect(BUSINESS_CONTACT.adminEmail).not.toBe('mrfahada39@gmail.com');
+      expect(BUSINESS_CONTACT.adminEmail).not.toMatch(/@(gmail|yahoo|hotmail)\.com$/i);
       expect(BUSINESS_CONTACT.phone).toBe('+92 321 3283301');
       expect(BUSINESS_CONTACT.phone).not.toBe('+92 300 1234567');
     });

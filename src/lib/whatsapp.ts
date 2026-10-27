@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { PaymentAuditResult } from '@/lib/ai/payment-verifier';
 import { getAdminTokenSecret } from '@/lib/admin-auth';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 /**
  * Generate a tamper-proof HMAC-SHA256 token for 1-Tap WhatsApp action links.
@@ -526,7 +527,7 @@ ${deliveryAddress}
 🌐 *Track order live:*
 👉 ${trackingUrl}
 
-📞 *For further details contact Admin:* +92 321 3283301`;
+📞 *For further details contact Admin:* ${BUSINESS_CONTACT.phone}`;
 
       const textSent = await this.sendTextMessage(customerPhone, message);
 
@@ -624,7 +625,7 @@ ${itemsList}
 🌐 *Track order live:*
 👉 ${trackingUrl}
 
-📞 *For further details contact Admin:* +92 321 3283301`;
+📞 *For further details contact Admin:* ${BUSINESS_CONTACT.phone}`;
 
       return await this.sendTextMessage(customerPhone, message);
     } catch (err) {
@@ -680,7 +681,7 @@ Hamari delivery team pohnchne se pehle aapko direct call karegi aur safe in-room
 🌐 *Live Tracking:*
 👉 ${trackingUrl}
 
-📞 *Concierge:* +92 321 3283301`;
+📞 *Concierge:* ${BUSINESS_CONTACT.phone}`;
 
       return await this.sendTextMessage(customerPhone, message);
     } catch (err) {
@@ -761,7 +762,7 @@ Order *#${shortId}* ki payment slip verify nahi ho saki.
 
 Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank slip is WhatsApp par humein reply karein taake hum manual check karke aapka order approve kar sakein.
 
-📞 *Direct WhatsApp Support:* +92 321 3283301
+📞 *Direct WhatsApp Support:* ${BUSINESS_CONTACT.phone}
 🌐 *Order Details:*
 👉 ${trackingUrl}
 

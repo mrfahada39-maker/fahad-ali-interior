@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AnimatedCounter from '@/components/AnimatedCounter';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 export interface PaymentVerificationsTabProps {
   orders: any[];
@@ -798,7 +799,7 @@ export function PaymentVerificationsTab({
                     <div className="pt-2 border-t border-stone-200 space-y-1.5">
                       {/* 1. Forward Details to Admin WhatsApp */}
                       <a
-                        href={`https://wa.me/923213283301?text=${encodeURIComponent(
+                        href={`https://wa.me/${BUSINESS_CONTACT.whatsapp}?text=${encodeURIComponent(
                           `✦ FAHAD ALI INTERIOR — PAYMENT VERIFICATION ✦\n` +
                           `━━━━━━━━━━━━━━━━━━━━\n` +
                           `📦 Order ID: #${shortId}\n` +
@@ -815,10 +816,10 @@ export function PaymentVerificationsTab({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-full h-8 px-2.5 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] border border-[#25D366]/30 font-bold text-[11px] flex items-center justify-center gap-1.5 transition-colors"
-                        title="Send complete slip dossier to Admin WhatsApp (+92 321 3283301)"
+                        title="Send complete slip dossier to Admin WhatsApp"
                       >
                         <MessageSquare size={13} className="text-[#25D366]" />
-                        <span>Send Details to Admin WhatsApp (+92 321 3283301)</span>
+                        <span>Send Details to Admin WhatsApp</span>
                       </a>
 
                       {/* 2. WhatsApp Slip Confirmation to Customer */}

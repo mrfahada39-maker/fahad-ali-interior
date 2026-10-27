@@ -13,6 +13,7 @@ import crypto from 'crypto';
 import { getToken } from 'next-auth/jwt';
 import { AI_SESSION_COOKIE_NAME, signAiSessionId, verifyAiSessionCookie } from '@/lib/ai-session-binding';
 import { findActivePromo, type ActivePromo } from '@/lib/coupons';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 /** High-capacity Dynamic AI Response Generator (ChatGPT/Claude/Gemini style) */
 function generateDynamicResponse(
@@ -135,7 +136,7 @@ function generateDynamicResponse(
   // G. Showroom Location & Timings
   if (q.includes('location') || q.includes('address') || q.includes('showroom') || q.includes('shop') || q.includes('dukan') || q.includes('store') || q.includes('kahan') || q.includes('where') || q.includes('timing')) {
     return {
-      replyText: `📍 **Flagship Showroom Location & Timings:**\n\n- 🏛️ **Address:** Gulberg III, Lahore, Punjab, Pakistan.\n- ⏰ **Timings:** Open 7 Days a Week (11:00 AM – 10:00 PM).\n- 📹 **Live Video Tour:** If you are outside Lahore, request a live HD Video Call Showroom Tour on WhatsApp (+92 321 3283301)!`,
+      replyText: `📍 **Flagship Showroom Location & Timings:**\n\n- 🏛️ **Address:** Gulberg III, Lahore, Punjab, Pakistan.\n- ⏰ **Timings:** Open 7 Days a Week (11:00 AM – 10:00 PM).\n- 📹 **Live Video Tour:** If you are outside Lahore, request a live HD Video Call Showroom Tour on WhatsApp (${BUSINESS_CONTACT.phone})!`,
       suggestedPrompts: ['📹 Request Video Tour', '💬 WhatsApp Showroom', '🚚 Delivery Details'],
     };
   }
@@ -532,7 +533,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
       })();
     }
 
-    const whatsAppNum = (process.env.WHATSAPP_NUM || '+923213283301').replace('+', '');
+    const whatsAppNum = (process.env.WHATSAPP_NUM || BUSINESS_CONTACT.whatsapp).replace('+', '');
     const waUrl = `https://wa.me/${whatsAppNum}?text=${encodeURIComponent(
       `Assalam-o-Alaikum! I have a question about: "${sanitizedUserQuery}". Please connect me with a Senior Specialist.`
     )}`;

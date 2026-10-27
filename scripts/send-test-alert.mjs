@@ -28,7 +28,7 @@ async function main() {
     order: {
       id: order.id,
       shippingName: order.shippingName || 'Fahad',
-      shippingPhone: order.shippingPhone || '03237006110',
+      shippingPhone: order.shippingPhone || process.env.ADMIN_WHATSAPP_NUMBER || '+92 300 1234567',
       shippingCity: order.shippingCity || 'Lahore',
       paymentMethod: order.paymentMethod || 'JAZZCASH',
       totalAmount: Number(order.totalAmount),

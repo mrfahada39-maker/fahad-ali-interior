@@ -9,6 +9,7 @@ import { getSiteUrl } from "@/lib/utils";
 import { unstable_cache } from "next/cache";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { db } from "@/lib/db";
+import { BUSINESS_CONTACT } from "@/lib/contact-config";
 
 const getCachedSettings = unstable_cache(
   async () => {
@@ -64,7 +65,7 @@ const organizationJsonLd = {
   image: `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80`,
   description:
     "Handcrafted luxury furniture from Lahore, Pakistan. Premium 100% solid seasoned Sheesham wood beds, L-shape sofas, dining sets, and bespoke wardrobes with a 10-year structural and anti-termite guarantee.",
-  telephone: "+92-321-3283301",
+  telephone: BUSINESS_CONTACT.phone,
   email: "concierge@fahadali.pk",
   priceRange: "PKR 35,000 - PKR 450,000",
   currenciesAccepted: "PKR",

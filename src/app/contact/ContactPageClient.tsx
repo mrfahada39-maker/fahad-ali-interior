@@ -23,6 +23,7 @@ export default function ContactPageClient() {
   const settings = useSiteSettingsStore((s) => s.settings);
   const contactPhone = settings?.contactPhone || BUSINESS_CONTACT.phone;
   const whatsappNumber = (settings?.socialWhatsapp || BUSINESS_CONTACT.whatsapp).replace(/\D/g, '');
+  const contactEmail = settings?.adminEmail || BUSINESS_CONTACT.supportEmail;
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -170,7 +171,7 @@ export default function ContactPageClient() {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="client@gmail.com"
+                      placeholder="name@example.com"
                       className="w-full h-11 px-3.5 rounded-xl bg-white border border-amber-300/60 focus:border-[#B88E4B] text-[#221814] font-medium text-xs sm:text-sm outline-none transition-colors shadow-2xs"
                     />
                   </div>
@@ -290,7 +291,7 @@ export default function ContactPageClient() {
               </a>
 
               <a
-                href="mailto:info@fahadaliinterior.com"
+                href={`mailto:${contactEmail}`}
                 className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white border border-transparent hover:border-amber-300/60 transition-all group relative z-10"
               >
                 <div className="w-10 h-10 rounded-xl bg-white border border-amber-300/70 flex items-center justify-center text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white transition-all shadow-2xs shrink-0">
@@ -298,7 +299,7 @@ export default function ContactPageClient() {
                 </div>
                 <div>
                   <p className="text-[9.5px] font-black uppercase tracking-widest text-[#8C6239]">Email Concierge</p>
-                  <p className="text-xs sm:text-sm font-bold text-[#221814]">info@fahadaliinterior.com</p>
+                  <p className="text-xs sm:text-sm font-bold text-[#221814]">{contactEmail}</p>
                 </div>
               </a>
 

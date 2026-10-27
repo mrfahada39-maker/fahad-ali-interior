@@ -21,6 +21,7 @@ interface NavbarProps {
 export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   const settings = useSiteSettingsStore((s) => s.settings);
   const contactPhone = settings?.contactPhone || BUSINESS_CONTACT.phone;
+  const contactEmail = settings?.adminEmail || BUSINESS_CONTACT.supportEmail;
   const cartItemCount = useCartStore((s) => s.getItemCount());
   const openCart = useCartStore((s) => s.openCart);
   const { data: session } = useSession();
@@ -488,8 +489,8 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               <a href={`tel:${contactPhone.replace(/\s+/g, '')}`} className="text-xs font-semibold text-[#2C1E18] block hover:underline">
                 {contactPhone}
               </a>
-              <a href="mailto:support@fahadaliinterior.com" className="text-[11px] text-[#7A6048] block hover:underline">
-                support@fahadaliinterior.com
+              <a href={`mailto:${contactEmail}`} className="text-[11px] text-[#7A6048] block hover:underline">
+                {contactEmail}
               </a>
             </div>
           </div>

@@ -355,9 +355,9 @@ describe('All 20 Website Pages Deep Advanced Verification Suite', () => {
 
       it('generates official WhatsApp confirmation URL with encoded greeting', () => {
         const displayId = 'ABC12345';
-        const url = `https://wa.me/923207006110?text=${encodeURIComponent(`Hello Fahad Ali Interior! I just placed order #${displayId} and would like to confirm my delivery schedule.`)}`;
+        const url = `https://wa.me/923001234567?text=${encodeURIComponent(`Hello Fahad Ali Interior! I just placed order #${displayId} and would like to confirm my delivery schedule.`)}`;
 
-        expect(url).toContain('wa.me/923207006110');
+        expect(url).toContain('wa.me/923001234567');
         expect(url).toContain('ABC12345');
       });
     });
@@ -460,11 +460,11 @@ describe('All 20 Website Pages Deep Advanced Verification Suite', () => {
           city: 'Lahore',
           address: 'Main Boulevard, Gulberg III / DHA Phase 5',
           hours: 'Monday – Saturday: 11:00 AM – 9:00 PM',
-          phone: '+92 320 7006110',
+          phone: '+92 300 1234567',
         };
 
         expect(showroom.city).toBe('Lahore');
-        expect(showroom.phone).toContain('320');
+        expect(showroom.phone).toContain('300');
       });
 
       it('validates contact inquiry submission data contract', () => {

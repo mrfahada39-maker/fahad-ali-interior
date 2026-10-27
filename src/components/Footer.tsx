@@ -23,6 +23,7 @@ export default function Footer() {
   const settings = useSiteSettingsStore((s) => s.settings) || {};
   const contactPhone = settings.contactPhone || BUSINESS_CONTACT.phone;
   const contactPhoneDial = contactPhone.replace(/\s+/g, '');
+  const contactEmail = settings.adminEmail || BUSINESS_CONTACT.supportEmail;
 
   // Mobile Accordions State (Menu open by default)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -217,11 +218,11 @@ export default function Footer() {
                 </div>
                 <span className="font-semibold text-xs sm:text-sm">{contactPhone}</span>
               </a>
-              <a href="mailto:info@fahadaliinterior.com" className="flex items-center justify-center gap-2.5 hover:text-[#B88E4B] transition-colors duration-200 group">
+              <a href={`mailto:${contactEmail}`} className="flex items-center justify-center gap-2.5 hover:text-[#B88E4B] transition-colors duration-200 group">
                 <div className="w-8 h-8 rounded-lg bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all shadow-2xs">
                   <Mail size={15} />
                 </div>
-                <span className="font-semibold text-xs sm:text-sm">info@fahadaliinterior.com</span>
+                <span className="font-semibold text-xs sm:text-sm">{contactEmail}</span>
               </a>
               <div className="flex items-center justify-center gap-2.5 text-[#221814] group">
                 <div className="w-8 h-8 rounded-lg bg-[#FAF5EE] border border-[#E2D1BC] flex items-center justify-center text-[#B88E4B] group-hover:scale-110 transition-transform shadow-2xs">
@@ -354,9 +355,9 @@ export default function Footer() {
               <Phone size={15} />
               <span className="font-semibold">{contactPhone}</span>
             </a>
-            <a href="mailto:info@fahadaliinterior.com" className="flex items-center gap-2 hover:text-[#B88E4B] transition-colors">
+            <a href={`mailto:${contactEmail}`} className="flex items-center gap-2 hover:text-[#B88E4B] transition-colors">
               <Mail size={15} />
-              <span className="font-semibold">info@fahadaliinterior.com</span>
+              <span className="font-semibold">{contactEmail}</span>
             </a>
             <div className="flex items-center gap-2">
               <MapPin size={15} />

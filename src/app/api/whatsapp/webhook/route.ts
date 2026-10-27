@@ -4,6 +4,7 @@ import type { PrismaClient } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import { WhatsAppService } from '@/lib/whatsapp';
 import { WhatsAppAdminCopilot } from '@/lib/whatsapp-admin-copilot';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 /**
  * Meta WhatsApp Cloud API Webhook:
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ status: 'test_received_ok' }, { status: 200 });
     }
 
-    const senderPhone = senderPhoneRaw || '923213283301';
+    const senderPhone = senderPhoneRaw || WhatsAppService.getAdminPhoneNumber();
     let buttonId = '';
 
     if (message.type === 'interactive' && message.interactive?.button_reply) {
@@ -134,7 +135,7 @@ export async function POST(req: NextRequest) {
             `Aapki inquiry hum tak pohanch chuki hai. Hamari concierge team jald aap se rabta karegi.\n\n` +
             `🛋️ *Official Catalog & Online Orders:*\n` +
             `👉 https://fahad-ali-interior.vercel.app\n\n` +
-            `📞 *Direct Showroom Helpline:* +92 321 3283301`;
+            `📞 *Direct Showroom Helpline:* ${BUSINESS_CONTACT.phone}`;
 
           await WhatsAppService.sendTextMessage(senderPhone, customerReply).catch((err) => {
             logger.warn('[WhatsApp Customer AutoReply Dispatch Warning]', { detail: String(err) });

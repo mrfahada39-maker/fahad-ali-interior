@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import tls from 'tls';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 export interface OrderEmailData {
   orderId: string;
@@ -450,7 +451,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                         <table align="center" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 10px;">
                           <tr>
                             <td align="center" style="background: #25D366; border-radius: 50px; box-shadow: 0 4px 14px rgba(37,211,102,0.3);">
-                              <a href="https://wa.me/923213283301?text=Assalam-o-Alaikum%20Fahad%20Ali%20Interior%2C%20I%20have%20an%20inquiry%20regarding%20Order%20%23${order.orderId}" style="display: inline-block; padding: 10px 24px; color: #FFFFFF; font-weight: 800; font-size: 12.5px; text-decoration: none; letter-spacing: 0.5px;">
+                              <a href="https://wa.me/${BUSINESS_CONTACT.whatsapp}?text=Assalam-o-Alaikum%20Fahad%20Ali%20Interior%2C%20I%20have%20an%20inquiry%20regarding%20Order%20%23${order.orderId}" style="display: inline-block; padding: 10px 24px; color: #FFFFFF; font-weight: 800; font-size: 12.5px; text-decoration: none; letter-spacing: 0.5px;">
                                 💬 WhatsApp Artisan Concierge
                               </a>
                             </td>
@@ -458,7 +459,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise
                         </table>
 
                         <p style="margin: 8px 0 0; font-size: 11.5px; color: #8C6239; font-weight: 600;">
-                          Direct Hotline: <strong>+92 321 3283301</strong> &nbsp;|&nbsp; <strong>orders@fahadaliinterior.com</strong>
+                          Direct Hotline: <strong>${BUSINESS_CONTACT.phone}</strong> &nbsp;|&nbsp; <strong>${BUSINESS_CONTACT.supportEmail}</strong>
                         </p>
                       </td>
                     </tr>
@@ -506,7 +507,7 @@ Subtotal: Rs. ${order.subtotal.toLocaleString()}
 VIP Delivery: COMPLIMENTARY FREE
 ${order.discount && order.discount > 0 ? `Voucher Discount: - Rs. ${order.discount.toLocaleString()}\n` : ''}Total Payable: Rs. ${order.totalAmount.toLocaleString()}
 
-Concierge WhatsApp: +92 321 3283301
+Concierge WhatsApp: ${BUSINESS_CONTACT.phone}
 © ${new Date().getFullYear()} Fahad Ali Interior. Lahore Flagship Showroom & Gujrat Atelier
 `;
 

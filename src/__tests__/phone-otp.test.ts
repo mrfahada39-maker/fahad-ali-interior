@@ -99,7 +99,7 @@ describe('Phone OTP Verification Engine', () => {
   });
 
   it('dispatches OTP successfully with cooldown in sendOtpToPhone', async () => {
-    const validNum = '0320 7006110';
+    const validNum = '0300 1234567';
     const res = await sendOtpToPhone(validNum);
     expect(res.success).toBe(true);
     if (res.success) {

@@ -55,23 +55,23 @@ describe('WhatsAppAdminCopilot Suite', () => {
     });
 
     it('returns menu on greetings like "hi", "aoa", "salam", "menu"', async () => {
-      const resAoa = await WhatsAppAdminCopilot.processAdminCommand('923207006110', 'Aoa');
+      const resAoa = await WhatsAppAdminCopilot.processAdminCommand('923001234567', 'Aoa');
       expect(resAoa).toContain('Sawal 1: Sales & Hisaab');
 
-      const resMenu = await WhatsAppAdminCopilot.processAdminCommand('923207006110', 'menu');
+      const resMenu = await WhatsAppAdminCopilot.processAdminCommand('923001234567', 'menu');
       expect(resMenu).toContain('Sawal 1: Sales & Hisaab');
     });
   });
 
   describe('2. Option 1: Sales & Hisaab Command', () => {
     it('handles option 1 and calls WhatsAppService.generateDailyReport', async () => {
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', '1');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', '1');
       expect(res).toBe('MOCK_DAILY_REPORT_SUCCESS');
       expect(WhatsAppService.generateDailyReport).toHaveBeenCalled();
     });
 
     it('handles natural Urdu phrases like "aaj ki sale batao"', async () => {
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', 'aaj ki sale batao');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', 'aaj ki sale batao');
       expect(res).toBe('MOCK_DAILY_REPORT_SUCCESS');
     });
   });
@@ -79,7 +79,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
   describe('3. Option 2: Pending Orders Command', () => {
     it('returns empty notice when no pending orders exist', async () => {
       (db.order.findMany as jest.Mock).mockResolvedValueOnce([]);
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', '2');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', '2');
       expect(res).toContain('Alhamdulillah Sir, is waqt koi pending order nahi hai');
     });
 
@@ -95,7 +95,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
         },
       ]);
 
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', 'pending orders');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', 'pending orders');
       expect(res).toContain('PENDING ORDERS FOR VERIFICATION');
       expect(res).toContain('Hamza Khan');
       expect(res).toContain('PKR 95,000');
@@ -105,7 +105,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
 
   describe('4. Option 3: Dispatch & Tracking', () => {
     it('asks for Order ID when none is provided', async () => {
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', '3');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', '3');
       expect(res).toContain('kis Order ID ko dispatch/shipped mark karna chahte hain');
     });
 
@@ -117,7 +117,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
         items: [{ name: 'Royal Dining Table', quantity: 1 }],
       });
 
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', 'ship 123456');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', 'ship 123456');
       expect(db.order.update).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { status: 'SHIPPED' },
@@ -131,7 +131,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
 
   describe('5. Option 4: Stock Update', () => {
     it('prompts with example format if stock command is incomplete', async () => {
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', '4');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', '4');
       expect(res).toContain('stock <Item Name> <Quantity>');
     });
 
@@ -144,7 +144,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
         },
       ]);
 
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', 'stock Velvet Sofa 12');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', 'stock Velvet Sofa 12');
       expect(db.product.update).toHaveBeenCalledWith({
         where: { id: 'prod_sofa_1' },
         data: { stockCount: 12 },
@@ -156,7 +156,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
 
   describe('6. Option 5: Price Change', () => {
     it('prompts with format when price command is incomplete', async () => {
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', '5');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', '5');
       expect(res).toContain('price <Item Name> <Amount in PKR>');
     });
 
@@ -169,7 +169,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
         },
       ]);
 
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', 'price Royal Bed 175000');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', 'price Royal Bed 175000');
       expect(db.product.update).toHaveBeenCalled();
       expect(res).toContain('Price Updated Successfully Sir');
       expect(res).toContain('175,000');
@@ -180,7 +180,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
     it('creates active percentage coupon code', async () => {
       (db.coupon.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', 'coupon EID20 20%');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', 'coupon EID20 20%');
       expect(db.coupon.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -208,7 +208,7 @@ describe('WhatsAppAdminCopilot Suite', () => {
       ]);
       (db.message.findMany as jest.Mock).mockResolvedValueOnce([]);
 
-      const res = await WhatsAppAdminCopilot.processAdminCommand('923207006110', '7');
+      const res = await WhatsAppAdminCopilot.processAdminCommand('923001234567', '7');
       expect(res).toContain('LATEST CUSTOMER INQUIRIES & MESSAGES');
       expect(res).toContain('Master Bedroom');
       expect(res).toContain('Ayesha Khan');

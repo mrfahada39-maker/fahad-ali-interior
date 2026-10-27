@@ -1,8 +1,8 @@
 # Official Security Policy & Vulnerability Disclosure — Fahad Ali Interior
 # RFC 9116 Compliant
 
-Contact: mailto:mrfahada39@gmail.com
-Contact: https://wa.me/923213283301
+Contact: mailto:security@fahadaliinterior.com
+Contact: https://fahad-ali-interior.vercel.app/contact
 Expires: 2027-12-31T23:59:59.000Z
 Preferred-Languages: en, ur
 Policy: https://fahad-ali-interior.vercel.app/security

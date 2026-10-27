@@ -2,6 +2,7 @@
 import { logger } from '@/lib/logger';
 import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 export type HomeStats = {
   products: number;
@@ -77,12 +78,12 @@ const empty: HomePageData = {
   banners: [],
   settings: {
     siteName: 'Fahad Ali Interior',
-    contactPhone: '+92 321 3283301',
-    adminEmail: 'info@fahadaliinterior.com',
-    storeAddress: 'Main Boulevard, Gulberg III, Lahore, Pakistan',
+    contactPhone: BUSINESS_CONTACT.phone,
+    adminEmail: BUSINESS_CONTACT.supportEmail,
+    storeAddress: BUSINESS_CONTACT.address,
     socialInstagram: '',
     socialFacebook: '',
-    socialWhatsapp: '923213283301',
+    socialWhatsapp: BUSINESS_CONTACT.whatsapp,
     foundedYear: '2016',
     currency: 'PKR',
   },
@@ -289,12 +290,12 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       reviews: formattedReviews,
       settings: settings ? {
         siteName: settings.siteName || 'Fahad Ali Interior',
-        contactPhone: settings.contactPhone || '+92 321 3283301',
-        adminEmail: 'info@fahadaliinterior.com',
-        storeAddress: settings.storeAddress || 'Main Boulevard, Gulberg III, Lahore, Pakistan',
+        contactPhone: settings.contactPhone || BUSINESS_CONTACT.phone,
+        adminEmail: settings.adminEmail || BUSINESS_CONTACT.supportEmail,
+        storeAddress: settings.storeAddress || BUSINESS_CONTACT.address,
         socialInstagram: settings.socialInstagram || '',
         socialFacebook: settings.socialFacebook || '',
-        socialWhatsapp: settings.socialWhatsapp || '923213283301',
+        socialWhatsapp: settings.socialWhatsapp || BUSINESS_CONTACT.whatsapp,
         foundedYear: settings.foundedYear || '2016',
         currency: settings.currency || 'PKR',
       } : empty.settings,
