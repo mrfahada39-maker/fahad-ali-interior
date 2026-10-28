@@ -29,7 +29,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (key.startsWith('fahad-ali-offline-') && key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })

@@ -129,12 +129,17 @@ const providers: NextAuthOptions['providers'] = [
               backupCodes: (user.backupCodes || []).filter((c: string) => c !== matchedBackup),
             },
           });
-        } else if (user.totpSecret?.startsWith('phone_otp:v1:')) {
+        } else if (user.totpSecret?.startsWith('phone_otp:v1:') && !user.totpSecret.includes(':used:')) {
           const isValidPhoneOtp = verifyPhoneOtpSecret(user.id, totpCode, user.totpSecret);
           if (!isValidPhoneOtp) {
             await recordFailed2Fa();
             throw new Error('INVALID_2FA_CODE');
           }
+          // Invalidate single-use phone OTP challenge to prevent replay
+          await db.user.update({
+            where: { id: user.id },
+            data: { totpSecret: `phone_otp:v1:used:${Date.now()}` },
+          }).catch(() => {});
         } else if (!user.totpSecret) {
           // H3: Fail closed — missing totpSecret fails login (no 6-digit wildcard)
           await recordFailed2Fa();

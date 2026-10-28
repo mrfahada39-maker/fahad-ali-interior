@@ -32,8 +32,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // If password is required and provided, verify it
-    if (dbUser.password && password) {
+    // If account has a password set, strictly require and verify it
+    if (dbUser.password) {
+      if (!password) {
+        return NextResponse.json(
+          { error: 'Current account password is required to disable 2-step verification.' },
+          { status: 400 }
+        );
+      }
       const isMatch = await bcrypt.compare(password, dbUser.password);
       if (!isMatch) {
         return NextResponse.json({ error: 'Incorrect account password.' }, { status: 400 });

@@ -731,21 +731,17 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
     }
 
     try {
-      await db.$transaction([
-        db.wishlistItem.deleteMany({ where: { productId: id } }),
-        db.review.deleteMany({ where: { productId: id } }),
-        db.orderItem.deleteMany({ where: { productId: id } }),
-        db.product.delete({ where: { id } }),
-      ]);
-    } catch {
-      try {
-        await db.wishlistItem.deleteMany({ where: { productId: id } }).catch(() => {});
-        await db.review.deleteMany({ where: { productId: id } }).catch(() => {});
-        await db.orderItem.deleteMany({ where: { productId: id } }).catch(() => {});
+      await db.wishlistItem.deleteMany({ where: { productId: id } }).catch(() => {});
+      if (typeof db.product?.update === 'function') {
+        await db.product.update({
+          where: { id },
+          data: { deletedAt: new Date(), stockCount: 0 },
+        });
+      } else {
         await db.product.delete({ where: { id } });
-      } catch (err: unknown) {
-        return safeApiErrorResponse(err, 'Failed to permanently delete product from database', 500, req);
       }
+    } catch (err: unknown) {
+      return safeApiErrorResponse(err, 'Failed to delete product from database', 500, req);
     }
 
     revalidateProductCaches(id);

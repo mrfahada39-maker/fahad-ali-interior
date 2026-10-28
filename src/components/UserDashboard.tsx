@@ -64,6 +64,16 @@ export default function UserDashboard() {
   const [selectedFabricPreference, setSelectedFabricPreference] = useState('Turkish Champagne Velvet');
   const userChatBottomRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab) {
+        setActiveTab(tab);
+      }
+    }
+  }, []);
+
   const {
     isCallOpen,
     callType,

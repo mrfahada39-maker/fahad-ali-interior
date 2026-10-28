@@ -34,7 +34,10 @@ export function useAdminCall() {
       clearTimeout(adminAutoAnswerTimerRef.current);
       adminAutoAnswerTimerRef.current = null;
     }
-    if (callDurationIntervalRef.current) clearInterval(callDurationIntervalRef.current);
+    if (callDurationIntervalRef.current) {
+      clearInterval(callDurationIntervalRef.current);
+      callDurationIntervalRef.current = null;
+    }
     if (adminRtcClientRef.current) {
       adminRtcClientRef.current.cleanup();
       adminRtcClientRef.current = null;

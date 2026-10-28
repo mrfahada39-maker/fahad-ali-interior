@@ -319,9 +319,9 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
           <div className="flex items-center justify-between mb-3 px-2 sm:px-0">
             <div>
               <div className="w-8 h-1 bg-[#C59B4B] rounded-full mb-1.5" />
-              <h3 className="font-serif font-black text-xl sm:text-2xl xl:text-3xl text-[#1F1A17] tracking-tight">
+              <h2 className="font-serif font-black text-xl sm:text-2xl xl:text-3xl text-[#1F1A17] tracking-tight">
                 Shop by Category
-              </h3>
+              </h2>
             </div>
             
             {/* Navigation Arrows (WCAG 44px Compliant on Mobile) */}
@@ -391,17 +391,22 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
           </div>
 
           {/* Dots Indicator matching Image 1 */}
-          <div suppressHydrationWarning className="flex items-center justify-center gap-1.5 mt-3 sm:mt-4">
+          <div suppressHydrationWarning className="flex items-center justify-center gap-1 mt-2 sm:mt-3">
             {Array.from({ length: maxIndex + 1 }).map((_, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setCurrentIndex(i)}
                 aria-label={`Go to category slide ${i + 1}`}
-                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  i === currentIndex ? 'w-6 bg-[#A68254]' : 'w-1.5 bg-[#E2D2BC]'
-                }`}
-              />
+                className="min-w-[24px] min-h-[24px] flex items-center justify-center cursor-pointer"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === currentIndex ? 'w-6 bg-[#A68254]' : 'w-1.5 bg-[#E2D2BC]'
+                  }`}
+                />
+              </button>
             ))}
           </div>
 

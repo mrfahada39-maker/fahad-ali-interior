@@ -56,6 +56,8 @@ export function toV1ApiPath(path: string): string {
     mapped = `${API_PREFIX}/auth/register`;
   } else if (mapped === '/api/health') {
     mapped = `${API_PREFIX}/health`;
+  } else if (mapped === '/api/chat') {
+    mapped = `${API_PREFIX}/ai/chat`;
   } else if (mapped.startsWith('/api/v1/') || mapped === '/api/v1') {
     // Already has /api/v1 prefix
   } else if (mapped.startsWith('/api/')) {

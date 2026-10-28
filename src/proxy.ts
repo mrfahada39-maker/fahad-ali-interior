@@ -80,10 +80,9 @@ function buildContentSecurityPolicy(
   httpsOnly: boolean
 ): string {
   const isTest = process.env.NODE_ENV === 'test';
-  const scriptSrc = isTest
-    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`
-    : isProduction
-      ? `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vitals.vercel-insights.com`
+  const scriptSrc =
+    isTest || isProduction
+      ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`
       : `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com`;
 
   const styleDirectives = [
@@ -311,6 +310,10 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith('/api/orders/action') ||
       pathname.startsWith('/api/cron');
 
+    const isStandaloneRoute =
+      pathname.startsWith('/api/checkout/verify-slip') ||
+      pathname.startsWith('/api/checkout/otp');
+
     if (isUnsafeMethod(request.method) && !isSameOriginRequest(request) && !isWebhookOrPublicAction) {
       return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
     }
@@ -318,7 +321,8 @@ export async function proxy(request: NextRequest) {
     if (
       !pathname.startsWith('/api/v1') &&
       !pathname.startsWith('/api/admin') &&
-      !isWebhookOrPublicAction
+      !isWebhookOrPublicAction &&
+      !isStandaloneRoute
     ) {
       const mapped = toV1ApiPath(`${pathname}${request.nextUrl.search}`);
       const q = mapped.indexOf('?');

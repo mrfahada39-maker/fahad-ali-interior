@@ -338,8 +338,8 @@ describe('Auth Security & Flows: Password Reset OTP & Multi-Account Registration
       const res = await registerPOST(req);
       expect(res.status).toBe(201);
 
-      // Verify db.user.update was called to auto-verify the user so they can log in
-      expect(db.user.update).toHaveBeenCalledWith(
+      // Security: verify db.user.update is NOT called to auto-verify when email fails
+      expect(db.user.update).not.toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: mockCreatedUser.id },
           data: expect.objectContaining({

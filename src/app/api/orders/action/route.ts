@@ -7,6 +7,23 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
 
 export async function GET(req: NextRequest) {
+  // Block automated WhatsApp / Email / Social link-preview crawlers from mutating order state on prefetch
+  const ua = (req.headers.get('user-agent') || '').toLowerCase();
+  if (
+    /whatsapp|facebookexternalhit|facebot|twitterbot|slackbot|telegrambot|discordbot|linkedinbot|googlebot|bingbot|crawler|spider|preview/i.test(
+      ua
+    )
+  ) {
+    return new NextResponse(
+      renderHtmlPage(
+        'Fahad Ali Interior — Executive Order Authorization',
+        'Open this secure link in your browser to authorize or review the order.',
+        'warning'
+      ),
+      { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+    );
+  }
+
   const ip = getClientIp(req);
   const rl = await rateLimit(`order_action:${ip}`, 'api');
   if (!rl.allowed) {
@@ -394,3 +411,5 @@ function renderHtmlPage(
 </body>
 </html>`;
 }
+
+export const POST = GET;

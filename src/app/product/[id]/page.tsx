@@ -105,16 +105,19 @@ export default async function ProductDetail({ params }: Props) {
             url: siteUrl,
           },
         },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: Number(product.avgRating) > 0 ? Number(product.avgRating).toFixed(1) : '4.9',
-          reviewCount:
-            typeof product.reviewCount === 'number' && product.reviewCount > 0
-              ? product.reviewCount
-              : 12,
-          bestRating: '5',
-          worstRating: '1',
-        },
+        ...(typeof product.reviewCount === 'number' &&
+        product.reviewCount > 0 &&
+        Number(product.avgRating) > 0
+          ? {
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: Number(product.avgRating).toFixed(1),
+                reviewCount: product.reviewCount,
+                bestRating: '5',
+                worstRating: '1',
+              },
+            }
+          : {}),
         additionalProperty: [
           {
             '@type': 'PropertyValue',

@@ -117,7 +117,7 @@ export const useCartStore = create<CartStore>()(
 
       getGST: () => {
         // Catalog prices are GST-inclusive across Pakistan
-        return Math.round(get().getSubtotal() * 0.17);
+        return 0;
       },
 
       getDiscount: () => {

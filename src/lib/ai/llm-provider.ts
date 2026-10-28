@@ -17,19 +17,17 @@ export class MultiProviderLlm {
 - You speak fluent, natural, respectful **Roman Urdu, Urdu script, English, and any language the user speaks**.
 - **COMPREHENSIVE ANSWERS:** Deliver full, articulate, deeply helpful answers like ChatGPT and Gemini. Provide structured markdown headings (###), comparison tables for products/prices, and bullet points. Never provide cut-off, lazy, or truncated one-sentence answers!
 - **FURNITURE & STORE CONTEXT:** When answering furniture or interior queries, seamlessly use your deep knowledge of 100% Solid Seasoned Sheesham Wood (8–12% moisture kiln-dried, official 10-year anti-termite guarantee), room layouts, custom dimensions, and any active promo vouchers.
-- **GENERAL QUERIES:** Answer any question with high intelligence, clarity, and precision. Never refuse legitimate general knowledge queries!`;
+- **DOMAIN BOUNDARY:** Stay focused on Interior Architecture, Furniture Design, Room Planning, Woodcraft, Home Styling, Order Assistance, and Fahad Ali Interior services. Politely redirect unrelated coding, homework, or off-topic requests back to interior design and furniture assistance.`;
 
     const groqKey = process.env.GROQ_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY;
     const openAiKey = process.env.OPENAI_API_KEY;
 
-    // ── 1. Priority 1: High-Speed Groq Cloud LLMs (GPT-OSS-120B / Qwen-27B / GPT-OSS-20B) ──
+    // ── 1. Priority 1: High-Speed Groq Cloud LLMs (Llama 3.3 70B & Llama 3.1 8B) ──
     if (groqKey && groqKey.trim().length > 10) {
       const groqModels = [
-        'openai/gpt-oss-120b',
-        'qwen/qwen3.8-27b',
-        'openai/gpt-oss-20b',
-        'qwen/qwen3.6-27b',
+        'llama-3.3-70b-versatile',
+        'llama-3.1-8b-instant',
       ];
 
       for (const model of groqModels) {
@@ -45,8 +43,9 @@ export class MultiProviderLlm {
               model,
               messages: formattedMessages,
               temperature: 0.7,
-              max_tokens: 3000,
+              max_tokens: 2048,
             }),
+            signal: typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal ? AbortSignal.timeout(6000) : undefined,
           });
 
           if (res.ok) {
@@ -128,28 +127,8 @@ export class MultiProviderLlm {
       }
     }
 
-    // ── 4. Priority 4: Direct Fallback Live LLM Inference ──
-    try {
-      const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || 'Hello';
-      const promptParam = encodeURIComponent(lastUserMsg);
-      const systemParam = encodeURIComponent(enrichedSystemPrompt);
-      const pollUrl = `https://text.pollinations.ai/${promptParam}?model=openai&system=${systemParam}&seed=${Math.floor(Math.random() * 1000)}`;
-
-      const pollRes = await fetch(pollUrl, {
-        method: 'GET',
-        cache: 'no-store',
-      });
-
-      if (pollRes.ok) {
-        const text = await pollRes.text();
-        if (text && text.trim().length > 5 && !text.includes('<!DOCTYPE html>')) {
-          return { text: text.trim(), provider: 'ChatGPT GPT-4o (Live LLM Engine)' };
-        }
-      }
-    } catch (e) {
-      logger.warn('Direct LLM fallback error:', { detail: String(e) });
-    }
-
+    // Note: External unauthenticated GET URL fallbacks (e.g. text.pollinations.ai) are intentionally
+    // disabled so system prompts and customer messages are never leaked in third-party GET URLs.
     return null;
   }
 }

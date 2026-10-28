@@ -280,13 +280,18 @@ if (typeof window !== 'undefined') {
  * Creates a synthetic silent audio and canvas-based video MediaStream
  * for reliable fallback when hardware webcam or microphone is not plugged in or permitted.
  */
+let sharedSyntheticAudioCtx: AudioContext | null = null;
+
 export function createSyntheticMediaStream(withVideo = false): MediaStream {
   if (typeof window === 'undefined') return new MediaStream();
   try {
     const AudioCtx =
       window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return new MediaStream();
-    const ctx = new AudioCtx();
+    const ctx =
+      sharedSyntheticAudioCtx && sharedSyntheticAudioCtx.state !== 'closed'
+        ? sharedSyntheticAudioCtx
+        : (sharedSyntheticAudioCtx = new AudioCtx());
     const osc = ctx.createOscillator();
     const dst = ctx.createMediaStreamDestination();
     const gain = ctx.createGain();

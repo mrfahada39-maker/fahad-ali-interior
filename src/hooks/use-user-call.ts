@@ -58,7 +58,8 @@ export function useUserCall(
 
     const userId = sessionUser?.id || profile?.id || 'client';
     const userEmail = sessionUser?.email || profile?.email || '';
-    const userAliases = Array.from(new Set([userId, userEmail, profile?.id, profile?.email, 'client'].filter(Boolean)));
+    const specificIds = [sessionUser?.id, profile?.id, userEmail].filter(Boolean) as string[];
+    const userAliases = Array.from(new Set(specificIds.length > 0 ? specificIds : ['client']));
 
     void apiFetch('/api/calls/signal', {
       method: 'POST',
@@ -92,7 +93,8 @@ export function useUserCall(
       const userId = sessionUser?.id || profile?.id || 'client';
       const myName = profile?.name || sessionUser?.name || 'VIP Client';
       const myEmail = sessionUser?.email || profile?.email || '';
-      const userAliases = Array.from(new Set([userId, myEmail, profile?.id, profile?.email, 'client'].filter(Boolean)));
+      const specificIds = [sessionUser?.id, profile?.id, myEmail].filter(Boolean) as string[];
+      const userAliases = Array.from(new Set(specificIds.length > 0 ? specificIds : ['client']));
 
       const rtcClient = new WebRtcCallClient(
         (remote) => setRemoteStream(remote),
@@ -240,7 +242,8 @@ export function useUserCall(
   useEffect(() => {
     const userId = sessionUser?.id || profile?.id || 'client';
     const userEmail = sessionUser?.email || profile?.email || '';
-    const userAliases = Array.from(new Set([userId, userEmail, profile?.id, profile?.email, 'client'].filter(Boolean)));
+    const specificIds = [sessionUser?.id, profile?.id, userEmail].filter(Boolean) as string[];
+    const userAliases = Array.from(new Set(specificIds.length > 0 ? specificIds : ['client']));
 
     const interval = setInterval(async () => {
       try {

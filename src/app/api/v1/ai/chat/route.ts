@@ -545,10 +545,22 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
       '👑 Request Custom Quote',
     ];
 
+    // Enforce output sanitization and live catalog price integrity before persisting or returning
+    replyText = SecurityGuardrails.sanitizeAiOutput(replyText);
+    const knownCatalogPrices = allProducts.map((p) => ({
+      name: String(p.name || ''),
+      price: Number(p.price || 0),
+    }));
+    if (!SecurityGuardrails.validatePriceIntegrity(replyText, knownCatalogPrices)) {
+      logger.warn('AI response contained a price discrepancy against live catalog');
+    }
+
+    const resolvedBundle = generatedBundle || generatedQuote?.bundle || null;
+
     const metadata = {
       products: retrievedProducts,
       quote: generatedQuote,
-      bundle: generatedQuote?.bundle || null,
+      bundle: resolvedBundle,
       roomAnalysis: roomAnalysisResult,
       suggestedPrompts,
       whatsAppUrl: waUrl,
@@ -583,7 +595,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
         intent: activeAgentRole.toUpperCase(),
         products: retrievedProducts,
         quote: generatedQuote,
-        bundle: generatedQuote?.bundle || null,
+        bundle: resolvedBundle,
         roomAnalysis: roomAnalysisResult,
         whatsAppUrl: waUrl,
         suggestedPrompts,

@@ -474,8 +474,8 @@ export default function SettingsTab({
                   <div className="relative">
                     <input id="fai-adminsettingstab-field-7" name="fai_adminsettingstab_field_7"
                       type={safeShowPassword.current ? 'text' : 'password'}
-                      value={safePasswordForm.current ?? ''}
-                      onChange={(e) => setPasswordForm({ ...safePasswordForm, current: e.target.value })}
+                      value={safePasswordForm.currentPassword ?? safePasswordForm.current ?? ''}
+                      onChange={(e) => setPasswordForm({ ...safePasswordForm, currentPassword: e.target.value, current: e.target.value })}
                       placeholder="••••••••"
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono rounded-xl h-9.5 pl-3 pr-8 text-xs focus:border-[#B88E4B] outline-none"
                     />
@@ -494,8 +494,8 @@ export default function SettingsTab({
                   <div className="relative">
                     <input id="fai-adminsettingstab-field-8" name="fai_adminsettingstab_field_8"
                       type={safeShowPassword.next ? 'text' : 'password'}
-                      value={safePasswordForm.next ?? ''}
-                      onChange={(e) => setPasswordForm({ ...safePasswordForm, next: e.target.value })}
+                      value={safePasswordForm.newPassword ?? safePasswordForm.next ?? ''}
+                      onChange={(e) => setPasswordForm({ ...safePasswordForm, newPassword: e.target.value, next: e.target.value })}
                       placeholder="••••••••"
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono rounded-xl h-9.5 pl-3 pr-8 text-xs focus:border-[#B88E4B] outline-none"
                     />
@@ -514,8 +514,8 @@ export default function SettingsTab({
                   <div className="relative">
                     <input id="fai-adminsettingstab-field-9" name="fai_adminsettingstab_field_9"
                       type={safeShowPassword.confirm ? 'text' : 'password'}
-                      value={safePasswordForm.confirm ?? ''}
-                      onChange={(e) => setPasswordForm({ ...safePasswordForm, confirm: e.target.value })}
+                      value={safePasswordForm.confirmPassword ?? safePasswordForm.confirm ?? ''}
+                      onChange={(e) => setPasswordForm({ ...safePasswordForm, confirmPassword: e.target.value, confirm: e.target.value })}
                       placeholder="••••••••"
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono rounded-xl h-9.5 pl-3 pr-8 text-xs focus:border-[#B88E4B] outline-none"
                     />

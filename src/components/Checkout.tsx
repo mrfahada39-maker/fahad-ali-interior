@@ -536,8 +536,38 @@ export default function Checkout() {
 
     if (paymentMethod === 'card') {
       const cleanCardNum = cardDetails.number.replace(/\s+/g, '');
-      if (cleanCardNum.length < 15 || cardDetails.expiry.length < 5 || cardDetails.cvv.length < 3) {
+      if (!/^\d{15,16}$/.test(cleanCardNum) || cardDetails.expiry.length < 5 || !/^\d{3,4}$/.test(cardDetails.cvv)) {
         toast.error('Please enter valid 16-digit Card Number, Expiry (MM/YY), and CVV, or choose Cash on Delivery / Bank Transfer.');
+        return;
+      }
+      // Luhn checksum validation
+      let luhnSum = 0;
+      let shouldDouble = false;
+      for (let i = cleanCardNum.length - 1; i >= 0; i--) {
+        let digit = parseInt(cleanCardNum.charAt(i), 10);
+        if (shouldDouble) {
+          digit *= 2;
+          if (digit > 9) digit -= 9;
+        }
+        luhnSum += digit;
+        shouldDouble = !shouldDouble;
+      }
+      if (luhnSum % 10 !== 0) {
+        toast.error('Invalid card number checksum. Please check your card number or use Raast / Bank Transfer.');
+        return;
+      }
+      // Expiry MM/YY validation
+      const [expMmStr, expYyStr] = cardDetails.expiry.split('/');
+      const expMonth = parseInt(expMmStr || '0', 10);
+      const expYear = 2000 + parseInt(expYyStr || '0', 10);
+      const nowDate = new Date();
+      if (
+        expMonth < 1 ||
+        expMonth > 12 ||
+        expYear < nowDate.getFullYear() ||
+        (expYear === nowDate.getFullYear() && expMonth < nowDate.getMonth() + 1)
+      ) {
+        toast.error('Card has expired or expiry date (MM/YY) is invalid.');
         return;
       }
     }

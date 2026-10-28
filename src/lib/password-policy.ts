@@ -23,8 +23,8 @@ const COMMON_PASSWORDS = new Set([
   'sheesham12', 'furniture1', 'luxury1234', 'interiors1', 'interiors12',
 ]);
 
-// Pre-computed bcrypt hash with cost 12 for dummy compare
-const DUMMY_BCRYPT_HASH = '$2a$12$K8yq.Uv5tQ8N6eY2X4i7Me.5B1R2e9Z0Q8V1k4U3j2L1m0P4q5r6s';
+// Pre-computed valid 60-char bcrypt hash with cost 12 for constant-time dummy compare
+const DUMMY_BCRYPT_HASH = '$2b$12$Mvm3eahlf.LRYNy9PCUsf.CQoRiT9U2uMsII7XZQ/HRCoZEwJTrka';
 
 export function validatePasswordStrength(password: string): { valid: boolean; error?: string } {
   if (!password || typeof password !== 'string') {

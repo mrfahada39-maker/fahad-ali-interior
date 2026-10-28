@@ -15,7 +15,7 @@ async function getArticleBySlug(slug: string): Promise<EditorialArticle | null> 
   const cleanSlug = decodeURIComponent(slug).trim();
   const dbArticle = await db.blogPost
     .findFirst({
-      where: { slug: cleanSlug, deletedAt: null },
+      where: { slug: cleanSlug, deletedAt: null, isActive: true },
     })
     .catch(() => null);
 
@@ -49,6 +49,20 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
     alternates: {
       canonical: `/blog/${article.slug}`,
     },
+    openGraph: {
+      title: `${article.title} | Fahad Ali Interior`,
+      description: article.excerpt,
+      type: 'article',
+      url: `/blog/${article.slug}`,
+      images: [
+        {
+          url: article.image || '/hero-living-room-img1-4k.webp',
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
+    },
   };
 }
 
@@ -64,8 +78,38 @@ export default async function BlogDetailPage({ params }: RouteProps) {
     .map((p) => p.trim())
     .filter(Boolean);
 
+  const blogPostingSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: article.title,
+    description: article.excerpt,
+    image: article.image ? [article.image] : ['/hero-living-room-img1-4k.webp'],
+    datePublished: article.createdAt,
+    dateModified: article.createdAt,
+    author: {
+      '@type': 'Person',
+      name: article.author || 'Fahad Ali Atelier',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Fahad Ali Interior',
+      logo: {
+        '@type': 'ImageObject',
+        url: '/logo.svg',
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://fahadaliinterior.com/blog/${article.slug}`,
+    },
+  };
+
   return (
     <StoreShell showFooter={true}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
+      />
       <main className="min-h-screen bg-[#FAF8F5] text-[#2C1E18] font-sans pt-28 pb-20">
         <article className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="mb-6">

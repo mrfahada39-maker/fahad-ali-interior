@@ -44,27 +44,35 @@ function isSafeImageUrl(rawUrl: string): boolean {
     const parsed = new URL(rawUrl);
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
 
-    const hostname = parsed.hostname.toLowerCase();
+    const hostname = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
     if (
       hostname === 'localhost' ||
       hostname === '127.0.0.1' ||
       hostname === '0.0.0.0' ||
       hostname === '::1' ||
+      hostname === '0:0:0:0:0:0:0:1' ||
+      hostname.startsWith('::ffff:127.') ||
+      hostname.startsWith('::ffff:10.') ||
+      hostname.startsWith('::ffff:192.168.') ||
+      hostname.startsWith('fe80:') ||
+      hostname.startsWith('fc00:') ||
+      hostname.startsWith('fd00:') ||
       hostname === '169.254.169.254' ||
       hostname.endsWith('.internal') ||
-      hostname.endsWith('.local')
+      hostname.endsWith('.local') ||
+      /^\d+$/.test(hostname) ||
+      /^0x[0-9a-f]+$/i.test(hostname)
     ) {
       return false;
     }
 
-    // Disallow IPv4 private ranges: 10.x.x.x, 192.168.x.x, 172.16.x.x - 172.31.x.x
+    // Disallow IPv4 private ranges: 10.x.x.x, 192.168.x.x, 172.16.x.x - 172.31.x.x, 0.x.x.x
     const ipv4Pattern = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
     const ipMatch = hostname.match(ipv4Pattern);
     if (ipMatch) {
       const first = parseInt(ipMatch[1], 10);
       const second = parseInt(ipMatch[2], 10);
-      if (first === 10) return false;
-      if (first === 127) return false;
+      if (first === 0 || first === 10 || first === 127) return false;
       if (first === 169 && second === 254) return false;
       if (first === 192 && second === 168) return false;
       if (first === 172 && second >= 16 && second <= 31) return false;
@@ -126,6 +134,7 @@ export class PaymentVerifier {
             const timeoutId = setTimeout(() => controller.abort(), 8000);
             const imgRes = await fetch(screenshotUrlOrBase64, {
               signal: controller.signal,
+              redirect: 'error',
               headers: { Accept: 'image/*' },
             });
             clearTimeout(timeoutId);
@@ -249,9 +258,37 @@ Return ONLY a valid JSON object matching this schema:
       }
     }
 
-    // ── Amount Match Analysis ──
+    // ── Amount, Receiver Account & Date Freshness Analysis ──
     const amountDifference = extractedAmount !== null ? Math.abs(extractedAmount - expectedAmount) : null;
     const amountMatches = amountDifference !== null && amountDifference <= 5; // tolerance of Rs. 5
+
+    // Validate receiver account / title if extracted
+    const officialAccounts = (process.env.OFFICIAL_PAYMENT_ACCOUNTS || 'fahad ali,fahadali,interior,03213283301,03207006110,meezan,jazzcash,easypaisa')
+      .toLowerCase()
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const cleanReceiver = (receiverAccount || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const isReceiverSuspicious =
+      cleanReceiver.length >= 4 &&
+      !officialAccounts.some((acc) => {
+        const cleanAcc = acc.replace(/[^a-z0-9]/g, '');
+        return cleanReceiver.includes(cleanAcc) || cleanAcc.includes(cleanReceiver);
+      });
+
+    // Check if slip date is older than 7 days
+    let isStaleSlip = false;
+    if (paymentDate) {
+      const parsedDate = Date.parse(paymentDate);
+      if (!Number.isNaN(parsedDate)) {
+        const ageMs = Date.now() - parsedDate;
+        if (ageMs > 7 * 24 * 60 * 60 * 1000) {
+          isStaleSlip = true;
+          tamperingSuspected = true;
+        }
+      }
+    }
 
     // ── Determine Overall Verdict ──
     let verdict: PaymentAuditResult['verdict'] = 'AUTHENTIC_MATCH';
@@ -262,6 +299,10 @@ Return ONLY a valid JSON object matching this schema:
       verdict = 'DUPLICATE_TID';
       summaryUrdu = `⚠️ Khatra: Transaction ID (${transactionId}) pehle se kisi aur order mein use ho chuki hai!`;
       summaryEnglish = `⚠️ FRAUD ALERT: Transaction ID (${transactionId}) was previously used on another order!`;
+    } else if (isStaleSlip) {
+      verdict = 'TAMPERED_SUSPECTED';
+      summaryUrdu = `⚠️ Purani Slip: Yeh receipt (${paymentDate}) 7 din se zyada purani hai!`;
+      summaryEnglish = `⚠️ STALE RECEIPT ALERT: Payment date (${paymentDate}) is older than 7 days!`;
     } else if (tamperingSuspected) {
       verdict = 'TAMPERED_SUSPECTED';
       summaryUrdu = `⚠️ Shak: Screenshot mein editing / photoshop ke nishan mile hain!`;
@@ -270,6 +311,11 @@ Return ONLY a valid JSON object matching this schema:
       verdict = 'AMOUNT_MISMATCH';
       summaryUrdu = `⚠️ Raqam Farq: Slip par Rs. ${extractedAmount?.toLocaleString()} hai jabke order Rs. ${expectedAmount.toLocaleString()} ka hai!`;
       summaryEnglish = `⚠️ AMOUNT MISMATCH: Slip shows PKR ${extractedAmount?.toLocaleString()} but order requires PKR ${expectedAmount.toLocaleString()}!`;
+    } else if (isReceiverSuspicious) {
+      verdict = 'MANUAL_REVIEW_NEEDED';
+      confidence = Math.min(confidence, 60);
+      summaryUrdu = `⚠️ Receiver Check: Slip par receiver (${receiverAccount}) company account se match nahi ho raha. Admin review zaroori hai.`;
+      summaryEnglish = `⚠️ RECEIVER ALERT: Recipient on slip (${receiverAccount}) does not match Fahad Ali Interior accounts. Manual review required.`;
     } else if (extractedAmount !== null && amountMatches && !tamperingSuspected) {
       verdict = 'AUTHENTIC_MATCH';
       summaryUrdu = `✅ Slip Asli Hai: Rs. ${expectedAmount.toLocaleString()} poori raqam aur TID (${transactionId || 'Meezan/Raast'}) match ho gayi hai.`;

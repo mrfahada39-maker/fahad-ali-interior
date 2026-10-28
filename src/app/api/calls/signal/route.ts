@@ -148,6 +148,17 @@ async function loadActiveCallSessions(now: number): Promise<CallSession[]> {
   return Array.from(sessionsMap.values());
 }
 
+export async function GET(req: NextRequest) {
+  const target = req.nextUrl.searchParams.get('target') || '';
+  if (target === 'admin') {
+    const isAdmin = Boolean(await getVerifiedAdmin(req));
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized: Admin authentication required.' }, { status: 403 });
+    }
+  }
+  return NextResponse.json({ error: 'Use POST /api/calls/signal with signaling action.' }, { status: 405 });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));

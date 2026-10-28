@@ -32,7 +32,23 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}));
+    const rawBody = await req.text().catch(() => '');
+    const appSecret = (process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET || '').trim();
+    const signatureHeader = req.headers.get('x-hub-signature-256');
+    if (appSecret && (signatureHeader || process.env.NODE_ENV === 'production')) {
+      if (!signatureHeader || !signatureHeader.startsWith('sha256=')) {
+        return NextResponse.json({ error: 'Missing or invalid X-Hub-Signature-256' }, { status: 401 });
+      }
+      const { createHmac, timingSafeEqual } = await import('crypto');
+      const expectedHex = createHmac('sha256', appSecret).update(rawBody).digest('hex');
+      const providedHex = signatureHeader.slice(7);
+      const expectedBuf = Buffer.from(expectedHex, 'utf8');
+      const providedBuf = Buffer.from(providedHex, 'utf8');
+      if (expectedBuf.length !== providedBuf.length || !timingSafeEqual(expectedBuf, providedBuf)) {
+        return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 401 });
+      }
+    }
+    const body = rawBody ? (() => { try { return JSON.parse(rawBody); } catch { return {}; } })() : {};
     const entry = body?.entry?.[0];
     const changes = entry?.changes?.[0];
     const value = changes?.value;
@@ -44,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     // Immediately mark incoming message as read on Meta Cloud API (turns grey ticks into double blue ticks)
     if (message.id && !message.id.startsWith('wamid.test')) {
-      WhatsAppService.markMessageAsRead(message.id).catch(() => {});
+      WhatsAppService.markMessageAsRead(message.id).catch(() => { });
     }
 
     const senderPhoneRaw = message.from ? String(message.from).replace(/\D/g, '') : '';
@@ -155,7 +171,7 @@ export async function POST(req: NextRequest) {
     const [, action, targetOrderId] = match as [string, 'verify' | 'hold' | 'reject', string];
 
     // Look up order in database: exact, endsWith, or latest pending
-    let order = targetOrderId === 'latest'
+    const order = targetOrderId === 'latest'
       ? await db.order.findFirst({
         where: { paymentStatus: 'AWAITING_VERIFICATION', deletedAt: null },
         orderBy: { createdAt: 'desc' },
@@ -169,15 +185,8 @@ export async function POST(req: NextRequest) {
         include: { items: true },
       });
 
-    if (!order && targetOrderId !== 'latest') {
-      // Fallback: Check if there's any pending order created in the last 24 hours
-      order = await db.order.findFirst({
-        where: { paymentStatus: 'AWAITING_VERIFICATION', deletedAt: null },
-        orderBy: { createdAt: 'desc' },
-        include: { items: true },
-      });
-    }
-
+    // Note: Do NOT fall back to an arbitrary pending order when a specific targetOrderId is not found,
+    // as that could accidentally approve or reject a different customer's order.
     if (!order) {
       logger.warn(`[WhatsApp Webhook] Order not found for ID: ${targetOrderId}`);
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
@@ -192,7 +201,7 @@ export async function POST(req: NextRequest) {
     }
     if (order.paymentStatus === 'PAID' && action === 'verify') {
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'verify');
-      await WhatsAppService.sendCustomerOrderApproved(order).catch(() => {});
+      await WhatsAppService.sendCustomerOrderApproved(order).catch(() => { });
       return NextResponse.json({ message: 'Order is already marked as paid' }, { status: 200 });
     }
 

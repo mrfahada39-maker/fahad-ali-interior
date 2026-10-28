@@ -108,22 +108,14 @@ export async function POST(req: NextRequest) {
         });
 
         if (!emailSent.success) {
-          logger.warn('[VERIFICATION_EMAIL_FAILED] Auto-verifying user to prevent lockout:', {
+          logger.warn('[VERIFICATION_EMAIL_FAILED] SMTP dispatch failed:', {
             userId: user.id,
             email: user.email,
             error: emailSent.error,
           });
-          await db.user.update({
-            where: { id: user.id },
-            data: { emailVerified: new Date() },
-          });
         }
       } catch (err) {
         logger.error('Failed to send verification email upon registration:', err);
-        await db.user.update({
-          where: { id: user.id },
-          data: { emailVerified: new Date() },
-        }).catch(() => {});
       }
     }
 

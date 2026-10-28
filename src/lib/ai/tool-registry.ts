@@ -209,18 +209,18 @@ export class AiToolExecutor {
           return {
             success: true,
             orderNumber: order.id,
-            status: 'Processing — White Glove Courier Assigned',
+            status: order.status || 'PENDING',
+            paymentStatus: order.paymentStatus || 'AWAITING_VERIFICATION',
+            trackingNumber: order.trackingNumber || 'Pending Courier Assignment',
             totalAmount: Number(order.totalAmount),
-            estimatedDelivery: '3 Days',
+            estimatedDelivery: order.status === 'DELIVERED' ? 'Delivered' : '3–5 Business Days',
           };
         }
 
         return {
-          success: true,
+          success: false,
           orderNumber: orderIdOrNumber,
-          status: 'In Transit — White Glove Assembly Team Dispatched',
-          estimatedDelivery: '2-3 Business Days',
-          carrier: 'FAHAD ALI Express Logistics',
+          status: 'Order Not Found — Please verify your Order ID or contact our showroom concierge.',
         };
       }
 

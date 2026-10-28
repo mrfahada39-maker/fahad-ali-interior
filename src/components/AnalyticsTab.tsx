@@ -207,7 +207,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
 
   const exportAnalyticsCSV = () => {
     const headers = ['Month', 'Revenue (PKR)', 'Est Orders'];
-    const rows = revenueChartData.map((d) => [d.name, d.revenue, d.ordersCount]);
+    const rows = revenueChartData.map((d) => [d.name, d.revenue, d.ordersCount].map((v) => `"${String(v ?? '').replace(/"/g, '""').replace(/^[=+\-@\t\r]/, "'$&")}"`));
     const csvContent =
       'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);

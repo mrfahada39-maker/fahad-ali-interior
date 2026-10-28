@@ -37,7 +37,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
   useEffect(() => {
     setMounted(true);
-    
+
     let lastScrolled = false;
     const handleScroll = () => {
       const scrolled = window.scrollY > 30;
@@ -46,10 +46,10 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         setIsScrolled(scrolled);
       }
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -66,7 +66,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           setUnreadCount(data.unreadCount);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [mounted, session?.user]);
 
   const desktopNavLinks = [
@@ -93,11 +93,10 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       {/* ── STICKY FLOATING EDITORIAL LUXURY NAVBAR (HIDES WHEN CATEGORY BAR IS PINNED) ── */}
       <header
         suppressHydrationWarning
-        className={`fixed top-0 left-0 right-0 z-50 w-full px-3 sm:px-6 pt-2.5 sm:pt-3 pointer-events-none font-sans transition-all duration-300 ease-in-out ${
-          isCategoryBarSticky ? '-translate-y-28 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 w-full px-3 sm:px-6 pt-2.5 sm:pt-3 pointer-events-none font-sans transition-all duration-300 ease-in-out ${isCategoryBarSticky ? '-translate-y-28 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
+          }`}
       >
-        <nav 
+        <nav
           suppressHydrationWarning
           className="pointer-events-auto w-full max-w-[1550px] mx-auto bg-white/95 md:backdrop-blur-md rounded-[20px] sm:rounded-full border border-[#EBE1D3] shadow-[0_4px_25px_rgba(44,30,24,0.06)] px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between transition-all duration-300"
         >
@@ -111,11 +110,10 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                   href={link.href}
                   prefetch={false}
                   onClick={(e) => handleNavClick(e, link.href)}
-                  className={`text-xs xl:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                    isActive
-                      ? 'bg-[#C59B4B] text-white px-3.5 xl:px-4 py-1.5 rounded-full shadow-xs'
-                      : 'text-[#4A3E38] hover:text-[#C59B4B] px-2.5 xl:px-3 py-1.5 rounded-full hover:bg-[#FAF5ED]'
-                  }`}
+                  className={`text-xs xl:text-sm font-medium transition-all duration-200 whitespace-nowrap ${isActive
+                        ? 'bg-[#8C6239] text-white px-3.5 xl:px-4 py-1.5 rounded-full shadow-xs'
+                        : 'text-[#4A3E38] hover:text-[#8C6239] px-2.5 xl:px-3 py-1.5 rounded-full hover:bg-[#FAF5ED]'
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -138,8 +136,8 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* ── DESKTOP RIGHT SECTION: SEARCH, WISHLIST, CART, ALERTS, PROFILE ── */}
           <div className="hidden lg:flex items-center gap-2 xl:gap-2.5 flex-1 justify-end min-w-0">
             {/* 1. Search */}
-            <button 
-              onClick={onSearchOpen} 
+            <button
+              onClick={onSearchOpen}
               className="w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-[#FAF2E5] text-[#2C1E18] hover:text-[#B88E4B] flex items-center justify-center transition-colors cursor-pointer"
               aria-label="Search Catalog"
             >
@@ -156,15 +154,15 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             </button>
 
             {/* 3. Shopping Cart */}
-            <button 
-              onClick={openCart} 
+            <button
+              onClick={openCart}
               className="relative w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-[#FAF2E5] text-[#2C1E18] hover:text-[#B88E4B] flex items-center justify-center transition-colors cursor-pointer"
               aria-label="Shopping Cart"
             >
               <ShoppingBag size={16} strokeWidth={1.8} />
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-[#C59B4B] text-white text-[9.5px] font-bold flex items-center justify-center px-1">
-                {mounted ? cartItemCount : 0}
-              </span>
+                <span aria-hidden="true" className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-[#8C6239] text-white text-[9.5px] font-bold flex items-center justify-center px-1">
+                  {mounted ? cartItemCount : 0}
+                </span>
             </button>
 
             {/* 4. Notifications / Alerts */}
@@ -173,15 +171,15 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                 <NotificationBell />
               </div>
             ) : (
-              <button 
+              <button
                 onClick={onAuthOpen}
                 className="relative w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-[#FAF7F2] hover:bg-[#FAF2E5] text-[#2C1E18] hover:text-[#B88E4B] flex items-center justify-center transition-colors cursor-pointer"
                 aria-label="Notifications"
               >
                 <Bell size={16} strokeWidth={1.8} />
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-[#C59B4B] text-white text-[9.5px] font-bold flex items-center justify-center px-1">
-                  {unreadCount}
-                </span>
+                  <span aria-hidden="true" className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-[#8C6239] text-white text-[9.5px] font-bold flex items-center justify-center px-1">
+                    {unreadCount}
+                  </span>
               </button>
             )}
 
@@ -212,16 +210,16 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           <div className="lg:hidden flex items-center justify-between w-full">
             {/* Mobile Left: Menu & Search */}
             <div className="flex items-center gap-1.5">
-              <button 
-                onClick={() => setMobileOpen(true)} 
-                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs" 
+              <button
+                onClick={() => setMobileOpen(true)}
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs"
                 aria-label="Open Navigation Menu"
               >
                 <LayoutGrid size={18} strokeWidth={1.8} />
               </button>
-              <button 
-                onClick={onSearchOpen} 
-                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs" 
+              <button
+                onClick={onSearchOpen}
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs"
                 aria-label="Search Catalog"
               >
                 <Search size={17} strokeWidth={1.8} />
@@ -247,15 +245,15 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               >
                 <Heart size={17} strokeWidth={1.8} />
               </button>
-              <button 
-                onClick={openCart} 
-                className="relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs" 
+              <button
+                onClick={openCart}
+                className="relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-[#FAF7F2] border border-[#EBE1D3]/60 flex items-center justify-center text-[#2C1E18] active:scale-95 transition-all shadow-2xs"
                 aria-label="Shopping Cart"
               >
                 <ShoppingBag size={17} strokeWidth={1.8} />
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-[#C59B4B] text-white text-[9px] font-bold flex items-center justify-center px-1">
-                  {mounted ? cartItemCount : 0}
-                </span>
+                  <span aria-hidden="true" className="absolute -top-1 -right-1 min-w-[16px] h-[16px] rounded-full bg-[#8C6239] text-white text-[9px] font-bold flex items-center justify-center px-1">
+                    {mounted ? cartItemCount : 0}
+                  </span>
               </button>
             </div>
           </div>
@@ -266,18 +264,16 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       <div
         onClick={() => setMobileOpen(false)}
         aria-hidden={!mobileOpen}
-        className={`fixed inset-0 bg-black/60 z-50 lg:hidden transition-opacity duration-300 ${
-          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed inset-0 bg-black/60 z-50 lg:hidden transition-opacity duration-300 ${mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
       />
-      
+
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Navigation Menu"
-        className={`fixed top-0 left-0 bottom-0 w-[88%] max-w-[390px] bg-[#FAF7F2] text-[#2C1E18] z-50 flex flex-col justify-between p-5 sm:p-6 overflow-y-auto shadow-2xl rounded-r-[40px] border-r-2 border-[#C9A96E]/40 lg:hidden transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
-        }`}
+        className={`fixed top-0 left-0 bottom-0 w-[88%] max-w-[390px] bg-[#FAF7F2] text-[#2C1E18] z-50 flex flex-col justify-between p-5 sm:p-6 overflow-y-auto shadow-2xl rounded-r-[40px] border-r-2 border-[#C9A96E]/40 lg:hidden transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${mobileOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
+          }`}
       >
         {/* Top Header: Logo with Ornate Flourish & Circular Close Button */}
         <div className="flex items-start justify-between pt-1 pb-4">
@@ -290,7 +286,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
                 INTERIOR
               </span>
             </Link>
-            
+
             {/* Ornate Gold Flourish Line */}
             <div className="flex items-center gap-2 mt-2 w-36">
               <div className="h-px w-full bg-gradient-to-r from-[#C9A96E] to-transparent" />
@@ -299,9 +295,9 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
             </div>
           </div>
 
-          <button 
-            onClick={() => setMobileOpen(false)} 
-            className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#F4ECE1] border border-[#E6DCCF] flex items-center justify-center text-[#8A5A2B] shadow-sm hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer active:scale-95" 
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full bg-[#F4ECE1] border border-[#E6DCCF] flex items-center justify-center text-[#8A5A2B] shadow-sm hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer active:scale-95"
             aria-label="Close Navigation"
           >
             <X size={22} strokeWidth={1.7} />
@@ -310,7 +306,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
         {/* Menu Items Card List (Matches Screenshot Cards 100% with Luxury Hover Animations) */}
         <div className="flex flex-col gap-3 py-2">
-          
+
           {/* 1. HOME (Active Card with Gold Pill Bar & Hover Animation) */}
           <Link
             href="/"
@@ -415,7 +411,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
           {/* 7. NOTIFICATION (with Live Unread Badge) */}
           <Link
-            href={mounted && session?.user ? '/dashboard?tab=notifications' : '/?auth=login'}
+            href={mounted && session?.user ? '/dashboard?tab=orders' : '/?auth=login'}
             prefetch={false}
             onClick={(e) => {
               setMobileOpen(false);
@@ -501,37 +497,37 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
               FOLLOW US
             </span>
             <div className="flex items-center gap-3">
-              <a 
-                href={settings?.socialFacebook || 'https://facebook.com/fahadaliinterior'} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href={settings?.socialFacebook || 'https://facebook.com/fahadaliinterior'}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#F4ECE1] border border-[#E6DCCF] text-[#8A5A2B] flex items-center justify-center hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer shadow-sm"
                 aria-label="Facebook"
               >
                 <Facebook size={18} strokeWidth={1.5} />
               </a>
-              <a 
-                href={settings?.socialInstagram || 'https://instagram.com/fahadaliinterior'} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href={settings?.socialInstagram || 'https://instagram.com/fahadaliinterior'}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#F4ECE1] border border-[#E6DCCF] text-[#8A5A2B] flex items-center justify-center hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer shadow-sm"
                 aria-label="Instagram"
               >
                 <Instagram size={18} strokeWidth={1.5} />
               </a>
-              <a 
-                href="https://pinterest.com/fahadaliinterior" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://pinterest.com/fahadaliinterior"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#F4ECE1] border border-[#E6DCCF] text-[#8A5A2B] flex items-center justify-center hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer shadow-sm"
                 aria-label="Pinterest"
               >
                 <Sparkles size={18} strokeWidth={1.5} />
               </a>
-              <a 
-                href="https://youtube.com/@fahadaliinterior" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://youtube.com/@fahadaliinterior"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#F4ECE1] border border-[#E6DCCF] text-[#8A5A2B] flex items-center justify-center hover:bg-[#8A5A2B] hover:text-white transition-colors cursor-pointer shadow-sm"
                 aria-label="YouTube"
               >
@@ -543,21 +539,21 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       </div>
 
       {/* ── CLEAN LUXURY WHITE/IVORY BOTTOM NAVIGATION (MATCHES IMAGE 1 100%) ── */}
-      <nav 
+      <nav
         suppressHydrationWarning
         aria-label="Mobile Navigation Bar"
         className="fixed bottom-0 left-0 right-0 w-full z-40 lg:hidden bg-white/95 md:backdrop-blur-md border-t border-[#EAE1D5] shadow-[0_-4px_25px_rgba(44,30,24,0.06)] px-2 pt-1.5 pb-2 h-[62px] flex items-center justify-around select-none"
       >
         {/* 1. Home */}
-        <Link 
+        <Link
           prefetch={false}
           href="/"
           className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"
         >
-          <Home 
-            size={20} 
-            strokeWidth={pathname === '/' ? 2.2 : 1.8} 
-            className={pathname === '/' ? 'text-[#8C6222]' : 'text-[#7D6F64]'} 
+          <Home
+            size={20}
+            strokeWidth={pathname === '/' ? 2.2 : 1.8}
+            className={pathname === '/' ? 'text-[#8C6222]' : 'text-[#7D6F64]'}
           />
           <span className={`text-[10px] mt-0.5 tracking-wide ${pathname === '/' ? 'font-bold text-[#8C6222]' : 'font-medium text-[#7D6F64]'}`}>
             Home
@@ -568,7 +564,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         </Link>
 
         {/* 2. Shop */}
-        <Link 
+        <Link
           prefetch={false}
           href="/#signature-categories"
           onClick={(e) => {
@@ -618,7 +614,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         </button>
 
         {/* 5. Account */}
-        <Link 
+        <Link
           prefetch={false}
           href={mounted && session?.user ? (isAdmin ? '/admin' : '/dashboard') : '/?auth=login'}
           onClick={mounted && session?.user ? undefined : (e) => { e.preventDefault(); onAuthOpen(); }}

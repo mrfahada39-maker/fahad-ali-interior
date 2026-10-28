@@ -126,8 +126,43 @@ export function UserOrderModals({
               <Button
                 type="button"
                 onClick={() => {
-                  toast.success('Official Tax Invoice downloaded successfully');
-                  setSelectedOrderDetails(null);
+                  try {
+                    const shortId = (selectedOrderDetails.id || '').slice(-8).toUpperCase();
+                    const dateStr = new Date().toLocaleDateString('en-GB');
+                    const itemsRows = (selectedOrderDetails.items || []).map((it) => `
+                      <tr>
+                        <td style="padding:10px;border-bottom:1px solid #eee;">${it.name || 'Handcrafted Luxury Furniture'}</td>
+                        <td style="padding:10px;border-bottom:1px solid #eee;text-align:center;">${it.quantity || 1}</td>
+                        <td style="padding:10px;border-bottom:1px solid #eee;text-align:right;">PKR ${(it.price || 0).toLocaleString()}</td>
+                        <td style="padding:10px;border-bottom:1px solid #eee;text-align:right;">PKR ${((it.price || 0) * (it.quantity || 1)).toLocaleString()}</td>
+                      </tr>
+                    `).join('');
+                    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tax Invoice #${shortId}</title>
+                    <style>body{font-family:Helvetica,Arial,sans-serif;color:#1F1612;padding:30px;max-width:760px;margin:auto;}
+                    .th{background:#FAF5EE;padding:10px;border-bottom:2px solid #E7DDD0;text-align:left;}
+                    table{width:100%;border-collapse:collapse;margin:20px 0;}
+                    </style></head><body>
+                    <div style="display:flex;justify-content:space-between;border-bottom:2px solid #8C6239;padding-bottom:15px;">
+                      <div><h1 style="color:#8C6239;margin:0;font-size:22px;">FAHAD ALI INTERIOR</h1>
+                      <p style="font-size:12px;color:#666;margin:4px 0;">Official Sales Tax Invoice & Certificate</p></div>
+                      <div style="text-align:right;"><h3 style="margin:0;">#ORD-${shortId}</h3><p style="font-size:12px;color:#666;">Date: ${dateStr}</p></div>
+                    </div>
+                    <table><thead><tr><th class="th">Item</th><th class="th" style="text-align:center;">Qty</th><th class="th" style="text-align:right;">Price</th><th class="th" style="text-align:right;">Total</th></tr></thead><tbody>${itemsRows}</tbody></table>
+                    <div style="text-align:right;font-size:16px;"><strong>Total: PKR ${(selectedOrderDetails.totalAmount || 0).toLocaleString()}</strong></div>
+                    <script>window.onload=function(){window.print();};</script></body></html>`;
+                    const blob = new Blob([html], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    const win = window.open(url, '_blank');
+                    if (!win) {
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `Invoice_ORD_${shortId}.html`;
+                      a.click();
+                    }
+                    toast.success('Official Tax Invoice opened for printing/saving as PDF');
+                  } catch {
+                    toast.error('Failed to generate invoice');
+                  }
                 }}
                 className="flex-1 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#8C6239] hover:brightness-110 text-white text-xs font-bold h-9 shadow-sm active:scale-95 transition-all cursor-pointer"
               >

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendOtpToPhone, maskPakistaniPhone, generate6DigitOtp } from '@/lib/phone-otp';
-import { isValidPakistaniPhone } from '@/lib/pakistan-localization';
 import { createPhoneOtpSecret } from '@/lib/totp-crypto';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
@@ -33,34 +32,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '2-Step verification is not active for this account.' }, { status: 400 });
     }
 
-    // Determine target phone: body.phone -> user.phone -> admin default fallback
-    const requestedPhone = typeof body?.phone === 'string' ? body.phone.trim() : '';
-    let targetPhone = user.phone;
-
-    if (requestedPhone && isValidPakistaniPhone(requestedPhone)) {
-      targetPhone = requestedPhone;
-      await db.user.update({
-        where: { id: user.id },
-        data: { phone: targetPhone },
-      }).catch(() => {});
-    }
-
+    // Determine target phone strictly from user.phone already registered on account
     const defaultAdminPhone = process.env.ADMIN_WHATSAPP_NUMBER || process.env.WHATSAPP_NUM || '';
     const isUserAdmin =
       user.role === 'ADMIN' ||
       (process.env.ADMIN_EMAILS || '').toLowerCase().includes(email.toLowerCase());
 
-    if (!targetPhone && isUserAdmin) {
-      targetPhone = defaultAdminPhone;
-      await db.user.update({
-        where: { id: user.id },
-        data: { phone: targetPhone },
-      }).catch(() => {});
-    }
+    const targetPhone = user.phone || (isUserAdmin ? defaultAdminPhone : '');
 
     if (!targetPhone) {
       return NextResponse.json(
-        { error: 'No registered mobile number on account. Please contact support.' },
+        { error: 'No registered mobile number on account. Please use your Authenticator App or contact support.' },
         { status: 400 }
       );
     }
@@ -86,14 +68,14 @@ export async function POST(req: NextRequest) {
     }
 
     const returnDevCode = process.env.NODE_ENV === 'test';
+    const masked = maskPakistaniPhone(targetPhone);
 
     return NextResponse.json({
       success: true,
       channel: result.channel,
       cooldownSeconds: result.cooldownSeconds || 30,
-      maskedPhone: maskPakistaniPhone(targetPhone),
-      phone: targetPhone,
-      ...(returnDevCode ? { devCode: otp } : {}),
+      maskedPhone: masked,
+      ...(returnDevCode ? { phone: targetPhone, devCode: otp } : {}),
     });
   } catch (err) {
     return NextResponse.json(

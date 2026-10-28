@@ -470,6 +470,21 @@ export function PaymentVerificationsTab({
             const paymentMethod = (order.paymentMethod || 'BANK').toUpperCase();
             const screenshotUrl = order.paymentScreenshot || manualSlipInput[order.id];
             const busy = isUpdating[order.id];
+            const isDuplicateTid = Boolean(
+              tid &&
+                (orders || []).some(
+                  (other: any) => other.id !== order.id && extractTid(other) === tid
+                )
+            );
+            const auditConfidenceLabel = isDuplicateTid
+              ? '12.0% Fraud Risk (Duplicate TID)'
+              : screenshotUrl && tid
+              ? '96.0% High Confidence (Slip + TID)'
+              : screenshotUrl
+              ? '78.0% Medium Confidence (Slip Only)'
+              : tid
+              ? '65.0% Manual Review Needed (TID Only)'
+              : '25.0% Low Confidence (Missing Slip & TID)';
 
             return (
               <motion.div
@@ -728,14 +743,34 @@ export function PaymentVerificationsTab({
 
                       <div className="flex justify-between items-center">
                         <span className="text-stone-500 font-medium">AI Duplicate TID Check:</span>
-                        <span className="text-emerald-700 font-bold flex items-center gap-1">
-                          <CheckCircle2 size={12} /> Clean (No Duplicate)
-                        </span>
+                        {isDuplicateTid ? (
+                          <span className="text-rose-700 font-bold flex items-center gap-1">
+                            <AlertTriangle size={12} /> Duplicate TID Detected!
+                          </span>
+                        ) : tid ? (
+                          <span className="text-emerald-700 font-bold flex items-center gap-1">
+                            <CheckCircle2 size={12} /> Clean (No Duplicate)
+                          </span>
+                        ) : (
+                          <span className="text-amber-700 font-bold flex items-center gap-1">
+                            <Clock size={12} /> Awaiting TID Entry
+                          </span>
+                        )}
                       </div>
 
                       <div className="pt-1.5 border-t border-stone-100 flex items-center justify-between text-[11px]">
                         <span className="text-stone-500">Forensic Confidence:</span>
-                        <span className="font-black text-emerald-700">98.5% High Confidence</span>
+                        <span
+                          className={`font-black ${
+                            isDuplicateTid
+                              ? 'text-rose-700'
+                              : screenshotUrl && tid
+                              ? 'text-emerald-700'
+                              : 'text-amber-700'
+                          }`}
+                        >
+                          {auditConfidenceLabel}
+                        </span>
                       </div>
                     </div>
 

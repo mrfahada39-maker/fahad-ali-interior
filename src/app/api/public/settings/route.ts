@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 const DEFAULT_SETTINGS = {
   id: 'singleton',
   siteName: 'Fahad Ali Interior',
-  adminEmail: BUSINESS_CONTACT.adminEmail,
+  adminEmail: BUSINESS_CONTACT.supportEmail,
   contactPhone: BUSINESS_CONTACT.phone,
   storeAddress: BUSINESS_CONTACT.address,
   currency: 'PKR',
@@ -27,7 +27,16 @@ const DEFAULT_SETTINGS = {
 export async function GET() {
   try {
     const settings = await db.settings.findFirst().catch(() => null);
-    return NextResponse.json(settings || DEFAULT_SETTINGS, {
+    const sanitized = settings
+      ? {
+          ...settings,
+          adminEmail:
+            settings.adminEmail && !/@(gmail|yahoo|hotmail)\.com$/i.test(settings.adminEmail)
+              ? settings.adminEmail
+              : BUSINESS_CONTACT.supportEmail,
+        }
+      : DEFAULT_SETTINGS;
+    return NextResponse.json(sanitized, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
       },

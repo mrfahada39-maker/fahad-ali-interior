@@ -379,6 +379,26 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
         );
       }
 
+      if (targetUserId && targetUserId !== 'guest_system_account' && db.order?.findFirst) {
+        const alreadyUsedByUser = await db.order
+          .findFirst({
+            where: {
+              userId: targetUserId,
+              couponCode: dbCoupon.code,
+              deletedAt: null,
+              status: { not: 'CANCELLED' },
+            },
+            select: { id: true },
+          })
+          .catch(() => null);
+        if (alreadyUsedByUser) {
+          return NextResponse.json(
+            { error: 'You have already redeemed this promotional coupon on a previous order.' },
+            { status: 400 }
+          );
+        }
+      }
+
       const meetsMinAmount = subtotal >= Number(dbCoupon.minOrderAmount || 0);
       if (!meetsMinAmount) {
         return NextResponse.json(
@@ -497,7 +517,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
               user: { connect: { id: targetUserId } },
               shippingName,
               shippingPhone,
-              shippingEmail: shippingEmail || 'customer@fahadaliinterior.com',
+              shippingEmail: shippingEmail || `guest_${crypto.randomUUID().slice(0, 8)}@fahadali.orders`,
               shippingAddress,
               shippingCity,
               shippingProvince,
@@ -784,7 +804,13 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
     const isAdmin = requireAdmin(user);
     const isOwner = Boolean(user?.id && order.userId === user.id);
     const orderEmail = (order.shippingEmail || '').trim().toLowerCase();
-    const isEmailMatch = Boolean(email && orderEmail && email === orderEmail);
+    const isEmailMatch = Boolean(
+      email &&
+      orderEmail &&
+      !orderEmail.endsWith('@fahadali.orders') &&
+      orderEmail !== 'customer@fahadaliinterior.com' &&
+      email === orderEmail
+    );
     const isTokenMatch = Boolean(
       token &&
       orderEmail &&
@@ -977,6 +1003,26 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
         WhatsAppService.sendCustomerOrderHold(updated).catch(() => { });
       } else if (updateData.paymentStatus === 'FAILED' || updateData.status === 'CANCELLED') {
         WhatsAppService.sendCustomerOrderRejected(updated).catch(() => { });
+        // Restock product inventory when order is cancelled or rejected
+        if (updated.items && updated.items.length > 0) {
+          await Promise.all(
+            updated.items.map(async (item: DbOrderItemRecord) => {
+              if (item.productId && item.quantity) {
+                await db.product.update({
+                  where: { id: item.productId },
+                  data: { stockCount: { increment: item.quantity } },
+                }).catch(() => {});
+              }
+            })
+          ).catch(() => {});
+        }
+        // Restore coupon usage count
+        if (updated.couponCode) {
+          await db.coupon.update({
+            where: { code: updated.couponCode },
+            data: { usedCount: { decrement: 1 } },
+          }).catch(() => {});
+        }
       }
 
       if (updated.userId && (updateData.status || updateData.paymentStatus)) {

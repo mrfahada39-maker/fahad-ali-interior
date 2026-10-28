@@ -245,12 +245,12 @@ export async function sendOtpToPhone(
   customOtp?: string
 ): Promise<
   | {
-      success: true;
-      token: string;
-      cooldownSeconds: number;
-      channel: 'WHATSAPP' | 'SMS' | 'DEV_LOG';
-      devCode?: string;
-    }
+    success: true;
+    token: string;
+    cooldownSeconds: number;
+    channel: 'WHATSAPP' | 'SMS' | 'DEV_LOG';
+    devCode?: string;
+  }
   | { success: false; error: string; cooldownSeconds?: number }
 > {
   if (!isValidPakistaniPhone(phone)) {
@@ -323,7 +323,7 @@ export async function sendOtpToPhone(
         token,
         cooldownSeconds: COOLDOWN_SECONDS,
         channel: smsRes.channel,
-        ...(smsRes.devCode ? { devCode: smsRes.devCode } : (isDevOrTest || smsRes.channel === 'DEV_LOG' ? { devCode: otp } : {})),
+        ...(isDevOrTest ? { devCode: smsRes.devCode || otp } : {}),
       };
     }
   }
@@ -367,7 +367,7 @@ Yeh code agle 10 minute ke liye valid hai. Baraye meherbani yeh code kisi ke sat
     token,
     cooldownSeconds: COOLDOWN_SECONDS,
     channel: 'DEV_LOG',
-    devCode: otp,
+    ...(isDevOrTest ? { devCode: otp } : {}),
   };
 }
 

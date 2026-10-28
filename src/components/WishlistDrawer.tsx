@@ -45,8 +45,9 @@ export function WishlistDrawerPanel() {
     setTimeout(() => openCart(), 300);
   };
 
-  const handleRemove = (id: string, name: string) => {
+  const handleRemove = async (id: string, name: string) => {
     removeItem(id);
+    fetch(`/api/wishlist?id=${id}&productId=${id}`, { method: 'DELETE' }).catch(() => {});
     toast.success('Removed from wishlist', { description: name });
   };
 
