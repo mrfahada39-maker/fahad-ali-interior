@@ -57,10 +57,19 @@ export function DashboardWishlistTab({
         'Solid Sheesham specifications, Turkish velvet customization, Cloudinary high-res gallery, and instant bag allocation.',
         <Link
           href="/#signature-categories"
-          className="inline-flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] text-white font-serif font-bold text-xs uppercase tracking-wider hover:brightness-110 transition-all shadow-md shrink-0 active:scale-95"
+          className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
         >
-          <Plus size={14} />
-          <span>Explore More Pieces</span>
+          <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+            <Plus size={14} className="stroke-[2.2]" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+              Explore More Pieces
+            </div>
+            <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">
+              Haute Catalog Gallery
+            </span>
+          </div>
         </Link>
       )}
 

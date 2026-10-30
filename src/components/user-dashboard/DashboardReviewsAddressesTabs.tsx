@@ -47,12 +47,23 @@ export function DashboardReviewsTab({
         'My Atelier',
         'Reviews & Ratings',
         'Share your authentic furniture experience and timber finishing notes with fellow royal patrons.',
-        <Button
+        <button
+          type="button"
           onClick={() => setShowReviewForm(!showReviewForm)}
-          className="rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] text-white text-xs font-bold px-4.5 py-2.5 cursor-pointer shadow-md active:scale-95"
+          className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
         >
-          <Plus size={14} className="mr-1" /> {showReviewForm ? 'Close Form' : 'Write Review'}
-        </Button>
+          <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+            <Plus size={14} className="stroke-[2.2]" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+              {showReviewForm ? 'Close Form' : 'Write Review'}
+            </div>
+            <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">
+              Patron Testimonial
+            </span>
+          </div>
+        </button>
       )}
 
       {renderKpiGrid(reviewsKpis)}
@@ -290,12 +301,23 @@ export function DashboardAddressesTab({
         'Registered Residences',
         '& Estates',
         'Manage delivery addresses for insured white-glove installations across Pakistan.',
-        <Button
+        <button
+          type="button"
           onClick={() => setShowAddrForm(!showAddrForm)}
-          className="rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] text-white text-xs font-bold px-4.5 py-2.5 cursor-pointer shadow-md active:scale-95"
+          className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
         >
-          <Plus size={14} className="mr-1" /> Add Residence
-        </Button>
+          <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+            <Plus size={14} className="stroke-[2.2]" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+              Add Residence
+            </div>
+            <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">
+              VIP Dispatch Address
+            </span>
+          </div>
+        </button>
       )}
 
       {renderKpiGrid(addressesKpis)}
