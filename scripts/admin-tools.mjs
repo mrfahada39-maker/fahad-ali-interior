@@ -7,7 +7,11 @@ const arg = process.argv[3];
 async function main() {
   try {
     if (action === 'make-admin') {
-      const email = arg || 'mrfahado39@gmail.com';
+      const email = arg || process.env.ADMIN_EMAIL;
+      if (!email) {
+        console.error('❌ Please specify an email address.');
+        return;
+      }
       const user = await prisma.user.update({
         where: { email },
         data: { role: 'ADMIN', emailVerified: new Date() },

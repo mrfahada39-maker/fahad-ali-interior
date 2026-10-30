@@ -17,6 +17,7 @@ export default [
       "scratch/**",
       "tests/**",
       "playwright-report/**",
+      "coverage/**",
       "convert-svg-to-webp.js",
     ],
   },

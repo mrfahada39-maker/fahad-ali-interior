@@ -69,16 +69,19 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
       .catch(() => { });
   }, [mounted, session?.user]);
 
+  const isHomePage = pathname === '/';
+  const shopHref = isHomePage ? '/#signature-categories' : '/shop';
+
   const desktopNavLinks = [
     { label: 'Home', href: '/' },
-    { label: 'Shop', href: '/#signature-categories' },
+    { label: 'Shop', href: shopHref },
     { label: 'About', href: '/about' },
     { label: 'Service', href: '/faq#delivery' },
     { label: 'Contact', href: '/contact' },
   ];
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href.startsWith('/#')) {
+    if (href.startsWith('/#') && isHomePage) {
       const targetId = href.replace('/#', '');
       const el = document.getElementById(targetId);
       if (el) {
@@ -328,9 +331,18 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
 
           {/* 3. SHOP */}
           <Link
-            href="/#signature-categories"
+            href={shopHref}
             prefetch={false}
-            onClick={() => setMobileOpen(false)}
+            onClick={(e) => {
+              setMobileOpen(false);
+              if (isHomePage) {
+                const el = document.getElementById('signature-categories');
+                if (el) {
+                  e.preventDefault();
+                  el.scrollIntoView({ behavior: 'smooth' });
+                }
+              }
+            }}
             className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/90 border border-[#EAE0D0] shadow-[0_2px_8px_rgba(44,30,24,0.02)] hover:border-[#C9A96E] hover:bg-gradient-to-r hover:from-white hover:to-[#FDFBF7] hover:shadow-[0_8px_25px_rgba(201,169,110,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 cursor-pointer group"
           >
             <div className="flex items-center gap-3.5">
@@ -566,12 +578,14 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
         {/* 2. Shop */}
         <Link
           prefetch={false}
-          href="/#signature-categories"
+          href={shopHref}
           onClick={(e) => {
-            const el = document.getElementById('signature-categories');
-            if (el) {
-              e.preventDefault();
-              el.scrollIntoView({ behavior: 'smooth' });
+            if (isHomePage) {
+              const el = document.getElementById('signature-categories');
+              if (el) {
+                e.preventDefault();
+                el.scrollIntoView({ behavior: 'smooth' });
+              }
             }
           }}
           className="relative flex-1 flex flex-col items-center justify-center py-1 cursor-pointer active:scale-95 transition-transform"

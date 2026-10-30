@@ -1,4 +1,5 @@
 import { SiteKnowledgeEngine } from './rag';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 export class SalesAgent {
   static getPrompt(catalogContext: string): string {
@@ -21,7 +22,7 @@ MANDATORY COMMUNICATION & STYLE RULES:
 4. LIVE CATALOG & EXACT PRICES:
    - Quote exact PKR prices and stock availability from the LIVE DATABASE CATALOG.
    - Highlight any active discount promo vouchers listed in the system context.
-   - Guide customers smoothly toward [🛒 Add to Cart], [Checkout], or WhatsApp bespoke consultation (+92 300 1234567).
+   - Guide customers smoothly toward [🛒 Add to Cart], [Checkout], or WhatsApp bespoke consultation (${BUSINESS_CONTACT.phone}).
 5. COMPLETE TOPIC MASTERY:
    - Answer ANY question the customer has (furniture styling, care tips, dining table seating capacities, bedroom suite dimensions, sofa upholstery fabrics, delivery timelines).
 
@@ -74,7 +75,7 @@ RESPONSIBILITIES & RESPONSE RULES:
 4. FLAGSHIP SHOWROOM DETAILS:
    - Atelier Workshop: Chiniot, Punjab.
    - Flagship Showroom: Gulberg III, Lahore, Pakistan.
-   - Priority Helpline & WhatsApp: +92 300 1234567 / +92 320 700 6110.
+   - Priority Helpline & WhatsApp: ${BUSINESS_CONTACT.phone}.
 
 WEBSITE KNOWLEDGE & SYSTEM MAP:
 ${SiteKnowledgeEngine.getFullSiteKnowledge()}

@@ -1,5 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 'use client';
+
+import { LiquidCardGraph } from '@/components/admin/LiquidCardGraph';
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -275,25 +277,33 @@ export default function ProductsTab({
           </p>
         </div>
 
-        {/* Add Product Gold Button */}
+        {/* Add Product Luxury Capsule (Exact Match to Image 2, 3, 4 Color Scheme) */}
         <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full lg:w-auto shrink-0 relative z-10 pt-1 sm:pt-0 border-t sm:border-t-0 border-[#E7DDD0]/60">
-          <Button
+          <button
+            type="button"
             onClick={() => {
               if (editingProductId) {
                 handleCancel();
               }
               setShowAddProduct(!showAddProduct);
             }}
-            className="w-full sm:w-auto bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] hover:brightness-110 text-white font-serif font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+            className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
           >
-            {showAddProduct ? <X size={15} /> : <Plus size={15} />}
-            <span>{showAddProduct ? 'Close Form' : 'New Masterpiece'}</span>
-          </Button>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+              {showAddProduct ? <X size={14} className="stroke-[2.2]" /> : <Plus size={14} className="stroke-[2.2]" />}
+            </div>
+            <div className="text-left">
+              <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+                {showAddProduct ? 'Close Form' : 'New Masterpiece'}
+              </div>
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">{totalProducts} Total Catalog</span>
+            </div>
+          </button>
         </div>
       </motion.div>
 
       {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
             key={kpi.label}
@@ -302,35 +312,35 @@ export default function ProductsTab({
             whileHover={{ y: -4, scale: 1.015 }}
             whileTap={{ scale: 0.98 }}
             transition={{ delay: idx * 0.05, duration: 0.25, type: 'spring', stiffness: 350, damping: 25 }}
-            className={`bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border rounded-2xl sm:rounded-[22px] p-4.5 flex flex-col justify-between min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${kpi.cardGlow}`}
+            className={`bg-gradient-to-br from-white/95 via-[#FCFAF7]/90 to-[#FAF5EE]/95 backdrop-blur-md border rounded-2xl sm:rounded-[22px] p-3 sm:p-4.5 flex flex-col justify-between min-h-[114px] sm:min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${kpi.cardGlow}`}
           >
             {/* Ambient Colored Radial Glow in Top Corner */}
-            <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 ${kpi.ambientGlow}`} />
+            {/* Ambient Liquid Colored Radial Glow in Top Corner */}
+            <div className={`absolute -top-10 -right-10 w-24 sm:w-28 h-24 sm:h-28 rounded-full blur-2xl pointer-events-none transition-all duration-500 opacity-90 sm:opacity-60 sm:group-hover:opacity-100 animate-pulse ${kpi.ambientGlow}`} />
 
-            <div className="flex justify-between items-start relative z-10">
-              <span className="text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase">
+            {/* Subtle Liquid Bottom Corner Glow */}
+            <div className={`absolute -bottom-8 -left-8 w-20 h-20 rounded-full blur-2xl pointer-events-none opacity-40 sm:group-hover:opacity-75 transition-opacity ${kpi.ambientGlow}`} />
+
+            {/* ── FLOWING LIQUID GRAPH WAVE ANIMATION ── */}
+            <LiquidCardGraph index={idx} color={kpi.color} value={kpi.numValue} />
+
+            {/* Liquid Sheen Shimmer Reflection Sweep */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+
+            <div className="flex justify-between items-start relative z-10 gap-1">
+              <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
                 {kpi.label}
               </span>
-              {/* 3D Glass Jewel Orb */}
-              <div className={`w-9 h-9 rounded-2xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 ${kpi.iconBg}`}>
-                <kpi.icon size={17} className="stroke-[2.2]" />
+              {/* 3D Liquid Glass Jewel Orb */}
+              <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 ${kpi.iconBg}`}>
+                <kpi.icon size={15} className="sm:w-[17px] sm:h-[17px] stroke-[2.2]" />
               </div>
             </div>
 
-            <div className="mt-2 relative z-10">
-              <h3 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none">
+            <div className="mt-1.5 sm:mt-2 relative z-10">
+              <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none">
                 <AnimatedCounter value={kpi.numValue} duration={1.5} />
               </h3>
-
-              <div className="mt-2.5 flex items-center">
-                <span className={`inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${kpi.badgeBg}`}>
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${kpi.dotColor} opacity-75`} />
-                    <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${kpi.dotColor}`} />
-                  </span>
-                  {kpi.sub}
-                </span>
-              </div>
             </div>
           </motion.div>
         ))}

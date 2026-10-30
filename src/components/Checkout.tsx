@@ -471,6 +471,16 @@ export default function Checkout() {
     }));
   };
 
+  const handleSkipOtpWithCallConfirmation = () => {
+    setIsPhoneVerified(true);
+    setForm((prev) => ({
+      ...prev,
+      phoneVerified: true,
+      notes: prev.notes ? `${prev.notes} [CONFIRM_ORDER_VIA_CALL]` : '[CONFIRM_ORDER_VIA_CALL]',
+    }));
+    toast.info('Mobile recorded. Our concierge will verify order via direct telephone call.');
+  };
+
   const goToNextSection = () => {
     if (currentSection === 1) {
       if (activeItems.length === 0) {
@@ -878,6 +888,7 @@ export default function Checkout() {
               handleSendOtp={handleSendOtp}
               handleVerifyOtp={handleVerifyOtp}
               handleResetPhoneVerification={handleResetPhoneVerification}
+              handleSkipOtpWithCallConfirmation={handleSkipOtpWithCallConfirmation}
             />
           )}
 

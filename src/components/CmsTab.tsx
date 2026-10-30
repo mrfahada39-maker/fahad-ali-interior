@@ -1,5 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 'use client';
+
+import { LiquidCardGraph } from '@/components/admin/LiquidCardGraph';
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 import { logger } from '@/lib/logger';
 
 import { useState, useEffect } from 'react';
@@ -296,20 +298,22 @@ export default function CmsTab() {
           </p>
         </div>
 
-        {/* Right Actions */}
+        {/* Right Actions Capsule (Matching Img 2, 3, 4) */}
         <div className="flex items-center justify-between sm:justify-end gap-2 w-full lg:w-auto shrink-0 relative z-10 pt-1 sm:pt-0 border-t sm:border-t-0 border-[#E7DDD0]/60">
           <button
+            type="button"
             onClick={() => {
               loadCategories();
               toast.success('Showroom collections synchronized ✓');
             }}
-            className="p-2.5 rounded-xl bg-white border border-[#E7DDD0] text-stone-500 hover:text-[#221814] transition-colors cursor-pointer shadow-2xs"
+            className="p-2 sm:p-2.5 rounded-xl bg-white border border-[#E7DDD0] text-stone-500 hover:text-[#221814] transition-colors cursor-pointer shadow-2xs shrink-0"
             title="Refresh Collections"
           >
             <RefreshCw size={15} className={loadingCategories ? 'animate-spin' : ''} />
           </button>
 
           <button
+            type="button"
             onClick={() => {
               setEditingCategoryId(null);
               setModalActiveTab('identity');
@@ -325,16 +329,23 @@ export default function CmsTab() {
               });
               setShowCategoryForm(true);
             }}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white font-black text-xs shadow-xs flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+            className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
           >
-            <Plus size={14} />
-            <span className="uppercase text-[11px] tracking-wider">Create Collection</span>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+              <Plus size={14} className="stroke-[2.2]" />
+            </div>
+            <div className="text-left">
+              <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+                Create Collection
+              </div>
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">{categories.length} Taxonomy Suites</span>
+            </div>
           </button>
         </div>
       </motion.div>
 
       {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
             key={kpi.label}
@@ -343,18 +354,28 @@ export default function CmsTab() {
             whileHover={{ y: -4, scale: 1.015 }}
             whileTap={{ scale: 0.98 }}
             transition={{ delay: idx * 0.05, duration: 0.25, type: 'spring', stiffness: 350, damping: 25 }}
-            className={`bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border rounded-2xl sm:rounded-[22px] p-4.5 flex flex-col justify-between min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${kpi.cardGlow}`}
+            className={`bg-gradient-to-br from-white/95 via-[#FCFAF7]/90 to-[#FAF5EE]/95 backdrop-blur-md border rounded-2xl sm:rounded-[22px] p-3 sm:p-4.5 flex flex-col justify-between min-h-[114px] sm:min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${kpi.cardGlow}`}
           >
             {/* Ambient Colored Radial Glow in Top Corner */}
-            <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 ${kpi.ambientGlow}`} />
+            {/* Ambient Liquid Colored Radial Glow in Top Corner */}
+            <div className={`absolute -top-10 -right-10 w-24 sm:w-28 h-24 sm:h-28 rounded-full blur-2xl pointer-events-none transition-all duration-500 opacity-90 sm:opacity-60 sm:group-hover:opacity-100 animate-pulse ${kpi.ambientGlow}`} />
 
-            <div className="flex justify-between items-start relative z-10">
-              <span className="text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase">
+            {/* Subtle Liquid Bottom Corner Glow */}
+            <div className={`absolute -bottom-8 -left-8 w-20 h-20 rounded-full blur-2xl pointer-events-none opacity-40 sm:group-hover:opacity-75 transition-opacity ${kpi.ambientGlow}`} />
+
+            {/* ── FLOWING LIQUID GRAPH WAVE ANIMATION ── */}
+            <LiquidCardGraph index={idx} color={kpi.color} value={kpi.numValue} />
+
+            {/* Liquid Sheen Shimmer Reflection Sweep */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+
+            <div className="flex justify-between items-start relative z-10 gap-1">
+              <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
                 {kpi.label}
               </span>
-              {/* 3D Glass Jewel Orb */}
-              <div className={`w-9 h-9 rounded-2xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 ${kpi.iconBg}`}>
-                <kpi.icon size={17} className="stroke-[2.2]" />
+              {/* 3D Liquid Glass Jewel Orb */}
+              <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 ${kpi.iconBg}`}>
+                <kpi.icon size={15} className="sm:w-[17px] sm:h-[17px] stroke-[2.2]" />
               </div>
             </div>
 
@@ -363,16 +384,6 @@ export default function CmsTab() {
                 <AnimatedCounter value={kpi.numValue} duration={1.5} />
                 {kpi.suffix ? <span className="text-base font-bold text-[#8C6D46] ml-1">{kpi.suffix}</span> : null}
               </h3>
-
-              <div className="mt-2.5 flex items-center">
-                <span className={`inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${kpi.badgeBg}`}>
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${kpi.dotColor} opacity-75`} />
-                    <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${kpi.dotColor}`} />
-                  </span>
-                  {kpi.sub}
-                </span>
-              </div>
             </div>
           </motion.div>
         ))}
@@ -577,64 +588,70 @@ export default function CmsTab() {
       {/* ── ADVANCED DUAL-PANE SHOWROOM COLLECTION EDITOR MODAL ($100K ARCHITECTURE) ── */}
       <AnimatePresence>
         {showCategoryForm && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="w-full max-w-4xl bg-white border-2 border-[#B88E4B]/50 rounded-[28px] shadow-[0_25px_70px_rgba(44,30,24,0.35)] relative overflow-hidden my-auto max-h-[92vh] flex flex-col"
+              className="w-full max-w-4xl bg-white border-2 border-[#B88E4B]/50 rounded-[20px] sm:rounded-[28px] shadow-[0_25px_70px_rgba(44,30,24,0.35)] relative overflow-hidden my-auto max-h-[94vh] sm:max-h-[92vh] flex flex-col"
             >
               {/* Gold Top Accent Line */}
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515]" />
 
               {/* Modal Executive Header */}
-              <div className="p-5 sm:p-6 border-b border-[#E7DDD0] flex items-center justify-between bg-gradient-to-r from-white via-[#FCFAF7] to-white shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3] border border-[#E2D1BC] flex items-center justify-center text-[#B88E4B] shadow-2xs">
-                    <FolderClosed size={20} />
+              <div className="p-3.5 sm:p-6 border-b border-[#E7DDD0] flex items-center justify-between bg-gradient-to-r from-white via-[#FCFAF7] to-white shrink-0 gap-2">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3] border border-[#E2D1BC] flex items-center justify-center text-[#B88E4B] shadow-2xs shrink-0">
+                    <FolderClosed size={18} className="sm:w-5 sm:h-5" />
                   </div>
-                  <div>
-                    <h3 className="text-base sm:text-lg font-black text-[#221814] font-serif flex items-center gap-2">
-                      <span className="text-[#B88E4B]">✦</span> {editingCategoryId ? 'Edit Showroom Collection' : 'Create Masterpiece Collection'}
+                  <div className="min-w-0">
+                    <h3 className="text-sm sm:text-lg font-black text-[#221814] font-serif flex items-center gap-1.5 sm:gap-2 truncate">
+                      <Sparkles size={14} className="text-[#B88E4B] shrink-0" />
+                      <span>{editingCategoryId ? 'Edit Collection' : 'Create Collection'}</span>
+                      <span className="hidden sm:inline font-serif font-black">{editingCategoryId ? 'Showroom' : 'Masterpiece'}</span>
                     </h3>
-                    <p className="text-stone-400 text-xs font-semibold mt-0.5">
-                      Configure taxonomy metadata, visual branding presets, and live shop routing
+                    <p className="text-stone-400 text-[10.5px] sm:text-xs font-medium mt-0.5 truncate">
+                      <span className="sm:hidden">Taxonomy, branding &amp; live shop routing</span>
+                      <span className="hidden sm:inline">Configure taxonomy metadata, visual branding presets, and live shop routing</span>
                     </p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setShowCategoryForm(false)}
-                  className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 flex items-center justify-center transition-colors cursor-pointer shadow-2xs shrink-0"
                 >
-                  <X size={16} />
+                  <X size={15} />
                 </button>
               </div>
 
               {/* Modal Body: Split Dual Pane Workspace */}
-              <div className="flex-1 overflow-y-auto p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
                 
                 {/* ── LEFT PANE: CONFIGURATION CONTROLS (7 Cols) ── */}
-                <div className="lg:col-span-7 space-y-4">
+                <div className="lg:col-span-7 space-y-3.5 sm:space-y-4">
                   
                   {/* Modal Sub-Tabs */}
-                  <div className="flex items-center gap-1.5 bg-[#FCFAF7] border border-[#E7DDD0] p-1.5 rounded-2xl">
+                  <div className="flex items-center gap-1 sm:gap-1.5 bg-[#FCFAF7] border border-[#E7DDD0] p-1 sm:p-1.5 rounded-xl sm:rounded-2xl">
                     {[
-                      { id: 'identity', label: '1. Identity & Badges', icon: Tag },
-                      { id: 'media', label: '2. High-Res Media', icon: ImageIcon },
-                      { id: 'seo', label: '3. Description & Routing', icon: Globe },
+                      { id: 'identity', short: '1. Identity', label: '1. Identity & Badges', icon: Tag },
+                      { id: 'media', short: '2. Media', label: '2. High-Res Media', icon: ImageIcon },
+                      { id: 'seo', short: '3. Details', label: '3. Description & Routing', icon: Globe },
                     ].map((tab) => (
                       <button
                         key={tab.id}
                         onClick={() => setModalActiveTab(tab.id as any)}
-                        className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        className={`flex-1 py-1 sm:py-1.5 px-1 sm:px-2 rounded-lg sm:rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                           modalActiveTab === tab.id
                             ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-2xs'
                             : 'text-stone-500 hover:text-[#1F1612]'
                         }`}
                       >
-                        <tab.icon size={12} />
-                        <span className="text-[11px] truncate">{tab.label}</span>
+                        <tab.icon size={11} className="shrink-0 sm:w-3 sm:h-3" />
+                        <span className="text-[10px] sm:text-[11px] font-bold whitespace-nowrap">
+                          <span className="sm:hidden">{tab.short}</span>
+                          <span className="hidden sm:inline">{tab.label}</span>
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -643,7 +660,7 @@ export default function CmsTab() {
                   {modalActiveTab === 'identity' && (
                     <div className="space-y-3">
                       <div>
-                        <label htmlFor="fai-cmstab-field-2" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+                        <label htmlFor="fai-cmstab-field-2" className="text-[10px] sm:text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
                           Collection Title
                         </label>
                         <input id="fai-cmstab-field-2" name="fai_cmstab_field_2"
@@ -663,9 +680,12 @@ export default function CmsTab() {
                       {/* Custom Badge Tag Section */}
                       <div className="space-y-2 bg-[#FCFAF7] border border-[#E7DDD0] p-3 rounded-2xl">
                         <div className="flex items-center justify-between">
-                          <label htmlFor="fai-cmstab-field-3" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+                          <label htmlFor="fai-cmstab-field-3" className="text-[10px] sm:text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                             <Tag size={12} className="text-[#B88E4B]" />
-                            <span>Custom Badge Tag (Optional)</span>
+                            <span>
+                              <span className="sm:hidden">Badge Tag (Optional)</span>
+                              <span className="hidden sm:inline">Custom Badge Tag (Optional)</span>
+                            </span>
                           </label>
                           {categoryForm.badge && (
                             <button
@@ -681,7 +701,7 @@ export default function CmsTab() {
                         {/* Custom Input */}
                         <div className="relative">
                           <input id="fai-cmstab-field-3" name="fai_cmstab_field_3"
-                            placeholder="e.g. Featured Collection, Flagship, New Arrival..."
+                            placeholder="e.g. Featured Collection, Flagship, New..."
                             value={categoryForm.badge ?? ''}
                             onChange={(e) => setCategoryForm({ ...categoryForm, badge: e.target.value })}
                             className="w-full bg-white border border-[#E7DDD0] text-[#1F1612] font-black rounded-xl h-10 px-3 text-xs focus:border-[#B88E4B] outline-none shadow-2xs placeholder:text-stone-400"
@@ -691,11 +711,12 @@ export default function CmsTab() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label htmlFor="fai-cmstab-field-4" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
-                            Item Count Label Override (Optional)
+                          <label htmlFor="fai-cmstab-field-4" className="text-[10px] sm:text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+                            <span className="sm:hidden">Item Count Override (Optional)</span>
+                            <span className="hidden sm:inline">Item Count Label Override (Optional)</span>
                           </label>
                           <input id="fai-cmstab-field-4" name="fai_cmstab_field_4"
-                            placeholder="Leave empty to use dynamic count (e.g. 3 Products)"
+                            placeholder="e.g. 3 Products (empty = auto)"
                             value={categoryForm.items ?? ''}
                             onChange={(e) => setCategoryForm({ ...categoryForm, items: e.target.value })}
                             className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono font-bold rounded-xl h-10 px-3 text-xs focus:border-[#B88E4B] outline-none shadow-2xs"
@@ -721,13 +742,12 @@ export default function CmsTab() {
                     </div>
                   )}
 
-                  {/* TAB 2: HIGH-RES MEDIA & PRESETS */}
                   {/* TAB 2: HIGH-RES MEDIA */}
                   {modalActiveTab === 'media' && (
                     <div className="space-y-4">
-                      <div className="bg-[#FCFAF7] border border-[#E7DDD0] p-4 rounded-2xl space-y-3">
+                      <div className="bg-[#FCFAF7] border border-[#E7DDD0] p-3 sm:p-4 rounded-2xl space-y-3">
                         <div className="flex items-center justify-between">
-                          <label htmlFor="fai-cmstab-field-6" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
+                          <label htmlFor="fai-cmstab-field-6" className="text-[10px] sm:text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider flex items-center gap-1.5">
                             <ImageIcon size={12} className="text-[#B88E4B]" />
                             <span>Upload Real Cover Image via Cloudinary</span>
                           </label>
@@ -777,8 +797,9 @@ export default function CmsTab() {
                   {modalActiveTab === 'seo' && (
                     <div className="space-y-3">
                       <div>
-                        <label htmlFor="fai-cmstab-field-7" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
-                          Architectural Craftsmanship Description
+                        <label htmlFor="fai-cmstab-field-7" className="text-[10px] sm:text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+                          <span className="sm:hidden">Craftsmanship Description</span>
+                          <span className="hidden sm:inline">Architectural Craftsmanship Description</span>
                         </label>
                         <textarea id="fai-cmstab-field-7" name="fai_cmstab_field_7"
                           placeholder="Describe the room ambiance, wood seasoning heritage, bespoke joinery, and styling suggestions..."
@@ -790,16 +811,16 @@ export default function CmsTab() {
                       </div>
 
                       <div>
-                        <label htmlFor="fai-cmstab-field-8" className="text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
+                        <label htmlFor="fai-cmstab-field-8" className="text-[10px] sm:text-[10.5px] font-black text-[#7A6354] uppercase tracking-wider block mb-1">
                           Storefront Destination URL Slug
                         </label>
                         <div className="flex items-center bg-[#FCFAF7] border border-[#E7DDD0] rounded-xl overflow-hidden h-10 px-3 shadow-2xs">
-                          <span className="text-stone-400 font-mono text-xs select-none">/#cat-section-</span>
+                          <span className="text-stone-400 font-mono text-[10.5px] sm:text-xs select-none shrink-0">/#cat-section-</span>
                           <input id="fai-cmstab-field-8" name="fai_cmstab_field_8"
                             placeholder="royal-living-room"
                             value={categoryForm.slug ?? ''}
                             onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
-                            className="bg-transparent text-[#1F1612] font-mono font-bold text-xs focus:outline-none flex-1"
+                            className="bg-transparent text-[#1F1612] font-mono font-bold text-xs focus:outline-none flex-1 min-w-0"
                           />
                         </div>
                       </div>
@@ -809,7 +830,7 @@ export default function CmsTab() {
                 </div>
 
                 {/* ── RIGHT PANE: REAL-TIME LIVE CARD PREVIEW (5 Cols) ── */}
-                <div className="lg:col-span-5 bg-[#FAF5EE]/70 border-2 border-dashed border-[#B88E4B]/40 p-4 sm:p-5 rounded-[24px] space-y-3">
+                <div className="lg:col-span-5 bg-[#FAF5EE]/70 border-2 border-dashed border-[#B88E4B]/40 p-3 sm:p-5 rounded-[20px] sm:rounded-[24px] space-y-3 overflow-hidden">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-widest text-[#8C6239] flex items-center gap-1.5">
                       <Eye size={12} className="text-[#B88E4B]" /> LIVE CARD PREVIEW
@@ -820,8 +841,8 @@ export default function CmsTab() {
                   </div>
 
                   {/* Clean Card Live Simulation matching real website design */}
-                  <div className="bg-white border border-[#E7DDD0] rounded-[22px] p-4 shadow-md space-y-3">
-                    <div className="flex items-center justify-between pb-2.5 border-b border-stone-100">
+                  <div className="bg-white border border-[#E7DDD0] rounded-2xl sm:rounded-[22px] p-3 sm:p-4 shadow-md space-y-3 overflow-hidden">
+                    <div className="flex items-center justify-between pb-2 border-b border-stone-100">
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-black text-[#8C6239] bg-[#FAF5EE] border border-[#E2D1BC]">
                         #1
                       </span>
@@ -833,7 +854,7 @@ export default function CmsTab() {
 
                     <div className="space-y-1.5">
                       <div className="flex items-start justify-between gap-1.5">
-                        <h4 className="text-base font-black font-serif text-[#1F1612] truncate">
+                        <h4 className="text-sm sm:text-base font-black font-serif text-[#1F1612] truncate">
                           {categoryForm.name || 'Collection Title'}
                         </h4>
                         <span className="px-2 py-0.5 rounded-lg text-[9px] font-black font-mono bg-[#FAF5EE] text-[#8C6239] border border-[#E2D1BC] shrink-0">
@@ -841,7 +862,7 @@ export default function CmsTab() {
                         </span>
                       </div>
 
-                      <div className="text-stone-400 font-mono text-[10px]">
+                      <div className="text-stone-400 font-mono text-[10px] truncate">
                         /#cat-section-{categoryForm.slug || 'slug'}
                       </div>
 
@@ -874,27 +895,32 @@ export default function CmsTab() {
                     </div>
                   </div>
 
-                  <p className="text-[10px] text-stone-400 text-center font-medium">
-                    This live preview dynamically reflects your changes in real-time.
+                  <p className="text-[9.5px] sm:text-[10px] text-stone-400 text-center font-medium">
+                    Live preview dynamically updates in real-time.
                   </p>
                 </div>
 
               </div>
 
               {/* Modal Footer Actions */}
-              <div className="p-4 sm:p-5 border-t border-[#E7DDD0] bg-white flex items-center justify-end gap-2.5 shrink-0">
+              <div className="p-3 sm:p-5 border-t border-[#E7DDD0] bg-white flex items-center justify-between sm:justify-end gap-2 shrink-0">
                 <button
+                  type="button"
                   onClick={() => setShowCategoryForm(false)}
-                  className="px-5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-black text-xs transition-colors cursor-pointer"
+                  className="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-black text-xs transition-colors cursor-pointer shrink-0"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleSaveCategory}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white font-black text-xs shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+                  className="flex-1 sm:flex-initial px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white font-black text-xs shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 truncate"
                 >
-                  <CheckCircle2 size={14} />
-                  <span>{editingCategoryId ? 'Save & Apply Collection Changes' : 'Publish Collection to Showroom'}</span>
+                  <CheckCircle2 size={14} className="shrink-0" />
+                  <span className="truncate">
+                    <span className="sm:hidden">{editingCategoryId ? 'Save Changes' : 'Publish Collection'}</span>
+                    <span className="hidden sm:inline">{editingCategoryId ? 'Save & Apply Collection Changes' : 'Publish Collection to Showroom'}</span>
+                  </span>
                 </button>
               </div>
             </motion.div>

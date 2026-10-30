@@ -3,9 +3,8 @@ import StoreShell from '@/components/StoreShell';
 import HomePageInteractive from './HomePageInteractive';
 import { getHomePageData } from '@/lib/home-page-data';
 
-// Force real-time dynamic rendering so product additions, deletions, and restores appear in 0ms
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ISR edge caching: cached for 60s while on-demand revalidatePath('/') purges instantly on admin mutations
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   alternates: {

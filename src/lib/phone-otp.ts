@@ -348,6 +348,21 @@ Yeh code agle 10 minute ke liye valid hai. Baraye meherbani yeh code kisi ke sat
     logger.warn('[WhatsApp OTP Dispatch Failed]:', { detail: String(err) });
   }
 
+  // Dual delivery guarantee: Always also dispatch via Meta approved template so it bypasses 24h customer window
+  try {
+    const tmplOk = await WhatsAppService.sendTemplateMessage(normPhone, 'customer_order_slip_v2', [
+      'Valued Client',
+      `OTP-${otp}`,
+      `Code: ${otp}`,
+      'Login Security OTP',
+      `Aapka 6-digit WhatsApp login verification code: ${otp}. Valid for 10 minutes.`,
+      'https://fahadali.pk/login',
+    ]);
+    if (tmplOk) sentViaWhatsApp = true;
+  } catch (tmplErr) {
+    logger.warn('[WhatsApp Template OTP Fallback Error]:', { detail: String(tmplErr) });
+  }
+
   if (sentViaWhatsApp) {
     logger.info(`[WhatsApp OTP Dispatched]: Sent 6-digit code to ${normPhone}`);
     return {

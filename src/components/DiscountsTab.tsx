@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
 import AnimatedCounter from '@/components/AnimatedCounter';
+import { LiquidCardGraph } from '@/components/admin/LiquidCardGraph';
 
 export interface CouponItem {
   id: string;
@@ -386,9 +387,13 @@ _Luxury Living Redefined._`;
     {
       label: 'TOTAL DISCOUNTS CREATED',
       value: stats.totalCoupons,
+      numValue: stats.totalCoupons,
       sub: '✓ Promotional Architecture',
       icon: Tag,
       color: 'text-[#B88E4B]',
+      ambientGlow: 'bg-amber-500/10',
+      dotColor: 'bg-amber-500',
+      badgeBg: 'bg-amber-500/10 text-[#8C6239] border-amber-300/60',
       iconBg:
         'bg-gradient-to-br from-amber-50 via-[#FAF5EE] to-amber-100/80 border-amber-300/70 text-[#B88E4B] shadow-[0_3px_12px_rgba(184,142,75,0.2)]',
       cardGlow:
@@ -397,9 +402,13 @@ _Luxury Living Redefined._`;
     {
       label: 'ACTIVE ON STOREFRONT',
       value: stats.activeCoupons,
+      numValue: stats.activeCoupons,
       sub: '⚡ Live Checkout Redemptions',
       icon: CheckCircle2,
       color: 'text-emerald-600',
+      ambientGlow: 'bg-emerald-500/10',
+      dotColor: 'bg-emerald-500',
+      badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-300/60',
       iconBg:
         'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/80 border-emerald-300/70 text-emerald-600 shadow-[0_3px_12px_rgba(16,185,129,0.2)]',
       cardGlow:
@@ -408,9 +417,13 @@ _Luxury Living Redefined._`;
     {
       label: 'TOTAL CLIENT USES',
       value: stats.totalRedemptions,
-      sub: '🎯 Customer Orders Redeemed',
+      numValue: stats.totalRedemptions,
+      sub: '🛍️ Customer Orders Redeemed',
       icon: TrendingUp,
       color: 'text-purple-600',
+      ambientGlow: 'bg-purple-500/10',
+      dotColor: 'bg-purple-500',
+      badgeBg: 'bg-purple-50 text-purple-700 border-purple-300/60',
       iconBg:
         'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-300/70 text-purple-600 shadow-[0_3px_12px_rgba(168,85,247,0.2)]',
       cardGlow:
@@ -419,10 +432,14 @@ _Luxury Living Redefined._`;
     {
       label: 'ESTIMATED CLIENT SAVINGS',
       value: stats.totalSavingsGranted,
+      numValue: stats.totalSavingsGranted,
       prefix: 'PKR ',
       sub: '💰 Loyalty Value Delivered',
       icon: Coins,
       color: 'text-blue-600',
+      ambientGlow: 'bg-blue-500/10',
+      dotColor: 'bg-blue-500',
+      badgeBg: 'bg-blue-50 text-blue-700 border-blue-300/60',
       iconBg:
         'bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100/80 border-blue-300/70 text-blue-600 shadow-[0_3px_12px_rgba(59,130,246,0.2)]',
       cardGlow:
@@ -482,43 +499,65 @@ _Luxury Living Redefined._`;
           </button>
 
           <button
+            type="button"
             onClick={handleOpenCreateModal}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#A87E47] to-[#8C6239] text-white text-xs font-bold tracking-wide shadow-[0_4px_16px_rgba(184,142,75,0.35)] hover:shadow-[0_6px_20px_rgba(184,142,75,0.5)] hover:brightness-105 active:scale-98 transition-all cursor-pointer"
+            className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
           >
-            <Plus size={15} className="stroke-[2.5]" />
-            <span>Create Coupon Code</span>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+              <Plus size={14} className="stroke-[2.2]" />
+            </div>
+            <div className="text-left">
+              <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+                Create Coupon Code
+              </div>
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">{stats.activeCoupons} Active Storefront</span>
+            </div>
           </button>
         </div>
       </motion.div>
 
-      {/* ── 4 EXECUTIVE METRIC CARDS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+      {/* ── 4 EXECUTIVE METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 8 }}
+            key={kpi.label}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            className={`relative overflow-hidden rounded-2xl bg-white border p-3.5 sm:p-4 transition-all duration-300 ${kpi.cardGlow}`}
+            whileHover={{ y: -4, scale: 1.015 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ delay: idx * 0.05, duration: 0.25, type: 'spring', stiffness: 350, damping: 25 }}
+            className={`bg-gradient-to-br from-white/95 via-[#FCFAF7]/90 to-[#FAF5EE]/95 backdrop-blur-md border rounded-2xl sm:rounded-[22px] p-3 sm:p-4.5 flex flex-col justify-between min-h-[114px] sm:min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${kpi.cardGlow}`}
           >
-            <div className="flex items-start justify-between mb-2">
-              <span className="text-[9.5px] sm:text-[10px] font-bold text-stone-400 tracking-wider uppercase block">
+            {/* Ambient Liquid Colored Radial Glow in Top Corner */}
+            <div className={`absolute -top-10 -right-10 w-24 sm:w-28 h-24 sm:h-28 rounded-full blur-2xl pointer-events-none transition-all duration-500 opacity-90 sm:opacity-60 sm:group-hover:opacity-100 animate-pulse ${kpi.ambientGlow}`} />
+
+            {/* Subtle Liquid Bottom Corner Glow */}
+            <div className={`absolute -bottom-8 -left-8 w-20 h-20 rounded-full blur-2xl pointer-events-none opacity-40 sm:group-hover:opacity-75 transition-opacity ${kpi.ambientGlow}`} />
+
+            {/* ── FLOWING LIQUID GRAPH WAVE ANIMATION ── */}
+            <LiquidCardGraph index={idx} color={kpi.color} value={kpi.numValue} />
+
+            {/* Liquid Sheen Shimmer Reflection Sweep */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+
+            <div className="flex justify-between items-start relative z-10 gap-1">
+              <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
                 {kpi.label}
               </span>
-              <div
-                className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${kpi.iconBg}`}
-              >
-                <kpi.icon size={15} className="stroke-[2.2]" />
+              {/* 3D Liquid Glass Jewel Orb */}
+              <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 ${kpi.iconBg}`}>
+                <kpi.icon size={15} className="sm:w-[17px] sm:h-[17px] stroke-[2.2]" />
               </div>
             </div>
 
-            <div className="text-xl sm:text-2xl lg:text-3xl font-black text-[#1F1612] tracking-tight font-serif">
-              <AnimatedCounter value={kpi.value} prefix={kpi.prefix || ''} />
+            <div className="mt-1.5 sm:mt-2 relative z-10">
+              <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none flex items-baseline flex-wrap">
+                {kpi.prefix ? (
+                  <span className="text-[11px] sm:text-base font-bold text-[#8C6D46] mr-0.5 sm:mr-1 select-none">{kpi.prefix}</span>
+                ) : null}
+                <AnimatedCounter value={kpi.numValue} duration={1.5} />
+              </h3>
             </div>
-
-            <p className="text-[10px] sm:text-[11px] font-semibold text-stone-500 mt-1 flex items-center gap-1">
-              {kpi.sub}
-            </p>
           </motion.div>
         ))}
       </div>
@@ -537,7 +576,7 @@ _Luxury Living Redefined._`;
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
           {PROMO_TEMPLATES.map((tmpl, idx) => (
             <div
               key={idx}

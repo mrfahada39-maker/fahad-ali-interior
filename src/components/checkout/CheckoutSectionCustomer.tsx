@@ -39,6 +39,7 @@ export interface CheckoutSectionCustomerProps {
   handleSendOtp: () => Promise<void>;
   handleVerifyOtp: () => Promise<void>;
   handleResetPhoneVerification: () => void;
+  handleSkipOtpWithCallConfirmation?: () => void;
 }
 
 export function CheckoutSectionCustomer({
@@ -60,6 +61,7 @@ export function CheckoutSectionCustomer({
   handleSendOtp,
   handleVerifyOtp,
   handleResetPhoneVerification,
+  handleSkipOtpWithCallConfirmation,
 }: CheckoutSectionCustomerProps) {
   return (
     <motion.div
@@ -241,7 +243,7 @@ export function CheckoutSectionCustomer({
                                   />
                                   <motion.div
                                     initial={{ scale: 0, rotate: -45 }}
-                                    animate={{ scale: [0, 1.25, 1], rotate: 0 }}
+                                    animate={{ scale: 1, rotate: 0 }}
                                     transition={{
                                       type: 'spring',
                                       stiffness: 380,
@@ -436,6 +438,27 @@ export function CheckoutSectionCustomer({
                                 )}
                                 <span>{otpVerifying ? 'Verifying...' : 'Verify Code'}</span>
                               </button>
+                            </div>
+
+                            {/* Fallback Option: Call Confirmation If WhatsApp Not Received */}
+                            <div className="w-full flex items-center justify-between pt-1 px-0.5 text-[10px]">
+                              <button
+                                type="button"
+                                onClick={handleSendOtp}
+                                disabled={otpCooldown > 0 || otpLoading}
+                                className="text-stone-500 hover:text-stone-800 underline cursor-pointer disabled:opacity-40"
+                              >
+                                {otpCooldown > 0 ? `Resend OTP in ${otpCooldown}s` : 'Resend WhatsApp Code'}
+                              </button>
+                              {handleSkipOtpWithCallConfirmation && (
+                                <button
+                                  type="button"
+                                  onClick={handleSkipOtpWithCallConfirmation}
+                                  className="text-[#8C6239] hover:text-[#5A3923] font-bold underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <span>📞 Confirm via Phone Call</span>
+                                </button>
+                              )}
                             </div>
                           </motion.div>
                         )}

@@ -452,6 +452,14 @@ export function CheckoutBankCardPanel({
             />
           </div>
         </div>
+
+        {/* Transparent Card Authorization Notice */}
+        <div className="bg-[#FAF7F2] border border-[#E2D9CD] rounded-xl p-2.5 text-[10.5px] text-[#7A6354] leading-relaxed flex items-start gap-2">
+          <span className="text-amber-700 text-sm shrink-0">🛡️</span>
+          <span>
+            <strong className="text-[#2C1E18]">Direct Card Authorization:</strong> Your card is validated for booking reservation. No immediate funds will be auto-debited until your order is verified with our master concierge. For instant digital settlement, select <strong>Raast Instant IBFT</strong>, <strong>JazzCash</strong>, or <strong>Easypaisa</strong>.
+          </span>
+        </div>
       </div>
     </div>
   );

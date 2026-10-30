@@ -1,5 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 'use client';
+
+import { LiquidCardGraph } from '@/components/admin/LiquidCardGraph';
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -328,28 +330,30 @@ export default function RecycleBinTab() {
           <h1 className="text-2xl sm:text-3xl font-black text-[#221814] tracking-tight font-serif">
             Recycle Bin <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">& Archive Manager</span>
           </h1>
-          <p className="text-stone-500 text-xs font-medium mt-0.5 max-w-xl">
-            Deleted items are safely stored in separate sections away from your active database. Your live tables stay 100% clean and match the website 1-to-1.
-          </p>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#E7DDD0]/60">
-          <Button
-            variant="outline"
-            size="sm"
+        {/* Action Controls Capsule (Matching Img 2, 3, 4) */}
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#E7DDD0]/60">
+          <button
+            type="button"
             onClick={() => fetchItems()}
             disabled={loading}
-            className="bg-white hover:bg-[#FAF5EE] border-[#D9C4AC] text-[#1F1612] text-xs font-bold shadow-2xs rounded-full px-3.5 h-[36px]"
+            className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
           >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+              <RefreshCw size={14} className={`stroke-[2.2] ${loading ? 'animate-spin' : ''}`} />
+            </div>
+            <div className="text-left">
+              <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+                Refresh Archive
+              </div>
+              <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">Sync Isolated Records</span>
+            </div>
+          </button>
 
           {counts.ALL > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
+            <button
+              type="button"
               onClick={() =>
                 setConfirmModal({
                   open: true,
@@ -357,17 +361,17 @@ export default function RecycleBinTab() {
                   section: activeSection,
                 })
               }
-              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-full px-3.5 h-[36px] shadow-2xs"
+              className="p-2 sm:py-2 sm:px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center gap-1.5 shrink-0"
             >
-              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              {activeSection === 'ALL' ? 'Empty All Bin' : `Empty ${SECTION_CONFIG[activeSection].label}`}
-            </Button>
+              <Trash2 size={13} />
+              <span className="hidden sm:inline">{activeSection === 'ALL' ? 'Empty Bin' : 'Clear Section'}</span>
+            </button>
           )}
         </div>
       </motion.div>
 
       {/* ── 4 KPI METRIC CARDS (EXACT MATCHING OVERVIEW TAB & IMAGE 2) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
             key={kpi.label}
@@ -377,10 +381,20 @@ export default function RecycleBinTab() {
             whileTap={{ scale: 0.98 }}
             transition={{ delay: idx * 0.05, duration: 0.25, type: 'spring', stiffness: 350, damping: 25 }}
             onClick={() => setActiveSection(kpi.targetSection)}
-            className={`bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border rounded-2xl sm:rounded-[22px] p-4.5 flex flex-col justify-between min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${kpi.cardGlow}`}
+            className={`bg-gradient-to-br from-white/95 via-[#FCFAF7]/90 to-[#FAF5EE]/95 backdrop-blur-md border rounded-2xl sm:rounded-[22px] p-3 sm:p-4.5 flex flex-col justify-between min-h-[114px] sm:min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${kpi.cardGlow}`}
           >
             {/* Ambient Colored Radial Glow in Top Corner */}
-            <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 ${kpi.ambientGlow}`} />
+            {/* Ambient Liquid Colored Radial Glow in Top Corner */}
+            <div className={`absolute -top-10 -right-10 w-24 sm:w-28 h-24 sm:h-28 rounded-full blur-2xl pointer-events-none transition-all duration-500 opacity-90 sm:opacity-60 sm:group-hover:opacity-100 animate-pulse ${kpi.ambientGlow}`} />
+
+            {/* Subtle Liquid Bottom Corner Glow */}
+            <div className={`absolute -bottom-8 -left-8 w-20 h-20 rounded-full blur-2xl pointer-events-none opacity-40 sm:group-hover:opacity-75 transition-opacity ${kpi.ambientGlow}`} />
+
+            {/* ── FLOWING LIQUID GRAPH WAVE ANIMATION ── */}
+            <LiquidCardGraph index={idx} color={kpi.color} value={kpi.numValue} />
+
+            {/* Liquid Sheen Shimmer Reflection Sweep */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
 
             <div className="flex justify-between items-start relative z-10">
               <span className="text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase">
@@ -396,16 +410,6 @@ export default function RecycleBinTab() {
                 {kpi.prefix && <span className="text-lg sm:text-xl font-bold mr-1 text-[#8C6239]">{kpi.prefix}</span>}
                 <AnimatedCounter value={kpi.numValue} duration={1.2} />
               </h3>
-
-              <div className="mt-2.5 flex items-center">
-                <span className={`inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${kpi.badgeBg}`}>
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${kpi.dotColor} opacity-75`} />
-                    <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${kpi.dotColor}`} />
-                  </span>
-                  {kpi.sub}
-                </span>
-              </div>
             </div>
           </motion.div>
         ))}

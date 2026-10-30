@@ -67,7 +67,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const returnDevCode = process.env.NODE_ENV === 'test';
     const masked = maskPakistaniPhone(targetPhone);
 
     return NextResponse.json({
@@ -75,7 +74,6 @@ export async function POST(req: NextRequest) {
       channel: result.channel,
       cooldownSeconds: result.cooldownSeconds || 30,
       maskedPhone: masked,
-      ...(returnDevCode ? { phone: targetPhone, devCode: otp } : {}),
     });
   } catch (err) {
     return NextResponse.json(

@@ -1,5 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, @next/next/no-img-element */
 'use client';
+
+import { LiquidCardGraph } from '@/components/admin/LiquidCardGraph';
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, @next/next/no-img-element */
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -323,117 +325,144 @@ export default function AiChatbotTab() {
 
   return (
     <div className="space-y-4 font-sans">
-      {/* ── HEADER WITH VIEW SWITCHER ── */}
+      {/* ── 1. DEDICATED HEADER CARD (SEPARATE TITLE BLOCK) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E7DDD0] p-3.5 sm:py-3 sm:px-5 rounded-2xl shadow-[0_4px_20px_rgba(44,30,24,0.02)] shrink-0 relative overflow-hidden group hover:border-[#B88E4B]/40 transition-all"
+        className="flex items-center justify-between gap-3 bg-gradient-to-r from-white via-[#FCFAF7] to-white border border-[#E7DDD0] p-3.5 sm:py-3 sm:px-5 rounded-2xl shadow-[0_4px_20px_rgba(44,30,24,0.02)] shrink-0 relative overflow-hidden group hover:border-[#B88E4B]/40 transition-all"
       >
-        <div className="relative z-10 w-full lg:w-auto">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/35 flex items-center gap-1 shadow-2xs">
-              <Sparkles size={9} className="text-[#B88E4B] animate-spin duration-3000" />
-              <span>AI NEURAL ENGINE V2.4</span>
+        <div className="relative z-10">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap sm:flex-nowrap">
+            <span className="px-2 sm:px-2.5 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-[#FAF0E2] to-[#F5E5CF] text-[#8C6239] border border-[#B88E4B]/35 flex items-center gap-1 shadow-2xs whitespace-nowrap shrink-0">
+              <Sparkles size={9} className="text-[#B88E4B] animate-spin duration-3000 shrink-0" />
+              <span className="sm:hidden">AI V2.4</span>
+              <span className="hidden sm:inline">AI ENGINE V2.4</span>
             </span>
 
-            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black font-mono uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-500/35 flex items-center gap-1.5 shadow-2xs">
-              <span className="relative flex h-2 w-2">
+            <span className="px-2 sm:px-2.5 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-black font-mono uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-500/35 flex items-center gap-1.5 shadow-2xs whitespace-nowrap shrink-0">
+              <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500" />
               </span>
-              <span>LIVE AI CONCIERGE (CONNECTED)</span>
+              <span className="sm:hidden">LIVE AI</span>
+              <span className="hidden sm:inline">LIVE CONCIERGE</span>
             </span>
           </div>
 
           <h1 className="text-[22px] sm:text-2xl lg:text-3xl font-black text-[#221814] tracking-tight leading-snug font-serif">
             AI Neural Chatbot <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">& Intelligence</span>
           </h1>
-          <p className="text-stone-500 text-xs font-medium mt-0.5">
-            Real-time customer query intent breakdown, live sandbox testing, and conversation transcript audits.
-          </p>
         </div>
 
-        {/* Action Controls & Tab Switcher */}
-        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full lg:w-auto shrink-0 relative z-10 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E7DDD0]/60">
-          <div className="inline-flex bg-[#FAF5EE] p-1 rounded-xl border border-[#E2D1BC]">
-            <button
-              onClick={() => setActiveView('audits')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeView === 'audits'
-                  ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-xs'
-                  : 'text-stone-600 hover:text-[#1F1612]'
-              }`}
-            >
-              <FileText size={13} />
-              <span>Intelligence & Audits</span>
-            </button>
-            <button
-              onClick={() => setActiveView('simulator')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeView === 'simulator'
-                  ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-xs'
-                  : 'text-stone-600 hover:text-[#1F1612]'
-              }`}
-            >
-              <Terminal size={13} />
-              <span>Live AI Simulator</span>
-            </button>
-            <button
-              onClick={() => setActiveView('knowledge')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeView === 'knowledge'
-                  ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-xs'
-                  : 'text-stone-600 hover:text-[#1F1612]'
-              }`}
-            >
-              <ShieldCheck size={13} />
-              <span>Knowledge & Policies</span>
-            </button>
-          </div>
+        <button
+          onClick={() => fetchAnalytics(true)}
+          className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-white hover:bg-stone-50 border border-[#E7DDD0] text-[#1F1612] font-bold text-xs shadow-2xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-98 shrink-0 relative z-10"
+          title="Refresh AI Data"
+        >
+          <RefreshCw size={13} className={loading ? 'animate-spin text-[#B88E4B]' : 'text-[#8C6239]'} />
+          <span className="hidden sm:inline">Refresh</span>
+        </button>
+      </motion.div>
 
+      {/* ── 2. DEDICATED SEPARATE VIEW SWITCHER BAR CARD (EXACT MATCH TO USER IMAGE) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -4 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full bg-[#FAF5EE] border border-[#E8DEC8] p-1.5 rounded-2xl shadow-xs"
+      >
+        <div className="grid grid-cols-3 gap-1 sm:gap-1.5">
+          {/* Option 1: Intelligence & Audits */}
           <button
-            onClick={() => fetchAnalytics(true)}
-            className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-stone-50 border border-[#E7DDD0] text-[#1F1612] font-bold text-xs shadow-2xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-98"
+            type="button"
+            onClick={() => setActiveView('audits')}
+            className={`py-2 px-1.5 sm:px-2.5 rounded-xl sm:rounded-[14px] transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+              activeView === 'audits'
+                ? 'bg-gradient-to-br from-[#A57534] via-[#946427] to-[#7E521E] text-white shadow-[0_2px_8px_rgba(148,100,39,0.35)]'
+                : 'text-[#4A3B32] hover:text-[#1F1612] hover:bg-black/5'
+            }`}
           >
-            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-            <span>Refresh</span>
+            <FileText size={14} className="shrink-0 opacity-90" />
+            <div className="leading-tight text-[10.5px] sm:text-xs font-bold text-left">
+              <span className="block">Intelligence &amp;</span>
+              <span className="block">Audits</span>
+            </div>
+          </button>
+
+          {/* Option 2: Live AI Simulator */}
+          <button
+            type="button"
+            onClick={() => setActiveView('simulator')}
+            className={`py-2 px-1.5 sm:px-2.5 rounded-xl sm:rounded-[14px] transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+              activeView === 'simulator'
+                ? 'bg-gradient-to-br from-[#A57534] via-[#946427] to-[#7E521E] text-white shadow-[0_2px_8px_rgba(148,100,39,0.35)]'
+                : 'text-[#4A3B32] hover:text-[#1F1612] hover:bg-black/5'
+            }`}
+          >
+            <Terminal size={14} className="shrink-0 opacity-80" />
+            <div className="leading-tight text-[10.5px] sm:text-xs font-bold text-left">
+              <span className="block">Live AI</span>
+              <span className="block">Simulator</span>
+            </div>
+          </button>
+
+          {/* Option 3: Knowledge & Policies */}
+          <button
+            type="button"
+            onClick={() => setActiveView('knowledge')}
+            className={`py-2 px-1.5 sm:px-2.5 rounded-xl sm:rounded-[14px] transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+              activeView === 'knowledge'
+                ? 'bg-gradient-to-br from-[#A57534] via-[#946427] to-[#7E521E] text-white shadow-[0_2px_8px_rgba(148,100,39,0.35)]'
+                : 'text-[#4A3B32] hover:text-[#1F1612] hover:bg-black/5'
+            }`}
+          >
+            <ShieldCheck size={14} className="shrink-0 opacity-80" />
+            <div className="leading-tight text-[10.5px] sm:text-xs font-bold text-left">
+              <span className="block">Knowledge &amp;</span>
+              <span className="block">Policies</span>
+            </div>
           </button>
         </div>
       </motion.div>
 
-      {/* ── 4 KPI METRIC CARDS ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
+      {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 shrink-0">
         {kpis.map((kpi, idx) => (
           <motion.div
             key={kpi.label}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05, duration: 0.25 }}
-            className={`bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border rounded-2xl p-4 flex flex-col justify-between min-h-[120px] transition-all duration-300 relative overflow-hidden group ${kpi.cardGlow}`}
+            whileHover={{ y: -4, scale: 1.015 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ delay: idx * 0.05, duration: 0.25, type: 'spring', stiffness: 350, damping: 25 }}
+            className={`bg-gradient-to-br from-white/95 via-[#FCFAF7]/90 to-[#FAF5EE]/95 backdrop-blur-md border rounded-2xl sm:rounded-[22px] p-3 sm:p-4.5 flex flex-col justify-between min-h-[114px] sm:min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group ${kpi.cardGlow}`}
           >
-            <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none opacity-60 ${kpi.ambientGlow}`} />
+            {/* Ambient Liquid Colored Radial Glow in Top Corner */}
+            <div className={`absolute -top-10 -right-10 w-24 sm:w-28 h-24 sm:h-28 rounded-full blur-2xl pointer-events-none transition-all duration-500 opacity-90 sm:opacity-60 sm:group-hover:opacity-100 animate-pulse ${kpi.ambientGlow}`} />
 
-            <div className="flex justify-between items-start relative z-10">
-              <span className="text-[10px] font-black tracking-wider text-[#7A6354] uppercase">
+            {/* Subtle Liquid Bottom Corner Glow */}
+            <div className={`absolute -bottom-8 -left-8 w-20 h-20 rounded-full blur-2xl pointer-events-none opacity-40 sm:group-hover:opacity-75 transition-opacity ${kpi.ambientGlow}`} />
+
+            {/* ── FLOWING LIQUID GRAPH WAVE ANIMATION ── */}
+            <LiquidCardGraph index={idx} color={kpi.color} value={kpi.numValue} />
+
+            {/* Liquid Sheen Shimmer Reflection Sweep */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+
+            <div className="flex justify-between items-start relative z-10 gap-1">
+              <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
                 {kpi.label}
               </span>
-              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${kpi.iconBg}`}>
-                <kpi.icon size={16} className="stroke-[2.2]" />
+              {/* 3D Liquid Glass Jewel Orb */}
+              <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 ${kpi.iconBg}`}>
+                <kpi.icon size={15} className="sm:w-[17px] sm:h-[17px] stroke-[2.2]" />
               </div>
             </div>
 
-            <div className="mt-2 relative z-10">
-              <h3 className="text-2xl sm:text-[28px] font-black text-[#1F1612] tracking-tight leading-none flex items-baseline">
-                <AnimatedCounter value={kpi.numValue} duration={1.2} />
-                {kpi.suffix ? <span className="text-base font-bold text-[#8C6D46] ml-1">{kpi.suffix}</span> : null}
+            <div className="mt-1.5 sm:mt-2 relative z-10">
+              <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none flex items-baseline flex-wrap">
+                <AnimatedCounter value={kpi.numValue} duration={1.5} />
+                {kpi.suffix ? <span className="text-[11px] sm:text-base font-bold text-[#8C6D46] ml-1">{kpi.suffix}</span> : null}
               </h3>
-
-              <div className="mt-2 flex items-center">
-                <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-2xs ${kpi.badgeBg}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${kpi.dotColor} animate-pulse`} />
-                  {kpi.sub}
-                </span>
-              </div>
             </div>
           </motion.div>
         ))}

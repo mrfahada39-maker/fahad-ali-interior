@@ -263,7 +263,18 @@ Return ONLY a valid JSON object matching this schema:
     const amountMatches = amountDifference !== null && amountDifference <= 5; // tolerance of Rs. 5
 
     // Validate receiver account / title if extracted
-    const officialAccounts = (process.env.OFFICIAL_PAYMENT_ACCOUNTS || 'fahad ali,fahadali,interior,03213283301,03207006110,meezan,jazzcash,easypaisa')
+    const fallbackAccounts = [
+      'fahad ali',
+      'fahadali',
+      'interior',
+      process.env.ADMIN_WHATSAPP_NUMBER || '',
+      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '',
+      'meezan',
+      'jazzcash',
+      'easypaisa',
+    ].filter(Boolean).join(',');
+
+    const officialAccounts = (process.env.OFFICIAL_PAYMENT_ACCOUNTS || fallbackAccounts)
       .toLowerCase()
       .split(',')
       .map((s) => s.trim())

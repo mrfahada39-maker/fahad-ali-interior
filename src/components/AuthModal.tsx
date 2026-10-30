@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { apiFetchJsonWithStatus, setEnterpriseTokens } from '@/lib/api-client';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -353,7 +354,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                             💬 Sender: <strong>Fahad Ali Interior</strong>
                           </span>
                           <a
-                            href="https://wa.me/"
+                            href={`https://wa.me/${BUSINESS_CONTACT.whatsapp}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-900 bg-emerald-200/70 hover:bg-emerald-200 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
@@ -399,7 +400,7 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                           </button>
                         )}
                       </span>
-                      <span>Backup codes also accepted</span>
+                      <span className="text-[10px] text-stone-400">Backup codes also accepted</span>
                     </div>
                   </div>
 
