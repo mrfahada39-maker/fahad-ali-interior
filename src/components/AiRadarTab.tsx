@@ -1,6 +1,5 @@
 'use client';
 
-import { LiquidCardGraph } from '@/components/admin/LiquidCardGraph';
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import React, { useState } from 'react';
@@ -120,7 +119,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-amber-500/10" />
 
-          <LiquidCardGraph index={0} variant="gold" value={activeVisitorsCount} />
+          
 
             <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
@@ -133,8 +132,16 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
           <div className="mt-2 relative z-10">
             <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none truncate font-sans">
-              {telemetry?.topLocation || (activeVisitorsCount === 0 ? 'Standby' : 'Detecting...')}
-            </h3>
+              </h3>
+            <div className="mt-2.5 flex items-center">
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs bg-emerald-50 text-emerald-800 border-emerald-500/30">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                Live Geolocation Radar
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -149,7 +156,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-blue-500/10" />
 
-          <LiquidCardGraph index={1} variant="blue" value={activeVisitorsCount} />
+          
 
             <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
@@ -178,7 +185,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-purple-500/10" />
 
-          <LiquidCardGraph index={2} variant="purple" value={activeVisitorsCount} />
+          
 
             <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
@@ -191,8 +198,16 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
           <div className="mt-2 relative z-10">
             <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none truncate font-sans">
-              {telemetry?.avgSessionTime || (activeVisitorsCount === 0 ? '0s' : 'Real-Time Active')}
-            </h3>
+              </h3>
+            <div className="mt-2.5 flex items-center">
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs bg-purple-50 text-purple-800 border-purple-500/30">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-purple-500" />
+                </span>
+                Live Shopper Dwell Time
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -207,7 +222,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-[#B88E4B]/10" />
 
-          <LiquidCardGraph index={3} variant="amber" />
+          
 
             <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
@@ -223,6 +238,15 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
               <span className="text-base sm:text-lg font-bold text-[#8C6D46] mr-1 select-none">Rs. </span>
               <AnimatedCounter value={stats?.totalRevenue || 0} duration={1.5} />
             </h3>
+            <div className="mt-2.5 flex items-center">
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs bg-emerald-50 text-emerald-800 border-emerald-500/30">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                {stats?.orderCount || 0} Orders Processed
+              </span>
+            </div>
           </div>
         </motion.div>
 

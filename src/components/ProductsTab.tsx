@@ -1,6 +1,5 @@
 'use client';
 
-import { LiquidCardGraph } from '@/components/admin/LiquidCardGraph';
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import { useState, useMemo } from 'react';
@@ -322,7 +321,7 @@ export default function ProductsTab({
             <div className={`absolute -bottom-8 -left-8 w-20 h-20 rounded-full blur-2xl pointer-events-none opacity-40 sm:group-hover:opacity-75 transition-opacity ${kpi.ambientGlow}`} />
 
             {/* ── FLOWING LIQUID GRAPH WAVE ANIMATION ── */}
-            <LiquidCardGraph index={idx} color={kpi.color} value={kpi.numValue} />
+            
 
             {/* Liquid Sheen Shimmer Reflection Sweep */}
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
@@ -341,6 +340,15 @@ export default function ProductsTab({
               <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none">
                 <AnimatedCounter value={kpi.numValue} duration={1.5} />
               </h3>
+              <div className="mt-2.5 flex items-center">
+                <span className={`inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs truncate ${kpi.badgeBg}`}>
+                  <span className="relative flex h-1.5 w-1.5 shrink-0">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${kpi.dotColor} opacity-75`} />
+                    <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${kpi.dotColor}`} />
+                  </span>
+                  <span className="truncate">{kpi.sub}</span>
+                </span>
+              </div>
             </div>
           </motion.div>
         ))}

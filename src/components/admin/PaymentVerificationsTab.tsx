@@ -1,6 +1,5 @@
 'use client';
 
-import { LiquidCardGraph } from '@/components/admin/LiquidCardGraph';
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import React, { useState, useMemo } from 'react';
@@ -221,7 +220,7 @@ export function PaymentVerificationsTab({
           className="bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border border-amber-300/80 hover:border-[#B88E4B] rounded-2xl sm:rounded-[22px] p-3 sm:p-4.5 flex flex-col justify-between min-h-[114px] sm:min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_12px_30px_rgba(184,142,75,0.18)]"
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-[#B88E4B]/10" />
-          <LiquidCardGraph index={0} variant="gold" value={totalLockedPkr} />
+          
 
             <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
@@ -236,6 +235,15 @@ export function PaymentVerificationsTab({
               <span className="text-base sm:text-lg font-bold text-[#8C6D46] mr-1 select-none">Rs.</span>
               <AnimatedCounter value={totalLockedPkr} duration={1.5} />
             </h3>
+            <div className="mt-2.5 flex items-center">
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs bg-emerald-50 text-emerald-800 border-emerald-500/30">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                {verificationEligibleOrders.length} Total Slips Placed
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -249,7 +257,7 @@ export function PaymentVerificationsTab({
           className="bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border border-amber-300/80 hover:border-amber-500 rounded-2xl sm:rounded-[22px] p-3 sm:p-4.5 flex flex-col justify-between min-h-[114px] sm:min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group shadow-[0_4px_20px_rgba(245,158,11,0.08)] hover:shadow-[0_12px_30px_rgba(245,158,11,0.18)]"
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-amber-500/10" />
-          <LiquidCardGraph index={1} variant="blue" value={pendingOrders.length} />
+          
 
             <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
@@ -263,6 +271,15 @@ export function PaymentVerificationsTab({
             <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none flex items-baseline">
               <AnimatedCounter value={pendingOrders.length} duration={1.5} />
             </h3>
+            <div className="mt-2.5 flex items-center">
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs bg-amber-50 text-amber-800 border-amber-500/30">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
+                </span>
+                ⚡ Awaiting Verification
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -276,7 +293,7 @@ export function PaymentVerificationsTab({
           className="bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border border-blue-300/80 hover:border-blue-500 rounded-2xl sm:rounded-[22px] p-3 sm:p-4.5 flex flex-col justify-between min-h-[114px] sm:min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group shadow-[0_4px_20px_rgba(59,130,246,0.08)] hover:shadow-[0_12px_30px_rgba(59,130,246,0.18)]"
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-blue-500/10" />
-          <LiquidCardGraph index={2} variant="purple" value={verifiedCount} />
+          
 
             <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
@@ -290,6 +307,15 @@ export function PaymentVerificationsTab({
             <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none flex items-baseline">
               <AnimatedCounter value={verifiedCount} duration={1.5} />
             </h3>
+            <div className="mt-2.5 flex items-center">
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs bg-blue-50 text-blue-800 border-blue-500/30">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500" />
+                </span>
+                ● {verifiedCount} Shipped / In Production
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -303,7 +329,7 @@ export function PaymentVerificationsTab({
           className="bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border border-emerald-300/80 hover:border-emerald-500 rounded-2xl sm:rounded-[22px] p-3 sm:p-4.5 flex flex-col justify-between min-h-[114px] sm:min-h-[124px] transition-all duration-300 cursor-pointer relative overflow-hidden group shadow-[0_4px_20px_rgba(16,185,129,0.08)] hover:shadow-[0_12px_30px_rgba(16,185,129,0.18)]"
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-emerald-500/10" />
-          <LiquidCardGraph index={3} variant="emerald" value={verifiedCount} />
+          
 
             <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
