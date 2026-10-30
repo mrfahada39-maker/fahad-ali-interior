@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useWishlistStore, useCartStore } from '@/store';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
@@ -10,7 +11,7 @@ import LuxuryCallModal from '@/components/LuxuryCallModal';
 import { useUserCall } from '@/hooks/use-user-call';
 import { UserOrderModals } from '@/components/user-dashboard/UserOrderModals';
 import { buildDashboardKpis } from '@/components/user-dashboard/dashboard-kpis';
-import { DashboardSidebarAndMobileNav, DashboardTopTabDock } from '@/components/user-dashboard/DashboardNav';
+import { DashboardSidebarAndMobileNav } from '@/components/user-dashboard/DashboardNav';
 import { DashboardOverviewTab, DashboardOrdersTab } from '@/components/user-dashboard/DashboardOverviewOrdersTabs';
 import { DashboardWishlistTab, DashboardConciergeTab } from '@/components/user-dashboard/DashboardWishlistConciergeTabs';
 import { DashboardReviewsTab, DashboardAddressesTab } from '@/components/user-dashboard/DashboardReviewsAddressesTabs';
@@ -596,7 +597,7 @@ export default function UserDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#1F1612] flex flex-col font-sans selection:bg-[#B88E4B]/20 relative">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-[#FAF7F2] text-[#2D231E] font-sans selection:bg-[#B88E4B] selection:text-black flex flex-row p-2 sm:p-3 gap-2 sm:gap-3 select-none">
       <DashboardSidebarAndMobileNav
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -604,15 +605,15 @@ export default function UserDashboard() {
         ordersLength={orders.length}
       />
 
-      <div className="flex-1 lg:pl-[108px] pt-[124px] lg:pt-0 flex flex-col min-w-0">
-        <main className="flex-1 flex flex-col min-w-0 p-3 sm:p-4 lg:p-5 pb-24 lg:pb-5 gap-3.5 max-w-[1700px] w-full mx-auto">
-          <DashboardTopTabDock
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            ordersLength={orders.length}
-            mergedWishlistLength={mergedWishlist.length}
-          />
-
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col h-full pr-0 pt-[118px] sm:pt-[124px] lg:pt-0 min-h-0 overflow-y-auto">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0.9 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.05 }}
+          className="flex-1 flex flex-col min-h-0 pb-24 lg:pb-3"
+        >
           {activeTab === 'overview' && (
             <DashboardOverviewTab
               overviewKpis={overviewKpis}
@@ -722,8 +723,8 @@ export default function UserDashboard() {
           {activeTab === 'security' && <DashboardSecurityTab securityKpis={securityKpis} />}
 
           {activeTab === 'settings' && <DashboardSettingsTab settingsKpis={settingsKpis} profile={profile} />}
-        </main>
-      </div>
+        </motion.div>
+      </main>
 
       <UserOrderModals
         selectedOrderDetails={selectedOrderDetails}
