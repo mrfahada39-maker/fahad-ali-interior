@@ -596,6 +596,13 @@ export default function UserDashboard() {
     addresses,
   });
 
+  const rawName =
+    profile?.name ||
+    session?.user?.name ||
+    (session?.user?.email ? session.user.email.split('@')[0] : '') ||
+    'VIP Client';
+  const clientName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
   return (
     <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-[#FAF7F2] text-[#2D231E] font-sans selection:bg-[#B88E4B] selection:text-black flex flex-row p-2 sm:p-3 gap-2 sm:gap-3 select-none">
       <DashboardSidebarAndMobileNav
@@ -623,6 +630,7 @@ export default function UserDashboard() {
               orders={orders}
               trajectoryData={trajectoryData}
               fulfillmentData={fulfillmentData}
+              clientName={clientName}
             />
           )}
 
@@ -657,6 +665,7 @@ export default function UserDashboard() {
               setQuickViewProduct={setQuickViewProduct}
               handleMoveToCart={handleMoveToCart}
               handleRemoveWishlist={handleRemoveWishlist}
+              clientName={clientName}
             />
           )}
 
@@ -670,6 +679,7 @@ export default function UserDashboard() {
               setMsgInput={setMsgInput}
               handleSendMessage={handleSendMessage}
               handleSendVoiceNote={handleSendVoiceNote}
+              clientName={clientName}
             />
           )}
 
@@ -686,6 +696,7 @@ export default function UserDashboard() {
               reviewUploading={reviewUploading}
               handleReviewImageUpload={handleReviewImageUpload}
               handleDeleteReview={handleDeleteReview}
+              clientName={clientName}
             />
           )}
 
@@ -699,6 +710,7 @@ export default function UserDashboard() {
               addrForm={addrForm}
               setAddrForm={setAddrForm}
               handleDeleteAddress={handleDeleteAddress}
+              clientName={clientName}
             />
           )}
 
@@ -720,9 +732,9 @@ export default function UserDashboard() {
             />
           )}
 
-          {activeTab === 'security' && <DashboardSecurityTab securityKpis={securityKpis} />}
+          {activeTab === 'security' && <DashboardSecurityTab securityKpis={securityKpis} clientName={clientName} />}
 
-          {activeTab === 'settings' && <DashboardSettingsTab settingsKpis={settingsKpis} profile={profile} />}
+          {activeTab === 'settings' && <DashboardSettingsTab settingsKpis={settingsKpis} profile={profile} clientName={clientName} />}
         </motion.div>
       </main>
 

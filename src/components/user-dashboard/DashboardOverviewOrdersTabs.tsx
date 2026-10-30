@@ -19,6 +19,7 @@ export function DashboardOverviewTab({
   orders,
   trajectoryData,
   fulfillmentData,
+  clientName = 'VIP Client',
 }: {
   overviewKpis: any[];
   chartMetric: 'REVENUE' | 'COUNT';
@@ -27,6 +28,7 @@ export function DashboardOverviewTab({
   orders: any[];
   trajectoryData: any[];
   fulfillmentData: any[];
+  clientName?: string;
 }) {
   return (
     <div className="flex-1 flex flex-col gap-3 font-sans pb-2">
@@ -35,8 +37,8 @@ export function DashboardOverviewTab({
         'VIP CLIENT SUITE V2.4',
         'LIVE SYNCED',
         '100% REAL LIVE DATA SYNCED',
-        'Fahad Ali Interior',
-        '— Client Executive Suite',
+        clientName,
+        '& Executive Suite',
         'Real-time bespoke commission tracking, timber seasoning radar, curated wishlist gallery, and direct master artisan concierge.',
         <Link
           href="/#signature-categories"
@@ -223,6 +225,12 @@ export function DashboardOrdersTab({
   setTrackingOrder: (o: any) => void;
   setSelectedOrderDetails: (o: any) => void;
 }) {
+  const clientName =
+    profile?.name ||
+    session?.user?.name ||
+    (session?.user?.email ? session.user.email.split('@')[0] : '') ||
+    'VIP Client';
+
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
       {renderHeaderBanner(
@@ -230,7 +238,7 @@ export function DashboardOrdersTab({
         '✦ FULFILLMENT REGISTRY V2.4',
         'LIVE SYNCED',
         '100% REAL DATABASE ORDERS SYNCED',
-        'Fulfillment',
+        clientName,
         '& Bespoke Commissions',
         'Real-time fulfillment stages, customer WhatsApp hotline, timber seasoning validation, and invoice generation.',
         <Link

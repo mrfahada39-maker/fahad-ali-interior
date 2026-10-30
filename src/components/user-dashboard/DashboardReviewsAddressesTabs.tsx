@@ -24,6 +24,7 @@ export function DashboardReviewsTab({
   reviewUploading,
   handleReviewImageUpload,
   handleDeleteReview,
+  clientName = 'VIP Client',
 }: {
   myReviews: any[];
   reviewsKpis: any[];
@@ -36,6 +37,7 @@ export function DashboardReviewsTab({
   reviewUploading: boolean;
   handleReviewImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDeleteReview: (id: string) => void;
+  clientName?: string;
 }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
@@ -44,8 +46,8 @@ export function DashboardReviewsTab({
         '✦ ARTISAN RATINGS V2.4',
         `${myReviews.length} REVIEWS`,
         `${myReviews.length} VERIFIED REVIEWS`,
-        'My Atelier',
-        'Reviews & Ratings',
+        clientName,
+        '& Atelier Testimonials',
         'Share your authentic furniture experience and timber finishing notes with fellow royal patrons.',
         <button
           type="button"
@@ -281,6 +283,7 @@ export function DashboardAddressesTab({
   addrForm,
   setAddrForm,
   handleDeleteAddress,
+  clientName = 'VIP Client',
 }: {
   addresses: any[];
   addressesKpis: any[];
@@ -290,6 +293,7 @@ export function DashboardAddressesTab({
   addrForm: { name: string; phone: string; address: string; city: string; province: string; isDefault: boolean };
   setAddrForm: React.Dispatch<React.SetStateAction<{ name: string; phone: string; address: string; city: string; province: string; isDefault: boolean }>>;
   handleDeleteAddress: (id: string) => void;
+  clientName?: string;
 }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
@@ -298,8 +302,8 @@ export function DashboardAddressesTab({
         '✦ RESIDENTIAL REGISTRY V2.4',
         `${addresses.length} HAVENS`,
         `${addresses.length} SAVED ESTATES`,
-        'Registered Residences',
-        '& Estates',
+        clientName,
+        '& Registered Residences',
         'Manage delivery addresses for insured white-glove installations across Pakistan.',
         <button
           type="button"

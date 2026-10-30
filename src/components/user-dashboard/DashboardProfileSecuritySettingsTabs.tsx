@@ -4,7 +4,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  Crown, Check, User, Phone, Mail, Sparkles, Layers, FileText,
+  Crown, Check, User, Phone, Mail, Sparkles, Layers, FileText, ShieldCheck, Settings,
 } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
@@ -43,6 +43,12 @@ export function DashboardProfileTab({
   selectedFabricPreference: string;
   setSelectedFabricPreference: (s: string) => void;
 }) {
+  const clientName =
+    profile?.name ||
+    session?.user?.name ||
+    (session?.user?.email ? session.user.email.split('@')[0] : '') ||
+    'VIP Client';
+
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
       {renderHeaderBanner(
@@ -50,9 +56,32 @@ export function DashboardProfileTab({
         '✦ CLIENT CREDENTIALS V2.4',
         'VIP STATUS',
         'VERIFIED VIP PATRON',
-        'VIP Client Profile',
-        '& Credentials',
-        'Manage your architectural contact credentials, registered contact channels, and bespoke styling notes.'
+        clientName,
+        '& Profile & Credentials',
+        'Manage your architectural contact credentials, registered contact channels, and bespoke styling notes.',
+        <button
+          type="button"
+          onClick={() => {
+            const el = document.getElementById('client-profile-name-input');
+            if (el) {
+              el.focus();
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }}
+          className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
+        >
+          <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+            <User size={14} className="stroke-[2.2]" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+              Edit Credentials
+            </div>
+            <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">
+              Update Profile Information
+            </span>
+          </div>
+        </button>
       )}
 
       {renderKpiGrid(profileKpis)}
@@ -159,6 +188,7 @@ export function DashboardProfileTab({
                   <User size={12} className="text-[#B88E4B]" /> Full Legal Name
                 </span>
                 <Input
+                  id="client-profile-name-input"
                   value={profileForm.name}
                   onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
                   placeholder="e.g. Your Full Name"
@@ -267,7 +297,13 @@ export function DashboardProfileTab({
   );
 }
 
-export function DashboardSecurityTab({ securityKpis }: { securityKpis: any[] }) {
+export function DashboardSecurityTab({
+  securityKpis,
+  clientName = 'VIP Client',
+}: {
+  securityKpis: any[];
+  clientName?: string;
+}) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
       {renderHeaderBanner(
@@ -275,21 +311,51 @@ export function DashboardSecurityTab({ securityKpis }: { securityKpis: any[] }) 
         '✦ ENCRYPTION SHIELD V2.4',
         'ACTIVE 256-BIT',
         'ENTERPRISE ENCRYPTION ACTIVE',
-        'Security & Two-Factor',
-        'Authentication Guard',
-        'Fortify your VIP client portal with hardware TOTP tokens and cryptographic session guards.'
+        clientName,
+        '& Security & 2FA Guard',
+        'Fortify your VIP client portal with hardware TOTP tokens and cryptographic session guards.',
+        <button
+          type="button"
+          onClick={() => {
+            const el = document.getElementById('two-factor-setup-container');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }}
+          className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
+        >
+          <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 shrink-0 group-hover:scale-110 transition-transform">
+            <ShieldCheck size={14} className="stroke-[2.2]" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+              Configure 2FA Guard
+            </div>
+            <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">
+              Hardware TOTP &amp; Token
+            </span>
+          </div>
+        </button>
       )}
 
       {renderKpiGrid(securityKpis)}
 
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-[#E7DDD0] p-6 shadow-2xs">
+      <div id="two-factor-setup-container" className="bg-white/95 backdrop-blur-md rounded-2xl border border-[#E7DDD0] p-6 shadow-2xs">
         <TwoFactorSetup />
       </div>
     </motion.div>
   );
 }
 
-export function DashboardSettingsTab({ settingsKpis, profile }: { settingsKpis: any[]; profile: any }) {
+export function DashboardSettingsTab({
+  settingsKpis,
+  profile,
+  clientName = 'VIP Client',
+}: {
+  settingsKpis: any[];
+  profile: any;
+  clientName?: string;
+}) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
       {renderHeaderBanner(
@@ -297,14 +363,36 @@ export function DashboardSettingsTab({ settingsKpis, profile }: { settingsKpis: 
         '✦ PORTAL CONFIG V2.4',
         'AUTO SYNC',
         'AUTOMATIC PREFERENCE SYNC',
-        'Client Suite',
-        'Preferences & Settings',
-        'Configure notifications, bespoke order status alerts, and client portal display formats.'
+        clientName,
+        '& Portal Preferences',
+        'Configure notifications, bespoke order status alerts, and client portal display formats.',
+        <button
+          type="button"
+          onClick={() => {
+            const el = document.getElementById('user-settings-form-container');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }}
+          className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start cursor-pointer transition-all active:scale-98 group"
+        >
+          <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+            <Settings size={14} className="stroke-[2.2]" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm sm:text-base font-black text-[#1F1612] leading-none font-serif flex items-center gap-1.5">
+              Portal Settings
+            </div>
+            <span className="text-[8.5px] sm:text-[9.5px] font-bold text-stone-500 block uppercase tracking-wider">
+              Sync Preferences
+            </span>
+          </div>
+        </button>
       )}
 
       {renderKpiGrid(settingsKpis)}
 
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-[#E7DDD0] p-6 shadow-2xs">
+      <div id="user-settings-form-container" className="bg-white/95 backdrop-blur-md rounded-2xl border border-[#E7DDD0] p-6 shadow-2xs">
         <SettingsTab profile={profile} />
       </div>
     </motion.div>

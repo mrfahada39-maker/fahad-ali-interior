@@ -31,6 +31,7 @@ export function DashboardWishlistTab({
   setQuickViewProduct,
   handleMoveToCart,
   handleRemoveWishlist,
+  clientName = 'VIP Client',
 }: {
   mergedWishlist: any[];
   wishlistKpis: any[];
@@ -44,6 +45,7 @@ export function DashboardWishlistTab({
   setQuickViewProduct: (prod: any) => void;
   handleMoveToCart: (prod: any) => void;
   handleRemoveWishlist: (item: any) => void;
+  clientName?: string;
 }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
@@ -52,8 +54,8 @@ export function DashboardWishlistTab({
         '✦ HAUTE GALLERY REGISTRY',
         `${mergedWishlist.length} CURATIONS`,
         `${mergedWishlist.length} ACTIVE CURATIONS`,
-        'Private Curated',
-        'Wishlist & Living Pieces',
+        clientName,
+        '& Wishlist & Living Pieces',
         'Solid Sheesham specifications, Turkish velvet customization, Cloudinary high-res gallery, and instant bag allocation.',
         <Link
           href="/#signature-categories"
@@ -244,6 +246,7 @@ export function DashboardConciergeTab({
   setMsgInput,
   handleSendMessage,
   handleSendVoiceNote,
+  clientName = 'VIP Client',
 }: {
   conciergeKpis: any[];
   startCall: (type: 'voice' | 'video') => void;
@@ -253,6 +256,7 @@ export function DashboardConciergeTab({
   setMsgInput: (v: string) => void;
   handleSendMessage: (t?: string) => void;
   handleSendVoiceNote: (url: string, duration: number) => void;
+  clientName?: string;
 }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
@@ -261,8 +265,8 @@ export function DashboardConciergeTab({
         '✦ ATELIER PRIVATE HOTLINE',
         'ONLINE',
         'MASTER CRAFTSMAN ONLINE',
-        'VIP Concierge',
-        '& Atelier Dialogue',
+        clientName,
+        '& Atelier Concierge Dialogue',
         'Direct encrypted channel with Fahad Ali master artisans and architectural styling team.',
         <div className="flex items-center gap-2 flex-wrap">
           <button
