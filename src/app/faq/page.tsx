@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import FAQPage from './FAQPage';
 import { faqCategories } from '@/lib/faq-data';
 

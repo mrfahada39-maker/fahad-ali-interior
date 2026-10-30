@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { ArrowRight, ChevronRight, Sparkles } from 'lucide-react';
-import ProductCard from '@/components/ProductCard';
+import ProductCard from '@/components/shop/ProductCard';
 import type { StorefrontProduct } from '@/lib/types';
 import { useUiNavigationStore } from '@/store';
 

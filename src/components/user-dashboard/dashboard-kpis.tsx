@@ -8,7 +8,7 @@ import {
   Package, Star, Sparkles, Home, Crown, Clock, Phone, Truck, Lock,
   MessageSquare, ShieldCheck, ClipboardList, Coins, CheckCircle2, PhoneCall,
 } from 'lucide-react';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 export const DASHBOARD_TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },

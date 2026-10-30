@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import ContactPageClient from './ContactPageClient';
 
 export const revalidate = 300;

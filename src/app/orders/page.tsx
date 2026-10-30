@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import OrdersPageClient from './OrdersPageClient';
 import { motion } from 'framer-motion';
 import { Package, ArrowRight, User } from 'lucide-react';

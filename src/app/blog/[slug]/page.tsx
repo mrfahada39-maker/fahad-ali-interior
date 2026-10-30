@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Calendar, User, Sparkles, ArrowRight } from 'lucide-react';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import { db } from '@/lib/db';
 import type { EditorialArticle } from '@/lib/editorial-fallback';
 

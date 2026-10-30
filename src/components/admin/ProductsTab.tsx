@@ -25,14 +25,14 @@ import {
   Boxes,
   ArrowUpDown
 } from 'lucide-react';
-import { Button } from '@/components/button';
-import { Input } from '@/components/input';
-import { Textarea } from '@/components/textarea';
-import { Badge } from '@/components/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import CloudinaryImageUpload from '@/components/CloudinaryImageUpload';
-import AnimatedCounter from '@/components/AnimatedCounter';
-import LuxurySelect from '@/components/LuxurySelect';
+import CloudinaryImageUpload from '@/components/shared/CloudinaryImageUpload';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
+import LuxurySelect from '@/components/ui/LuxurySelect';
 import { AdminProductSummary } from './admin-tab-types';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);

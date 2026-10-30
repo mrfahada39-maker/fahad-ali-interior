@@ -7,7 +7,7 @@ import { useWishlistStore, useCartStore } from '@/store';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
-import LuxuryCallModal from '@/components/LuxuryCallModal';
+import LuxuryCallModal from '@/components/ai/LuxuryCallModal';
 import { useUserCall } from '@/hooks/use-user-call';
 import { UserOrderModals } from '@/components/user-dashboard/UserOrderModals';
 import { buildDashboardKpis } from '@/components/user-dashboard/dashboard-kpis';

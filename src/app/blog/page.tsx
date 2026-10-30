@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, Calendar, User, ArrowRight, BookOpen } from 'lucide-react';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import { db } from '@/lib/db';
 import type { EditorialArticle } from '@/lib/editorial-fallback';
 

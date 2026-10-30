@@ -40,7 +40,7 @@ import {
   Cell,
   LabelList
 } from 'recharts';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 import { AdminOrderSummary } from './admin-tab-types';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);

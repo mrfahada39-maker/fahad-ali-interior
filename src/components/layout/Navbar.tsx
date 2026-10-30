@@ -9,9 +9,9 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { useWishlistDrawerStore } from '@/components/WishlistDrawer';
+import { useWishlistDrawerStore } from '@/components/shop/WishlistDrawer';
 
-const NotificationBell = dynamic(() => import('@/components/NotificationBell'), { ssr: false });
+const NotificationBell = dynamic(() => import('@/components/layout/NotificationBell'), { ssr: false });
 
 interface NavbarProps {
   onSearchOpen: () => void;

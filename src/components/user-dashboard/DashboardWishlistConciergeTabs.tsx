@@ -9,12 +9,12 @@ import {
   Plus, Search, ShoppingBag, Heart, Sparkles, Eye, ShieldCheck, Trash2,
   Phone, Video, MessageCircle, Crown, Send,
 } from 'lucide-react';
-import { Button } from '@/components/button';
-import { Input } from '@/components/input';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { resolveImageUrl } from '@/lib/images';
-import VoiceNotePlayer from '@/components/VoiceNotePlayer';
-import VoiceNoteRecorder from '@/components/VoiceNoteRecorder';
+import VoiceNotePlayer from '@/components/ai/VoiceNotePlayer';
+import VoiceNoteRecorder from '@/components/ai/VoiceNoteRecorder';
 import { renderHeaderBanner, renderKpiGrid, formatPrice } from './dashboard-kpis';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 

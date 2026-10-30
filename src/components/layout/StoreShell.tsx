@@ -2,22 +2,22 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import BackToTop from '@/components/BackToTop';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import BackToTop from '@/components/layout/BackToTop';
 import { useCartStore } from '@/store';
-import { useWishlistDrawerStore } from '@/components/WishlistDrawer';
+import { useWishlistDrawerStore } from '@/components/shop/WishlistDrawer';
 
-const CartDrawer = dynamic(() => import('@/components/CartDrawer'), { ssr: false });
+const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer'), { ssr: false });
 const WishlistDrawerPanel = dynamic(
-  () => import('@/components/WishlistDrawer').then((m) => m.WishlistDrawerPanel),
+  () => import('@/components/shop/WishlistDrawer').then((m) => m.WishlistDrawerPanel),
   { ssr: false }
 );
-const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
-const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false });
-const PWAInstallPrompt = dynamic(() => import('@/components/PWAInstallPrompt'), { ssr: false });
+const SearchModal = dynamic(() => import('@/components/shop/SearchModal'), { ssr: false });
+const AuthModal = dynamic(() => import('@/components/auth/AuthModal'), { ssr: false });
+const PWAInstallPrompt = dynamic(() => import('@/components/layout/PWAInstallPrompt'), { ssr: false });
 const AiEmployeeWidget = dynamic(
-  () => import('@/components/AiEmployeeWidget').then((m) => m.AiEmployeeWidget),
+  () => import('@/components/ai/AiEmployeeWidget').then((m) => m.AiEmployeeWidget),
   { ssr: false }
 );
 

@@ -33,9 +33,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
-import CloudinaryImageUpload from '@/components/CloudinaryImageUpload';
+import CloudinaryImageUpload from '@/components/shared/CloudinaryImageUpload';
 import { resolveImageUrl } from '@/lib/images';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 
 export default function CmsTab() {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Minus, Plus, X } from 'lucide-react';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import { useCartStore } from '@/store';
 import { resolveImageUrl } from '@/lib/images';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { X, Heart, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/button';
+import { Button } from '@/components/ui/button';
 import { useWishlistStore, useCartStore } from '@/store';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';

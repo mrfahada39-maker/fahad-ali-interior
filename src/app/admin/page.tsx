@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
-const AdminDashboard = dynamic(() => import('@/components/AdminDashboard'), { ssr: false });
+const AdminDashboard = dynamic(() => import('@/components/admin/AdminDashboard'), { ssr: false });
 
 export default function AdminPage() {
   const [mounted, setMounted] = useState(false);

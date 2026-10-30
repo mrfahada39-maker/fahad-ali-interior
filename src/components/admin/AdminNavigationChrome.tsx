@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Home, Settings, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { tabs } from '@/components/admin-tab-types';
+import { tabs } from '@/components/admin/admin-tab-types';
 import { DashboardStoreNavbar } from '@/components/shared/DashboardStoreNavbar';
 
 export interface AdminNavigationChromeProps {

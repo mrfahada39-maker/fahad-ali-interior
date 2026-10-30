@@ -19,8 +19,8 @@ import {
   ShieldCheck,
   Printer
 } from 'lucide-react';
-import AnimatedCounter from '@/components/AnimatedCounter';
-import LuxurySelect from '@/components/LuxurySelect';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
+import LuxurySelect from '@/components/ui/LuxurySelect';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 

@@ -24,7 +24,7 @@ import {
   Tag,
   PenTool
 } from 'lucide-react';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 interface BlogTabProps {
   blogs: any[];

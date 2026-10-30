@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, Award, ShieldCheck, ArrowRight } from 'lucide-react';

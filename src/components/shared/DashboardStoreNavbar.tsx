@@ -21,14 +21,14 @@ import {
   User,
 } from 'lucide-react';
 import { useCartStore } from '@/store';
-import { useWishlistDrawerStore } from '@/components/WishlistDrawer';
+import { useWishlistDrawerStore } from '@/components/shop/WishlistDrawer';
 
-const CartDrawer = dynamic(() => import('@/components/CartDrawer'), { ssr: false });
+const CartDrawer = dynamic(() => import('@/components/shop/CartDrawer'), { ssr: false });
 const WishlistDrawerPanel = dynamic(
-  () => import('@/components/WishlistDrawer').then((m) => m.WishlistDrawerPanel),
+  () => import('@/components/shop/WishlistDrawer').then((m) => m.WishlistDrawerPanel),
   { ssr: false }
 );
-const SearchModal = dynamic(() => import('@/components/SearchModal'), { ssr: false });
+const SearchModal = dynamic(() => import('@/components/shop/SearchModal'), { ssr: false });
 
 export function DashboardStoreNavbar() {
   const { data: session } = useSession();

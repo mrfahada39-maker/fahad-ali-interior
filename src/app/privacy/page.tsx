@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Metadata } from 'next';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import Link from 'next/link';
 import { ShieldCheck, Lock, EyeOff, FileText, CheckCircle2, Phone, Mail, ArrowRight, Sparkles } from 'lucide-react';
 

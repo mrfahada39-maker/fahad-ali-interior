@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import {
   FileText, Coins, ClipboardList, ShoppingBag, Search, Package, MessageSquare, Truck, Eye,
 } from 'lucide-react';
-import { Input } from '@/components/input';
+import { Input } from '@/components/ui/input';
 import { renderHeaderBanner, renderKpiGrid, formatPrice } from './dashboard-kpis';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 

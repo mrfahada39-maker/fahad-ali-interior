@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 export interface CouponItem {
   id: string;

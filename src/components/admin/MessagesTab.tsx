@@ -33,9 +33,9 @@ import {
   Video,
   PhoneCall
 } from 'lucide-react';
-import AnimatedCounter from '@/components/AnimatedCounter';
-import VoiceNotePlayer from '@/components/VoiceNotePlayer';
-import VoiceNoteRecorder from '@/components/VoiceNoteRecorder';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
+import VoiceNotePlayer from '@/components/ai/VoiceNotePlayer';
+import VoiceNoteRecorder from '@/components/ai/VoiceNoteRecorder';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 

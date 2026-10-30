@@ -21,14 +21,14 @@ describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
 
   it('uses framer-motion in AnimatedCounter (no duplicate gsap dependency) and lazy-loads Recharts tabs in AdminDashboard', () => {
     const counterSrc = fs.readFileSync(
-      path.join(rootDir, 'src/components/AnimatedCounter.tsx'),
+      path.join(rootDir, 'src/components/home/AnimatedCounter.tsx'),
       'utf8'
     );
     expect(counterSrc).not.toContain('gsap');
     expect(counterSrc).toContain("from 'framer-motion'");
 
     const adminSrc = fs.readFileSync(
-      path.join(rootDir, 'src/components/AdminDashboard.tsx'),
+      path.join(rootDir, 'src/components/admin/AdminDashboard.tsx'),
       'utf8'
     );
     expect(adminSrc).toContain("dynamic(() => import('./OverviewTab')");
@@ -36,8 +36,8 @@ describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
   });
 
   it('optimizes hero video/image and LCP images (priority, sizes)', () => {
-    const heroSrc = fs.existsSync(path.join(rootDir, 'src/components/ModernLuxuryHero.tsx'))
-      ? fs.readFileSync(path.join(rootDir, 'src/components/ModernLuxuryHero.tsx'), 'utf8')
+    const heroSrc = fs.existsSync(path.join(rootDir, 'src/components/home/ModernLuxuryHero.tsx'))
+      ? fs.readFileSync(path.join(rootDir, 'src/components/home/ModernLuxuryHero.tsx'), 'utf8')
       : fs.readFileSync(path.join(rootDir, 'src/app/HomePageInteractive.tsx'), 'utf8');
     expect(heroSrc).toContain('priority');
     expect(heroSrc).toContain('sizes="100vw"');
@@ -64,7 +64,7 @@ describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
 
   it('deduplicates testimonials and uses distinct avatars across different names', () => {
     const testimonialsSrc = fs.readFileSync(
-      path.join(rootDir, 'src/components/TestimonialsSection.tsx'),
+      path.join(rootDir, 'src/components/home/TestimonialsSection.tsx'),
       'utf8'
     );
     expect(testimonialsSrc).toContain('DISTINCT_FALLBACK_AVATARS');
@@ -93,7 +93,7 @@ describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
   });
 
   it('fixes Decor & Lighting link, social links, hardcoded Notification 2 badge, and dead href="#" links', () => {
-    const footerSrc = fs.readFileSync(path.join(rootDir, 'src/components/Footer.tsx'), 'utf8');
+    const footerSrc = fs.readFileSync(path.join(rootDir, 'src/components/layout/Footer.tsx'), 'utf8');
     expect(footerSrc).toContain("href: '/shop?category=Decor%20%26%20Lighting'");
     expect(footerSrc).not.toContain("{ label: 'Decor & Lighting', href: '/shop?category=Luxury%20Showcase' }");
     expect(footerSrc).toContain('https://facebook.com/fahadaliinterior');
@@ -101,7 +101,7 @@ describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
     expect(footerSrc).toContain('https://pinterest.com/fahadaliinterior');
     expect(footerSrc).toContain('https://youtube.com/@fahadaliinterior');
 
-    const navbarSrc = fs.readFileSync(path.join(rootDir, 'src/components/Navbar.tsx'), 'utf8');
+    const navbarSrc = fs.readFileSync(path.join(rootDir, 'src/components/layout/Navbar.tsx'), 'utf8');
     expect(navbarSrc).not.toContain(": '#'");
     expect(navbarSrc).not.toContain('href="#"');
     expect(navbarSrc).toContain("unreadCount > 0");

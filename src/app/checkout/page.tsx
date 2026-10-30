@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import dynamic from 'next/dynamic';
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   },
 };
 
-const Checkout = dynamic(() => import('@/components/Checkout'), {
+const Checkout = dynamic(() => import('@/components/checkout/Checkout'), {
   loading: () => (
     <div className="min-h-[70vh] flex items-center justify-center bg-[#FCFAF7]">
       <div className="flex flex-col items-center gap-3">

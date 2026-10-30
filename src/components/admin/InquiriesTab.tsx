@@ -27,7 +27,7 @@ import {
   Crown,
   Briefcase
 } from 'lucide-react';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 

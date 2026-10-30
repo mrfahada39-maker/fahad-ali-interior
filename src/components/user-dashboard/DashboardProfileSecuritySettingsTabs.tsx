@@ -6,12 +6,12 @@ import { motion } from 'framer-motion';
 import {
   Crown, Check, User, Phone, Mail, Sparkles, Layers, FileText, ShieldCheck, Settings,
 } from 'lucide-react';
-import { Button } from '@/components/button';
-import { Input } from '@/components/input';
-import { Textarea } from '@/components/textarea';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import TwoFactorSetup from '@/components/TwoFactorSetup';
-import SettingsTab from '@/components/UserSettingsTab';
+import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
+import SettingsTab from '@/components/user-dashboard/UserSettingsTab';
 import { renderHeaderBanner, renderKpiGrid, formatPrice } from './dashboard-kpis';
 
 export function DashboardProfileTab({

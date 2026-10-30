@@ -28,8 +28,8 @@ import {
   DollarSign
 } from 'lucide-react';
 import { toast } from 'sonner';
-import TwoFactorSetup from '@/components/TwoFactorSetup';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 interface SettingsTabProps {
   siteSettings: any;

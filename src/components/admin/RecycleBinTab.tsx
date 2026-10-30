@@ -21,11 +21,11 @@ import {
   User,
   ShieldCheck,
 } from 'lucide-react';
-import { Button } from '@/components/button';
-import { Input } from '@/components/input';
-import { Badge } from '@/components/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 type RecycleSection = 'ALL' | 'PRODUCT' | 'CATEGORY' | 'ORDER' | 'REVIEW';
 

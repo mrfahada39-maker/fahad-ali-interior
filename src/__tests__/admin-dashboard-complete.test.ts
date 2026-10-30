@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { tabs, statusStyles, STORE_SETTINGS_KEYS, AdminBundle } from '@/components/admin-tab-types';
+import { tabs, statusStyles, STORE_SETTINGS_KEYS, AdminBundle } from '@/components/admin/admin-tab-types';
 
 /**
  * High-Level Comprehensive Automated Test Engineering Suite

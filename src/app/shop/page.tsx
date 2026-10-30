@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
-import StoreShell from '@/components/StoreShell';
-import HomeSignatureCategories from '@/components/HomeSignatureCategories';
+import StoreShell from '@/components/layout/StoreShell';
+import HomeSignatureCategories from '@/components/home/HomeSignatureCategories';
 import { getHomePageData } from '@/lib/home-page-data';
 
 export const dynamic = 'force-dynamic';

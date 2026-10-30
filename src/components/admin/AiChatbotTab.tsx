@@ -34,7 +34,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 interface ChatMessageItem {
   id: string;

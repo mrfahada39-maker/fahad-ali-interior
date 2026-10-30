@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Plus, ShoppingBag, Trash2, ArrowRight, ShieldCheck, Sparkles, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/button';
+import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';

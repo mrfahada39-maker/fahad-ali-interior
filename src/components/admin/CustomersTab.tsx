@@ -40,7 +40,7 @@ import {
 import { toast } from 'sonner';
 import { apiFetchJsonWithStatus } from '@/lib/api-client';
 import { ensureEnterpriseTokens } from '@/hooks/use-enterprise-auth-sync';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 

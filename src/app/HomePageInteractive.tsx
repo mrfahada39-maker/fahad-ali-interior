@@ -4,11 +4,11 @@
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { apiFetchJson } from '@/lib/api-client';
-import HomeSignatureCategories from '@/components/HomeSignatureCategories';
-import ModernLuxuryHero from '@/components/ModernLuxuryHero';
+import HomeSignatureCategories from '@/components/home/HomeSignatureCategories';
+import ModernLuxuryHero from '@/components/home/ModernLuxuryHero';
 
 const TestimonialsSection = dynamic(
-  () => import('@/components/TestimonialsSection'),
+  () => import('@/components/home/TestimonialsSection'),
   {
     ssr: false,
     loading: () => <div className="min-h-[300px] w-full bg-[#FAF6F0]" />,

@@ -29,7 +29,7 @@ import {
   ShoppingBag,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import AnimatedCounter from '@/components/AnimatedCounter';
+import AnimatedCounter from '@/components/home/AnimatedCounter';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 export interface PaymentVerificationsTabProps {

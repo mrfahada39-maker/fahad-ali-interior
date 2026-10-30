@@ -12,7 +12,7 @@ import {
   MessageSquare,
   ShoppingBag,
 } from 'lucide-react';
-import { Button } from '@/components/button';
+import { Button } from '@/components/ui/button';
 import { resolveImageUrl } from '@/lib/images';
 import { formatPrice } from '@/lib/pakistan-localization';
 import { toast } from 'sonner';

@@ -3,9 +3,9 @@ import { notFound } from 'next/navigation';
 import { getProductById, getStorefrontProducts } from '@/lib/catalog-api';
 import { resolveImageUrl } from '@/lib/images';
 import { getSiteUrl } from '@/lib/utils';
-import StoreShell from '@/components/StoreShell';
+import StoreShell from '@/components/layout/StoreShell';
 import ProductPageClient from './ProductPageClient';
-import JsonLd from '@/components/JsonLd';
+import JsonLd from '@/components/layout/JsonLd';
 
 export const revalidate = 60;
 

@@ -5,8 +5,8 @@ import { SessionProvider } from 'next-auth/react';
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useSiteSettingsStore, type SiteSettings } from '@/store';
-const TelemetryTracker = dynamic(() => import('@/components/TelemetryTracker'), { ssr: false });
-const NetworkWatcher = dynamic(() => import('@/components/NetworkWatcher'), { ssr: false });
+const TelemetryTracker = dynamic(() => import('@/components/layout/TelemetryTracker'), { ssr: false });
+const NetworkWatcher = dynamic(() => import('@/components/layout/NetworkWatcher'), { ssr: false });
 const Toaster = dynamic(() => import('sonner').then((m) => m.Toaster), { ssr: false });
 
 interface ProvidersProps {

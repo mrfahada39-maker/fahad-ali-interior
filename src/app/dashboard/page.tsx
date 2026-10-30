@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import UserDashboard from '@/components/UserDashboard';
+import UserDashboard from '@/components/user-dashboard/UserDashboard';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);

@@ -3,10 +3,10 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import StoreShell from '@/components/StoreShell';
-import { Button } from '@/components/button';
-import { Input } from '@/components/input';
-import { Label } from '@/components/label';
+import StoreShell from '@/components/layout/StoreShell';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { apiFetchJsonWithStatus } from '@/lib/api-client';
 import Link from 'next/link';
