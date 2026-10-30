@@ -266,7 +266,7 @@ export function DashboardConciergeTab({
         'ONLINE',
         'MASTER CRAFTSMAN ONLINE',
         clientName,
-        '& Atelier Concierge',
+        '& Messages Support',
         'Direct encrypted channel with Fahad Ali master artisans and architectural styling team.',
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           <button

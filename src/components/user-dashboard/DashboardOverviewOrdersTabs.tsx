@@ -239,7 +239,7 @@ export function DashboardOrdersTab({
         'LIVE SYNCED',
         '100% REAL DATABASE ORDERS SYNCED',
         clientName,
-        '& Commissions',
+        '& Order Management',
         'Real-time fulfillment stages, customer WhatsApp hotline, timber seasoning validation, and invoice generation.',
         <Link
           href="/#signature-categories"

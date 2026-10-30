@@ -47,7 +47,7 @@ export function DashboardReviewsTab({
         `${myReviews.length} REVIEWS`,
         `${myReviews.length} VERIFIED REVIEWS`,
         clientName,
-        '& Testimonials',
+        '& Review Moderation',
         'Share your authentic furniture experience and timber finishing notes with fellow royal patrons.',
         <button
           type="button"
