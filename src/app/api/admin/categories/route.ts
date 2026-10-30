@@ -1,18 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { getServerSession } from 'next-auth';
-import { getToken } from 'next-auth/jwt';
-import crypto from 'crypto';
+import type { Prisma, Category } from '@prisma/client';
 import { db } from '@/lib/db';
-import { authOptions } from '@/lib/auth';
 import { moveToRecycleBin } from '@/lib/recycle-bin';
-
-interface SessionUser {
-  id?: string;
-  email?: string;
-  role?: string;
-}
+import { getVerifiedAdmin } from '@/lib/admin-auth';
+import { safeApiErrorResponse } from '@/lib/api-error';
 
 function invalidateStorefrontCache() {
   try {
@@ -23,9 +15,6 @@ function invalidateStorefrontCache() {
 }
 
 // Showroom Taxonomy & Master Collections API (Standardized categories: Living Room, Bedroom, Dining Room, Center Tables & Coffee Tables, etc.)
-
-import { getVerifiedAdmin } from '@/lib/admin-auth';
-import { safeApiErrorResponse } from '@/lib/api-error';
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -52,10 +41,11 @@ export async function GET(req: NextRequest) {
       }).catch(() => []),
     ]);
 
+    type ProductCatRef = { id: string; category: string | null; categoryId: string | null };
     // Attach dynamic real-time product count matching categoryId or category name
-    const listWithCounts = (categories as any[]).map((cat: any) => {
-      const count = (products as any[]).filter(
-        (p: any) =>
+    const listWithCounts = (categories as Category[]).map((cat: Category) => {
+      const count = (products as ProductCatRef[]).filter(
+        (p: ProductCatRef) =>
           p.categoryId === cat.id ||
           (p.category && p.category.trim().toLowerCase() === cat.name.trim().toLowerCase())
       ).length;
@@ -69,7 +59,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(listWithCounts);
-  } catch (error: any) {
+  } catch (error) {
     return safeApiErrorResponse(error, 'Failed to fetch categories', 500, req);
   }
 }
@@ -121,7 +111,7 @@ export async function POST(req: NextRequest) {
 
     invalidateStorefrontCache();
     return NextResponse.json({ success: true, data: category, category });
-  } catch (error: any) {
+  } catch (error) {
     return safeApiErrorResponse(error, 'Failed to create category', 500, req);
   }
 }
@@ -138,7 +128,7 @@ export async function PUT(req: NextRequest) {
     const searchId = req.nextUrl.searchParams.get('id');
     const id = body.id || searchId;
 
-    const updateData: any = {};
+    const updateData: Prisma.CategoryUpdateInput = {};
     if (body.name !== undefined) updateData.name = body.name.trim();
     if (body.description !== undefined) updateData.description = body.description?.trim() || null;
     if (body.image !== undefined) updateData.image = body.image?.trim() || null;
@@ -159,7 +149,7 @@ export async function PUT(req: NextRequest) {
       if (updateData.name) {
         await db.product.updateMany({
           where: { categoryId: id },
-          data: { category: updateData.name },
+          data: { category: updateData.name as string },
         }).catch(() => {});
       }
     } else if (body.name) {
@@ -173,7 +163,7 @@ export async function PUT(req: NextRequest) {
 
     invalidateStorefrontCache();
     return NextResponse.json({ success: true, data: updated, category: updated });
-  } catch (error: any) {
+  } catch (error) {
     return safeApiErrorResponse(error, 'Failed to update category', 500, req);
   }
 }
@@ -227,7 +217,7 @@ export async function DELETE(req: NextRequest) {
 
     invalidateStorefrontCache();
     return NextResponse.json({ success: true, deletedId: id, message: 'Category deleted successfully' });
-  } catch (error: any) {
+  } catch (error) {
     return safeApiErrorResponse(error, 'Failed to delete category', 500, req);
   }
 }

@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { SecurityGuardrails } from '@/lib/guardrails';
 import { AgentRouter, AgentRole } from '@/lib/ai/agents';
-import { ENTERPRISE_AI_TOOLS, AiToolExecutor } from '@/lib/ai/tool-registry';
 import { VectorIndexer, HybridSearchEngine } from '@/lib/ai/rag';
 import { RoomAnalyzer } from '@/lib/ai/room-analyzer';
 import { MultiProviderLlm, LlmMessage } from '@/lib/ai/llm-provider';
@@ -15,15 +13,49 @@ import { AI_SESSION_COOKIE_NAME, signAiSessionId, verifyAiSessionCookie } from '
 import { findActivePromo, type ActivePromo } from '@/lib/coupons';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
+interface ChatProductItem {
+  id: string;
+  name: string;
+  price: number;
+  category?: string | null;
+  image?: string | null;
+  images?: string[];
+  stockCount?: number;
+  description?: string | null;
+  dimensions?: string | null;
+  material?: string | null;
+  [key: string]: unknown;
+}
+
+interface ChatHistoryItem {
+  role: string;
+  content: string;
+  [key: string]: unknown;
+}
+
+interface ChatCategoryItem {
+  id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+interface DynamicAiResponse {
+  replyText: string;
+  products?: ChatProductItem[];
+  quote?: Record<string, unknown>;
+  bundle?: Record<string, unknown>;
+  suggestedPrompts?: string[];
+}
+
 /** High-capacity Dynamic AI Response Generator (ChatGPT/Claude/Gemini style) */
 function generateDynamicResponse(
   query: string,
   role: string,
-  allProducts: any[],
-  history: any[],
-  dbCategories: any[] = [],
+  allProducts: ChatProductItem[],
+  history: ChatHistoryItem[],
+  dbCategories: ChatCategoryItem[] = [],
   activeCoupon?: { code: string; discount: number; discountType: string } | null
-): { replyText: string; products?: any[]; quote?: any; bundle?: any; suggestedPrompts?: string[] } {
+): DynamicAiResponse {
   const cleanQ = query.replace(/[^\w\s]/g, ' ').toLowerCase().trim();
   const q = cleanQ || query.toLowerCase().trim();
   const promoLabel = activeCoupon
@@ -305,7 +337,7 @@ export async function POST(request: NextRequest) {
     const sanitizedUserQuery = SecurityGuardrails.sanitizeString(rawUserQuery);
 
     // 2. Vision AI Room Analysis (If Room Photo Uploaded)
-    let roomAnalysisResult: any = null;
+    let roomAnalysisResult: unknown = null;
     if (roomImageBase64) {
       try {
         roomAnalysisResult = await RoomAnalyzer.analyzeRoomImage(roomImageBase64, sanitizedUserQuery);
@@ -348,7 +380,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Fetch past chat history (last 10)
-    let history: any[] = [];
+    let history: ChatHistoryItem[] = [];
     try {
       history = await db.chatMessage.findMany({
         where: { sessionId },
@@ -360,7 +392,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Fetch LIVE Store Products from Database (Fast cached fetch, no blocking indexer)
-    let allProducts: any[] = [];
+    let allProducts: ChatProductItem[] = [];
     try {
       allProducts = await db.product.findMany({
         where: { deletedAt: null },
@@ -375,7 +407,7 @@ export async function POST(request: NextRequest) {
     const activeAgentRole = AgentRouter.routeIntent(sanitizedUserQuery, requestedRole);
 
     // Fetch active categories and active promo coupon from database
-    let dbCategories: any[] = [];
+    let dbCategories: ChatCategoryItem[] = [];
     const activeCoupon: ActivePromo | null = await findActivePromo();
     try {
       dbCategories = await db.category.findMany({
@@ -418,9 +450,9 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
     llmMessages.push({ role: 'user', content: sanitizedUserQuery });
 
     let replyText = '';
-    let retrievedProducts: any[] | undefined = undefined;
-    let generatedQuote: any | undefined = undefined;
-    let generatedBundle: any | undefined = undefined;
+    let retrievedProducts: ChatProductItem[] | undefined = undefined;
+    let generatedQuote: Record<string, unknown> | undefined = undefined;
+    let generatedBundle: Record<string, unknown> | undefined = undefined;
     let customPrompts: string[] | undefined = undefined;
 
     const llmResult = await MultiProviderLlm.generateCompletion(systemPrompt, llmMessages);
@@ -462,16 +494,16 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
         if (hybridResults.length > 0 && hybridResults[0].score > 0.1) {
           retrievedProducts = hybridResults.map((r) => {
             const doc = r.document;
-            const liveProd = allProducts.find((p) => `prod_${p.id}` === doc.id) || {};
+            const liveProd = allProducts.find((p) => `prod_${p.id}` === doc.id);
             return {
-              id: liveProd.id || doc.metadata.id,
-              name: liveProd.name || doc.metadata.name,
-              price: Number(liveProd.price || doc.metadata.price || 150000),
-              category: liveProd.category || doc.metadata.category || 'Furniture',
-              image: liveProd.image || liveProd.images?.[0] || doc.metadata.image || '/cat-thumb-sofas-2x.webp',
-              description: liveProd.description || '100% Solid Seasoned Sheesham Wood',
-              dimensions: liveProd.dimensions || 'Standard',
-              material: liveProd.material || '100% Solid Sheesham Wood',
+              id: liveProd?.id || String(doc.metadata.id || ''),
+              name: liveProd?.name || String(doc.metadata.name || 'Piece'),
+              price: Number(liveProd?.price || doc.metadata.price || 150000),
+              category: liveProd?.category || String(doc.metadata.category || 'Furniture'),
+              image: liveProd?.image || liveProd?.images?.[0] || (doc.metadata.image as string) || '/cat-thumb-sofas-2x.webp',
+              description: liveProd?.description || '100% Solid Seasoned Sheesham Wood',
+              dimensions: liveProd?.dimensions || 'Standard',
+              material: liveProd?.material || '100% Solid Sheesham Wood',
               matchScore: r.score,
             };
           });
@@ -611,7 +643,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
     });
 
     return res;
-  } catch (err: any) {
+  } catch (err) {
     logger.error('Global Error in /api/v1/ai/chat route:', err);
     return NextResponse.json({
       success: true,

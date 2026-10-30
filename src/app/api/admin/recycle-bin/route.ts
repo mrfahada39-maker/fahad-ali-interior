@@ -1,10 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { getToken } from 'next-auth/jwt';
-import crypto from 'crypto';
-import { db } from '@/lib/db';
-import { authOptions } from '@/lib/auth';
 import {
   listRecycleBinItems,
   restoreFromRecycleBin,
@@ -52,7 +46,7 @@ export async function GET(req: NextRequest) {
       success: true,
       ...result,
     });
-  } catch (error: any) {
+  } catch (error) {
     return safeApiErrorResponse(error, 'Failed to list recycle bin items', 500, req);
   }
 }
@@ -78,7 +72,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid action. Supported: restore' }, { status: 400 });
-  } catch (error: any) {
+  } catch (error) {
     return safeApiErrorResponse(error, 'Failed to restore item', 500, req);
   }
 }
@@ -112,7 +106,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Provide item id or specify empty/all action' }, { status: 400 });
-  } catch (error: any) {
+  } catch (error) {
     return safeApiErrorResponse(error, 'Failed to delete from recycle bin', 500, req);
   }
 }

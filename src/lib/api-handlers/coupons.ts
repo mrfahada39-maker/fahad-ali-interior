@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
+import type { Coupon } from '@prisma/client';
 import { db } from '@/lib/db';
 import { normalizeCouponCode } from '@/lib/coupons';
 import { logger } from '@/lib/logger';
@@ -57,7 +57,7 @@ export async function handleCouponRoutes(ctx: ApiDispatchContext): Promise<NextR
       ]);
 
       const now = new Date();
-      const formattedCoupons = (coupons as any[]).map((c: any) => {
+      const formattedCoupons = (coupons as Coupon[]).map((c: Coupon) => {
         const isExpired = c.expiresAt ? new Date(c.expiresAt) < now : false;
         const isMaxedOut = c.maxUses > 0 ? c.usedCount >= c.maxUses : false;
         return {
@@ -78,10 +78,10 @@ export async function handleCouponRoutes(ctx: ApiDispatchContext): Promise<NextR
       });
 
       const totalCoupons = formattedCoupons.length;
-      const activeCoupons = formattedCoupons.filter((c: any) => c.isActive && !c.isExpired && !c.isMaxedOut).length;
-      const totalRedemptions = formattedCoupons.reduce((sum: number, c: any) => sum + (c.usedCount || 0), 0);
-      const totalSavingsGranted = (ordersWithCoupons as any[]).reduce(
-        (sum: number, o: any) => sum + Number(o.discount || 0),
+      const activeCoupons = formattedCoupons.filter((c) => c.isActive && !c.isExpired && !c.isMaxedOut).length;
+      const totalRedemptions = formattedCoupons.reduce((sum: number, c) => sum + (c.usedCount || 0), 0);
+      const totalSavingsGranted = ordersWithCoupons.reduce(
+        (sum: number, o: { discount: unknown }) => sum + Number(o.discount || 0),
         0
       );
 
@@ -95,7 +95,7 @@ export async function handleCouponRoutes(ctx: ApiDispatchContext): Promise<NextR
           totalSavingsGranted: Math.round(totalSavingsGranted),
         },
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Failed to load admin coupons in v1 handler', error);
       return NextResponse.json({ success: false, error: 'Failed to fetch coupons' }, { status: 500 });
     }
@@ -168,9 +168,10 @@ export async function handleCouponRoutes(ctx: ApiDispatchContext): Promise<NextR
           minOrderAmount: Number(newCoupon.minOrderAmount),
         },
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Failed to create coupon in v1 handler', error);
-      return NextResponse.json({ success: false, error: error.message || 'Failed to create coupon' }, { status: 500 });
+      const msg = error instanceof Error ? error.message : 'Failed to create coupon';
+      return NextResponse.json({ success: false, error: msg }, { status: 500 });
     }
   }
 
@@ -250,9 +251,10 @@ export async function handleCouponRoutes(ctx: ApiDispatchContext): Promise<NextR
           minOrderAmount: Number(updated.minOrderAmount),
         },
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Failed to update coupon in v1 handler', error);
-      return NextResponse.json({ success: false, error: error.message || 'Failed to update coupon' }, { status: 500 });
+      const msg = error instanceof Error ? error.message : 'Failed to update coupon';
+      return NextResponse.json({ success: false, error: msg }, { status: 500 });
     }
   }
 
@@ -292,9 +294,10 @@ export async function handleCouponRoutes(ctx: ApiDispatchContext): Promise<NextR
         success: true,
         message: `Coupon "${existing.code}" has been removed.`,
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Failed to delete coupon in v1 handler', error);
-      return NextResponse.json({ success: false, error: error.message || 'Failed to delete coupon' }, { status: 500 });
+      const msg = error instanceof Error ? error.message : 'Failed to delete coupon';
+      return NextResponse.json({ success: false, error: msg }, { status: 500 });
     }
   }
 

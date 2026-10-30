@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
@@ -16,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     const endpoint = String(body.endpoint);
     const keys = body.keys;
-    const sessionUserId = (session?.user as any)?.id;
+    const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
 
     if (!sessionUserId) {
       return NextResponse.json({ error: 'Authenticated session required to subscribe to push notifications' }, { status: 401 });

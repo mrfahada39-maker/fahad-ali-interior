@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
@@ -81,7 +80,7 @@ export async function POST(req: NextRequest) {
       message: 'If an account exists with this email, a reset link and code have been sent.',
       ...(process.env.NODE_ENV !== 'production' ? { devCode: code } : {}),
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('[FORGOT PASSWORD ERROR]', error);
     return NextResponse.json({ error: 'An unexpected error occurred. Please try again.' }, { status: 500 });
   }

@@ -1,8 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 import { db } from '@/lib/db';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
+
+interface AuditLogDelegate {
+  deleteMany: (args: unknown) => Promise<unknown>;
+  create: (args: unknown) => Promise<unknown>;
+  findMany: (args: unknown) => Promise<Array<{ metadata?: unknown; entityId?: string }>>;
+}
 
 export interface CallSession {
   id: string;
@@ -14,9 +19,9 @@ export interface CallSession {
   toUserEmail?: string;
   callType: 'voice' | 'video';
   status: 'outgoing' | 'connected' | 'ended' | 'declined';
-  offerSdp?: any;
-  answerSdp?: any;
-  candidates: any[];
+  offerSdp?: RTCSessionDescriptionInit | Record<string, unknown> | null;
+  answerSdp?: RTCSessionDescriptionInit | Record<string, unknown> | null;
+  candidates: Array<RTCIceCandidateInit | Record<string, unknown>>;
   connectedAt?: number;
   updatedAt: number;
 }
@@ -71,16 +76,17 @@ async function saveCallSessionToStores(sessionKey: string, session: CallSession,
   }
 
   try {
-    if ((db as any)?.auditLog) {
-      await (db as any).auditLog.deleteMany({
+    const auditDb = db as unknown as { auditLog?: AuditLogDelegate };
+    if (auditDb.auditLog) {
+      await auditDb.auditLog.deleteMany({
         where: { entity: 'call_signal', entityId: sessionKey },
       });
-      await (db as any).auditLog.create({
+      await auditDb.auditLog.create({
         data: {
           action: actionName,
           entity: 'call_signal',
           entityId: sessionKey,
-          metadata: session as any,
+          metadata: session as unknown as object,
         },
       });
     }
@@ -113,15 +119,16 @@ async function loadActiveCallSessions(now: number): Promise<CallSession[]> {
 
   // 2. Read from Database (persistent serverless fallback with 5-minute TTL)
   try {
-    if ((db as any)?.auditLog) {
-      await (db as any).auditLog.deleteMany({
+    const auditDb = db as unknown as { auditLog?: AuditLogDelegate };
+    if (auditDb.auditLog) {
+      await auditDb.auditLog.deleteMany({
         where: {
           entity: 'call_signal',
           createdAt: { lt: new Date(now - CALL_TTL_MS) },
         },
       }).catch(() => {});
 
-      const records = await (db as any).auditLog.findMany({
+      const records = await auditDb.auditLog.findMany({
         where: {
           entity: 'call_signal',
           createdAt: { gte: new Date(now - CALL_TTL_MS) },
@@ -134,9 +141,11 @@ async function loadActiveCallSessions(now: number): Promise<CallSession[]> {
         if (rec?.metadata) {
           const s = rec.metadata as CallSession;
           const key = s.id || rec.entityId;
-          const existing = sessionsMap.get(key);
-          if (!existing || (s.updatedAt || 0) > (existing.updatedAt || 0)) {
-            sessionsMap.set(key, s);
+          if (key) {
+            const existing = sessionsMap.get(key);
+            if (!existing || (s.updatedAt || 0) > (existing.updatedAt || 0)) {
+              sessionsMap.set(key, s);
+            }
           }
         }
       }

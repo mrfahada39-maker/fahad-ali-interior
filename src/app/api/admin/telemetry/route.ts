@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
@@ -52,10 +51,10 @@ function parseLocationFromHeaders(headers: Headers, bodyCity?: string, bodyCount
 // POST /api/admin/telemetry — Client ping for live tracking
 export async function POST(req: Request) {
   try {
-    let body: any = {};
+    let body: Record<string, string | undefined> = {};
     try {
       body = await req.json();
-    } catch (e) {
+    } catch {
       body = {};
     }
 
@@ -111,7 +110,7 @@ export async function POST(req: Request) {
 
     // Active sessions are tracked in high-speed memory and Redis; no heavy DB logging needed
     return NextResponse.json({ success: true, activeCount: activeSessionsMap.size });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: true }, { status: 200 });
   }
 }
@@ -134,7 +133,7 @@ export async function GET(req: NextRequest) {
     // Lookback 10 minutes in database to accommodate any server clock timezone sync issues
     const dbCutoffDate = new Date(now - 10 * 60 * 1000);
 
-    let dbLogs: any[] = [];
+    let dbLogs: Array<{ id: string; entityId: string | null; ip: string | null; metadata: unknown; createdAt: Date }> = [];
     try {
       dbLogs = await db.auditLog.findMany({
         where: {
@@ -159,7 +158,7 @@ export async function GET(req: NextRequest) {
 
     // 2. Load active sessions from DB logs
     dbLogs.forEach((log) => {
-      const meta = (log.metadata as any) || {};
+      const meta = (log.metadata as Record<string, string | number | undefined>) || {};
       const sid = log.entityId || log.id;
       const lastActiveTime = Number(meta.lastActive || new Date(log.createdAt).getTime());
 
@@ -168,14 +167,14 @@ export async function GET(req: NextRequest) {
         mergedSessions.set(sid, {
           sessionId: sid,
           ip: log.ip || '127.0.0.1',
-          city: meta.city || 'Lahore',
-          country: meta.country || 'Pakistan',
-          currentPage: meta.pageTitle || 'Homepage',
-          pathname: meta.pathname || '/',
-          device: meta.device || 'Mobile',
-          browser: meta.browser || 'Chrome',
-          trafficSource: meta.trafficSource || 'Direct Link',
-          status: meta.status || 'Browsing',
+          city: (meta.city as string) || 'Lahore',
+          country: (meta.country as string) || 'Pakistan',
+          currentPage: (meta.pageTitle as string) || 'Homepage',
+          pathname: (meta.pathname as string) || '/',
+          device: (meta.device as string) || 'Mobile',
+          browser: (meta.browser as string) || 'Chrome',
+          trafficSource: (meta.trafficSource as string) || 'Direct Link',
+          status: (meta.status as string) || 'Browsing',
           firstSeen: Number(meta.firstSeen || lastActiveTime),
           lastActive: lastActiveTime,
         });
@@ -259,8 +258,10 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: 'desc' },
         select: { totalAmount: true },
       }).catch(() => []);
-      totalOrderValue = dbOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
-    } catch (e) {}
+      totalOrderValue = dbOrders.reduce((sum: number, o: { totalAmount: unknown }) => sum + Number(o.totalAmount || 0), 0);
+    } catch {
+      // Ignore DB errors
+    }
 
     return NextResponse.json({
       activeVisitorsCount: activeCount,

@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import type { ChatMessage } from '@prisma/client';
 import { db } from '@/lib/db';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
@@ -69,8 +69,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       }
     }
 
-    const formattedMessages = session.messages.map((m: any) => {
-      const meta = (m.metadata as any) || {};
+    const formattedMessages = session.messages.map((m: ChatMessage) => {
+      const meta = (m.metadata && typeof m.metadata === 'object' ? m.metadata : {}) as Record<string, unknown>;
       return {
         id: m.id,
         sender: m.role === 'user' ? 'user' : 'ai',
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       status: session.status,
       messages: formattedMessages,
     });
-  } catch (err: any) {
+  } catch (err) {
     logger.error('[AI_HISTORY_ERROR]', err);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch chat history' },

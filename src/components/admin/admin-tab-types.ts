@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LayoutDashboard, Package, ShoppingBag, Users, MessageSquare, Star, BarChart3, FileText, FolderSync, Settings, Sparkles, Radio, Trash2, ShieldCheck, BadgePercent } from 'lucide-react';
 
 export const tabs = [
@@ -72,11 +71,12 @@ export interface AdminProductSummary {
   dimensions?: string | null;
   description?: string | null;
   createdAt?: string | Date;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface AdminOrderSummary {
   id?: string;
+  _id?: string;
   orderNumber?: string;
   shippingName?: string | null;
   shippingEmail?: string | null;
@@ -88,16 +88,16 @@ export interface AdminOrderSummary {
   city?: string | null;
   customerName?: string | null;
   customerEmail?: string | null;
-  totalAmount?: any;
-  subtotal?: any;
-  discount?: any;
+  totalAmount?: number | string | null;
+  subtotal?: number | string | null;
+  discount?: number | string | null;
   status?: string | null;
   paymentStatus?: string | null;
   paymentMethod?: string | null;
   createdAt?: string | Date | null;
   user?: { name?: string | null; email?: string | null; phone?: string | null } | null;
-  items?: Array<{ id?: string; name?: string; price?: any; quantity?: number; image?: string }> | null;
-  [key: string]: any;
+  items?: Array<{ id?: string; name?: string; price?: number | string | null; quantity?: number; image?: string }> | null;
+  [key: string]: unknown;
 }
 
 export interface AdminCustomerSummary {
@@ -111,7 +111,7 @@ export interface AdminCustomerSummary {
   totalOrders?: number;
   totalSpent?: number;
   createdAt?: string | Date;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface AdminMessageSummary {
@@ -123,7 +123,7 @@ export interface AdminMessageSummary {
   message?: string;
   status?: string;
   createdAt?: string | Date;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface AdminInquirySummary {
@@ -136,7 +136,18 @@ export interface AdminInquirySummary {
   message?: string;
   status?: string;
   createdAt?: string | Date;
-  [key: string]: any;
+  [key: string]: unknown;
+}
+
+export interface AdminReviewSummary {
+  id?: string;
+  rating?: number;
+  comment?: string;
+  status?: string;
+  createdAt?: string | Date;
+  user?: { name?: string | null; email?: string | null } | null;
+  product?: { name?: string | null } | null;
+  [key: string]: unknown;
 }
 
 export interface AdminSiteSettings {
@@ -154,19 +165,19 @@ export interface AdminSiteSettings {
   iban?: string;
   jazzcashNumber?: string;
   easypaisaNumber?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export type AdminBundle = {
-  stats: Record<string, any>;
+  stats: Record<string, unknown>;
   products: AdminProductSummary[] | { products: AdminProductSummary[] };
   orders: AdminOrderSummary[];
   customers: AdminCustomerSummary[];
   users?: AdminCustomerSummary[];
   messages: AdminMessageSummary[];
-  reviews: any[];
+  reviews: AdminReviewSummary[];
   inquiries: AdminInquirySummary[];
   siteSettings: AdminSiteSettings;
-  analytics: Record<string, any>;
+  analytics: Record<string, unknown>;
   account: { name?: string; email?: string; phone?: string };
 };

@@ -1,9 +1,33 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+
+interface ChatMessageWithMeta {
+  id: string;
+  role: string;
+  content: string;
+  intent?: string | null;
+  metadata?: {
+    quote?: unknown;
+    products?: unknown[];
+    bundle?: unknown;
+    whatsAppUrl?: string;
+  } | null;
+  createdAt: Date;
+}
+
+interface ChatSessionWithMessages {
+  id: string;
+  sessionId: string;
+  customerName?: string | null;
+  city?: string | null;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  messages: ChatMessageWithMeta[];
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -59,23 +83,23 @@ export async function GET(request: NextRequest) {
       'Showroom Location & Timings': 0,
     };
 
-    sessions.forEach((s: any) => {
+    (sessions as unknown as ChatSessionWithMessages[]).forEach((s) => {
       const isEscalated =
         s.status === 'escalated' ||
-        (s.messages || []).some((m: any) => {
+        (s.messages || []).some((m) => {
           const txt = (m.content || '').toLowerCase();
           const metaWa = m.metadata?.whatsAppUrl;
           return txt.includes('whatsapp') || txt.includes('specialist') || txt.includes('human') || !!metaWa;
         });
 
       const hasQuoteOrProduct = (s.messages || []).some(
-        (m: any) => !!m.metadata?.quote || !!m.metadata?.products?.length || !!m.metadata?.bundle
+        (m) => !!m.metadata?.quote || !!m.metadata?.products?.length || !!m.metadata?.bundle
       );
       if (hasQuoteOrProduct || isEscalated) {
         quoteOrConversionCount++;
       }
 
-      (s.messages || []).forEach((m: any) => {
+      (s.messages || []).forEach((m) => {
         if (m.role === 'user') {
           const q = (m.content || '').toLowerCase();
           if (q.includes('custom') || q.includes('size') || q.includes('naap') || q.includes('dimension') || q.includes('quote')) {
@@ -107,11 +131,11 @@ export async function GET(request: NextRequest) {
     const conversionRate = totalSessions > 0 ? ((quoteOrConversionCount / Math.max(sessions.length, 1)) * 100).toFixed(1) : '0';
     const totalPages = Math.ceil(totalSessions / limit);
 
-    const recentSessions = sessions.map((s: any) => {
+    const recentSessions = (sessions as unknown as ChatSessionWithMessages[]).map((s) => {
       const lastMsg = s.messages && s.messages.length > 0 ? s.messages[s.messages.length - 1] : null;
       const isEsc =
         s.status === 'escalated' ||
-        (s.messages || []).some((m: any) => (m.content || '').toLowerCase().includes('whatsapp') || !!m.metadata?.whatsAppUrl);
+        (s.messages || []).some((m) => (m.content || '').toLowerCase().includes('whatsapp') || !!m.metadata?.whatsAppUrl);
 
       return {
         id: s.id,
@@ -123,7 +147,7 @@ export async function GET(request: NextRequest) {
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
         lastText: lastMsg ? lastMsg.content : '',
-        messages: (s.messages || []).map((m: any) => ({
+        messages: (s.messages || []).map((m) => ({
           id: m.id,
           role: m.role,
           content: m.content,
@@ -152,7 +176,7 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Error in GET /api/v1/ai/admin/analytics:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to retrieve AI analytics' },
@@ -200,7 +224,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, message: `Session ${sessionId} deleted successfully` });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Error in DELETE /api/v1/ai/admin/analytics:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to delete chat session' },

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
@@ -17,7 +16,8 @@ async function getUserId(req: NextRequest): Promise<string | null> {
   } catch {}
   try {
     const session = await getServerSession(authOptions);
-    if ((session?.user as any)?.id) return (session?.user as any).id;
+    const user = session?.user as { id?: string } | undefined;
+    if (user?.id) return user.id;
     if (session?.user?.email) {
       const u = await db.user.findUnique({ where: { email: session.user.email } }).catch(() => null);
       if (u?.id) return u.id;

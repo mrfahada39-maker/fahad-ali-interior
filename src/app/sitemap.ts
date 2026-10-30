@@ -1,8 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MetadataRoute } from 'next';
 import { getStorefrontProducts } from '@/lib/catalog-api';
 import { getSiteUrl } from '@/lib/utils';
 import { db } from '@/lib/db';
+
+type ExtendedSitemapEntry = MetadataRoute.Sitemap[number] & { images?: string[] };
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
@@ -21,9 +22,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 1. Fetch Storefront Products
   const products = await getStorefrontProducts(100).catch(() => []);
   const productPages: MetadataRoute.Sitemap = (products || []).map((p) => {
-    const entry: MetadataRoute.Sitemap[number] = {
+    const pWithUpdated = p as { id: string; image?: string; updatedAt?: string | Date };
+    const entry: ExtendedSitemapEntry = {
       url: `${baseUrl}/product/${p.id}`,
-      lastModified: (p as any).updatedAt ? new Date((p as any).updatedAt) : new Date(),
+      lastModified: pWithUpdated.updatedAt ? new Date(pWithUpdated.updatedAt) : new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     };
@@ -33,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ? p.image
         : `${baseUrl}${p.image.startsWith('/') ? '' : '/'}${p.image}`;
 
-      (entry as any).images = [imageUrl];
+      entry.images = [imageUrl];
     }
 
     return entry;
@@ -55,7 +57,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const blogPages: MetadataRoute.Sitemap = blogArticles.map((article) => {
-    const entry: MetadataRoute.Sitemap[number] = {
+    const entry: ExtendedSitemapEntry = {
       url: `${baseUrl}/blog/${article.slug}`,
       lastModified: article.updatedAt ? new Date(article.updatedAt) : new Date(),
       changeFrequency: 'monthly',
@@ -66,7 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const img = article.image.startsWith('http')
         ? article.image
         : `${baseUrl}${article.image.startsWith('/') ? '' : '/'}${article.image}`;
-      (entry as any).images = [img];
+      entry.images = [img];
     }
 
     return entry;

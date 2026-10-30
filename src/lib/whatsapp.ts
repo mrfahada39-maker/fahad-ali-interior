@@ -1,10 +1,36 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import crypto from 'crypto';
+import type { Order, Product, OrderItem } from '@prisma/client';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { PaymentAuditResult } from '@/lib/ai/payment-verifier';
 import { getAdminTokenSecret } from '@/lib/admin-auth';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
+
+export interface WhatsAppOrderItem {
+  name?: string;
+  productName?: string;
+  quantity?: number;
+  price?: number;
+}
+
+export interface WhatsAppCustomerOrderInput {
+  id?: string;
+  shippingName?: string | null;
+  shippingPhone?: string | null;
+  shippingAddress?: string | null;
+  shippingCity?: string | null;
+  shippingProvince?: string | null;
+  shippingNotes?: string | null;
+  paymentMethod?: string | null;
+  paymentGatewayRef?: string | null;
+  paymentScreenshot?: string | null;
+  trackingNumber?: string | null;
+  totalAmount?: number | string | unknown;
+  createdAt?: string | Date;
+  items?: WhatsAppOrderItem[];
+  user?: { phone?: string | null; name?: string | null } | null;
+  [key: string]: unknown;
+}
 
 /**
  * Generate a tamper-proof HMAC-SHA256 token for 1-Tap WhatsApp action links.
@@ -428,7 +454,7 @@ ${itemsList}
   /**
    * Sends an automated luxury WhatsApp digital Order Slip / Receipt to the Customer upon checkout.
    */
-  static async sendCustomerOrderPlacedSlip(orderInput: string | any): Promise<boolean> {
+  static async sendCustomerOrderPlacedSlip(orderInput: string | WhatsAppCustomerOrderInput): Promise<boolean> {
     try {
       const order = typeof orderInput === 'string'
         ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
@@ -462,7 +488,7 @@ ${itemsList}
       }).format(dateObj);
 
       const itemsList = (order.items || [])
-        .map((i: any) => {
+        .map((i: WhatsAppOrderItem) => {
           const name = i.name || i.productName || 'Item';
           const qty = i.quantity || 1;
           const price = i.price ? `PKR ${Number(i.price * qty).toLocaleString()}` : '';
@@ -492,7 +518,7 @@ ${itemsList}
 
       // 1. Try sending via Meta Approved Template (bypasses 24-hour window for new customers)
       const summaryItems = (order.items || [])
-        .map((i: any) => `${i.name || 'Item'} (Qty: ${i.quantity || 1})`)
+        .map((i: WhatsAppOrderItem) => `${i.name || 'Item'} (Qty: ${i.quantity || 1})`)
         .join(', ') || 'Furniture Suite';
 
       await this.sendTemplateMessage(customerPhone, 'customer_order_slip_v2', [
@@ -559,7 +585,7 @@ ${deliveryAddress}
   /**
    * Sends an automated luxury WhatsApp approval notification to the Customer.
    */
-  static async sendCustomerOrderApproved(orderInput: string | any): Promise<boolean> {
+  static async sendCustomerOrderApproved(orderInput: string | WhatsAppCustomerOrderInput): Promise<boolean> {
     try {
       const order = typeof orderInput === 'string'
         ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
@@ -594,7 +620,7 @@ ${deliveryAddress}
       }).format(dateObj);
 
       const itemsList = (order.items || [])
-        .map((i: any) => {
+        .map((i: WhatsAppOrderItem) => {
           const name = i.name || i.productName || 'Item';
           const qty = i.quantity || 1;
           const price = i.price ? `PKR ${Number(i.price * qty).toLocaleString()}` : '';
@@ -642,7 +668,7 @@ ${itemsList}
    * Sends an automated luxury WhatsApp dispatch/shipping notice to the Customer.
    */
   static async sendCustomerOrderShipped(
-    orderInput: string | any,
+    orderInput: string | WhatsAppCustomerOrderInput,
     trackingNumber?: string | null,
     courier?: string | null
   ): Promise<boolean> {
@@ -663,7 +689,7 @@ ${itemsList}
       const shortId = order.id.slice(-8).toUpperCase();
       const customerName = order.shippingName || 'Valued Client';
       const itemsList = (order.items || [])
-        .map((i: any) => `  ▫️ ${i.name || i.productName || 'Piece'} (x${i.quantity || 1})`)
+        .map((i: WhatsAppOrderItem) => `  ▫️ ${i.name || i.productName || 'Piece'} (x${i.quantity || 1})`)
         .join('\n') || '  ▫️ Bespoke Furniture Suite';
 
       const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
@@ -697,7 +723,7 @@ Hamari delivery team pohnchne se pehle aapko direct call karegi aur safe in-room
   /**
    * Sends an automated luxury WhatsApp hold notice to the Customer.
    */
-  static async sendCustomerOrderHold(orderInput: string | any): Promise<boolean> {
+  static async sendCustomerOrderHold(orderInput: string | WhatsAppCustomerOrderInput): Promise<boolean> {
     try {
       const order = typeof orderInput === 'string'
         ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
@@ -739,7 +765,7 @@ Jaise hi bank se clearance complete hogi, aapko notification mil jayegi aur prod
   /**
    * Sends an automated luxury WhatsApp payment mismatch/rejection notice to the Customer.
    */
-  static async sendCustomerOrderRejected(orderInput: string | any): Promise<boolean> {
+  static async sendCustomerOrderRejected(orderInput: string | WhatsAppCustomerOrderInput): Promise<boolean> {
     try {
       const order = typeof orderInput === 'string'
         ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
@@ -953,21 +979,22 @@ Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank s
         }),
       ]);
 
+      type TodayOrderWithItems = Order & { items?: OrderItem[] };
       const totalOrders = ordersToday.length;
-      const paidOrders = ordersToday.filter((o: any) => o.paymentStatus === 'PAID');
-      const awaitingOrders = ordersToday.filter(
-        (o: any) => o.paymentStatus === 'PENDING' || o.paymentStatus === 'AWAITING_VERIFICATION'
+      const paidOrders = (ordersToday as TodayOrderWithItems[]).filter((o: TodayOrderWithItems) => o.paymentStatus === 'PAID');
+      const awaitingOrders = (ordersToday as TodayOrderWithItems[]).filter(
+        (o: TodayOrderWithItems) => o.paymentStatus === 'PENDING' || o.paymentStatus === 'AWAITING_VERIFICATION'
       );
-      const shippedOrders = ordersToday.filter(
-        (o: any) => o.status === 'SHIPPED' || o.status === 'DELIVERED'
+      const shippedOrders = (ordersToday as TodayOrderWithItems[]).filter(
+        (o: TodayOrderWithItems) => o.status === 'SHIPPED' || o.status === 'DELIVERED'
       );
 
-      const totalRevenue = paidOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
+      const totalRevenue = paidOrders.reduce((sum: number, o: TodayOrderWithItems) => sum + Number(o.totalAmount || 0), 0);
 
       // Top products demanded
       const itemCounts: Record<string, number> = {};
-      for (const order of ordersToday) {
-        for (const item of (order as any).items || []) {
+      for (const order of (ordersToday as TodayOrderWithItems[])) {
+        for (const item of order.items || []) {
           const name = item.name || 'Piece';
           itemCounts[name] = (itemCounts[name] || 0) + (item.quantity || 1);
         }
@@ -977,17 +1004,17 @@ Agar aapne amount bhej di hai, to baraye meherbani apni transaction ID ya bank s
         .slice(0, 3)
         .map(([name, qty]) => `  ▫️ ${name} (x${qty})`);
 
-      const outOfStock = lowStockProducts.filter((p: any) => p.stockCount === 0);
-      const runningLow = lowStockProducts.filter((p: any) => p.stockCount > 0 && p.stockCount <= 5);
+      const outOfStock = (lowStockProducts as Product[]).filter((p: Product) => p.stockCount === 0);
+      const runningLow = (lowStockProducts as Product[]).filter((p: Product) => p.stockCount > 0 && p.stockCount <= 5);
 
       const stockSection = [
         outOfStock.length > 0
           ? `🔴 *Out of Stock (Zero Units):*\n` +
-            outOfStock.map((p: any) => `  • ${p.name} (0 stock)`).join('\n')
+            outOfStock.map((p: Product) => `  • ${p.name} (0 stock)`).join('\n')
           : '✅ *Out of Stock:* Koi item khatam nahi hui.',
         runningLow.length > 0
           ? `🟡 *Low Stock Alert (< 5 Units):*\n` +
-            runningLow.map((p: any) => `  • ${p.name} (${p.stockCount} baaqi)`).join('\n')
+            runningLow.map((p: Product) => `  • ${p.name} (${p.stockCount} baaqi)`).join('\n')
           : '✅ *Low Stock:* Tamam items ka stock safe level par hai.',
       ].join('\n\n');
 
