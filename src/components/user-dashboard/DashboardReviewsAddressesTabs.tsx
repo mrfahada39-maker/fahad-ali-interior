@@ -47,7 +47,7 @@ export function DashboardReviewsTab({
         `${myReviews.length} REVIEWS`,
         `${myReviews.length} VERIFIED REVIEWS`,
         clientName,
-        '& Atelier Testimonials',
+        '& Testimonials',
         'Share your authentic furniture experience and timber finishing notes with fellow royal patrons.',
         <button
           type="button"
@@ -303,7 +303,7 @@ export function DashboardAddressesTab({
         `${addresses.length} HAVENS`,
         `${addresses.length} SAVED ESTATES`,
         clientName,
-        '& Registered Residences',
+        '& Residences',
         'Manage delivery addresses for insured white-glove installations across Pakistan.',
         <button
           type="button"

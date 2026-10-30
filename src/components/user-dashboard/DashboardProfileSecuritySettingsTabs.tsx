@@ -57,7 +57,7 @@ export function DashboardProfileTab({
         'VIP STATUS',
         'VERIFIED VIP PATRON',
         clientName,
-        '& Profile & Credentials',
+        '& Credentials',
         'Manage your architectural contact credentials, registered contact channels, and bespoke styling notes.',
         <button
           type="button"
@@ -312,7 +312,7 @@ export function DashboardSecurityTab({
         'ACTIVE 256-BIT',
         'ENTERPRISE ENCRYPTION ACTIVE',
         clientName,
-        '& Security & 2FA Guard',
+        '& 2FA Guard',
         'Fortify your VIP client portal with hardware TOTP tokens and cryptographic session guards.',
         <button
           type="button"
@@ -364,7 +364,7 @@ export function DashboardSettingsTab({
         'AUTO SYNC',
         'AUTOMATIC PREFERENCE SYNC',
         clientName,
-        '& Portal Preferences',
+        '& Preferences',
         'Configure notifications, bespoke order status alerts, and client portal display formats.',
         <button
           type="button"

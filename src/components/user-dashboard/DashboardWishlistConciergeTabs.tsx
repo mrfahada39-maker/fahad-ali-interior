@@ -55,7 +55,7 @@ export function DashboardWishlistTab({
         `${mergedWishlist.length} CURATIONS`,
         `${mergedWishlist.length} ACTIVE CURATIONS`,
         clientName,
-        '& Wishlist & Living Pieces',
+        '& Living Wishlist',
         'Solid Sheesham specifications, Turkish velvet customization, Cloudinary high-res gallery, and instant bag allocation.',
         <Link
           href="/#signature-categories"
@@ -266,36 +266,53 @@ export function DashboardConciergeTab({
         'ONLINE',
         'MASTER CRAFTSMAN ONLINE',
         clientName,
-        '& Atelier Concierge Dialogue',
+        '& Atelier Concierge',
         'Direct encrypted channel with Fahad Ali master artisans and architectural styling team.',
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
           <button
             type="button"
             onClick={() => startCall('voice')}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#8C6239] hover:brightness-110 text-white font-black text-xs transition-all shadow-md shrink-0 cursor-pointer active:scale-95"
+            className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 py-1.5 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2 cursor-pointer transition-all active:scale-98 group"
             title="Start VIP Audio Call"
           >
-            <Phone size={13} />
-            <span>Voice Call</span>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+              <Phone size={13} className="stroke-[2.2]" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-black text-[#1F1612] leading-none font-serif">Voice Call</div>
+              <span className="text-[8px] font-bold text-stone-500 block uppercase tracking-wider">Audio Hotline</span>
+            </div>
           </button>
 
           <button
             type="button"
             onClick={() => startCall('video')}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1F1612] hover:bg-[#32231C] text-amber-200 border border-[#B88E4B]/40 font-black text-xs transition-all shadow-md shrink-0 cursor-pointer active:scale-95"
+            className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-[#B88E4B] px-3 py-1.5 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2 cursor-pointer transition-all active:scale-98 group"
             title="Start VIP Video Consultation"
           >
-            <Video size={13} />
-            <span>Video Call</span>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#B88E4B] shrink-0 group-hover:scale-110 transition-transform">
+              <Video size={13} className="stroke-[2.2]" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-black text-[#1F1612] leading-none font-serif">Video Call</div>
+              <span className="text-[8px] font-bold text-stone-500 block uppercase tracking-wider">Atelier Suite</span>
+            </div>
           </button>
 
           <a
             href={`https://wa.me/${BUSINESS_CONTACT.whatsapp}?text=Hello%20Fahad%20Ali%20Interior%20Team,%20connecting%20via%20VIP%20Concierge.`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#25D366] text-white font-bold text-xs hover:brightness-110 transition-all shadow-md shrink-0"
+            className="bg-gradient-to-br from-[#FAF5EE] via-white to-[#F3E7D3] hover:from-[#F5EBDD] hover:to-[#EAD8BF] border border-[#E2D1BC] hover:border-emerald-500 px-3 py-1.5 rounded-xl sm:rounded-2xl shadow-xs flex items-center gap-2 cursor-pointer transition-all active:scale-98 group"
+            title="Chat on WhatsApp"
           >
-            <Phone size={13} /> WhatsApp
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 shrink-0 group-hover:scale-110 transition-transform">
+              <Phone size={13} className="stroke-[2.2]" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-black text-[#1F1612] leading-none font-serif">WhatsApp</div>
+              <span className="text-[8px] font-bold text-emerald-600 block uppercase tracking-wider">Direct Chat</span>
+            </div>
           </a>
         </div>
       )}

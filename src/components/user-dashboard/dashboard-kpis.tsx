@@ -251,7 +251,7 @@ export function renderHeaderBanner(
             <span className="hidden lg:inline tracking-wide">{liveTagFull}</span>
           </span>
         </div>
-        <h1 className="text-[21px] sm:text-2xl lg:text-3xl xl:text-4xl font-black text-[#221814] tracking-tight leading-snug lg:leading-tight font-serif">
+        <h1 className="text-[18px] sm:text-2xl lg:text-3xl xl:text-4xl font-black text-[#221814] tracking-tight leading-snug lg:leading-tight font-serif">
           <span className="sm:hidden">
             {titlePrefix.replace(/^Fahad Ali Interior\s*—?\s*/i, '')} <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">{titleAccent.replace(/^—\s*/, '')}</span>
           </span>
