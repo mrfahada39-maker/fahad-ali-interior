@@ -505,9 +505,14 @@ export const authOptions: NextAuthOptions = {
             where: { id: token.id as string },
             select: { role: true, deletedAt: true, lockedUntil: true },
           });
+          if (!dbUser || dbUser.deletedAt) {
+            extToken.revoked = true;
+            extToken.role = undefined;
+            return token;
+          }
           const isAdmin = dbUser.role === 'ADMIN' || (dbUser.role as string) === 'SUPER_ADMIN';
           const isLocked = !isAdmin && dbUser.lockedUntil && new Date(dbUser.lockedUntil) > new Date();
-          if (!dbUser || dbUser.deletedAt || isLocked) {
+          if (isLocked) {
             extToken.revoked = true;
             extToken.role = undefined;
             return token;

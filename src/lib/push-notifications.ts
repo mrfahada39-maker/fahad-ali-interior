@@ -65,8 +65,11 @@ export async function broadcastPushNotification(payload: PushNotificationPayload
   let failed = 0;
 
   for (const sub of subscriptions) {
+    if (!sub.keys || typeof sub.keys !== 'object' || Array.isArray(sub.keys)) continue;
+    const keys = sub.keys as { p256dh: string; auth: string; [key: string]: string };
+    if (!keys.p256dh || !keys.auth) continue;
     const success = await sendPushNotification(
-      { endpoint: sub.endpoint, keys: sub.keys },
+      { endpoint: sub.endpoint, keys },
       payload
     );
     if (success) sent++;

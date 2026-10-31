@@ -127,7 +127,7 @@ export async function getStorefrontProducts(limit = 50): Promise<StorefrontProdu
       take: limit,
       orderBy: { createdAt: 'desc' },
     });
-    const result = (products || []).map((p: { id: string; name: string; category: string; description: string | null; dimensions: string | null; price: number | string; [key: string]: unknown }) => {
+    const result = (products || []).map((p: { id: string; name: string; category: string; description: string | null; dimensions: string | null; price: unknown; [key: string]: unknown }) => {
       const cleanName = normalizeCatalogText(p.name, p.name);
       const cleanCategory = normalizeCatalogText(p.category, p.category);
       return {

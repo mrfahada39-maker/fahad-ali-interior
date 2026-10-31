@@ -11,7 +11,8 @@ export interface WhatsAppOrderItem {
   name?: string;
   productName?: string;
   quantity?: number;
-  price?: number;
+  price?: number | string | { toString(): string } | unknown;
+  [key: string]: unknown;
 }
 
 export interface WhatsAppCustomerOrderInput {
@@ -28,7 +29,7 @@ export interface WhatsAppCustomerOrderInput {
   trackingNumber?: string | null;
   totalAmount?: number | string | unknown;
   createdAt?: string | Date;
-  items?: WhatsAppOrderItem[];
+  items?: Array<WhatsAppOrderItem | { name?: string; price?: unknown; quantity?: number; [key: string]: unknown }>;
   user?: { phone?: string | null; name?: string | null } | null;
   [key: string]: unknown;
 }
@@ -444,12 +445,20 @@ ${itemsList}
   /**
    * Sends an automated luxury WhatsApp digital Order Slip / Receipt to the Customer upon checkout.
    */
+  private static async resolveOrder(
+    orderInput: string | WhatsAppCustomerOrderInput
+  ): Promise<(WhatsAppCustomerOrderInput & { id: string }) | null> {
+    const rawOrder =
+      typeof orderInput === 'string'
+        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true, user: true } })
+        : orderInput;
+    if (!rawOrder || !rawOrder.id) return null;
+    return rawOrder as WhatsAppCustomerOrderInput & { id: string };
+  }
+
   static async sendCustomerOrderPlacedSlip(orderInput: string | WhatsAppCustomerOrderInput): Promise<boolean> {
     try {
-      const order = typeof orderInput === 'string'
-        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
-        : orderInput;
-
+      const order = await this.resolveOrder(orderInput);
       if (!order) return false;
 
       const rawPhone = order.shippingPhone || order.user?.phone || '';
@@ -481,7 +490,7 @@ ${itemsList}
         .map((i: WhatsAppOrderItem) => {
           const name = i.name || i.productName || 'Item';
           const qty = i.quantity || 1;
-          const price = i.price ? `PKR ${Number(i.price * qty).toLocaleString()}` : '';
+          const price = i.price != null && i.price !== '' ? `PKR ${Number(Number(i.price) * qty).toLocaleString()}` : '';
           return `  ▫️ *${name}* | Qty: ${qty}${price ? ` | ${price}` : ''}`;
         })
         .join('\n') || '  ▫️ Furniture Suite';
@@ -492,7 +501,7 @@ ${itemsList}
         order.shippingAddress,
         order.shippingCity,
         order.shippingProvince,
-      ].filter((part, idx, arr) => part && (!arr[idx - 1] || part.toLowerCase() !== arr[idx - 1].toLowerCase()));
+      ].filter((part, idx, arr) => part && (!arr[idx - 1] || part.toLowerCase() !== arr[idx - 1]?.toLowerCase()));
       const deliveryAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Provided on Checkout';
 
       const slipStatus = order.paymentScreenshot ? '✅ Attached & Under AI Verification' : 'Pending Verification';
@@ -577,10 +586,7 @@ ${deliveryAddress}
    */
   static async sendCustomerOrderApproved(orderInput: string | WhatsAppCustomerOrderInput): Promise<boolean> {
     try {
-      const order = typeof orderInput === 'string'
-        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
-        : orderInput;
-
+      const order = await this.resolveOrder(orderInput);
       if (!order) return false;
 
       const rawPhone = order.shippingPhone || order.user?.phone || '';
@@ -613,7 +619,7 @@ ${deliveryAddress}
         .map((i: WhatsAppOrderItem) => {
           const name = i.name || i.productName || 'Item';
           const qty = i.quantity || 1;
-          const price = i.price ? `PKR ${Number(i.price * qty).toLocaleString()}` : '';
+          const price = i.price != null && i.price !== '' ? `PKR ${Number(Number(i.price) * qty).toLocaleString()}` : '';
           return `  ▫️ *${name}* | Qty: ${qty}${price ? ` | ${price}` : ''}`;
         })
         .join('\n') || '  ▫️ Furniture Suite';
@@ -663,10 +669,7 @@ ${itemsList}
     courier?: string | null
   ): Promise<boolean> {
     try {
-      const order = typeof orderInput === 'string'
-        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
-        : orderInput;
-
+      const order = await this.resolveOrder(orderInput);
       if (!order) return false;
 
       const rawPhone = order.shippingPhone || order.user?.phone || '';
@@ -715,10 +718,7 @@ Hamari delivery team pohnchne se pehle aapko direct call karegi aur safe in-room
    */
   static async sendCustomerOrderHold(orderInput: string | WhatsAppCustomerOrderInput): Promise<boolean> {
     try {
-      const order = typeof orderInput === 'string'
-        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
-        : orderInput;
-
+      const order = await this.resolveOrder(orderInput);
       if (!order) return false;
 
       const rawPhone = order.shippingPhone || order.user?.phone || '';
@@ -757,10 +757,7 @@ Jaise hi bank se clearance complete hogi, aapko notification mil jayegi aur prod
    */
   static async sendCustomerOrderRejected(orderInput: string | WhatsAppCustomerOrderInput): Promise<boolean> {
     try {
-      const order = typeof orderInput === 'string'
-        ? await db.order.findUnique({ where: { id: orderInput }, include: { items: true } })
-        : orderInput;
-
+      const order = await this.resolveOrder(orderInput);
       if (!order) return false;
 
       const rawPhone = order.shippingPhone || order.user?.phone || '';

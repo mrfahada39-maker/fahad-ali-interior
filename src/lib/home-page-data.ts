@@ -133,6 +133,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
           material: true,
           stockCount: true,
           isPremium: true,
+          description: true,
           createdAt: true,
         },
         take: 28,
@@ -233,7 +234,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       return '8.5 ft × 6.5 ft × 34 in (Custom Sizing Available)';
     };
 
-    const formattedProducts = products.map((p: { id: string; name: string; category: string; description: string | null; dimensions: string | null; price: number | string; [key: string]: unknown }) => {
+    const formattedProducts = products.map((p: { id: string; name: string; category: string; description: string | null; dimensions: string | null; price: unknown; [key: string]: unknown }) => {
       const cleanName = normalizeCatalogText(p.name, p.name);
       const cleanCategory = normalizeCatalogText(p.category, p.category);
       return {
@@ -309,7 +310,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
         image: b.image,
         badgeText: '',
         price: b.price != null ? Number(b.price) : null,
-        colors: b.colors ?? null,
+        colors: typeof b.colors === 'string' ? b.colors : Array.isArray(b.colors) ? (b.colors as string[]).join(', ') : null,
       })),
     };
   } catch (err) {

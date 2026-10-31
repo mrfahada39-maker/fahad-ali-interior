@@ -25,6 +25,7 @@ jest.mock('@/lib/rate-limit', () => ({
     resetTime: Date.now() + 60000,
   }),
   getClientIp: jest.fn().mockReturnValue('127.0.0.1'),
+  isRateLimitConfigured: jest.fn().mockReturnValue(false),
 }));
 
 jest.mock('@/lib/api-handlers/shared', () => ({

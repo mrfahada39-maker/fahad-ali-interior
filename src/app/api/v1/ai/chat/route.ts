@@ -395,11 +395,15 @@ export async function POST(request: NextRequest) {
     // 5. Fetch LIVE Store Products from Database (Fast cached fetch, no blocking indexer)
     let allProducts: ChatProductItem[] = [];
     try {
-      allProducts = await db.product.findMany({
+      const rawProducts = await db.product.findMany({
         where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
         take: 20,
       });
+      allProducts = (rawProducts || []).map(
+        (p: { id: string; name: string; category: string; price: unknown; image?: string; [key: string]: unknown }) =>
+          ({ ...p, price: Number(p.price) } as unknown as ChatProductItem)
+      );
     } catch (e) {
       logger.warn('Prisma product fetch notice:', { detail: String(e) });
     }
@@ -624,7 +628,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
           role: 'assistant',
           content: replyText,
           intent: activeAgentRole.toUpperCase(),
-          metadata,
+          metadata: metadata as unknown as import('@prisma/client').Prisma.InputJsonValue,
         },
       });
 

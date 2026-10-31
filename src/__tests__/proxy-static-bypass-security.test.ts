@@ -8,6 +8,15 @@ jest.mock('next-auth/jwt', () => ({
   getToken: jest.fn(),
 }));
 
+jest.mock('@/lib/rate-limit', () => {
+  const actual = jest.requireActual<Record<string, unknown>>('@/lib/rate-limit');
+  return {
+    ...actual,
+    rateLimit: (jest.fn() as any).mockResolvedValue({ allowed: true, remaining: 100 }),
+    isRateLimitConfigured: jest.fn().mockReturnValue(true),
+  };
+});
+
 const mockedGetToken = nextAuthJwt.getToken as unknown as jest.MockedFunction<
   (...args: unknown[]) => Promise<unknown>
 >;

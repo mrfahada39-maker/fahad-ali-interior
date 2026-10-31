@@ -84,7 +84,7 @@ export class WhatsAppAdminCopilot {
       let msg = `📋 *PENDING ORDERS FOR VERIFICATION (${pendingOrders.length} Found):*\n`;
       msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
 
-      pendingOrders.forEach((order: { id: string; shippingName?: string | null; shippingPhone?: string | null; totalAmount?: number | string | null; items: Array<{ name: string; quantity: number }>; paymentScreenshot?: string | null }, index: number) => {
+      pendingOrders.forEach((order: { id: string; shippingName?: string | null; shippingPhone?: string | null; totalAmount?: unknown; items: Array<{ name: string; quantity: number }>; paymentScreenshot?: string | null }, index: number) => {
         const shortId = order.id.slice(-6).toUpperCase();
         const clientName = order.shippingName || 'Client';
         const clientPhone = order.shippingPhone || 'N/A';
@@ -428,7 +428,7 @@ export class WhatsAppAdminCopilot {
 
       if (inquiries.length > 0) {
         msg += `\n🛋️ *Custom Interior Inquiries:*\n`;
-        inquiries.forEach((inq: { roomType?: string | null; name?: string | null; budget?: number | string | null; description?: string | null; user?: { name?: string | null; phone?: string | null } | null }, idx: number) => {
+        inquiries.forEach((inq: { roomType?: string | null; name?: string | null; budget?: unknown; description?: string | null; user?: { name?: string | null; phone?: string | null } | null }, idx: number) => {
           const clientName = inq.user?.name || 'Valued Client';
           const phone = inq.user?.phone || 'N/A';
           const budget = inq.budget ? `PKR ${Number(inq.budget).toLocaleString()}` : 'Flexible';

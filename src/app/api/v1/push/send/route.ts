@@ -34,7 +34,10 @@ export async function POST(req: NextRequest) {
       let sent = 0;
       let failed = 0;
       for (const sub of subscriptions) {
-        const ok = await sendPushNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload);
+        if (!sub.keys || typeof sub.keys !== 'object' || Array.isArray(sub.keys)) continue;
+        const keys = sub.keys as { p256dh: string; auth: string; [key: string]: string };
+        if (!keys.p256dh || !keys.auth) continue;
+        const ok = await sendPushNotification({ endpoint: sub.endpoint, keys }, payload);
         if (ok) sent++;
         else failed++;
       }

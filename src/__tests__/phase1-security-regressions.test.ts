@@ -317,6 +317,7 @@ describe('Phase 1 Security Regression Tests', () => {
           body: JSON.stringify({
             shippingEmail: 'patron@example.com',
             shippingName: 'Patron',
+            paymentMethod: 'BANK',
             couponCode,
             items: [{ productId: 'prod_valid_1', quantity: 1 }],
           }),
@@ -351,6 +352,7 @@ describe('Phase 1 Security Regression Tests', () => {
         method: 'POST',
         body: JSON.stringify({
           shippingEmail: 'patron@example.com',
+          paymentMethod: 'BANK',
           couponCode: 'EXPIRED10',
           items: [{ productId: 'prod_1', quantity: 1 }],
         }),
@@ -391,6 +393,7 @@ describe('Phase 1 Security Regression Tests', () => {
         method: 'POST',
         body: JSON.stringify({
           shippingEmail: 'patron@example.com',
+          paymentMethod: 'BANK',
           couponCode: 'RACE10',
           items: [{ productId: 'prod_1', quantity: 1 }],
         }),
@@ -505,6 +508,7 @@ describe('Phase 1 Security Regression Tests', () => {
         method: 'POST',
         body: JSON.stringify({
           shippingEmail: 'patron@example.com',
+          paymentMethod: 'BANK',
           items: [
             {
               productId: 'prod_genuine',
@@ -542,6 +546,7 @@ describe('Phase 1 Security Regression Tests', () => {
         method: 'POST',
         body: JSON.stringify({
           shippingEmail: 'patron@example.com',
+          paymentMethod: 'BANK',
           items: [{ productId: 'prod_out_of_stock', quantity: 2 }],
         }),
       });

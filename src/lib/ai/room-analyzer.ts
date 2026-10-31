@@ -38,7 +38,7 @@ export class RoomAnalyzer {
 
     let dbProducts: Array<{ id: string; name: string; price: number; image?: string; images?: string[]; category: string; description?: string | null }> = [];
     try {
-      dbProducts = await db.product.findMany({
+      const rawProducts = await db.product.findMany({
         where: {
           deletedAt: null,
           category: { equals: targetCategory, mode: 'insensitive' },
@@ -46,12 +46,15 @@ export class RoomAnalyzer {
         take: 3,
         orderBy: { createdAt: 'desc' },
       });
+      type AnalyzedProductItem = { id: string; name: string; price: unknown; image?: string; images?: string[]; category: string; description?: string | null };
+      dbProducts = (rawProducts || []).map((p: AnalyzedProductItem) => ({ ...p, price: Number(p.price) }));
       if (dbProducts.length === 0) {
-        dbProducts = await db.product.findMany({
+        const fallbackProducts = await db.product.findMany({
           where: { deletedAt: null },
           take: 3,
           orderBy: { createdAt: 'desc' },
         });
+        dbProducts = (fallbackProducts || []).map((p: AnalyzedProductItem) => ({ ...p, price: Number(p.price) }));
       }
     } catch (e) {
       if (process.env.NODE_ENV !== 'test') {
