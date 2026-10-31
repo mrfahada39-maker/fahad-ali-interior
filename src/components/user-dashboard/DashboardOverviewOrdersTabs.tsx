@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React from 'react';
@@ -10,6 +9,26 @@ import {
 import { Input } from '@/components/ui/input';
 import { renderHeaderBanner, renderKpiGrid, formatPrice } from './dashboard-kpis';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import type { OrderDetailsRecord } from './UserOrderModals';
+import type {
+  DashboardKpiItem,
+  DashboardOrderRecord,
+  UserProfileData,
+  SafeUserSession,
+} from './user-dashboard-types';
+
+export interface TrajectoryPoint {
+  name: string;
+  revenue?: number;
+  count?: number;
+  [key: string]: unknown;
+}
+
+export interface FulfillmentStagePoint {
+  stage: string;
+  count: number;
+  [key: string]: unknown;
+}
 
 export function DashboardOverviewTab({
   overviewKpis,
@@ -21,13 +40,13 @@ export function DashboardOverviewTab({
   fulfillmentData,
   clientName = 'VIP Client',
 }: {
-  overviewKpis: any[];
+  overviewKpis: DashboardKpiItem[];
   chartMetric: 'REVENUE' | 'COUNT';
   setChartMetric: (m: 'REVENUE' | 'COUNT') => void;
   totalSpentCalculated: number;
-  orders: any[];
-  trajectoryData: any[];
-  fulfillmentData: any[];
+  orders: DashboardOrderRecord[];
+  trajectoryData: TrajectoryPoint[];
+  fulfillmentData: FulfillmentStagePoint[];
   clientName?: string;
 }) {
   return (
@@ -134,7 +153,7 @@ export function DashboardOverviewTab({
               )}
             </div>
             <div className="flex justify-between text-[11px] text-[#9E8A78] font-mono px-1">
-              {trajectoryData.map((d: any, i: number) => (
+              {trajectoryData.map((d: TrajectoryPoint, i: number) => (
                 <span key={i}>{d.name}</span>
               ))}
             </div>
@@ -168,8 +187,8 @@ export function DashboardOverviewTab({
             ) : (
               <>
                 <div className="h-[200px] w-full flex items-end justify-between gap-3 px-2">
-                  {fulfillmentData.map((d: any, i: number) => {
-                    const maxCount = Math.max(...fulfillmentData.map((item: any) => item.count || 0), 1);
+                  {fulfillmentData.map((d: FulfillmentStagePoint, i: number) => {
+                    const maxCount = Math.max(...fulfillmentData.map((item: FulfillmentStagePoint) => item.count || 0), 1);
                     const heightPercent = d.count === 0 ? 4 : Math.max(8, Math.round(((d.count || 0) / maxCount) * 100));
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
@@ -185,7 +204,7 @@ export function DashboardOverviewTab({
                   })}
                 </div>
                 <div className="flex justify-between text-[10px] text-[#9E8A78] font-bold px-1 border-t border-[#F0E8DD] pt-2">
-                  {fulfillmentData.map((d: any, i: number) => (
+                  {fulfillmentData.map((d: FulfillmentStagePoint, i: number) => (
                     <span key={i} className="text-center flex-1 truncate">{d.stage}</span>
                   ))}
                 </div>
@@ -212,18 +231,18 @@ export function DashboardOrdersTab({
   setTrackingOrder,
   setSelectedOrderDetails,
 }: {
-  ordersKpis: any[];
-  orders: any[];
+  ordersKpis: DashboardKpiItem[];
+  orders: DashboardOrderRecord[];
   orderFilter: 'ALL' | 'PENDING' | 'SHIPPED' | 'DELIVERED';
   setOrderFilter: (f: 'ALL' | 'PENDING' | 'SHIPPED' | 'DELIVERED') => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
-  filteredOrders: any[];
-  session: any;
-  profile: any;
+  filteredOrders: DashboardOrderRecord[];
+  session: SafeUserSession;
+  profile: UserProfileData | null;
   profileForm: { name: string; phone: string; bio: string };
-  setTrackingOrder: (o: any) => void;
-  setSelectedOrderDetails: (o: any) => void;
+  setTrackingOrder: (o: OrderDetailsRecord | null) => void;
+  setSelectedOrderDetails: (o: OrderDetailsRecord | null) => void;
 }) {
   const clientName =
     profile?.name ||
@@ -263,15 +282,15 @@ export function DashboardOrdersTab({
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white/80 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-[#E7DDD0] shadow-xs">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-          {[
-            { id: 'ALL', label: 'All Orders', count: orders.length },
-            { id: 'PENDING', label: 'Pending', count: orders.filter((o) => !o.status || String(o.status).toUpperCase() === 'PENDING').length },
-            { id: 'SHIPPED', label: 'In-Transit', count: orders.filter((o) => ['SHIPPED', 'PROCESSING'].includes(String(o.status || '').toUpperCase())).length },
-            { id: 'DELIVERED', label: 'Delivered', count: orders.filter((o) => String(o.status || '').toUpperCase() === 'DELIVERED').length },
+            {[
+            { id: 'ALL' as const, label: 'All Orders', count: orders.length },
+            { id: 'PENDING' as const, label: 'Pending', count: orders.filter((o) => !o.status || String(o.status).toUpperCase() === 'PENDING').length },
+            { id: 'SHIPPED' as const, label: 'In-Transit', count: orders.filter((o) => ['SHIPPED', 'PROCESSING'].includes(String(o.status || '').toUpperCase())).length },
+            { id: 'DELIVERED' as const, label: 'Delivered', count: orders.filter((o) => String(o.status || '').toUpperCase() === 'DELIVERED').length },
           ].map((f) => (
             <button
               key={f.id}
-              onClick={() => setOrderFilter(f.id as any)}
+              onClick={() => setOrderFilter(f.id)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black cursor-pointer transition-all flex items-center gap-1.5 shrink-0 ${
                 orderFilter === f.id
                   ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-sm ring-1 ring-[#B88E4B]/40'
@@ -332,9 +351,9 @@ export function DashboardOrdersTab({
                   const isDelivered = String(order.status || '').toUpperCase() === 'DELIVERED';
                   const isShipped = String(order.status || '').toUpperCase() === 'SHIPPED';
                   const orderRef = `#${(order.id || 'ORDER').slice(-8).toUpperCase()}`;
-                  const clientName = order.customerName || session?.user?.name || profile?.name || 'VIP Client';
-                  const clientEmail = order.customerEmail || session?.user?.email || profile?.email || '';
-                  const clientPhone = order.customerPhone || profileForm.phone || '';
+                  const clientName = String(order.customerName || session?.user?.name || profile?.name || 'VIP Client');
+                  const clientEmail = String(order.customerEmail || session?.user?.email || profile?.email || '');
+                  const clientPhone = String(order.customerPhone || profileForm.phone || '');
 
                   return (
                     <tr key={order.id || idx} className="hover:bg-[#FAF5EE]/50 transition-colors group">
@@ -440,7 +459,17 @@ export function DashboardOrdersTab({
                           </a>
 
                           <button
-                            onClick={() => setTrackingOrder(order)}
+                            onClick={() => setTrackingOrder({
+                              id: order.id,
+                              status: order.status,
+                              totalAmount: order.totalAmount,
+                              items: (order.items || []).map((it) => ({
+                                name: it.name || it.productName || it.title || it.product?.name || 'Bespoke Item',
+                                image: it.image || it.product?.image,
+                                quantity: it.quantity || 1,
+                                price: Number(it.price || 0),
+                              })),
+                            })}
                             className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 text-[#8C6239] hover:bg-[#B88E4B] hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
                             title="Track Live Crafting Stages"
                           >
@@ -448,7 +477,17 @@ export function DashboardOrdersTab({
                           </button>
 
                           <button
-                            onClick={() => setSelectedOrderDetails(order)}
+                            onClick={() => setSelectedOrderDetails({
+                              id: order.id,
+                              status: order.status,
+                              totalAmount: order.totalAmount,
+                              items: (order.items || []).map((it) => ({
+                                name: it.name || it.productName || it.title || it.product?.name || 'Bespoke Item',
+                                image: it.image || it.product?.image,
+                                quantity: it.quantity || 1,
+                                price: Number(it.price || 0),
+                              })),
+                            })}
                             className="w-8 h-8 rounded-xl bg-white border border-[#E7DDD0] text-stone-700 hover:text-[#B88E4B] hover:border-[#B88E4B] flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
                             title="View Invoice & Specs"
                           >

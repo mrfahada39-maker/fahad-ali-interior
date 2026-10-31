@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -9,7 +8,7 @@ import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
 import LuxuryCallModal from '@/components/ai/LuxuryCallModal';
 import { useUserCall } from '@/hooks/use-user-call';
-import { UserOrderModals } from '@/components/user-dashboard/UserOrderModals';
+import { UserOrderModals, type OrderDetailsRecord, type QuickViewProductRecord } from '@/components/user-dashboard/UserOrderModals';
 import { buildDashboardKpis } from '@/components/user-dashboard/dashboard-kpis';
 import { DashboardSidebarAndMobileNav } from '@/components/user-dashboard/DashboardNav';
 import { DashboardOverviewTab, DashboardOrdersTab } from '@/components/user-dashboard/DashboardOverviewOrdersTabs';
@@ -20,8 +19,19 @@ import {
   DashboardSecurityTab,
   DashboardSettingsTab,
 } from '@/components/user-dashboard/DashboardProfileSecuritySettingsTabs';
+import type {
+  UserStatsData,
+  UserProfileData,
+  UserAddressRecord,
+  UserReviewRecord,
+  DashboardOrderRecord,
+  UserOrderItem,
+  UserWishlistItemRecord,
+  UserMessageRecord,
+} from '@/components/user-dashboard/user-dashboard-types';
+import type { StorefrontProduct } from '@/lib/types';
 
-const DEFAULT_USER_STATS = {
+const DEFAULT_USER_STATS: UserStatsData = {
   totalSpent: 0,
   totalOrders: 0,
   completedOrders: 0,
@@ -38,28 +48,28 @@ export default function UserDashboard() {
   const openCart = useCartStore((s) => s.openCart);
 
   const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState<any>(DEFAULT_USER_STATS);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [dbWishlist, setDbWishlist] = useState<any[]>([]);
-  const [profile, setProfile] = useState<any>(null);
-  const [addresses, setAddresses] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [stats, setStats] = useState<UserStatsData>(DEFAULT_USER_STATS);
+  const [orders, setOrders] = useState<DashboardOrderRecord[]>([]);
+  const [dbWishlist, setDbWishlist] = useState<UserWishlistItemRecord[]>([]);
+  const [profile, setProfile] = useState<UserProfileData | null>(null);
+  const [addresses, setAddresses] = useState<UserAddressRecord[]>([]);
+  const [messages, setMessages] = useState<UserMessageRecord[]>([]);
   const [msgInput, setMsgInput] = useState('');
   const [profileForm, setProfileForm] = useState({ name: '', phone: '', bio: '' });
   const [addrForm, setAddrForm] = useState({ name: '', phone: '', address: '', city: '', province: '', isDefault: false });
   const [showAddrForm, setShowAddrForm] = useState(false);
-  const [myReviews, setMyReviews] = useState<any[]>([]);
+  const [myReviews, setMyReviews] = useState<UserReviewRecord[]>([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ productId: '', rating: 5, comment: '', image: '' });
   const [reviewUploading, setReviewUploading] = useState(false);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<StorefrontProduct[]>([]);
   const [orderFilter, setOrderFilter] = useState<'ALL' | 'PENDING' | 'SHIPPED' | 'DELIVERED'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [wishlistCategoryFilter, setWishlistCategoryFilter] = useState('ALL');
   const [chartMetric, setChartMetric] = useState<'REVENUE' | 'COUNT'>('REVENUE');
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState<any>(null);
-  const [trackingOrder, setTrackingOrder] = useState<any>(null);
-  const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState<OrderDetailsRecord | null>(null);
+  const [trackingOrder, setTrackingOrder] = useState<OrderDetailsRecord | null>(null);
+  const [quickViewProduct, setQuickViewProduct] = useState<QuickViewProductRecord | null>(null);
   const [copiedId, setCopiedId] = useState(false);
   const [selectedTimberFinish, setSelectedTimberFinish] = useState('Royal Walnut');
   const [selectedFabricPreference, setSelectedFabricPreference] = useState('Turkish Champagne Velvet');
@@ -242,8 +252,8 @@ export default function UserDashboard() {
   }, [products]);
 
   const mergedWishlist = useMemo(() => {
-    const map = new Map<string, any>();
-    (dbWishlist || []).forEach((w: any) => {
+    const map = new Map<string, UserWishlistItemRecord>();
+    (dbWishlist || []).forEach((w: UserWishlistItemRecord) => {
       if (w?.product) {
         const prodId = w.product.id || w.productId || w.id;
         map.set(prodId, {
@@ -255,12 +265,11 @@ export default function UserDashboard() {
             price: Number(w.product.price || 0),
             image: w.product.image || '/cat-thumb-sofas-2x.webp',
             category: w.product.category || 'Living Room',
-            material: w.product.material || 'Solid Sheesham Wood',
           },
         });
       }
     });
-    (localWishlistItems || []).forEach((item: any) => {
+    (localWishlistItems || []).forEach((item) => {
       if (item && !map.has(item.id)) {
         map.set(item.id, {
           id: `local-${item.id}`,
@@ -271,7 +280,7 @@ export default function UserDashboard() {
             price: Number(item.price || 0),
             image: item.image || '/cat-thumb-sofas-2x.webp',
             category: item.category || 'Living Room',
-            material: item.material || 'Solid Sheesham Wood',
+            material: (item as { material?: string }).material || 'Solid Sheesham Wood',
           },
         });
       }
@@ -298,30 +307,33 @@ export default function UserDashboard() {
       const shortId = orderId.slice(-8);
       const matchId = orderId.includes(q) || (cleanQ.length > 0 && (orderId.includes(cleanQ) || shortId.includes(cleanQ)));
 
+      const shippingInfo = o.shippingInfo as { name?: string; email?: string; phone?: string; address?: string; city?: string } | undefined;
+      const userObj = o.user as { name?: string; email?: string; phone?: string } | undefined;
+
       const clientName = String(
-        o.customerName || o.shippingName || o.shippingInfo?.name || o.user?.name || session?.user?.name || profile?.name || ''
+        o.customerName || o.shippingName || shippingInfo?.name || userObj?.name || session?.user?.name || profile?.name || ''
       ).toLowerCase();
       const matchName = clientName.includes(q) || (cleanQ.length > 0 && clientName.includes(cleanQ));
 
       const clientEmail = String(
-        o.customerEmail || o.shippingEmail || o.shippingInfo?.email || o.user?.email || session?.user?.email || profile?.email || ''
+        o.customerEmail || o.shippingEmail || shippingInfo?.email || userObj?.email || session?.user?.email || profile?.email || ''
       ).toLowerCase();
       const matchEmail = clientEmail.includes(q) || (cleanQ.length > 0 && clientEmail.includes(cleanQ));
 
       const rawPhone = String(
-        o.customerPhone || o.shippingPhone || o.shippingInfo?.phone || o.user?.phone || profileForm.phone || ''
+        o.customerPhone || o.shippingPhone || shippingInfo?.phone || userObj?.phone || profileForm.phone || ''
       );
       const phoneDigits = rawPhone.replace(/\D/g, '');
       const matchPhone =
         (rawPhone.length > 0 && rawPhone.toLowerCase().includes(q)) ||
         (digitsQ.length >= 3 && phoneDigits.includes(digitsQ));
 
-      const destination = `${o.shippingAddress || o.shippingInfo?.address || ''} ${o.shippingCity || o.shippingInfo?.city || ''}`.toLowerCase();
+      const destination = `${o.shippingAddress || shippingInfo?.address || ''} ${o.shippingCity || shippingInfo?.city || ''}`.toLowerCase();
       const matchDestination = destination.includes(q) || (cleanQ.length > 0 && destination.includes(cleanQ));
 
       const matchItems = Boolean(
         Array.isArray(o.items) &&
-          o.items.some((i: any) => {
+          o.items.some((i: UserOrderItem) => {
             const title = String(i?.name || i?.productName || i?.title || i?.product?.name || '').toLowerCase();
             return title.includes(q) || (cleanQ.length > 0 && title.includes(cleanQ));
           })
@@ -387,25 +399,27 @@ export default function UserDashboard() {
     ];
   }, [orders]);
 
-  const handleRemoveWishlist = async (item: any) => {
+  const handleRemoveWishlist = async (item: UserWishlistItemRecord) => {
     if (item.id && !item.id.startsWith('local-')) {
       await apiFetch(`/api/wishlist?id=${item.id}`, { method: 'DELETE' });
       setDbWishlist((prev) => prev.filter((w) => w.id !== item.id));
     }
-    removeLocalWishlist(item.productId);
+    if (item.productId) {
+      removeLocalWishlist(item.productId);
+    }
     toast.success('Removed from Curated Collection');
   };
 
-  const handleMoveToCart = (product: any) => {
+  const handleMoveToCart = (product: UserWishlistItemRecord | { id: string; name?: string; price?: number; image?: string; category?: string }) => {
     addItem({
       id: product.id,
-      name: product.name,
+      name: product.name || 'Bespoke Item',
       price: Number(product.price || 0),
       image: product.image || '/cat-thumb-sofas-2x.webp',
       category: product.category || 'Furniture',
     });
     openCart();
-    toast.success(`${product.name} added to Bespoke Bag`);
+    toast.success(`${product.name || 'Bespoke Item'} added to Bespoke Bag`);
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {

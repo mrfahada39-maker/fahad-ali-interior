@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React from 'react';
@@ -13,6 +12,11 @@ import { toast } from 'sonner';
 import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
 import SettingsTab from '@/components/user-dashboard/UserSettingsTab';
 import { renderHeaderBanner, renderKpiGrid, formatPrice } from './dashboard-kpis';
+import type {
+  DashboardKpiItem,
+  UserProfileData,
+  SafeUserSession,
+} from './user-dashboard-types';
 
 export function DashboardProfileTab({
   profileKpis,
@@ -29,9 +33,9 @@ export function DashboardProfileTab({
   selectedFabricPreference,
   setSelectedFabricPreference,
 }: {
-  profileKpis: any[];
-  session: any;
-  profile: any;
+  profileKpis: DashboardKpiItem[];
+  session: SafeUserSession;
+  profile: UserProfileData | null;
   copiedId: boolean;
   setCopiedId: (c: boolean) => void;
   totalSpentCalculated: number;
@@ -117,13 +121,13 @@ export function DashboardProfileTab({
             <div className="text-left">
               <span className="text-[9px] font-mono font-bold text-stone-400 uppercase block">Patron ID</span>
               <span className="text-xs font-mono font-black text-[#1F1612]">
-                #{(session?.user as any)?.id ? (session?.user as any).id.slice(-6).toUpperCase() : 'VIP'}
+                #{(session?.user as { id?: string } | undefined)?.id ? (session?.user as { id?: string }).id!.slice(-6).toUpperCase() : 'VIP'}
               </span>
             </div>
             <button
               type="button"
               onClick={() => {
-                const patronId = `#${(session?.user as any)?.id ? (session?.user as any).id.slice(-6).toUpperCase() : 'VIP'}`;
+                const patronId = `#${(session?.user as { id?: string } | undefined)?.id ? (session?.user as { id?: string }).id!.slice(-6).toUpperCase() : 'VIP'}`;
                 navigator.clipboard.writeText(patronId);
                 setCopiedId(true);
                 toast.success(`Patron ID ${patronId} copied to clipboard`);
@@ -301,7 +305,7 @@ export function DashboardSecurityTab({
   securityKpis,
   clientName = 'VIP Client',
 }: {
-  securityKpis: any[];
+  securityKpis: DashboardKpiItem[];
   clientName?: string;
 }) {
   return (
@@ -352,8 +356,8 @@ export function DashboardSettingsTab({
   profile,
   clientName = 'VIP Client',
 }: {
-  settingsKpis: any[];
-  profile: any;
+  settingsKpis: DashboardKpiItem[];
+  profile: UserProfileData | null;
   clientName?: string;
 }) {
   return (

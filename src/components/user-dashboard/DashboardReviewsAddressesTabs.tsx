@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React from 'react';
@@ -11,6 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { renderHeaderBanner, renderKpiGrid, formatPrice } from './dashboard-kpis';
+import type {
+  DashboardKpiItem,
+  UserReviewRecord,
+  UserAddressRecord,
+} from './user-dashboard-types';
 
 export function DashboardReviewsTab({
   myReviews,
@@ -26,14 +30,14 @@ export function DashboardReviewsTab({
   handleDeleteReview,
   clientName = 'VIP Client',
 }: {
-  myReviews: any[];
-  reviewsKpis: any[];
+  myReviews: UserReviewRecord[];
+  reviewsKpis: DashboardKpiItem[];
   showReviewForm: boolean;
   setShowReviewForm: (s: boolean) => void;
   handleSubmitReview: (e: React.FormEvent) => void;
   reviewForm: { productId: string; rating: number; comment: string; image: string };
   setReviewForm: React.Dispatch<React.SetStateAction<{ productId: string; rating: number; comment: string; image: string }>>;
-  groupedProducts: [string, any[]][];
+  groupedProducts: [string, { id: string; name: string; [key: string]: unknown }[]][];
   reviewUploading: boolean;
   handleReviewImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDeleteReview: (id: string) => void;
@@ -91,7 +95,7 @@ export function DashboardReviewsTab({
                 <optgroup key={category} label={`✦ ${category.toUpperCase()}`}>
                   {items.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} (PKR {formatPrice(p.price)})
+                      {String(p.name || 'Piece')} (PKR {formatPrice(Number(p.price || 0))})
                     </option>
                   ))}
                 </optgroup>
@@ -221,15 +225,15 @@ export function DashboardReviewsTab({
                     {rev.product.image && (
                       <Image
                         src={rev.product.image}
-                        alt={rev.product.name}
+                        alt={rev.product.name || 'Bespoke piece'}
                         width={36}
                         height={36}
                         className="w-9 h-9 rounded-lg object-cover border border-[#E2D1BC] shrink-0"
                       />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-[#1F1612] truncate">{rev.product.name}</p>
-                      {rev.product.price && (
+                      <p className="text-xs font-bold text-[#1F1612] truncate">{rev.product.name || 'Bespoke piece'}</p>
+                      {typeof rev.product.price === 'number' && (
                         <p className="text-[10px] font-mono text-[#8C6239]">PKR {formatPrice(rev.product.price)}</p>
                       )}
                     </div>
@@ -243,7 +247,7 @@ export function DashboardReviewsTab({
                       alt="Client review photo"
                       fill
                       className="object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                      onClick={() => window.open(rev.image, '_blank')}
+                      onClick={() => { if (rev.image) window.open(rev.image, '_blank'); }}
                     />
                   </div>
                 )}
@@ -285,8 +289,8 @@ export function DashboardAddressesTab({
   handleDeleteAddress,
   clientName = 'VIP Client',
 }: {
-  addresses: any[];
-  addressesKpis: any[];
+  addresses: UserAddressRecord[];
+  addressesKpis: DashboardKpiItem[];
   showAddrForm: boolean;
   setShowAddrForm: (s: boolean) => void;
   handleAddAddress: (e: React.FormEvent) => void;

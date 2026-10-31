@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React from 'react';
@@ -9,6 +8,14 @@ import {
   MessageSquare, ShieldCheck, ClipboardList, Coins, CheckCircle2, PhoneCall,
 } from 'lucide-react';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
+import type {
+  DashboardKpiItem,
+  DashboardOrderRecord,
+  UserWishlistItemRecord,
+  UserStatsData,
+  UserReviewRecord,
+  UserAddressRecord,
+} from './user-dashboard-types';
 
 export const DASHBOARD_TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -72,9 +79,9 @@ function kpi(
   numValue: number | string,
   prefix: string,
   sub: string,
-  icon: any,
+  icon: React.ComponentType<{ className?: string; size?: number }>,
   theme: keyof typeof KPI_THEMES
-) {
+): DashboardKpiItem {
   return { label, numValue, prefix, sub, icon, ...KPI_THEMES[theme] };
 }
 
@@ -91,11 +98,11 @@ export function buildDashboardKpis({
   totalSpentCalculated: number;
   totalOrdersCount: number;
   deliveredCount: number;
-  orders: any[];
-  mergedWishlist: any[];
-  stats: any;
-  myReviews: any[];
-  addresses: any[];
+  orders: DashboardOrderRecord[];
+  mergedWishlist: UserWishlistItemRecord[];
+  stats: UserStatsData;
+  myReviews: UserReviewRecord[];
+  addresses: UserAddressRecord[];
 }) {
   const approvedReviewsCount = myReviews.filter((r) => (r.status || '').toLowerCase() === 'approved').length;
   const pendingReviewsCount = myReviews.filter((r) => (r.status || 'pending').toLowerCase() === 'pending').length;
@@ -167,7 +174,7 @@ export function buildDashboardKpis({
   };
 }
 
-export function renderKpiGrid(kpis: any[]) {
+export function renderKpiGrid(kpis: DashboardKpiItem[]) {
   return (
     <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 shrink-0">
       {kpis.map((item, idx) => (

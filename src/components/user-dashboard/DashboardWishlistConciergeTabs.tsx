@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React from 'react';
@@ -17,6 +16,13 @@ import VoiceNotePlayer from '@/components/ai/VoiceNotePlayer';
 import VoiceNoteRecorder from '@/components/ai/VoiceNoteRecorder';
 import { renderHeaderBanner, renderKpiGrid, formatPrice } from './dashboard-kpis';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import type {
+  DashboardKpiItem,
+  UserWishlistItemRecord,
+  UserMessageRecord,
+} from './user-dashboard-types';
+import type { QuickViewProductRecord } from './UserOrderModals';
+import type { CartItem } from '@/store';
 
 export function DashboardWishlistTab({
   mergedWishlist,
@@ -33,18 +39,18 @@ export function DashboardWishlistTab({
   handleRemoveWishlist,
   clientName = 'VIP Client',
 }: {
-  mergedWishlist: any[];
-  wishlistKpis: any[];
+  mergedWishlist: UserWishlistItemRecord[];
+  wishlistKpis: DashboardKpiItem[];
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   wishlistCategoryFilter: string;
   setWishlistCategoryFilter: (c: string) => void;
-  addItem: (prod: any) => void;
+  addItem: (prod: CartItem | (Omit<CartItem, 'quantity'> & { quantity?: number })) => void;
   openCart: () => void;
-  filteredWishlist: any[];
-  setQuickViewProduct: (prod: any) => void;
-  handleMoveToCart: (prod: any) => void;
-  handleRemoveWishlist: (item: any) => void;
+  filteredWishlist: UserWishlistItemRecord[];
+  setQuickViewProduct: (prod: QuickViewProductRecord | null) => void;
+  handleMoveToCart: (prod: UserWishlistItemRecord) => void;
+  handleRemoveWishlist: (item: UserWishlistItemRecord) => void;
   clientName?: string;
 }) {
   return (
@@ -114,7 +120,18 @@ export function DashboardWishlistTab({
           {mergedWishlist.length > 0 && (
             <Button
               onClick={() => {
-                mergedWishlist.forEach((item) => addItem(item.product));
+                mergedWishlist.forEach((item) => {
+                  const prod = item.product;
+                  if (prod?.id) {
+                    addItem({
+                      id: prod.id,
+                      name: prod.name || item.name || 'Bespoke Item',
+                      price: Number(prod.price || item.price || 0),
+                      image: prod.image || item.image || '/cat-thumb-sofas-2x.webp',
+                      category: prod.category || item.category || 'Living Room',
+                    });
+                  }
+                });
                 openCart();
                 toast.success('All curated pieces transferred to Shopping Bag');
               }}
@@ -145,9 +162,19 @@ export function DashboardWishlistTab({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredWishlist.map((item) => (
+          {filteredWishlist.map((item, idx) => {
+            const prod = item.product || {
+              id: item.productId || item.id,
+              name: item.name || 'Bespoke Item',
+              price: Number(item.price || 0),
+              image: item.image || '/cat-thumb-sofas-2x.webp',
+              category: item.category || 'Living Room',
+              material: item.material || 'Solid Sheesham Wood',
+            };
+
+            return (
             <motion.div
-              key={item.id}
+              key={item.id || idx}
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               whileHover={{ y: -4 }}
@@ -156,8 +183,8 @@ export function DashboardWishlistTab({
             >
               <div className="relative aspect-[4/3] bg-[#FAF5EE] overflow-hidden">
                 <Image
-                  src={resolveImageUrl(item.product.image, item.product.category)}
-                  alt={item.product.name}
+                  src={resolveImageUrl(prod.image, prod.category)}
+                  alt={prod.name || 'Bespoke Item'}
                   fill
                   className="object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
                 />
@@ -165,7 +192,7 @@ export function DashboardWishlistTab({
 
                 <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
                   <span className="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-md text-[8.5px] font-black text-[#1F1612] uppercase tracking-wider border border-[#E7DDD0] shadow-xs">
-                    {item.product.category || 'CENTER TABLES'}
+                    {prod.category || 'CENTER TABLES'}
                   </span>
                   <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white text-[8px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1">
                     <Sparkles size={8} /> PREMIUM BESPOKE
@@ -179,7 +206,14 @@ export function DashboardWishlistTab({
 
                 <div className="absolute bottom-2.5 left-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
                   <button
-                    onClick={() => setQuickViewProduct(item.product)}
+                    onClick={() => setQuickViewProduct({
+                      id: String(prod.id || item.id),
+                      name: String(prod.name || 'Bespoke Item'),
+                      price: Number(prod.price || 0),
+                      image: prod.image,
+                      category: prod.category,
+                      material: prod.material,
+                    })}
                     className="w-full py-1.5 rounded-xl bg-white/95 backdrop-blur-md text-[#1F1612] text-[11px] font-bold border border-[#E7DDD0] shadow-md hover:bg-[#B88E4B] hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Eye size={12} /> View Crafting Specs
@@ -190,11 +224,11 @@ export function DashboardWishlistTab({
               <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
                 <div>
                   <h3 className="font-serif font-black text-[15px] sm:text-base text-[#1F1612] truncate group-hover:text-[#B88E4B] transition-colors">
-                    {item.product.name}
+                    {prod.name}
                   </h3>
                   <p className="text-[11px] text-[#7A6354] font-medium mt-0.5 flex items-center gap-1">
                     <ShieldCheck size={12} className="text-[#B88E4B]" />
-                    {item.product.material || 'Solid Sheesham Wood'}
+                    {prod.material || 'Solid Sheesham Wood'}
                   </p>
                 </div>
 
@@ -202,15 +236,15 @@ export function DashboardWishlistTab({
                   <div>
                     <span className="text-[10px] uppercase font-mono font-bold text-stone-400 block">Commission</span>
                     <span className="font-serif font-black text-base sm:text-[17px] text-[#1F1612]">
-                      Rs. {formatPrice(item.product.price)}
+                      Rs. {formatPrice(Number(prod.price || 0))}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => {
-                        handleMoveToCart(item.product);
-                        toast.success(`${item.product.name} added to Shopping Bag`);
+                        handleMoveToCart(item);
+                        toast.success(`${prod.name} added to Shopping Bag`);
                       }}
                       className="px-3 py-2 rounded-xl bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
                       title="Add to Shopping Bag"
@@ -230,7 +264,8 @@ export function DashboardWishlistTab({
                 </div>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       )}
     </motion.div>
@@ -248,9 +283,9 @@ export function DashboardConciergeTab({
   handleSendVoiceNote,
   clientName = 'VIP Client',
 }: {
-  conciergeKpis: any[];
+  conciergeKpis: DashboardKpiItem[];
   startCall: (type: 'voice' | 'video') => void;
-  messages: any[];
+  messages: UserMessageRecord[];
   userChatBottomRef: React.RefObject<HTMLDivElement | null>;
   msgInput: string;
   setMsgInput: (v: string) => void;
@@ -375,10 +410,10 @@ export function DashboardConciergeTab({
               </p>
             </div>
           ) : (
-            messages.map((m: any, i: number) => {
+            messages.map((m: UserMessageRecord, i: number) => {
               const isMe = m.sender === 'user';
               const isVoiceNote = typeof m.text === 'string' && m.text.startsWith('[VOICE_NOTE]:');
-              const voiceAudioUrl = isVoiceNote ? m.text.replace('[VOICE_NOTE]:', '') : '';
+              const voiceAudioUrl = isVoiceNote && typeof m.text === 'string' ? m.text.replace('[VOICE_NOTE]:', '') : '';
 
               return (
                 <div key={i} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`}>
