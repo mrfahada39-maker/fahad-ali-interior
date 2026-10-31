@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,21 +23,21 @@ import AnimatedCounter from '@/components/home/AnimatedCounter';
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface AiRadarTabProps {
-  telemetry: any;
-  stats: any;
+  telemetry: import('./admin-tab-types').AdminTelemetry | null;
+  stats: import('./admin-tab-types').AdminStats;
 }
 
 export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
   const [activeFilter, setActiveFilter] = useState<'all' | 'checkout' | 'cart' | 'viewing'>('all');
 
   // 100% REAL live active visitors from telemetry backend
-  const liveVisitors: any[] = Array.isArray(telemetry?.visitors) ? telemetry.visitors : [];
-  const activeVisitorsCount = telemetry?.activeVisitorsCount ?? liveVisitors.length;
+  const liveVisitors: import('./admin-tab-types').AdminTelemetryVisitor[] = Array.isArray(telemetry?.visitors) ? telemetry.visitors : [];
+  const activeVisitorsCount: number = typeof telemetry?.activeVisitorsCount === 'number' ? telemetry.activeVisitorsCount : liveVisitors.length;
 
-  const filteredVisitors = liveVisitors.filter((v: any) => {
-    if (activeFilter === 'cart') return v.status?.toLowerCase().includes('cart');
-    if (activeFilter === 'checkout') return v.status?.toLowerCase().includes('checkout');
-    if (activeFilter === 'viewing') return v.status?.toLowerCase().includes('view') || v.status?.toLowerCase().includes('brows');
+  const filteredVisitors = liveVisitors.filter((v: import('./admin-tab-types').AdminTelemetryVisitor) => {
+    if (activeFilter === 'cart') return typeof v.status === 'string' && v.status.toLowerCase().includes('cart');
+    if (activeFilter === 'checkout') return typeof v.status === 'string' && v.status.toLowerCase().includes('checkout');
+    if (activeFilter === 'viewing') return typeof v.status === 'string' && (v.status.toLowerCase().includes('view') || v.status.toLowerCase().includes('brows'));
     return true;
   });
 
@@ -169,7 +168,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
           <div className="mt-2 relative z-10">
             <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none truncate font-sans">
-              {telemetry?.mobileRatio || (activeVisitorsCount === 0 ? 'Desktop' : 'Desktop Browser')}
+              telemetry?.mobileRatio || (activeVisitorsCount === 0 ? 'Desktop' : 'Desktop Browser')
             </h3>
           </div>
         </motion.div>
@@ -329,7 +328,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
                       <span className="text-[#D4AF37] flex items-center gap-1 font-serif">
                         <span>📍</span> {vis.location}
                       </span>
-                      <span className="text-stone-300 truncate max-w-[150px] font-medium">{vis.currentPage}</span>
+                      <span className="text-stone-300 truncate max-w-[150px] font-medium">{vis.currentPage || vis.path || "Browsing Store"}</span>
                     </div>
                   </div>
                 );
@@ -359,14 +358,14 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
             <div className="bg-[#FAF5EE] border border-[#EADBCE] rounded-xl py-1 px-1.5 text-center shadow-2xs hover:border-[#B88E4B]/50 transition-all">
               <span className="text-[9px] font-black uppercase text-stone-500 block tracking-wider">Prime City</span>
               <span className="text-xs font-black text-[#1F1612] truncate block font-sans mt-0.5">
-                {telemetry?.topLocation || 'Standby'}
+                telemetry?.topLocation || 'Standby'
               </span>
             </div>
 
             <div className="bg-[#FAF5EE] border border-[#EADBCE] rounded-xl py-1 px-1.5 text-center shadow-2xs hover:border-[#B88E4B]/50 transition-all">
               <span className="text-[9px] font-black uppercase text-stone-500 block tracking-wider">Hardware</span>
               <span className="text-xs font-black text-blue-700 truncate block mt-0.5">
-                {telemetry?.mobileRatio || 'Desktop'}
+                telemetry?.mobileRatio || 'Desktop'
               </span>
             </div>
           </div>
@@ -417,7 +416,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
               </div>
             ) : (
               <AnimatePresence>
-                {filteredVisitors.map((vis: any, idx: number) => (
+                {filteredVisitors.map((vis: import('./admin-tab-types').AdminTelemetryVisitor, idx: number) => (
                   <motion.div
                     key={vis.id || idx}
                     initial={{ opacity: 0, y: 8 }}
@@ -434,7 +433,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
                           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
                         </span>
                         <span className="font-mono text-xs font-black text-[#1F1612] bg-white border border-[#E2D1BC] px-2.5 py-0.5 rounded-md">
-                          {vis.visitorNum}
+                          {vis.visitorNum || vis.id || 'Visitor'}
                         </span>
                         <span className="text-[10.5px] font-bold text-stone-500 bg-white border border-stone-200 px-2.5 py-0.5 rounded-md">
                           {vis.lastSeenAgo || 'Active'}
@@ -442,13 +441,13 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
                       </div>
 
                       <span className={`px-3 py-0.5 rounded-full text-[10.5px] font-black uppercase tracking-wider border ${
-                        vis.status?.includes('Checkout')
+                        typeof vis.status === 'string' && vis.status.includes('Checkout')
                           ? 'bg-amber-50 text-amber-900 border-amber-300'
-                          : vis.status?.includes('Cart')
+                          : typeof vis.status === 'string' && vis.status.includes('Cart')
                           ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
                           : 'bg-blue-50 text-blue-900 border-blue-300'
                       }`}>
-                        {vis.status}
+                        {vis.status || 'Active'}
                       </span>
                     </div>
 
@@ -458,22 +457,20 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
                       {/* Product */}
                       <div className="flex items-center gap-2 text-[#1F1612] truncate bg-white border border-[#EADBCE] px-2.5 py-1 rounded-lg">
                         <ShoppingBag size={13} className="text-[#B88E4B] shrink-0" />
-                        <span className="font-bold truncate text-xs" title={vis.currentPage}>
-                          {vis.currentPage}
-                        </span>
+                        <span className="font-bold truncate text-xs" title={vis.currentPage || vis.path || ""}>{vis.currentPage || vis.path || "Catalog"}</span>
                       </div>
 
                       {/* Location */}
                       <div className="flex items-center gap-2 text-stone-700 truncate bg-white border border-[#EADBCE] px-2.5 py-1 rounded-lg">
                         <MapPin size={13} className="text-amber-600 shrink-0" />
-                        <span className="font-bold truncate text-xs">{vis.location}</span>
+                        <span className="font-bold truncate text-xs">{vis.location || vis.city || "Pakistan"}</span>
                       </div>
 
                       {/* Device & Traffic */}
                       <div className="flex items-center justify-between text-stone-600 truncate bg-white border border-[#EADBCE] px-2.5 py-1 rounded-lg">
-                        <span className="truncate font-bold text-xs">{vis.device}</span>
+                        <span className="truncate font-bold text-xs">{vis.device || "Mobile"}</span>
                         <span className="font-black text-emerald-800 bg-emerald-50 border border-emerald-300/80 px-2 py-0.2 rounded text-[10px] shrink-0 ml-1">
-                          {vis.trafficSource}
+                          {vis.trafficSource || 'Direct'}
                         </span>
                       </div>
 

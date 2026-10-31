@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -45,7 +44,7 @@ import { AdminOrderSummary } from './admin-tab-types';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
-const getCustomerName = (o: any) => {
+const getCustomerName = (o?: AdminOrderSummary | null) => {
   if (!o) return 'VIP Client';
   const name =
     (typeof o.shippingName === 'string' && o.shippingName.trim() && o.shippingName.trim() !== 'Customer') ? o.shippingName.trim() :
@@ -58,7 +57,7 @@ const getCustomerName = (o: any) => {
   return name;
 };
 
-const getCustomerEmail = (o: any) => {
+const getCustomerEmail = (o?: AdminOrderSummary | null) => {
   if (!o) return 'client@fahad-ali.com';
   const email =
     (typeof o.shippingEmail === 'string' && o.shippingEmail.trim() && !o.shippingEmail.includes('example.com')) ? o.shippingEmail.trim() :
@@ -70,7 +69,7 @@ const getCustomerEmail = (o: any) => {
   return email;
 };
 
-const getCustomerPhone = (o: any) => {
+const getCustomerPhone = (o?: AdminOrderSummary | null) => {
   if (!o) return '—';
   const raw =
     (typeof o.shippingPhone === 'string' && o.shippingPhone.trim() && !o.shippingPhone.includes('0000000') && !o.shippingPhone.includes('1234567')) ? o.shippingPhone.trim() :
@@ -81,7 +80,7 @@ const getCustomerPhone = (o: any) => {
   return raw || '—';
 };
 
-const getCustomerAddress = (o: any) => {
+const getCustomerAddress = (o?: AdminOrderSummary | null) => {
   if (!o) return 'Pakistan';
   let street = '';
   if (typeof o.shippingAddress === 'string') {
@@ -108,7 +107,7 @@ const getCustomerAddress = (o: any) => {
   return parts.length > 0 ? parts.join(', ') : 'Pakistan';
 };
 
-const getOrderItemsSummary = (o: any) => {
+const getOrderItemsSummary = (o?: AdminOrderSummary | null) => {
   if (!o) return 'Bespoke Luxury Interior Unit';
 
   const itemsList = Array.isArray(o.items) && o.items.length > 0 ? o.items :
@@ -116,7 +115,7 @@ const getOrderItemsSummary = (o: any) => {
                     [];
 
   if (itemsList.length > 0) {
-    return itemsList.map((item: any) => {
+    return itemsList.map((item: { name?: string; title?: string; product?: { name?: string; title?: string }; quantity?: number }) => {
       const title = item.name || item.title || item.product?.name || item.product?.title || 'Interior Item';
       const qty = item.quantity || 1;
       return `${title} (x${qty})`;
@@ -126,7 +125,7 @@ const getOrderItemsSummary = (o: any) => {
   return 'Bespoke Luxury Interior Unit';
 };
 
-const formatOrderDateTime = (dateVal: any) => {
+const formatOrderDateTime = (dateVal?: string | number | Date | null) => {
   const d = new Date(dateVal || Date.now());
   const dateStr = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
   const dayStr = d.toLocaleDateString('en-US', { weekday: 'long' });
@@ -135,8 +134,8 @@ const formatOrderDateTime = (dateVal: any) => {
 };
 
 interface OverviewTabProps {
-  stats: Record<string, any>;
-  analytics: Record<string, any>;
+  stats: import('./admin-tab-types').AdminStats | Record<string, unknown>;
+  analytics: import('./admin-tab-types').AdminAnalytics | Record<string, unknown> | null;
   orders: AdminOrderSummary[];
   setActiveTab: (tab: string) => void;
 }
@@ -397,7 +396,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
     }
 
     // Comprehensive multi-field matching function
-    const matchesQuery = (o: any) => {
+    const matchesQuery = (o: AdminOrderSummary) => {
       const rawId = String(o.id || o._id || '').toLowerCase();
       const shortId = rawId.slice(-6);
       const name = getCustomerName(o).toLowerCase();
@@ -680,7 +679,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                 {kpi.prefix ? (
                   <span className="text-[11px] sm:text-base font-bold text-[#8C6D46] mr-0.5 sm:mr-1 select-none">{kpi.prefix}</span>
                 ) : null}
-                <AnimatedCounter value={kpi.numValue} duration={1.5} />
+                <AnimatedCounter value={Number(kpi.numValue) || 0} duration={1.5} />
               </h3>
               <div className="mt-2.5 flex items-center">
                 <span className={`inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs truncate ${kpi.badgeBg}`}>
@@ -902,11 +901,7 @@ export default function OverviewTab({ stats, analytics, orders, setActiveTab }: 
                 <BarChart
                   data={orderStatusData}
                   margin={{ top: 22, right: 10, left: -20, bottom: 10 }}
-                  onClick={(state: any) => {
-                    if (state && state.activePayload && state.activePayload.length) {
-                      setActiveTab('orders');
-                    }
-                  }}
+                  onClick={() => { setActiveTab('orders'); }}
                   className="cursor-pointer"
                 >
                   <defs>

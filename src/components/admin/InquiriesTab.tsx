@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,14 +31,14 @@ import AnimatedCounter from '@/components/home/AnimatedCounter';
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface InquiriesTabProps {
-  inquiries: any[];
+  inquiries: import('./admin-tab-types').AdminInquirySummary[];
   updateInquiryStatus: (id: string, status: string) => void;
 }
 
 export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: InquiriesTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('all');
-  const [selectedInquiryModal, setSelectedInquiryModal] = useState<any>(null);
+  const [selectedInquiryModal, setSelectedInquiryModal] = useState<import('./admin-tab-types').AdminInquirySummary | null>(null);
 
   const totalBudgetVal = inquiries.reduce((acc, curr) => acc + (Number(curr.budget) || 0), 0);
   const pendingCount = inquiries.filter((i) => (i.status || '').toLowerCase() === 'pending').length;
@@ -391,19 +390,19 @@ export default function InquiriesTab({ inquiries = [], updateInquiryStatus }: In
                   {/* Right Status Workflow Buttons */}
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => updateInquiryStatus(inq.id, 'contacted')}
+                      onClick={() => updateInquiryStatus(String(inq.id || ''), 'contacted')}
                       className="px-2.5 py-1 rounded-lg text-[10px] font-black text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
                     >
                       Contacted
                     </button>
                     <button
-                      onClick={() => updateInquiryStatus(inq.id, 'reviewed')}
+                      onClick={() => updateInquiryStatus(String(inq.id || ''), 'reviewed')}
                       className="px-2.5 py-1 rounded-lg text-[10px] font-black text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors cursor-pointer"
                     >
                       Reviewed
                     </button>
                     <button
-                      onClick={() => updateInquiryStatus(inq.id, 'approved')}
+                      onClick={() => updateInquiryStatus(String(inq.id || ''), 'approved')}
                       className="px-2.5 py-1 rounded-lg text-[10px] font-black text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
                     >
                       Approved

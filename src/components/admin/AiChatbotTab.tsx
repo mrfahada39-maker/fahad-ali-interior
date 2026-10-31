@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, @next/next/no-img-element */
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,7 +40,7 @@ interface ChatMessageItem {
   role: 'user' | 'assistant' | 'system';
   content: string;
   intent?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   createdAt?: string;
 }
 
@@ -58,9 +57,19 @@ interface ChatSessionItem {
   messages: ChatMessageItem[];
 }
 
+interface AiChatbotAnalytics {
+  totalSessions?: number;
+  totalMessages?: number;
+  escalatedSessions?: number;
+  conversionRate?: number;
+  recentSessions?: ChatSessionItem[];
+  intentCounts?: { intent: string; count: number }[];
+  [key: string]: unknown;
+}
+
 export default function AiChatbotTab() {
   // Synchronous localStorage initializer for instant 0ms load
-  const [analytics, setAnalytics] = useState<any>(() => {
+  const [analytics, setAnalytics] = useState<AiChatbotAnalytics | null>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_ai_admin_analytics');
@@ -134,12 +143,14 @@ export default function AiChatbotTab() {
       if (data.success) {
         toast.success(`Session #${sessionId} deleted`);
         if (selectedSession?.sessionId === sessionId) setSelectedSession(null);
-        setAnalytics((prev: any) => {
+        setAnalytics((prev) => {
           if (!prev) return prev;
-          const filtered = (prev.recentSessions || []).filter((s: any) => s.sessionId !== sessionId);
+          const prevRecent = Array.isArray(prev.recentSessions) ? prev.recentSessions : [];
+          const filtered = prevRecent.filter((s) => s.sessionId !== sessionId);
+          const total = typeof prev.totalSessions === 'number' ? prev.totalSessions : 1;
           return {
             ...prev,
-            totalSessions: Math.max(0, (prev.totalSessions || 1) - 1),
+            totalSessions: Math.max(0, total - 1),
             recentSessions: filtered,
           };
         });
@@ -153,7 +164,7 @@ export default function AiChatbotTab() {
 
   // Export transcripts to CSV / JSON
   const handleExportTranscripts = () => {
-    const sessions: ChatSessionItem[] = analytics?.recentSessions || [];
+    const sessions: ChatSessionItem[] = Array.isArray(analytics?.recentSessions) ? analytics.recentSessions : [];
     if (sessions.length === 0) {
       toast.info('No sessions available to export');
       return;
@@ -502,15 +513,15 @@ export default function AiChatbotTab() {
               {intentCounts.length === 0 ? (
                 <p className="text-stone-400 text-xs text-center py-4">No intent queries recorded yet.</p>
               ) : (
-                intentCounts.map((item: any, i: number) => {
-                  const maxCount = Math.max(...intentCounts.map((x: any) => x.count), 1);
+                intentCounts.map((item: { intent?: string; count: number }, i: number) => {
+                  const maxCount = Math.max(...intentCounts.map((x: { count: number }) => x.count), 1);
                   const pct = Math.round((item.count / maxCount) * 100);
                   const isSelected = selectedIntentFilter === item.intent;
 
                   return (
                     <div
                       key={item.intent || i}
-                      onClick={() => setSelectedIntentFilter(isSelected ? null : item.intent)}
+                      onClick={() => setSelectedIntentFilter(isSelected ? null : (item.intent ?? null))}
                       className={`p-2 rounded-xl transition-all cursor-pointer border ${
                         isSelected
                           ? 'bg-[#FAF5EE] border-[#B88E4B]'
@@ -755,7 +766,7 @@ export default function AiChatbotTab() {
                     {/* Products Grid if attached */}
                     {m.products && m.products.length > 0 && (
                       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-black/10">
-                        {m.products.map((p: any) => (
+                        {m.products.map((p: { id: string; name: string; price: number; image?: string; category?: string }) => (
                           <div key={p.id} className="bg-white/90 p-2 rounded-xl border border-[#E7DDD0] flex gap-2">
                             {p.image && (
                               <img
@@ -977,7 +988,7 @@ export default function AiChatbotTab() {
                 {(selectedSession.messages || []).length === 0 ? (
                   <p className="text-stone-400 text-center py-6">No recorded messages for this session.</p>
                 ) : (
-                  (selectedSession.messages || []).map((m: any, i: number) => {
+                  (selectedSession.messages || []).map((m: { id?: string; role?: string; content?: string; text?: string; createdAt?: string; metadata?: { products?: Array<{ id: string; name: string; price: number; image?: string }>; whatsAppUrl?: string; [key: string]: unknown } }, i: number) => {
                     const isAssistant = m.role === 'assistant' || m.role === 'bot';
                     return (
                       <div
@@ -1008,7 +1019,7 @@ export default function AiChatbotTab() {
                               ✦ Recommended Live Products:
                             </span>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {m.metadata.products.map((p: any) => (
+                              {m.metadata.products.map((p: { id: string; name: string; price: number; image?: string }) => (
                                 <div key={p.id} className="bg-white p-2 rounded-xl border border-[#E7DDD0] flex gap-2">
                                   {p.image && (
                                     <img src={p.image} alt={p.name} className="w-12 h-12 object-cover rounded-lg" />

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -40,8 +39,8 @@ import { AdminOrderSummary, AdminProductSummary } from './admin-tab-types';
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface AnalyticsTabProps {
-  stats: Record<string, any>;
-  analytics: Record<string, any>;
+  stats: import('./admin-tab-types').AdminStats | Record<string, unknown>;
+  analytics: import('./admin-tab-types').AdminAnalytics | Record<string, unknown> | null;
   orders: AdminOrderSummary[];
   products: AdminProductSummary[];
 }
@@ -187,12 +186,14 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
     return Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
   }, [orders, timeframe, customStartDate, customEndDate]);
 
-  const categoryChartData =
-    analytics?.categoryDistribution?.map((c: any) => ({
-      name: c.category,
-      count: c._count?.category || 0,
-      value: c._count?.category || 0,
-    })) || [];
+  const rawCatList = analytics?.categoryDistribution || analytics?.categoriesDistribution;
+  const categoryChartData: Array<{ name: string; count: number; value: number }> = Array.isArray(rawCatList)
+    ? rawCatList.map((c) => ({
+        name: String(c.category || c.name || 'Other'),
+        count: Number(c._count?.category ?? c.count ?? 0),
+        value: Number(c._count?.category ?? c.value ?? c.count ?? 0),
+      }))
+    : [];
 
   const totalRevenue = Number(stats?.totalRevenue ?? 0);
   const totalOrdersCount = Number(stats?.orderCount ?? orders?.length ?? 0);
@@ -551,9 +552,9 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
           </div>
 
           <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-            {categoryChartData.map((c: any, idx: number) => {
-              const maxVal = Math.max(...categoryChartData.map((x: any) => x.count), 1);
-              const pct = Math.round((c.count / maxVal) * 100);
+            {categoryChartData.map((c: { name: string; count: number; value: number }, idx: number) => {
+              const maxVal = Math.max(...categoryChartData.map((x: { count?: number }) => x.count || 0), 1);
+              const pct = Math.round(((c.count || 0) / maxVal) * 100);
 
               return (
                 <div key={c.name || idx} className="space-y-1">
@@ -591,7 +592,7 @@ export default function AnalyticsTab({ stats, analytics, orders = [], products =
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 pt-1">
-            {orderStatusData.map((st: any) => {
+            {orderStatusData.map((st: { name: string; value: number }) => {
               const nameLower = st.name.toLowerCase();
               const badgeStyle =
                 nameLower === 'delivered'

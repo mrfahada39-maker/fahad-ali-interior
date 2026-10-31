@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,7 +24,7 @@ import { toast } from 'sonner';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 interface ReviewsTabProps {
-  reviews: any[];
+  reviews: import('./admin-tab-types').AdminReviewSummary[];
   updateReviewStatus: (id: string, status: string) => void;
   deleteReview: (id: string) => void;
   statusColor: (status: string) => string;
@@ -40,14 +39,14 @@ export default function ReviewsTab({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  const filteredReviews = (reviews || []).filter((r: any) => {
+  const filteredReviews = (reviews || []).filter((r: import('./admin-tab-types').AdminReviewSummary) => {
     const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
       !q ||
-      Boolean(r.customerName && r.customerName.toLowerCase().includes(q)) ||
-      Boolean(r.user?.name && r.user.name.toLowerCase().includes(q)) ||
-      Boolean(r.product?.name && r.product.name.toLowerCase().includes(q)) ||
-      Boolean(r.comment && r.comment.toLowerCase().includes(q));
+      Boolean(r.customerName && String(r.customerName).toLowerCase().includes(q)) ||
+      Boolean(r.user?.name && String(r.user.name).toLowerCase().includes(q)) ||
+      Boolean(r.product?.name && String(r.product.name).toLowerCase().includes(q)) ||
+      Boolean(r.comment && String(r.comment).toLowerCase().includes(q));
 
     if (filterStatus === 'all') return matchesSearch;
     if (filterStatus === 'pending') return matchesSearch && (r.status || 'pending').toLowerCase() === 'pending';
@@ -58,10 +57,10 @@ export default function ReviewsTab({
   });
 
   const totalCount = reviews.length;
-  const pendingCount = reviews.filter((r: any) => (r.status || 'pending').toLowerCase() === 'pending').length;
-  const approvedCount = reviews.filter((r: any) => (r.status || '').toLowerCase() === 'approved').length;
+  const pendingCount = reviews.filter((r: import('./admin-tab-types').AdminReviewSummary) => (r.status || 'pending').toLowerCase() === 'pending').length;
+  const approvedCount = reviews.filter((r: import('./admin-tab-types').AdminReviewSummary) => (r.status || '').toLowerCase() === 'approved').length;
   const avgRating = totalCount > 0
-    ? (reviews.reduce((acc: number, r: any) => acc + (Number(r.rating) || 5), 0) / totalCount).toFixed(1)
+    ? (reviews.reduce((acc: number, r: import('./admin-tab-types').AdminReviewSummary) => acc + (Number(r.rating) || 5), 0) / totalCount).toFixed(1)
     : '0.0';
   const approvalRate = totalCount > 0 ? Number(((approvedCount / totalCount) * 100).toFixed(1)) : 0;
 
@@ -286,7 +285,7 @@ export default function ReviewsTab({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-          {filteredReviews.map((r: any) => {
+          {filteredReviews.map((r: import('./admin-tab-types').AdminReviewSummary) => {
             const initial = (r.customerName || r.user?.name || 'A').charAt(0).toUpperCase();
             const ratingNum = Number(r.rating) || 5;
 
@@ -370,7 +369,7 @@ export default function ReviewsTab({
                 <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
                   {(r.status || '').toLowerCase() !== 'approved' && (
                     <button
-                      onClick={() => updateReviewStatus(r.id, 'approved')}
+                      onClick={() => updateReviewStatus(String(r.id || ''), 'approved')}
                       className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:brightness-110 text-white font-black text-xs shadow-2xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
                     >
                       <CheckCircle2 size={13} />
@@ -379,7 +378,7 @@ export default function ReviewsTab({
                   )}
                   {(r.status || '').toLowerCase() !== 'rejected' && (
                     <button
-                      onClick={() => updateReviewStatus(r.id, 'rejected')}
+                      onClick={() => updateReviewStatus(String(r.id || ''), 'rejected')}
                       className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:brightness-110 text-white font-black text-xs shadow-2xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
                     >
                       <XCircle size={13} />
@@ -387,7 +386,7 @@ export default function ReviewsTab({
                     </button>
                   )}
                   <button
-                    onClick={() => deleteReview(r.id)}
+                    onClick={() => deleteReview(String(r.id || ''))}
                     className="p-1.5 rounded-xl bg-[#FAF5EE] hover:bg-rose-50 text-stone-500 hover:text-rose-600 border border-[#E2D1BC] hover:border-rose-200 transition-colors cursor-pointer"
                     title="Delete Review"
                   >

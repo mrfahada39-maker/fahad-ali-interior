@@ -74,6 +74,19 @@ export interface AdminProductSummary {
   [key: string]: unknown;
 }
 
+export interface AdminOrderItem {
+  id?: string;
+  name?: string;
+  title?: string;
+  productName?: string;
+  product?: { name?: string; image?: string; [key: string]: unknown };
+  price?: number | string | null;
+  unitPrice?: number | string | null;
+  quantity?: number;
+  image?: string;
+  [key: string]: unknown;
+}
+
 export interface AdminOrderSummary {
   id?: string;
   _id?: string;
@@ -82,9 +95,12 @@ export interface AdminOrderSummary {
   shippingEmail?: string | null;
   shippingPhone?: string | null;
   shippingAddress?: string | { fullName?: string; email?: string; phone?: string; address?: string; street?: string; city?: string; province?: string } | null;
-  shippingInfo?: { name?: string; email?: string; phone?: string; address?: string; city?: string; province?: string } | null;
+  shippingInfo?: { name?: string; email?: string; phone?: string; address?: string; city?: string; province?: string; notes?: string } | null;
   shippingCity?: string | null;
   shippingProvince?: string | null;
+  shippingNotes?: string | null;
+  paymentScreenshot?: string | null;
+  paymentGatewayRef?: string | null;
   city?: string | null;
   customerName?: string | null;
   customerEmail?: string | null;
@@ -96,7 +112,7 @@ export interface AdminOrderSummary {
   paymentMethod?: string | null;
   createdAt?: string | Date | null;
   user?: { name?: string | null; email?: string | null; phone?: string | null } | null;
-  items?: Array<{ id?: string; name?: string; price?: number | string | null; quantity?: number; image?: string }> | null;
+  items?: AdminOrderItem[] | null;
   [key: string]: unknown;
 }
 
@@ -134,8 +150,10 @@ export interface AdminInquirySummary {
   roomType?: string;
   budget?: number;
   message?: string;
+  description?: string;
   status?: string;
   createdAt?: string | Date;
+  user?: { name?: string | null; email?: string | null; phone?: string | null; [key: string]: unknown };
   [key: string]: unknown;
 }
 
@@ -144,9 +162,11 @@ export interface AdminReviewSummary {
   rating?: number;
   comment?: string;
   status?: string;
+  customerName?: string | null;
+  image?: string | null;
   createdAt?: string | Date;
-  user?: { name?: string | null; email?: string | null } | null;
-  product?: { name?: string | null } | null;
+  user?: { name?: string | null; email?: string | null; image?: string | null } | null;
+  product?: { id?: string; name?: string | null; image?: string | null } | null;
   [key: string]: unknown;
 }
 
@@ -168,16 +188,136 @@ export interface AdminSiteSettings {
   [key: string]: unknown;
 }
 
+export interface AdminStats {
+  totalRevenue?: number;
+  orderCount?: number;
+  userCount?: number;
+  productCount?: number;
+  pendingOrders?: number;
+  processingOrders?: number;
+  shippedOrders?: number;
+  deliveredOrders?: number;
+  cancelledOrders?: number;
+  totalProducts?: number;
+  [key: string]: unknown;
+}
+
+export interface AdminAnalyticsCategory {
+  category?: string;
+  name?: string;
+  count?: number;
+  value?: number;
+  _count?: { category?: number };
+  [key: string]: unknown;
+}
+
+export interface AdminAnalytics {
+  revenueOverTime?: Array<{ date: string; amount: number; [key: string]: unknown }>;
+  topProducts?: Array<{ id: string; name: string; sales: number; [key: string]: unknown }>;
+  categoriesDistribution?: AdminAnalyticsCategory[];
+  categoryDistribution?: AdminAnalyticsCategory[];
+  [key: string]: unknown;
+}
+
+export interface AdminTelemetryVisitor {
+  id?: string;
+  visitorNum?: string | number;
+  lastSeenAgo?: string;
+  status?: string;
+  currentPage?: string;
+  location?: string;
+  device?: string;
+  trafficSource?: string;
+  posX?: number;
+  posY?: number;
+  path?: string;
+  city?: string;
+  [key: string]: unknown;
+}
+
+export interface AdminTelemetry {
+  onlineUsers?: number;
+  cpuUsage?: number;
+  memoryUsage?: number;
+  activeSessions?: number;
+  errorRate?: number;
+  latency?: number;
+  activeVisitorsCount?: number;
+  mobileRatio?: string;
+  topLocation?: string;
+  avgDwellTime?: string;
+  topIntent?: string;
+  visitors?: AdminTelemetryVisitor[];
+  [key: string]: unknown;
+}
+
+export interface AdminMessageItem {
+  id?: string;
+  text?: string;
+  content?: string;
+  sender?: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+  userPhone?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  createdAt?: string | Date;
+  [key: string]: unknown;
+}
+
+export interface AdminMessageThread {
+  id: string;
+  userId?: string;
+  name?: string;
+  userName?: string;
+  email?: string;
+  userEmail?: string;
+  phone?: string;
+  userPhone?: string;
+  messages?: AdminMessageItem[];
+  [key: string]: unknown;
+}
+
+export interface BlogFormData {
+  id?: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  image?: string;
+  author?: string;
+  isActive?: boolean;
+  tags?: string;
+  [key: string]: unknown;
+}
+
+export interface AdminBlogSummary {
+  id?: string;
+  title: string;
+  slug?: string;
+  content?: string;
+  excerpt?: string;
+  image?: string;
+  published?: boolean;
+  isActive?: boolean;
+  author?: string;
+  tags?: string | string[];
+  createdAt?: string | Date;
+  [key: string]: unknown;
+}
+
 export type AdminBundle = {
-  stats: Record<string, unknown>;
+  stats: AdminStats;
   products: AdminProductSummary[] | { products: AdminProductSummary[] };
   orders: AdminOrderSummary[];
   customers: AdminCustomerSummary[];
   users?: AdminCustomerSummary[];
-  messages: AdminMessageSummary[];
+  messages: AdminMessageSummary[] | AdminMessageThread[];
   reviews: AdminReviewSummary[];
   inquiries: AdminInquirySummary[];
   siteSettings: AdminSiteSettings;
-  analytics: Record<string, unknown>;
+  analytics: AdminAnalytics;
   account: { name?: string; email?: string; phone?: string };
 };

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -44,4 +43,4 @@ export const DEFAULT_ADMIN_STATS = {
   cancelledOrders: 0,
 };
 
-export const DEFAULT_ADMIN_ORDERS: any[] = [];
+export const DEFAULT_ADMIN_ORDERS: unknown[] = [];

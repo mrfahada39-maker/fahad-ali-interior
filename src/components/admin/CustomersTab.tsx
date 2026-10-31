@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -78,16 +77,36 @@ interface CustomerRow {
 }
 
 interface CustomersTabProps {
-  initialUsers?: any[];
+  initialUsers?: import('./admin-tab-types').AdminCustomerSummary[];
 }
 
 export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
-  const [customers, setCustomers] = useState<CustomerRow[]>(initialUsers as CustomerRow[]);
+  const normalizeCustomer = (u: import('./admin-tab-types').AdminCustomerSummary): CustomerRow => ({
+    id: String(u.id || ''),
+    name: String(u.name || 'Valued Client'),
+    email: String(u.email || 'client@fahadali.com'),
+    phone: String(u.phone || ''),
+    emailVerified: ((u as Record<string, unknown>).emailVerified as string) ?? null,
+    tags: Array.isArray((u as Record<string, unknown>).tags) ? ((u as Record<string, unknown>).tags as string[]) : [],
+    isBlocked: Boolean((u as Record<string, unknown>).isBlocked),
+    lockedUntil: ((u as Record<string, unknown>).lockedUntil as string) ?? null,
+    createdAt: u.createdAt ? String(u.createdAt) : new Date().toISOString(),
+    avatar: ((u as Record<string, unknown>).avatar as string) ?? null,
+    loyaltyPoints: Number(u.loyaltyPoints || 0),
+    loyaltyTier: String(u.loyaltyTier || 'BRONZE'),
+    totalSpent: Number(u.totalSpent || 0),
+    segment: ((u as Record<string, unknown>).segment as string) ?? 'New',
+    lastOrderDate: ((u as Record<string, unknown>).lastOrderDate as string) ?? null,
+    lastOrderStatus: ((u as Record<string, unknown>).lastOrderStatus as string) ?? null,
+    _count: ((u as Record<string, unknown>)._count as CustomerRow['_count']) || { orders: Number(u.totalOrders || 0), reviews: 0, wishlistItems: 0, messages: 0 },
+  });
+
+  const [customers, setCustomers] = useState<CustomerRow[]>(() => (initialUsers || []).map(normalizeCustomer));
   const [stats, setStats] = useState<CustomerStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedSegment, setSelectedSegment] = useState('all');
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerRow | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -133,7 +152,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
 
   useEffect(() => {
     if (initialUsers && initialUsers.length > 0 && customers.length === 0) {
-      setCustomers(initialUsers as CustomerRow[]);
+      setCustomers(initialUsers.map(normalizeCustomer));
     }
   }, [initialUsers, customers.length]);
 
@@ -160,7 +179,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
     const csvRows = customers
       .map(
         (c) =>
-          `"${c.id}","${c.name || 'Client'}","${c.email}","${c.phone || ''}",${c._count?.orders || (c as any).ordersCount || 0},${c.totalSpent || 0},"${c.loyaltyTier || 'BRONZE'}","${c.isBlocked ? 'BLOCKED' : 'ACTIVE'}","${new Date(c.createdAt).toLocaleDateString()}"`
+          `"${c.id}","${c.name || 'Client'}","${c.email}","${c.phone || ''}",${c._count?.orders || (c as { ordersCount?: number }).ordersCount || 0},${c.totalSpent || 0},"${c.loyaltyTier || 'BRONZE'}","${c.isBlocked ? 'BLOCKED' : 'ACTIVE'}","${new Date(c.createdAt).toLocaleDateString()}"`
       )
       .join('\n');
     const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });

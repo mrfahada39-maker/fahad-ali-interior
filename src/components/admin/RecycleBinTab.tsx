@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,7 +33,7 @@ interface RecycleBinItem {
   entityType: 'PRODUCT' | 'CATEGORY' | 'ORDER' | 'REVIEW';
   entityId: string;
   name: string;
-  payload: any;
+  payload: Record<string, unknown>;
   deletedBy?: string | null;
   deletedAt: string;
 }
@@ -501,7 +500,7 @@ export default function RecycleBinTab() {
               {filteredItems.map((item) => {
                 const cfg = SECTION_CONFIG[item.entityType] || SECTION_CONFIG.ALL;
                 const Icon = cfg.icon;
-                const payload = item.payload || {};
+                const payload = (item.payload || {}) as { image?: string; price?: number | string; totalAmount?: number | string; description?: string; category?: string; shippingAddress?: string; shippingCity?: string };
                 const isRestoring = restoringId === item.id;
                 const isPurging = purgingId === item.id;
 

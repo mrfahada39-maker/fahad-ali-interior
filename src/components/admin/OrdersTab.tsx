@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,14 +24,14 @@ import LuxurySelect from '@/components/ui/LuxurySelect';
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface OrdersTabProps {
-  orders: any[];
+  orders: import('./admin-tab-types').AdminOrderSummary[];
   updateOrderStatus: (id: string, status: string, paymentStatus?: string) => void;
 }
 
 export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('all');
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState<any>(null);
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState<import('./admin-tab-types').AdminOrderSummary | null>(null);
 
   const getStatusBadge = (s: string) => {
     const st = (s || '').toLowerCase();
@@ -137,7 +136,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
     // Match Ordered Items
     const matchesItems = Boolean(
       Array.isArray(o.items) &&
-      o.items.some((it: any) => {
+      o.items.some((it: { name?: string; title?: string; product?: { name?: string }; [key: string]: unknown }) => {
         const title = String(it.productName || it.name || it.title || it.product?.name || '').toLowerCase();
         return title.includes(q) || (cleanQ.length > 0 && title.includes(cleanQ));
       })
@@ -411,7 +410,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                   const cleanPhone = customerPhone ? customerPhone.replace(/\D/g, '') : '';
                   const shortId = o.id ? o.id.slice(-8).toUpperCase() : 'ORDER';
                   const whatsappUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hi ${customerName}, regarding your Order #${shortId} from Fahad Ali Interior:`)}` : null;
-                  const badge = getStatusBadge(o.status);
+                  const badge = getStatusBadge(String(o.status || ""));
 
                   return (
                     <motion.tr
@@ -463,7 +462,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                       <td className="py-3.5 px-4">
                         <LuxurySelect
                           value={(o.status || '').toLowerCase()}
-                          onChange={(val) => updateOrderStatus(o.id, val)}
+                          onChange={(val) => updateOrderStatus(String(o.id || ""), val)}
                           options={[
                             { value: 'pending', label: 'Pending' },
                             { value: 'processing', label: 'Processing' },
@@ -542,7 +541,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                   <span className="text-[10px] font-black uppercase tracking-widest text-[#8C6239] bg-[#FAF5EE] border border-[#E2D1BC] px-2.5 py-0.5 rounded-full">
                     Official Executive Order Slip
                   </span>
-                  <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase border ${getStatusBadge(selectedOrderDetails.status).bg}`}>
+                  <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase border ${getStatusBadge(String(selectedOrderDetails.status || "")).bg}`}>
                     {selectedOrderDetails.status}
                   </span>
                 </div>
@@ -576,7 +575,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                   </p>
                 )}
                 <p className="text-stone-700 pt-0.5">
-                  {selectedOrderDetails.shippingAddress || selectedOrderDetails.shippingInfo?.address || 'Standard Delivery Address'}
+                  {typeof selectedOrderDetails.shippingAddress === 'string' ? selectedOrderDetails.shippingAddress : (selectedOrderDetails.shippingAddress?.address || selectedOrderDetails.shippingInfo?.address || 'Standard Delivery Address')}
                 </p>
                 <p className="text-stone-900 font-bold">
                   {[selectedOrderDetails.shippingCity || selectedOrderDetails.shippingInfo?.city, selectedOrderDetails.shippingProvince || selectedOrderDetails.shippingInfo?.province].filter(Boolean).join(', ') || 'Pakistan'}
@@ -604,7 +603,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                     </p>
                   </div>
                 ) : (
-                  (selectedOrderDetails.items || []).map((item: any, idx: number) => {
+                  (selectedOrderDetails.items || []).map((item: import('./admin-tab-types').AdminOrderItem, idx: number) => {
                     const price = Number(item.unitPrice || item.price || 0);
                     const qty = Number(item.quantity || 1);
                     return (
@@ -710,7 +709,6 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                             className="relative block w-14 h-14 rounded-lg overflow-hidden border border-stone-200 shrink-0 hover:opacity-90"
                             title="Click to view full screenshot"
                           >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={selectedOrderDetails.paymentScreenshot}
                               alt="Receipt"
@@ -743,8 +741,8 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                       {/* 1. Verify Payment */}
                       <button
                         onClick={() => {
-                          updateOrderStatus(selectedOrderDetails.id, 'PROCESSING', 'PAID');
-                          setSelectedOrderDetails((prev: any) => ({ ...prev, status: 'PROCESSING', paymentStatus: 'PAID' }));
+                          updateOrderStatus(String(selectedOrderDetails.id || ''), 'PROCESSING', 'PAID');
+                          setSelectedOrderDetails((prev) => prev ? ({ ...prev, status: 'PROCESSING', paymentStatus: 'PAID' }) : null);
                         }}
                         className="h-10 sm:h-10.5 px-2.5 sm:px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 border border-emerald-400/50 text-white font-bold text-xs sm:text-[13px] tracking-tight shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
                         title="Verify payment and approve order"
@@ -756,8 +754,8 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                       {/* 2. Hold 24-48 Hours */}
                       <button
                         onClick={() => {
-                          updateOrderStatus(selectedOrderDetails.id, 'PENDING', 'AWAITING_VERIFICATION');
-                          setSelectedOrderDetails((prev: any) => ({ ...prev, status: 'PENDING', paymentStatus: 'AWAITING_VERIFICATION' }));
+                          updateOrderStatus(String(selectedOrderDetails.id || ''), 'PENDING', 'AWAITING_VERIFICATION');
+                          setSelectedOrderDetails((prev) => prev ? ({ ...prev, status: 'PENDING', paymentStatus: 'AWAITING_VERIFICATION' }) : null);
                         }}
                         className="h-10 sm:h-10.5 px-2.5 sm:px-3.5 rounded-xl bg-gradient-to-r from-[#B88E4B] via-[#C9A24D] to-[#996515] hover:from-[#C9A24D] hover:to-[#B88E4B] border border-amber-300/50 text-white font-bold text-xs sm:text-[13px] tracking-tight shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
                         title="Hold order for 24-48 hours bank clearance"
@@ -769,8 +767,8 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                       {/* 3. Reject / Cancel Order */}
                       <button
                         onClick={() => {
-                          updateOrderStatus(selectedOrderDetails.id, 'CANCELLED', 'FAILED');
-                          setSelectedOrderDetails((prev: any) => ({ ...prev, status: 'CANCELLED', paymentStatus: 'FAILED' }));
+                          updateOrderStatus(String(selectedOrderDetails.id || ''), 'CANCELLED', 'FAILED');
+                          setSelectedOrderDetails((prev) => prev ? ({ ...prev, status: 'CANCELLED', paymentStatus: 'FAILED' }) : null);
                         }}
                         className="h-10 sm:h-10.5 px-2.5 sm:px-3.5 rounded-xl bg-gradient-to-r from-rose-600 via-rose-700 to-red-700 hover:from-rose-500 hover:to-red-600 border border-rose-400/50 text-white font-bold text-xs sm:text-[13px] tracking-tight shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
                         title="Reject slip and cancel order"
@@ -795,7 +793,7 @@ export default function OrdersTab({ orders, updateOrderStatus }: OrdersTabProps)
                   const name = selectedOrderDetails.shippingName || selectedOrderDetails.shippingInfo?.name || selectedOrderDetails.user?.name || 'Customer';
                   if (!phone) return null;
                   const cleanPhone = phone.replace(/\D/g, '');
-                  const message = encodeURIComponent(`Hi ${name}! Here is your official order slip summary for Order #${selectedOrderDetails.id?.slice(-8).toUpperCase()} from Fahad Ali Interior:\nTotal: Rs. ${formatPrice(selectedOrderDetails.totalAmount || 0)}\nStatus: ${selectedOrderDetails.status}`);
+                  const message = encodeURIComponent(`Hi ${name}! Here is your official order slip summary for Order #${selectedOrderDetails.id?.slice(-8).toUpperCase()} from Fahad Ali Interior:\nTotal: Rs. ${formatPrice(Number(selectedOrderDetails.totalAmount || 0))}\nStatus: ${selectedOrderDetails.status}`);
                   return (
                     <a
                       href={`https://wa.me/${cleanPhone}?text=${message}`}

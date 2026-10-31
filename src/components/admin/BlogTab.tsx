@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,14 +26,14 @@ import {
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 interface BlogTabProps {
-  blogs: any[];
-  blogForm: any;
-  setBlogForm: React.Dispatch<React.SetStateAction<any>>;
+  blogs: import('./admin-tab-types').AdminBlogSummary[];
+  blogForm: import('./admin-tab-types').BlogFormData;
+  setBlogForm: React.Dispatch<React.SetStateAction<import('./admin-tab-types').BlogFormData>>;
   showAddBlog: boolean;
   setShowAddBlog: (show: boolean) => void;
   saveBlog: () => void;
   deleteBlog: (id: string) => void;
-  editBlog: (b: any) => void;
+  editBlog: (b: import('./admin-tab-types').AdminBlogSummary) => void;
 }
 
 export default function BlogTab({
@@ -50,13 +49,13 @@ export default function BlogTab({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
 
-  const filteredBlogs = (blogs || []).filter((b: any) => {
+  const filteredBlogs = (blogs || []).filter((b: import('./admin-tab-types').AdminBlogSummary) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       b.title?.toLowerCase().includes(q) ||
       b.author?.toLowerCase().includes(q) ||
       b.slug?.toLowerCase().includes(q) ||
-      (b.tags && b.tags.some((t: string) => t.toLowerCase().includes(q)));
+      (Array.isArray(b.tags) ? b.tags.some((t: string) => t.toLowerCase().includes(q)) : (typeof b.tags === "string" && b.tags.toLowerCase().includes(q)));
 
     if (filterStatus === 'published') return matchesSearch && b.isActive;
     if (filterStatus === 'draft') return matchesSearch && !b.isActive;
@@ -64,8 +63,8 @@ export default function BlogTab({
   });
 
   const totalCount = blogs.length;
-  const publishedCount = blogs.filter((b: any) => b.isActive).length;
-  const draftCount = blogs.filter((b: any) => !b.isActive).length;
+  const publishedCount = blogs.filter((b: import('./admin-tab-types').AdminBlogSummary) => (b as { isActive?: boolean }).isActive).length;
+  const draftCount = blogs.filter((b: import('./admin-tab-types').AdminBlogSummary) => !(b as { isActive?: boolean }).isActive).length;
 
   const kpis = [
     {
@@ -255,7 +254,7 @@ export default function BlogTab({
             return (
               <button
                 key={tab.id}
-                onClick={() => setFilterStatus(tab.id as any)}
+                onClick={() => setFilterStatus(tab.id as 'all' | 'published' | 'draft')}
                 className={`px-3.5 py-1.5 rounded-xl font-black text-xs whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
                   isActive
                     ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-2xs'
@@ -315,7 +314,7 @@ export default function BlogTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {filteredBlogs.map((b: any) => (
+                {filteredBlogs.map((b: import('./admin-tab-types').AdminBlogSummary) => (
                   <tr key={b.id} className="hover:bg-[#FCFAF7] transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
@@ -368,7 +367,7 @@ export default function BlogTab({
                           <span>Edit</span>
                         </button>
                         <button
-                          onClick={() => deleteBlog(b.id)}
+                          onClick={() => deleteBlog(String(b.id || ""))}
                           className="p-1.5 rounded-xl bg-[#FAF5EE] hover:bg-rose-50 text-stone-400 hover:text-rose-600 border border-[#E2D1BC] hover:border-rose-200 transition-colors cursor-pointer"
                           title="Delete Article"
                         >

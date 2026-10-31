@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 import { logger } from '@/lib/logger';
 
 import { useState, useEffect } from 'react';
@@ -124,19 +123,19 @@ export default function CmsTab() {
     }
   };
 
-  const handleEditCategory = (c: any) => {
-    setEditingCategoryId(c.id);
+  const handleEditCategory = (c: { id?: string; name?: string; image?: string; description?: string; items?: string | number; order?: number; isActive?: boolean; badge?: string; slug?: string; [key: string]: unknown }) => {
+    setEditingCategoryId(c.id ?? null);
     setModalActiveTab('identity');
     setShowCategoryForm(true);
     setCategoryForm({
       name: c.name || '',
-      description: c.description || '',
+      description: String(c.description || ''),
       image: c.image || '',
-      items: c.items || '',
-      order: c.order || 0,
+      items: String(c.items || ''),
+      order: typeof c.order === 'number' ? c.order : 0,
       isActive: c.isActive !== false,
-      badge: c.badge || '',
-      slug: c.slug || (c.name ? c.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : ''),
+      badge: String(c.badge || ''),
+      slug: String(c.slug || (c.name ? c.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : '')),
     });
   };
 
@@ -416,7 +415,7 @@ export default function CmsTab() {
               return (
                 <button
                   key={f.id}
-                  onClick={() => setCategoryFilter(f.id as any)}
+                  onClick={() => setCategoryFilter(f.id as 'all' | 'active' | 'with-items')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     isActive
                       ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-2xs'
@@ -648,7 +647,7 @@ export default function CmsTab() {
                     ].map((tab) => (
                       <button
                         key={tab.id}
-                        onClick={() => setModalActiveTab(tab.id as any)}
+                        onClick={() => setModalActiveTab(tab.id as 'media' | 'identity' | 'seo')}
                         className={`flex-1 py-1 sm:py-1.5 px-1 sm:px-2 rounded-lg sm:rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-1.5 ${
                           modalActiveTab === tab.id
                             ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-2xs'

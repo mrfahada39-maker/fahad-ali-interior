@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -28,7 +27,23 @@ const LuxuryCallModal = dynamic(() => import('@/components/ai/LuxuryCallModal'),
 import { useAdminCall } from '@/hooks/use-admin-call';
 import { AdminNavigationChrome } from '@/components/admin/AdminNavigationChrome';
 import { PaymentVerificationsTab } from '@/components/admin/PaymentVerificationsTab';
-import { AdminBundle, STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
+import type {
+  AdminBundle,
+  AdminStats,
+  AdminAnalytics,
+  AdminTelemetry,
+  AdminProductSummary,
+  AdminOrderSummary,
+  AdminCustomerSummary,
+  AdminMessageThread,
+  AdminMessageItem,
+  AdminReviewSummary,
+  AdminBlogSummary,
+  BlogFormData,
+  AdminInquirySummary,
+  AdminSiteSettings,
+} from './admin-tab-types';
+import { STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
 
 import { useSiteSettingsStore } from '@/store';
 import { DEFAULT_ADMIN_STATS } from '@/lib/utils';
@@ -49,7 +64,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Synchronous cache snapshot for instant 0ms initial render (Zero blank page / zero loading delay)
-  const [stats, setStats] = useState<any>(() => {
+  const [stats, setStats] = useState<AdminStats>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_admin_live_bundle');
@@ -62,7 +77,7 @@ export default function AdminDashboard() {
     return DEFAULT_ADMIN_STATS;
   });
 
-  const [analytics, setAnalytics] = useState<any>(() => {
+  const [analytics, setAnalytics] = useState<AdminAnalytics | null>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_admin_live_bundle');
@@ -75,7 +90,7 @@ export default function AdminDashboard() {
     return null;
   });
 
-  const [products, setProducts] = useState<any[]>(() => {
+  const [products, setProducts] = useState<AdminProductSummary[]>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_admin_live_bundle');
@@ -90,7 +105,7 @@ export default function AdminDashboard() {
     return [];
   });
 
-  const [orders, setOrders] = useState<any[]>(() => {
+  const [orders, setOrders] = useState<AdminOrderSummary[]>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_admin_live_bundle');
@@ -103,7 +118,7 @@ export default function AdminDashboard() {
     return [];
   });
 
-  const [users, setUsers] = useState<any[]>(() => {
+  const [users, setUsers] = useState<AdminCustomerSummary[]>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_admin_live_bundle');
@@ -116,9 +131,9 @@ export default function AdminDashboard() {
     return [];
   });
 
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Array<{ id?: string; name: string; [key: string]: unknown }>>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
-  const [telemetry, setTelemetry] = useState<any>(null);
+  const [telemetry, setTelemetry] = useState<AdminTelemetry | null>(null);
 
   useEffect(() => {
     const fetchTelemetry = () => {
@@ -137,7 +152,7 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const [messages, setMessages] = useState<any[]>(() => {
+  const [messages, setMessages] = useState<AdminMessageThread[]>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_admin_live_bundle');
@@ -150,7 +165,7 @@ export default function AdminDashboard() {
     return [];
   });
 
-  const [reviews, setReviews] = useState<any[]>(() => {
+  const [reviews, setReviews] = useState<AdminReviewSummary[]>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_admin_live_bundle');
@@ -163,8 +178,8 @@ export default function AdminDashboard() {
     return [];
   });
 
-  const [blogs, setBlogs] = useState<any[]>([]);
-  const [inquiries, setInquiries] = useState<any[]>(() => {
+  const [blogs, setBlogs] = useState<AdminBlogSummary[]>([]);
+  const [inquiries, setInquiries] = useState<AdminInquirySummary[]>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_admin_live_bundle');
@@ -177,7 +192,7 @@ export default function AdminDashboard() {
     return [];
   });
 
-  const [siteSettings, setSiteSettings] = useState<any>(() => {
+  const [siteSettings, setSiteSettings] = useState<AdminSiteSettings>(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem('fahad_admin_live_bundle');
@@ -235,7 +250,7 @@ export default function AdminDashboard() {
     leadTime: '',
     warranty: '',
   });
-  const [blogForm, setBlogForm] = useState({ id: '', title: '', slug: '', content: '', excerpt: '', image: '', author: 'Admin', isActive: true, tags: '' });
+  const [blogForm, setBlogForm] = useState<BlogFormData>({ id: '', title: '', slug: '', content: '', excerpt: '', image: '', author: 'Admin', isActive: true, tags: '' });
   const seenUserMessageIdsRef = useRef<Set<string>>(new Set());
   const initializedMessageTrackingRef = useRef(false);
 
@@ -268,9 +283,9 @@ export default function AdminDashboard() {
       createdAt: new Date().toISOString(),
     };
 
-    setMessages((prev: any[]) => {
+    setMessages((prev: AdminMessageThread[]) => {
       if (!Array.isArray(prev)) return [optimisticMsg];
-      return prev.map((thread: any) => {
+      return prev.map((thread: AdminMessageThread) => {
         if (thread.id === threadId) {
           return {
             ...thread,
@@ -291,13 +306,13 @@ export default function AdminDashboard() {
       if (res.ok) {
         const data = await res.json().catch(() => null);
         if (data?.message?.id) {
-          setMessages((prev: any[]) => {
+          setMessages((prev: AdminMessageThread[]) => {
             if (!Array.isArray(prev)) return prev;
-            return prev.map((thread: any) => {
+            return prev.map((thread: AdminMessageThread) => {
               if (thread.id === threadId) {
                 return {
                   ...thread,
-                  messages: (thread.messages || []).map((m: any) => m.id === tempId ? data.message : m),
+                  messages: (thread.messages || []).map((m: AdminMessageItem) => m.id === tempId ? data.message : m),
                 };
               }
               return thread;
@@ -310,10 +325,10 @@ export default function AdminDashboard() {
 
   const applyMessageThreads = (messageThreads: unknown) => {
     setMessages(messageThreads as typeof messages);
-    const userMessageIds = (messageThreads as any[])
+    const userMessageIds = ((messageThreads as AdminMessageThread[]) || [])
       .flatMap((thread) => (thread.messages || []))
-      .filter((msg: any) => msg.sender === 'user')
-      .map((msg: any) => msg.id);
+      .filter((msg: AdminMessageItem) => msg.sender === 'user')
+      .map((msg: AdminMessageItem) => String(msg.id || ''));
     if (!initializedMessageTrackingRef.current) {
       userMessageIds.forEach((id: string) => seenUserMessageIdsRef.current.add(id));
       initializedMessageTrackingRef.current = true;
@@ -325,10 +340,10 @@ export default function AdminDashboard() {
     if (bundle.stats) setStats(bundle.stats);
     if (bundle.products) {
       const p = bundle.products;
-      setProducts(Array.isArray(p) ? p : (p as { products?: unknown[] }).products || []);
+      setProducts(Array.isArray(p) ? p : (p as { products?: AdminProductSummary[] }).products || []);
     }
     if (Array.isArray(bundle.orders)) setOrders(bundle.orders);
-    const bUsers = Array.isArray(bundle.users) ? bundle.users : (bundle as any).customers;
+    const bUsers = Array.isArray(bundle.users) ? bundle.users : bundle.customers;
     if (Array.isArray(bUsers)) setUsers(bUsers);
     if (bundle.messages) applyMessageThreads(bundle.messages);
     if (Array.isArray(bundle.reviews)) setReviews(bundle.reviews);
@@ -452,15 +467,15 @@ export default function AdminDashboard() {
         const messageThreads = await res.json();
         setMessages(messageThreads);
 
-        const newUserMessages = (messageThreads as any[])
+        const newUserMessages = ((messageThreads as AdminMessageThread[]) || [])
           .flatMap((thread) =>
             (thread.messages || [])
-              .filter((msg: any) => msg.sender === 'user' && !seenUserMessageIdsRef.current.has(msg.id))
-              .map((msg: any) => ({ ...msg, userName: thread.name || 'Customer' }))
+              .filter((msg: AdminMessageItem) => msg.sender === 'user' && !seenUserMessageIdsRef.current.has(String(msg.id || '')))
+              .map((msg: AdminMessageItem) => ({ ...msg, userName: thread.name || 'Customer' }))
           );
 
         if (newUserMessages.length > 0) {
-          newUserMessages.forEach((msg: any) => seenUserMessageIdsRef.current.add(msg.id));
+          newUserMessages.forEach((msg) => { if (msg.id) seenUserMessageIdsRef.current.add(String(msg.id)); });
           setUnreadMessageCount((prev) => prev + newUserMessages.length);
           const latest = newUserMessages[newUserMessages.length - 1];
           toast.success(`New message from ${latest.userName}`);
@@ -481,7 +496,7 @@ export default function AdminDashboard() {
   }, [activeTab, unreadMessageCount]);
 
   const updateOrderStatus = async (id: string, status: string, paymentStatus?: string) => {
-    setOrders((prev: any[]) =>
+    setOrders((prev: AdminOrderSummary[]) =>
       prev.map((o) =>
         o.id === id
           ? { ...o, status, ...(paymentStatus ? { paymentStatus } : {}) }
@@ -504,7 +519,7 @@ export default function AdminDashboard() {
     try {
       const res = await apiFetch('/api/admin/reviews', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
       if (res.ok) {
-        setReviews((prev: any[]) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+        setReviews((prev: AdminReviewSummary[]) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
         toast.success(`Review ${status}`);
       } else {
         toast.error('Failed to update review');
@@ -518,7 +533,7 @@ export default function AdminDashboard() {
     try {
       const res = await apiFetch('/api/admin/inquiries', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
       if (res.ok) {
-        setInquiries((prev: any[]) => prev.map((inq) => (inq.id === id ? { ...inq, status } : inq)));
+        setInquiries((prev: AdminInquirySummary[]) => prev.map((inq) => (inq.id === id ? { ...inq, status } : inq)));
         toast.success('Inquiry updated');
       } else {
         toast.error('Failed to update inquiry');
@@ -545,9 +560,9 @@ export default function AdminDashboard() {
       createdAt: new Date().toISOString(),
     };
 
-    setMessages((prev: any[]) => {
+    setMessages((prev: AdminMessageThread[]) => {
       if (!Array.isArray(prev)) return [optimisticMsg];
-      return prev.map((thread: any) => {
+      return prev.map((thread: AdminMessageThread) => {
         if (thread.id === userId) {
           return {
             ...thread,
@@ -571,13 +586,13 @@ export default function AdminDashboard() {
       if (res.ok) {
         const data = await res.json().catch(() => null);
         if (data?.message?.id) {
-          setMessages((prev: any[]) => {
+          setMessages((prev: AdminMessageThread[]) => {
             if (!Array.isArray(prev)) return prev;
-            return prev.map((thread: any) => {
+            return prev.map((thread: AdminMessageThread) => {
               if (thread.id === userId) {
                 return {
                   ...thread,
-                  messages: (thread.messages || []).map((m: any) => m.id === tempId ? data.message : m),
+                  messages: (thread.messages || []).map((m: AdminMessageItem) => m.id === tempId ? data.message : m),
                 };
               }
               return thread;
@@ -671,7 +686,7 @@ export default function AdminDashboard() {
             return [saved, ...arr.filter((p) => p.id !== saved.id)];
           });
           if (!editingId) {
-            setStats((prev: any) => ({ ...prev, totalProducts: (prev?.totalProducts || 0) + 1 }));
+            setStats((prev) => ({ ...prev, totalProducts: (prev.totalProducts || 0) + 1 }));
           }
         }
         if (typeof window !== 'undefined') {
@@ -701,7 +716,7 @@ export default function AdminDashboard() {
       const res = await apiFetch(`/api/admin/products?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
       if (res.ok) {
         setProducts((prev) => (Array.isArray(prev) ? prev.filter((p) => p.id !== id) : []));
-        setStats((prev: any) => ({ ...prev, totalProducts: Math.max(0, (prev?.totalProducts || 1) - 1) }));
+        setStats((prev) => ({ ...prev, totalProducts: Math.max(0, (prev.totalProducts || 1) - 1) }));
         if (typeof window !== 'undefined') {
           try {
             localStorage.setItem('fahad_catalog_updated', String(Date.now()));
@@ -762,7 +777,7 @@ export default function AdminDashboard() {
     try {
       const res = await apiFetch(`/api/v1/blog/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setBlogs((prev: any[]) => prev.filter((b) => b.id !== id));
+        setBlogs((prev: AdminBlogSummary[]) => prev.filter((b) => b.id !== id));
         toast.success('Blog post permanently deleted');
       } else {
         toast.error('Failed to delete blog post');
@@ -772,10 +787,17 @@ export default function AdminDashboard() {
     }
   };
 
-  const editBlog = (b: any) => {
+  const editBlog = (b: AdminBlogSummary) => {
     setBlogForm({
-      id: b.id, title: b.title, slug: b.slug, content: b.content, excerpt: b.excerpt || '',
-      image: b.image || '', author: b.author, isActive: b.isActive, tags: (b.tags || []).join(', ')
+      id: b.id || '',
+      title: b.title || '',
+      slug: b.slug || '',
+      content: b.content || '',
+      excerpt: b.excerpt || '',
+      image: b.image || '',
+      author: b.author || 'Admin',
+      isActive: Boolean(b.isActive !== undefined ? b.isActive : true),
+      tags: Array.isArray(b.tags) ? b.tags.join(', ') : String(b.tags || ''),
     });
     setShowAddBlog(true);
   };
@@ -901,7 +923,7 @@ export default function AdminDashboard() {
         unreadMessageCount={unreadMessageCount}
         pendingVerificationCount={
           (orders || []).filter(
-            (o: any) => (o.paymentStatus || '').toUpperCase() === 'AWAITING_VERIFICATION'
+            (o: AdminOrderSummary) => (o.paymentStatus || '').toUpperCase() === 'AWAITING_VERIFICATION'
           ).length
         }
       />
@@ -1014,7 +1036,7 @@ export default function AdminDashboard() {
                 try {
                   const res = await apiFetch('/api/admin/reviews', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
                   if (res.ok) {
-                    setReviews((prev: any[]) => prev.filter((r) => r.id !== id));
+                    setReviews((prev: AdminReviewSummary[]) => prev.filter((r) => r.id !== id));
                     toast.success('Review permanently deleted');
                   } else {
                     toast.error('Failed to delete review');

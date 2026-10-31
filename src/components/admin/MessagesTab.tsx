@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,13 +39,13 @@ import VoiceNoteRecorder from '@/components/ai/VoiceNoteRecorder';
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface MessagesTabProps {
-  messages: any[];
+  messages: import('./admin-tab-types').AdminMessageThread[];
   replyDrafts: Record<string, string>;
   setReplyDrafts: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   sendAdminReply: (threadId: string) => void;
   selectedThreadIndex: number;
   setSelectedThreadIndex: (idx: number) => void;
-  onStartCall?: (type: 'voice' | 'video', targetUser: any) => void;
+  onStartCall?: (type: 'voice' | 'video', targetUser: { id: string; name?: string; [key: string]: unknown }) => void;
   onSendAdminVoiceNote?: (threadId: string, audioUrl: string, duration: number) => void;
 }
 
@@ -79,9 +78,9 @@ export default function MessagesTab({
     if (messages[0] && Array.isArray(messages[0].messages)) {
       return messages;
     }
-    const threadMap = new Map<string, any>();
-    messages.forEach((msg: any) => {
-      const uId = msg.userId || 'guest_user';
+    const threadMap = new Map<string, import('./admin-tab-types').AdminMessageThread>();
+    messages.forEach((msg: import('./admin-tab-types').AdminMessageThread | import('./admin-tab-types').AdminMessageItem) => {
+      const uId = String(msg.userId || msg.id || 'guest_user');
       if (!threadMap.has(uId)) {
         threadMap.set(uId, {
           id: uId,
@@ -91,7 +90,10 @@ export default function MessagesTab({
           messages: [],
         });
       }
-      threadMap.get(uId).messages.push(msg);
+      const thread = threadMap.get(uId);
+      if (thread && thread.messages) {
+        thread.messages.push(msg as import('./admin-tab-types').AdminMessageItem);
+      }
     });
     return Array.from(threadMap.values());
   })();
@@ -102,7 +104,7 @@ export default function MessagesTab({
       t.name?.toLowerCase().includes(q) ||
       t.email?.toLowerCase().includes(q) ||
       t.phone?.toLowerCase().includes(q) ||
-      t.messages?.some((m: any) => m.text?.toLowerCase().includes(q));
+      t.messages?.some((m: import('./admin-tab-types').AdminMessageItem) => m.text?.toLowerCase().includes(q));
 
     if (filterType === 'unread') {
       const last = t.messages?.[t.messages.length - 1];
@@ -117,8 +119,8 @@ export default function MessagesTab({
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeThread?.messages?.length, selectedThreadIndex]);
 
-  const totalMessagesCount = normalizedThreads.reduce((acc: number, t: any) => acc + (t.messages?.length || 0), 0);
-  const unreadCount = normalizedThreads.filter((t: any) => {
+  const totalMessagesCount = normalizedThreads.reduce((acc: number, t: import('./admin-tab-types').AdminMessageThread) => acc + (t.messages?.length || 0), 0);
+  const unreadCount = normalizedThreads.filter((t: import('./admin-tab-types').AdminMessageThread) => {
     const last = t.messages?.[t.messages.length - 1];
     return last && last.sender === 'user';
   }).length;
@@ -368,7 +370,7 @@ export default function MessagesTab({
 
               {/* Threads List */}
               <div className="flex-1 overflow-y-auto space-y-2 pr-1 my-1">
-                {filteredThreads.map((thread: any, idx: number) => {
+                {filteredThreads.map((thread: import('./admin-tab-types').AdminMessageThread, idx: number) => {
                   const isSelected = activeThread?.id === thread.id;
                   const lastMsg = thread.messages?.[thread.messages.length - 1];
                   const lastMsgTime = lastMsg?.createdAt
@@ -533,14 +535,15 @@ export default function MessagesTab({
                 </span>
               </div>
 
-              {(activeThread?.messages || []).map((msg: any, idx: number) => {
+              {(activeThread?.messages || []).map((msg: import('./admin-tab-types').AdminMessageItem, idx: number) => {
                 const isSupport = msg.sender === 'support';
                 const timeStr = msg.createdAt
                   ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                   : '01:17 PM';
 
-                const isVoiceNote = typeof msg.text === 'string' && msg.text.startsWith('[VOICE_NOTE]:');
-                const voiceAudioUrl = isVoiceNote ? msg.text.replace('[VOICE_NOTE]:', '') : '';
+                const msgText = typeof msg.text === 'string' ? msg.text : typeof msg.content === 'string' ? msg.content : '';
+                const isVoiceNote = msgText.startsWith('[VOICE_NOTE]:');
+                const voiceAudioUrl = isVoiceNote ? msgText.replace('[VOICE_NOTE]:', '') : '';
 
                 return (
                   <motion.div

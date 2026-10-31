@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,17 +30,36 @@ import { toast } from 'sonner';
 import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
+export interface AdminAccountForm {
+  name: string;
+  email: string;
+  phone: string;
+  [key: string]: unknown;
+}
+
+export interface PasswordFormState {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ShowPasswordState {
+  current: boolean;
+  next: boolean;
+  confirm: boolean;
+}
+
 interface SettingsTabProps {
-  siteSettings: any;
-  setSiteSettings: (s: any) => void;
+  siteSettings: import('./admin-tab-types').AdminSiteSettings;
+  setSiteSettings: (s: import('./admin-tab-types').AdminSiteSettings) => void;
   saveSettings: () => void;
-  adminAccount: any;
-  setAdminAccount: (a: any) => void;
+  adminAccount: AdminAccountForm;
+  setAdminAccount: (a: AdminAccountForm) => void;
   saveAdminAccount: () => void;
-  passwordForm: any;
-  setPasswordForm: (f: any) => void;
-  showPassword: any;
-  setShowPassword: (s: any) => void;
+  passwordForm: PasswordFormState;
+  setPasswordForm: (f: PasswordFormState) => void;
+  showPassword: ShowPasswordState;
+  setShowPassword: (s: ShowPasswordState) => void;
   changeAdminPassword: () => void;
 }
 
@@ -52,7 +70,7 @@ export default function SettingsTab({
   adminAccount = { name: '', email: '', phone: '' },
   setAdminAccount,
   saveAdminAccount,
-  passwordForm = { current: '', next: '', confirm: '' },
+  passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' },
   setPasswordForm,
   showPassword = { current: false, next: false, confirm: false },
   setShowPassword,
@@ -62,7 +80,7 @@ export default function SettingsTab({
 
   const safeSettings = siteSettings || {};
   const safeAdmin = adminAccount || { name: '', email: '', phone: '' };
-  const safePasswordForm = passwordForm || { current: '', next: '', confirm: '' };
+  const safePasswordForm = passwordForm || { currentPassword: '', newPassword: '', confirmPassword: '' };
   const safeShowPassword = showPassword || { current: false, next: false, confirm: false };
 
   function settingField(
@@ -91,7 +109,7 @@ export default function SettingsTab({
   }
 
   function colorField(label: string, key: string, defaultValue: string) {
-    const val = safeSettings[key] || defaultValue;
+    const val = typeof safeSettings[key] === 'string' ? (safeSettings[key] as string) : defaultValue;
 
     return (
       <div key={key} className="flex items-center justify-between gap-4 py-2 border-b border-neutral-100 last:border-0">
@@ -300,7 +318,7 @@ export default function SettingsTab({
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveSettingsSection(tab.id as any)}
+              onClick={() => setActiveSettingsSection(tab.id as 'general' | 'payments' | 'social' | 'security' | 'theme')}
               className={`px-3.5 py-1.5 rounded-xl font-black text-xs whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-2xs'
@@ -492,8 +510,8 @@ export default function SettingsTab({
                   <div className="relative">
                     <input id="fai-adminsettingstab-field-7" name="fai_adminsettingstab_field_7"
                       type={safeShowPassword.current ? 'text' : 'password'}
-                      value={safePasswordForm.currentPassword ?? safePasswordForm.current ?? ''}
-                      onChange={(e) => setPasswordForm({ ...safePasswordForm, currentPassword: e.target.value, current: e.target.value })}
+                      value={safePasswordForm.currentPassword ?? ''}
+                      onChange={(e) => setPasswordForm({ ...safePasswordForm, currentPassword: e.target.value })}
                       placeholder="••••••••"
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono rounded-xl h-9.5 pl-3 pr-8 text-xs focus:border-[#B88E4B] outline-none"
                     />
@@ -512,8 +530,8 @@ export default function SettingsTab({
                   <div className="relative">
                     <input id="fai-adminsettingstab-field-8" name="fai_adminsettingstab_field_8"
                       type={safeShowPassword.next ? 'text' : 'password'}
-                      value={safePasswordForm.newPassword ?? safePasswordForm.next ?? ''}
-                      onChange={(e) => setPasswordForm({ ...safePasswordForm, newPassword: e.target.value, next: e.target.value })}
+                      value={safePasswordForm.newPassword ?? ''}
+                      onChange={(e) => setPasswordForm({ ...safePasswordForm, newPassword: e.target.value })}
                       placeholder="••••••••"
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono rounded-xl h-9.5 pl-3 pr-8 text-xs focus:border-[#B88E4B] outline-none"
                     />
@@ -532,8 +550,8 @@ export default function SettingsTab({
                   <div className="relative">
                     <input id="fai-adminsettingstab-field-9" name="fai_adminsettingstab_field_9"
                       type={safeShowPassword.confirm ? 'text' : 'password'}
-                      value={safePasswordForm.confirmPassword ?? safePasswordForm.confirm ?? ''}
-                      onChange={(e) => setPasswordForm({ ...safePasswordForm, confirmPassword: e.target.value, confirm: e.target.value })}
+                      value={safePasswordForm.confirmPassword ?? ''}
+                      onChange={(e) => setPasswordForm({ ...safePasswordForm, confirmPassword: e.target.value })}
                       placeholder="••••••••"
                       className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-mono rounded-xl h-9.5 pl-3 pr-8 text-xs focus:border-[#B88E4B] outline-none"
                     />
@@ -581,7 +599,7 @@ export default function SettingsTab({
             <div className="space-y-1">
               <label htmlFor="fai-adminsettingstab-field-10" className="text-[10px] font-black text-[#7A6354] uppercase tracking-wider block">Global Typography Family</label>
               <select id="fai-adminsettingstab-field-10" name="fai_adminsettingstab_field_10"
-                value={safeSettings.themeFontFamily || 'Outfit'}
+                value={typeof safeSettings.themeFontFamily === 'string' ? safeSettings.themeFontFamily : 'Outfit'}
                 onChange={(e) => setSiteSettings({ ...safeSettings, themeFontFamily: e.target.value })}
                 className="w-full bg-[#FCFAF7] border border-[#E7DDD0] text-[#1F1612] font-black rounded-xl h-10 px-3 text-xs focus:border-[#B88E4B] outline-none"
               >

@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,7 +52,7 @@ export interface ProductFormData {
   upholstery: string;
   finish: string;
   leadTime: string;
-  warranty?: string;
+  warranty: string;
   [key: string]: unknown;
 }
 
@@ -73,7 +72,7 @@ interface ProductsTabProps {
   showAddProduct: boolean;
   setShowAddProduct: (show: boolean) => void;
   productForm: ProductFormData;
-  setProductForm: React.Dispatch<React.SetStateAction<any>> | ((form: any) => void);
+  setProductForm: React.Dispatch<React.SetStateAction<ProductFormData>> | ((form: ProductFormData) => void);
   addProduct: () => void;
   deleteProduct: (id: string) => void;
   isSubmittingProduct?: boolean;
@@ -103,9 +102,9 @@ export default function ProductsTab({
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc' | 'stock'>('newest');
 
-  const handleEdit = (p: any) => {
+  const handleEdit = (p: import('./admin-tab-types').AdminProductSummary) => {
     setEditingProductId(p.id);
-    let parsedSpecs: any = {};
+    let parsedSpecs: Record<string, unknown> = {};
     try {
       if (p.specs) {
         parsedSpecs = typeof p.specs === 'string' ? JSON.parse(p.specs) : p.specs;
@@ -126,11 +125,11 @@ export default function ProductsTab({
       stockCount: p.stockCount || 0,
       isPremium: p.isPremium || false,
       compareAtPrice: parsedSpecs.compareAtPrice !== null && parsedSpecs.compareAtPrice !== undefined ? String(parsedSpecs.compareAtPrice) : '',
-      woodType: parsedSpecs.woodType || '',
-      upholstery: parsedSpecs.upholstery || '',
-      finish: parsedSpecs.finish || '',
-      leadTime: parsedSpecs.leadTime || '',
-      warranty: parsedSpecs.warranty || '',
+      woodType: String(parsedSpecs.woodType || ''),
+      upholstery: String(parsedSpecs.upholstery || ''),
+      finish: String(parsedSpecs.finish || ''),
+      leadTime: String(parsedSpecs.leadTime || ''),
+      warranty: String(parsedSpecs.warranty || ''),
     });
     setShowAddProduct(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -592,7 +591,7 @@ export default function ProductsTab({
                         <button
                           type="button"
                           onClick={() => {
-                            const updated = extraImagesList.filter((_: any, i: number) => i !== index);
+                            const updated = extraImagesList.filter((_: unknown, i: number) => i !== index);
                             setProductForm({ ...productForm, images: updated.join(', ') });
                           }}
                           className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
@@ -672,7 +671,7 @@ export default function ProductsTab({
           <div className="flex items-center">
             <LuxurySelect
               value={sortBy}
-              onChange={(val) => setSortBy(val as any)}
+              onChange={(val) => setSortBy(val as 'stock' | 'newest' | 'price-asc' | 'price-desc')}
               options={[
                 { value: 'newest', label: 'Sort: Newest First' },
                 { value: 'price-asc', label: 'Price: Low to High' },
@@ -720,7 +719,7 @@ export default function ProductsTab({
         <div className="space-y-2.5">
           {filteredProducts.map((p) => {
             let discountPercent = 0;
-            let parsedSpecs: any = {};
+            let parsedSpecs: Record<string, unknown> = {};
             try {
               if (p.specs) {
                 parsedSpecs = typeof p.specs === 'string' ? JSON.parse(p.specs) : p.specs;
@@ -850,7 +849,7 @@ export default function ProductsTab({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((p) => {
             let discountPercent = 0;
-            let parsedSpecs: any = {};
+            let parsedSpecs: Record<string, unknown> = {};
             try {
               if (p.specs) {
                 parsedSpecs = typeof p.specs === 'string' ? JSON.parse(p.specs) : p.specs;

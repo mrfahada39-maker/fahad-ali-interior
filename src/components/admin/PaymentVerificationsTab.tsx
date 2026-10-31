@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,7 +32,7 @@ import AnimatedCounter from '@/components/home/AnimatedCounter';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 export interface PaymentVerificationsTabProps {
-  orders: any[];
+  orders: import('./admin-tab-types').AdminOrderSummary[];
   updateOrderStatus: (id: string, status: string, paymentStatus?: string) => Promise<void> | void;
   onRefresh?: () => void;
 }
@@ -54,10 +53,11 @@ export function PaymentVerificationsTab({
   };
 
   // Helper to extract TID from notes or paymentGatewayRef
-  const extractTid = (order: any): string => {
-    if (order.paymentGatewayRef) return order.paymentGatewayRef;
-    const notes = order.shippingNotes || order.shippingInfo?.notes || '';
-    const match = notes.match(/TxID:\s*([A-Za-z0-9_-]+)/i);
+  const extractTid = (order?: import('./admin-tab-types').AdminOrderSummary | null): string => {
+    if (!order) return '';
+    if (typeof order.paymentGatewayRef === 'string' && order.paymentGatewayRef) return order.paymentGatewayRef;
+    const rawNotes = (order as { shippingNotes?: string }).shippingNotes || (order.shippingInfo as { notes?: string } | undefined)?.notes || '';
+    const match = String(rawNotes).match(/TxID:\s*([A-Za-z0-9_-]+)/i);
     if (match && match[1] && match[1] !== 'N/A') return match[1];
     return '';
   };
@@ -461,19 +461,20 @@ export function PaymentVerificationsTab({
               order.shippingPhone || order.shippingInfo?.phone || order.user?.phone || '';
             const cleanPhone = clientPhone.replace(/\D/g, '');
             const clientCity = order.shippingCity || order.shippingInfo?.city || 'Lahore';
-            const clientAddress = order.shippingAddress || order.shippingInfo?.address || '';
+            const clientAddress = typeof order.shippingAddress === 'string' ? order.shippingAddress : (order.shippingAddress?.address || order.shippingInfo?.address || '');
             const totalAmount = Number(order.totalAmount || order.subtotal || 0);
             const paymentStatus = (order.paymentStatus || 'AWAITING_VERIFICATION').toUpperCase();
             const isPending = paymentStatus === 'AWAITING_VERIFICATION';
             const isPaid = paymentStatus === 'PAID';
             const isFailed = paymentStatus === 'FAILED';
             const paymentMethod = (order.paymentMethod || 'BANK').toUpperCase();
-            const screenshotUrl = order.paymentScreenshot || manualSlipInput[order.id];
-            const busy = isUpdating[order.id];
+            const orderId = String(order.id || '');
+            const screenshotUrl = (order.paymentScreenshot as string | undefined) || manualSlipInput[orderId];
+            const busy = isUpdating[String(order.id || '')];
             const isDuplicateTid = Boolean(
               tid &&
                 (orders || []).some(
-                  (other: any) => other.id !== order.id && extractTid(other) === tid
+                  (other: import('./admin-tab-types').AdminOrderSummary) => other.id !== order.id && extractTid(other) === tid
                 )
             );
             const auditConfidenceLabel = isDuplicateTid
@@ -582,7 +583,6 @@ export function PaymentVerificationsTab({
                           }
                           className="relative w-full h-56 sm:h-64 rounded-xl overflow-hidden border-2 border-stone-200/80 bg-stone-900/5 group cursor-zoom-in shadow-inner"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={screenshotUrl}
                             alt={`Receipt for Order #${shortId}`}
@@ -688,13 +688,13 @@ export function PaymentVerificationsTab({
                         Ordered Furniture ({(order.items || []).length} items):
                       </p>
                       <div className="space-y-1 max-h-24 overflow-y-auto scrollbar-hide">
-                        {(order.items || []).map((item: any, idx: number) => (
+                        {(order.items || []).map((item, idx: number) => (
                           <div
                             key={idx}
                             className="flex justify-between items-center bg-white px-2.5 py-1 rounded-lg border border-stone-200 text-[11px]"
                           >
                             <span className="font-bold text-[#1F1612] truncate max-w-[160px]">
-                              {item.name || item.productName || 'Furniture Item'}
+                              {item.name || (item as { productName?: string }).productName || 'Furniture Item'}
                             </span>
                             <span className="text-stone-500 font-mono">
                               x{item.quantity || 1} • Rs. {formatPrice(Number(item.price || 0))}
@@ -790,7 +790,7 @@ export function PaymentVerificationsTab({
                         {/* 1. Verify Payment */}
                         <button
                           disabled={busy}
-                          onClick={() => handleAction(order.id, 'verify')}
+                          onClick={() => handleAction(String(order.id || ''), 'verify')}
                           className={`h-10 sm:h-10.5 px-2.5 sm:px-3.5 rounded-xl text-white font-bold text-xs sm:text-[13px] shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 border ${
                             isPaid
                               ? 'bg-gradient-to-r from-emerald-700 via-emerald-800 to-emerald-900 border-emerald-500/40 opacity-95 cursor-default'
@@ -805,7 +805,7 @@ export function PaymentVerificationsTab({
                         {/* 2. Hold 24-48 Hours */}
                         <button
                           disabled={busy}
-                          onClick={() => handleAction(order.id, 'hold')}
+                          onClick={() => handleAction(String(order.id || ''), 'hold')}
                           className="h-10 sm:h-10.5 px-2.5 sm:px-3.5 rounded-xl text-white font-bold text-xs sm:text-[13px] shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 bg-gradient-to-r from-[#B88E4B] via-[#C9A24D] to-[#996515] hover:from-[#C9A24D] hover:to-[#B88E4B] border border-amber-300/50"
                           title="Keep order on hold while awaiting interbank bank clearing"
                         >
@@ -816,7 +816,7 @@ export function PaymentVerificationsTab({
                         {/* 3. Reject Slip */}
                         <button
                           disabled={busy}
-                          onClick={() => handleAction(order.id, 'reject')}
+                          onClick={() => handleAction(String(order.id || ''), 'reject')}
                           className={`h-10 sm:h-10.5 px-2.5 sm:px-3.5 rounded-xl text-white font-bold text-xs sm:text-[13px] shadow-xs hover:shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 border ${
                             isFailed
                               ? 'bg-gradient-to-r from-rose-800 via-rose-900 to-stone-900 border-rose-500/40 opacity-95 cursor-default'
@@ -908,7 +908,6 @@ export function PaymentVerificationsTab({
                 </button>
               </div>
               <div className="flex-1 p-4 overflow-auto flex items-center justify-center bg-stone-900/5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={lightboxImage.url}
                   alt={lightboxImage.title}
