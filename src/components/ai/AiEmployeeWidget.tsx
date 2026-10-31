@@ -487,7 +487,7 @@ export function AiEmployeeWidget() {
                               id: item.id,
                               name: item.name,
                               price: item.price,
-                              image: item.image || '/images/placeholder.jpg',
+                              image: item.image || '/cat-thumb-sofas-2x.webp',
                               category: item.category || 'Furniture',
                             }));
                           }}
@@ -518,7 +518,7 @@ export function AiEmployeeWidget() {
                               id: p.id,
                               name: p.name,
                               price: p.price,
-                              image: p.image || '/images/placeholder.jpg',
+                              image: p.image || '/cat-thumb-sofas-2x.webp',
                               category: p.category || 'Furniture',
                             })}
                             className="bg-[#8A5A2B] hover:bg-[#734820] text-white px-2.5 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"

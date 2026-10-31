@@ -3,10 +3,10 @@ import bcrypt from 'bcryptjs';
 const db = new PrismaClient();
 
 const IMAGES = {
-  bed: '/images/bed.svg',
-  sofa: '/images/sofa.svg',
-  dining: '/images/dining.svg',
-  wardrobe: '/images/wardrobe.svg',
+  bed: '/cat-thumb-beds-2x.webp',
+  sofa: '/cat-thumb-sofas-2x.webp',
+  dining: '/cat-thumb-dining-2x.webp',
+  wardrobe: '/cat-thumb-wardrobes-2x.webp',
 };
 
 async function main() {
