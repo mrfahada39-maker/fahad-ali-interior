@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle, Phone, MapPin, CreditCard,
   Printer, Copy, Check, MessageSquare, ExternalLink, RefreshCw, Sparkles, ShieldCheck

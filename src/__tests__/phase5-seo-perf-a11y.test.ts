@@ -4,6 +4,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { LOCAL_IMAGES, compressCloudinaryUrl } from '@/lib/images';
 
 describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
   const rootDir = process.cwd();
@@ -40,7 +41,7 @@ describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
       ? fs.readFileSync(path.join(rootDir, 'src/components/home/ModernLuxuryHero.tsx'), 'utf8')
       : fs.readFileSync(path.join(rootDir, 'src/app/HomePageInteractive.tsx'), 'utf8');
     expect(heroSrc).toContain('priority');
-    expect(heroSrc).toContain('sizes="100vw"');
+    expect(heroSrc).toContain('sizes="(max-width: 1023px) 100vw, 0px"');
   });
 
   it('provides a valid 1200x630 PNG OpenGraph image at public/og-image.png and references it in layout.tsx', () => {
@@ -48,10 +49,8 @@ describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
     expect(fs.existsSync(ogPath)).toBe(true);
 
     const buf = fs.readFileSync(ogPath);
-    // PNG magic bytes: 89 50 4E 47 0D 0A 1A 0A
     expect(buf[0]).toBe(0x89);
     expect(buf.subarray(1, 4).toString('ascii')).toBe('PNG');
-    // IHDR chunk width (offset 16) and height (offset 20)
     expect(buf.readUInt32BE(16)).toBe(1200);
     expect(buf.readUInt32BE(20)).toBe(630);
 
@@ -107,5 +106,15 @@ describe('Phase 5: Performance, SEO, Accessibility & Content Fixes', () => {
     expect(navbarSrc).toContain("unreadCount > 0");
     expect(navbarSrc).toContain('https://facebook.com/fahadaliinterior');
     expect(navbarSrc).toContain('https://instagram.com/fahadaliinterior');
+  });
+
+  it('verifies responsive image delivery and Cloudinary auto-optimization', () => {
+    expect(LOCAL_IMAGES.hero).toBeDefined();
+    expect(LOCAL_IMAGES.bed).toBeDefined();
+
+    const rawCloudinary = 'https://res.cloudinary.com/demo/image/upload/sample.jpg';
+    const compressed = compressCloudinaryUrl(rawCloudinary, 1200);
+    expect(compressed).toContain('f_auto');
+    expect(compressed).toContain('q_auto');
   });
 });

@@ -3,26 +3,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FileText,
-  Plus,
-  Search,
-  Filter,
-  Sparkles,
-  Calendar,
-  User,
-  ExternalLink,
-  Edit,
-  Trash2,
-  CheckCircle2,
-  Clock,
-  Eye,
-  X,
-  BookOpen,
-  Image as ImageIcon,
-  Tag,
-  PenTool
-} from 'lucide-react';
+import { FileText, Plus, Search, Sparkles, Edit, Trash2, CheckCircle2, Clock, X, BookOpen, PenTool } from 'lucide-react';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 interface BlogTabProps {

@@ -579,7 +579,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
               }).catch(() => {});
             }
           }
-        } catch (_) {}
+        } catch {}
       })();
     }
 

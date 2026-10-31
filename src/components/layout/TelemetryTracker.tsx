@@ -44,7 +44,7 @@ export default function TelemetryTracker() {
             try {
               const url = new URL(referrer);
               trafficSource = url.hostname.replace('www.', '');
-            } catch (e) {
+            } catch {
               trafficSource = 'External Link';
             }
           }
@@ -107,7 +107,7 @@ export default function TelemetryTracker() {
             sessionId = 'usr_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36).slice(-4);
             sessionStorage.setItem('fa_telemetry_sess_id', sessionId);
           }
-        } catch (e) {
+        } catch {
           sessionId = 'usr_temp_' + Math.random().toString(36).substring(2, 9);
         }
 
@@ -121,7 +121,7 @@ export default function TelemetryTracker() {
             if (parsed.city) clientCity = parsed.city;
             if (parsed.country) clientCountry = parsed.country;
           }
-        } catch (e) {}
+        } catch {}
 
         const sendPing = () => {
           if (!isSubscribed) return;
@@ -135,7 +135,7 @@ export default function TelemetryTracker() {
               if (p.city) clientCity = p.city;
               if (p.country) clientCountry = p.country;
             }
-          } catch (e) {}
+          } catch {}
 
           const payload = JSON.stringify({
             sessionId,

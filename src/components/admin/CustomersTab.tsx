@@ -4,38 +4,7 @@ import { logger } from '@/lib/logger';
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Search,
-  Users,
-  Mail,
-  ShoppingBag,
-  Star,
-  Heart,
-  MapPin,
-  Shield,
-  ShieldOff,
-  X,
-  Loader2,
-  Download,
-  CreditCard,
-  TrendingUp,
-  Filter,
-  Eye,
-  CheckCircle,
-  Clock,
-  UserCheck,
-  Coins,
-  Sparkles,
-  Phone,
-  MessageSquare,
-  ChevronRight,
-  RefreshCw,
-  ExternalLink,
-  Crown,
-  Lock,
-  Unlock,
-  AlertTriangle
-} from 'lucide-react';
+import { Search, Users, ShoppingBag, ShieldOff, X, Loader2, Download, CreditCard, Eye, CheckCircle, UserCheck, Coins, Sparkles, Phone, MessageSquare, RefreshCw, Crown, Lock, Unlock } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetchJsonWithStatus } from '@/lib/api-client';
 import { ensureEnterpriseTokens } from '@/hooks/use-enterprise-auth-sync';

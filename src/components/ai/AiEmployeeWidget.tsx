@@ -2,9 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import {
-  Sparkles, X, Send, Camera, Mic, MicOff, ShoppingBag, PhoneCall, Crown, Calculator, Layers, ShieldCheck
-} from 'lucide-react';
+import { Sparkles, X, Send, Camera, Mic, MicOff, ShoppingBag, PhoneCall, Crown, ShieldCheck } from 'lucide-react';
 import { useCartStore } from '@/store';
 import dynamic from 'next/dynamic';
 const VoiceAiModal = dynamic(
@@ -97,7 +95,7 @@ export function AiEmployeeWidget() {
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const [roomImage, setRoomImage] = useState<string | null>(null);
   const [isListeningMic, setIsListeningMic] = useState(false);
-  const [sessionId, setSessionId] = useState<string>(() => {
+  const [sessionId, _setSessionId] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const stored = sessionStorage.getItem('fahad_ai_session_id');
       if (stored) return stored;
@@ -111,9 +109,9 @@ export function AiEmployeeWidget() {
   });
 
   // Custom Quote Interactive Form State
-  const [customLength, setCustomLength] = useState('78');
-  const [customWidth, setCustomWidth] = useState('72');
-  const [customStain, setCustomStain] = useState('Royal Dark Walnut');
+  const [customLength, _setCustomLength] = useState('78');
+  const [customWidth, _setCustomWidth] = useState('72');
+  const [customStain, _setCustomStain] = useState('Royal Dark Walnut');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -258,7 +256,7 @@ export function AiEmployeeWidget() {
         };
         setMessages((prev) => [...prev, aiMsg]);
       }
-    } catch (e) {
+    } catch {
       setIsTyping(false);
       const fallbackMsg: Message = {
         id: `ai_err_${Date.now()}`,
@@ -270,7 +268,7 @@ export function AiEmployeeWidget() {
     }
   };
 
-  const handleRoleTabChange = (role: 'sales' | 'interior' | 'support' | 'quote' | 'analytics') => {
+  const _handleRoleTabChange = (role: 'sales' | 'interior' | 'support' | 'quote' | 'analytics') => {
     setSelectedAgent(role);
     let prompt = "Show me top featured Sheesham furniture collections & room packages.";
     if (role === 'interior') {
@@ -331,7 +329,7 @@ export function AiEmployeeWidget() {
     }
   };
 
-  const handleCalculateCustomQuote = () => {
+  const _handleCalculateCustomQuote = () => {
     const prompt = `Please calculate custom quote for dimensions: ${customLength}" Length x ${customWidth}" Width in ${customStain} finish.`;
     handleSendMessage(prompt, 'quote');
   };

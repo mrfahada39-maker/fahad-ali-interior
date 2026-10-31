@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
@@ -324,7 +324,7 @@ export default function AdminDashboard() {
     } catch { }
   };
 
-  const applyMessageThreads = (messageThreads: unknown) => {
+  const applyMessageThreads = useCallback((messageThreads: unknown) => {
     setMessages(messageThreads as typeof messages);
     const userMessageIds = ((messageThreads as AdminMessageThread[]) || [])
       .flatMap((thread) => (thread.messages || []))
@@ -334,9 +334,9 @@ export default function AdminDashboard() {
       userMessageIds.forEach((id: string) => seenUserMessageIdsRef.current.add(id));
       initializedMessageTrackingRef.current = true;
     }
-  };
+  }, []);
 
-  const applyBundle = (bundle: AdminBundle, saveToCache = true) => {
+  const applyBundle = useCallback((bundle: AdminBundle, saveToCache = true) => {
     if (!bundle) return;
     if (bundle.stats) setStats(bundle.stats);
     if (bundle.products) {
@@ -364,9 +364,9 @@ export default function AdminDashboard() {
         localStorage.setItem('fahad_admin_live_bundle', JSON.stringify(bundle));
       } catch { }
     }
-  };
+  }, [applyMessageThreads]);
 
-  const loadAll = async () => {
+  const loadAll = useCallback(async () => {
     try {
       const res = await fetch('/api/v1/admin/dashboard-bundle', {
         cache: 'no-store',
@@ -398,7 +398,7 @@ export default function AdminDashboard() {
     } catch {
       // fallback
     }
-  };
+  }, [applyBundle]);
 
   useEffect(() => {
     // 0ms Instant SWR Cache Hydration (Render immediately without waiting)
@@ -414,7 +414,7 @@ export default function AdminDashboard() {
       } catch { }
     }
     loadAll();
-  }, []);
+  }, [applyBundle, loadAll]);
 
   // Fast 6-second background live sync loop + instant sync on tab focus
   useEffect(() => {
@@ -457,7 +457,7 @@ export default function AdminDashboard() {
         document.removeEventListener('visibilitychange', onVisibility);
       }
     };
-  }, []);
+  }, [applyBundle]);
 
   useEffect(() => {
     const pollMessages = async () => {

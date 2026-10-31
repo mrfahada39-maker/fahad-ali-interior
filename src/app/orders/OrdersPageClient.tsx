@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Package, Loader2, Sparkles, ChevronRight, Clock, Truck, CheckCircle2, XCircle, Search, ArrowRight, ShoppingBag, Eye } from 'lucide-react';
 
 import { apiFetchJsonWithStatus, clearEnterpriseTokens } from '@/lib/api-client';

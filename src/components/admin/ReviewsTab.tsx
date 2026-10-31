@@ -2,25 +2,8 @@
 
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Star,
-  CheckCircle2,
-  XCircle,
-  Trash2,
-  Search,
-  Filter,
-  Sparkles,
-  ShoppingBag,
-  User,
-  Clock,
-  ShieldCheck,
-  RefreshCw,
-  MessageSquare,
-  ThumbsUp,
-  Award
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { Star, CheckCircle2, XCircle, Trash2, Search, Sparkles, ShoppingBag, ShieldCheck, Award } from 'lucide-react';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 interface ReviewsTabProps {
@@ -34,7 +17,7 @@ export default function ReviewsTab({
   reviews = [],
   updateReviewStatus,
   deleteReview,
-  statusColor,
+  statusColor: _statusColor,
 }: ReviewsTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');

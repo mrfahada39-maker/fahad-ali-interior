@@ -52,7 +52,7 @@ export async function sendPushNotification(
         await db.pushSubscription.deleteMany({
           where: { endpoint: subscription.endpoint },
         });
-      } catch (_) {}
+      } catch {}
     }
     return false;
   }

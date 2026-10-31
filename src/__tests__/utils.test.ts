@@ -23,7 +23,8 @@ describe('src/lib/utils.ts real module verification', () => {
     it('merges class names and handles conflicting tailwind utilities', () => {
       expect(cn('px-2 py-1', 'bg-red-500')).toBe('px-2 py-1 bg-red-500');
       expect(cn('p-4', 'p-2')).toBe('p-2');
-      expect(cn('text-red-500', false && 'hidden', null, undefined, 'text-blue-500')).toBe('text-blue-500');
+      const isHidden = false;
+      expect(cn('text-red-500', isHidden && 'hidden', null, undefined, 'text-blue-500')).toBe('text-blue-500');
     });
   });
 

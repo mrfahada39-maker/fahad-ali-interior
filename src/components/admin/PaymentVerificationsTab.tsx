@@ -3,30 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ShieldCheck,
-  Clock,
-  X,
-  Eye,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Search,
-  Phone,
-  MapPin,
-  Sparkles,
-  ExternalLink,
-  MessageSquare,
-  Upload,
-  RefreshCw,
-  Lock,
-  ChevronRight,
-  Maximize2,
-  Copy,
-  Coins,
-  Truck,
-  ShoppingBag,
-} from 'lucide-react';
+import { ShieldCheck, Clock, X, Eye, CheckCircle2, AlertTriangle, XCircle, Search, Phone, MapPin, Sparkles, ExternalLink, MessageSquare, RefreshCw, Maximize2, Copy, Coins, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
@@ -45,7 +22,7 @@ export function PaymentVerificationsTab({
   const [filter, setFilter] = useState<'pending' | 'jazzcash' | 'easypaisa' | 'bank' | 'all'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
-  const [manualSlipInput, setManualSlipInput] = useState<{ [orderId: string]: string }>({});
+  const [manualSlipInput, _setManualSlipInput] = useState<{ [orderId: string]: string }>({});
   const [isUpdating, setIsUpdating] = useState<{ [orderId: string]: boolean }>({});
 
   const formatPrice = (p: number) => {
@@ -119,7 +96,7 @@ export function PaymentVerificationsTab({
   const verifiedCount = verificationEligibleOrders.filter(
     (o) => (o.paymentStatus || '').toUpperCase() === 'PAID'
   ).length;
-  const rejectedCount = verificationEligibleOrders.filter(
+  const _rejectedCount = verificationEligibleOrders.filter(
     (o) => (o.paymentStatus || '').toUpperCase() === 'FAILED'
   ).length;
 

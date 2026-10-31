@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Menu, X, Search, ShoppingBag, User, Home, Armchair, Sparkles, PhoneCall, Bell, LogOut, Compass, Crown, ChevronRight, Heart, LayoutGrid, Phone, UserPlus, Headphones, Facebook, Instagram, Youtube } from 'lucide-react';
+import { X, Search, ShoppingBag, User, Home, Sparkles, PhoneCall, Bell, LogOut, Compass, ChevronRight, Heart, LayoutGrid, UserPlus, Headphones, Facebook, Instagram, Youtube } from 'lucide-react';
 import { useCartStore, useSiteSettingsStore, useUiNavigationStore } from '@/store';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 import { useSession, signOut } from 'next-auth/react';
@@ -32,7 +32,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
   const pathname = rawPathname || '/';
   const roleUpper = (session?.user as { role?: string })?.role?.toUpperCase();
   const isAdmin = roleUpper === 'ADMIN' || roleUpper === 'SUPER_ADMIN';
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [_isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -405,7 +405,7 @@ export default function Navbar({ onSearchOpen, onAuthOpen }: NavbarProps) {
           {/* 6. WISHLIST */}
           <button
             aria-label="Open Wishlist"
-            onClick={(e) => {
+            onClick={() => {
               setMobileOpen(false);
               useWishlistDrawerStore.getState().openDrawer();
             }}

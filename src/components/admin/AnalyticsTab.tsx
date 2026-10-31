@@ -1,38 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  DollarSign,
-  ShoppingBag,
-  Users,
-  Package,
-  TrendingUp,
-  BarChart3,
-  Calendar,
-  Download,
-  Sparkles,
-  ShieldCheck,
-  Zap,
-  Activity,
-  Layers,
-  Star,
-  Award,
-  Crown,
-  CheckCircle2,
-  Clock,
-  ArrowUpRight
-} from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  ComposedChart
-} from 'recharts';
+import { DollarSign, Users, Package, Calendar, Download, Sparkles, Activity, Crown } from 'lucide-react';
+import { Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Bar, ComposedChart } from 'recharts';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 import { AdminOrderSummary, AdminProductSummary } from './admin-tab-types';
 

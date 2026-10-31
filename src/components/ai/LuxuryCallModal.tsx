@@ -2,19 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Phone,
-  PhoneOff,
-  Video,
-  VideoOff,
-  Mic,
-  MicOff,
-  Crown,
-  Sparkles,
-  Maximize2,
-  Minimize2,
-  Volume2
-} from 'lucide-react';
+import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Crown, Sparkles } from 'lucide-react';
 
 interface LuxuryCallModalProps {
   isOpen: boolean;

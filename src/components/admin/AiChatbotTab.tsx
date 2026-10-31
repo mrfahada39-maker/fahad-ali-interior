@@ -3,35 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  MessageSquare,
-  Sparkles,
-  TrendingUp,
-  PhoneCall,
-  RefreshCw,
-  CheckCircle2,
-  Search,
-  User,
-  FileText,
-  Calendar,
-  Filter,
-  Bot,
-  Zap,
-  ShieldCheck,
-  Eye,
-  X,
-  ExternalLink,
-  Layers,
-  ArrowRight,
-  Send,
-  Trash2,
-  Download,
-  Terminal,
-  Settings2,
-  Compass,
-  Check,
-  AlertCircle
-} from 'lucide-react';
+import { Sparkles, TrendingUp, PhoneCall, RefreshCw, Search, FileText, Bot, ShieldCheck, Eye, X, Send, Trash2, Download, Terminal, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
@@ -244,7 +216,10 @@ export default function AiChatbotTab() {
   const totalMessages = Number(analytics?.totalMessages ?? 0);
   const escalatedCount = Number(analytics?.escalatedSessions ?? 0);
   const conversionRate = totalSessions > 0 ? Number(analytics?.conversionRate) || 0 : 0;
-  const recentSessions: ChatSessionItem[] = Array.isArray(analytics?.recentSessions) ? analytics.recentSessions : [];
+  const recentSessions: ChatSessionItem[] = useMemo(
+    () => (Array.isArray(analytics?.recentSessions) ? analytics.recentSessions : []),
+    [analytics]
+  );
   const intentCounts = Array.isArray(analytics?.intentCounts) ? analytics.intentCounts : [];
 
   // Filtered sessions

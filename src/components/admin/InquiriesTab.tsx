@@ -3,29 +3,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  MessageSquare,
-  Search,
-  Filter,
-  Phone,
-  Mail,
-  MapPin,
-  DollarSign,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  ArrowUpRight,
-  Eye,
-  X,
-  Compass,
-  Sparkles,
-  Send,
-  ShieldCheck,
-  PhoneCall,
-  Crown,
-  Briefcase
-} from 'lucide-react';
+import { MessageSquare, Search, Phone, Mail, DollarSign, Clock, Eye, X, Compass, Sparkles, ShieldCheck, PhoneCall, Briefcase } from 'lucide-react';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);

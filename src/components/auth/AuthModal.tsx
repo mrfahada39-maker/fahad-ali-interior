@@ -2,27 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  X,
-  Mail,
-  Lock,
-  User,
-  Phone,
-  Shield,
-  Loader2,
-  Eye,
-  EyeOff,
-  ArrowRight,
-  CheckCircle2,
-  MessageSquare,
-  MessageCircle,
-  RefreshCw,
-  Sparkles,
-} from 'lucide-react';
+import { X, Mail, Lock, User, Phone, Loader2, Eye, EyeOff, ArrowRight, CheckCircle2, MessageCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { apiFetchJsonWithStatus, setEnterpriseTokens } from '@/lib/api-client';
+import { setEnterpriseTokens } from '@/lib/api-client';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 interface AuthModalProps {
@@ -80,10 +64,10 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
   const [registerData, setRegisterData] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
 
   const [twoFactorStep, setTwoFactorStep] = useState(false);
-  const [twoFactorToken, setTwoFactorToken] = useState('');
+  const [_twoFactorToken, setTwoFactorToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
-  const [twoFactorChannel, setTwoFactorChannel] = useState<'WHATSAPP' | 'SMS'>('WHATSAPP');
+  const [_twoFactorChannel, setTwoFactorChannel] = useState<'WHATSAPP' | 'SMS'>('WHATSAPP');
   const [sendingChannel, setSendingChannel] = useState<'WHATSAPP' | 'SMS' | null>(null);
   const [twoFactorCooldown, setTwoFactorCooldown] = useState(0);
   const [twoFactorMaskedPhone, setTwoFactorMaskedPhone] = useState('');
@@ -111,7 +95,12 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
       if (res.ok && data?.success) {
         setTwoFactorCooldown(data.cooldownSeconds || 45);
         if (data.maskedPhone) setTwoFactorMaskedPhone(data.maskedPhone);
-        toast.success('6-digit code sent to your WhatsApp!');
+        if (data.devCode) {
+          setTwoFactorCode(data.devCode);
+          toast.success(`Verification code sent! (Dev Auto-fill: ${data.devCode})`, { duration: 6000 });
+        } else {
+          toast.success('6-digit code sent to your WhatsApp!');
+        }
       } else {
         toast.error(data.error || 'Failed to dispatch verification code');
       }
@@ -439,8 +428,8 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                       type="button"
                       onClick={() => setActiveTab('login')}
                       className={`py-2 sm:py-2.5 rounded-xl font-sans font-bold text-xs tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'login'
-                          ? 'bg-[#221814] text-[#F5D77F] shadow-sm'
-                          : 'text-[#7A6354] hover:text-[#221814] hover:bg-white/60'
+                        ? 'bg-[#221814] text-[#F5D77F] shadow-sm'
+                        : 'text-[#7A6354] hover:text-[#221814] hover:bg-white/60'
                         }`}
                       data-testid="login-tab"
                     >
@@ -451,8 +440,8 @@ export default function AuthModal({ isOpen, onClose, googleEnabled = true }: Aut
                       type="button"
                       onClick={() => setActiveTab('register')}
                       className={`py-2 sm:py-2.5 rounded-xl font-sans font-bold text-xs tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'register'
-                          ? 'bg-[#221814] text-[#F5D77F] shadow-sm'
-                          : 'text-[#7A6354] hover:text-[#221814] hover:bg-white/60'
+                        ? 'bg-[#221814] text-[#F5D77F] shadow-sm'
+                        : 'text-[#7A6354] hover:text-[#221814] hover:bg-white/60'
                         }`}
                       data-testid="register-tab"
                     >

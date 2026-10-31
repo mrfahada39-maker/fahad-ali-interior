@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { sendOtpToPhone, maskPakistaniPhone, generate6DigitOtp } from '@/lib/phone-otp';
+import { sendOtpToPhone, maskPakistaniPhone, generate6DigitOtp, normalizePakistaniPhone } from '@/lib/phone-otp';
 import { createPhoneOtpSecret } from '@/lib/totp-crypto';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
@@ -38,7 +38,14 @@ export async function POST(req: NextRequest) {
       user.role === 'ADMIN' ||
       (process.env.ADMIN_EMAILS || '').toLowerCase().includes(email.toLowerCase());
 
-    const targetPhone = user.phone || (isUserAdmin ? defaultAdminPhone : '');
+    let targetPhone = user.phone || (isUserAdmin ? defaultAdminPhone : '');
+
+    // Prevent Meta Cloud API deadlock: WhatsApp cannot dispatch to its own business phone number
+    const businessPhone = normalizePakistaniPhone(process.env.WHATSAPP_NUM || '923213283301');
+    const adminPhone = normalizePakistaniPhone(process.env.ADMIN_WHATSAPP_NUMBER || '923207006110');
+    if (normalizePakistaniPhone(targetPhone) === businessPhone && adminPhone && adminPhone !== businessPhone) {
+      targetPhone = adminPhone;
+    }
 
     if (!targetPhone) {
       return NextResponse.json(
@@ -68,12 +75,14 @@ export async function POST(req: NextRequest) {
     }
 
     const masked = maskPakistaniPhone(targetPhone);
+    const isDev = process.env.NODE_ENV !== 'production';
 
     return NextResponse.json({
       success: true,
       channel: result.channel,
       cooldownSeconds: result.cooldownSeconds || 30,
       maskedPhone: masked,
+      ...(isDev ? { devCode: otp } : {}),
     });
   } catch (err) {
     return NextResponse.json(

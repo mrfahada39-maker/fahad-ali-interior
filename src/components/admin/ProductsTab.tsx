@@ -3,31 +3,10 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Plus,
-  Trash2,
-  Edit2,
-  Image as ImageIcon,
-  X,
-  LayoutGrid,
-  List,
-  Search,
-  Filter,
-  ShieldAlert,
-  Package,
-  Layers,
-  AlertCircle,
-  Sparkles,
-  Tag,
-  CheckCircle2,
-  Crown,
-  Boxes,
-  ArrowUpDown
-} from 'lucide-react';
+import { Plus, Trash2, Edit2, Image as ImageIcon, X, LayoutGrid, List, Search, Filter, ShieldAlert, Package, AlertCircle, Sparkles, Crown, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import CloudinaryImageUpload from '@/components/shared/CloudinaryImageUpload';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
@@ -93,7 +72,7 @@ export default function ProductsTab({
   deleteProduct,
   isSubmittingProduct = false,
   deletingProductId = null,
-  defaultProductImage,
+  defaultProductImage: _defaultProductImage,
   editingProductId,
   setEditingProductId,
 }: ProductsTabProps) {

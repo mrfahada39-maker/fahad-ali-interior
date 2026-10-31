@@ -74,7 +74,7 @@ function SuccessContent() {
               className="p-1 hover:bg-[#FAF5EE] rounded-lg text-[#8C6239] transition-colors border border-[#E8DFC8]/60 cursor-pointer"
               title="Copy Order ID"
             >
-              <Copy size={13} />
+              {copied ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
             </button>
           </div>
         </motion.div>

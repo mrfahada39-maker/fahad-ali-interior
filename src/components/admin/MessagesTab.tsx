@@ -2,41 +2,13 @@
 
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  MessageSquare,
-  Search,
-  Users,
-  Mail,
-  Send,
-  Sparkles,
-  Phone,
-  Clock,
-  CheckCheck,
-  Headphones,
-  Paperclip,
-  Smile,
-  ShieldCheck,
-  Star,
-  ExternalLink,
-  Crown,
-  Zap,
-  CheckCircle2,
-  RefreshCw,
-  MoreVertical,
-  ChevronRight,
-  ShoppingBag,
-  Inbox,
-  Filter,
-  ArrowLeft,
-  Video,
-  PhoneCall
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { MessageSquare, Search, Users, Mail, Send, Sparkles, Phone, CheckCheck, Star, Zap, Inbox, ArrowLeft, Video } from 'lucide-react';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 import VoiceNotePlayer from '@/components/ai/VoiceNotePlayer';
 import VoiceNoteRecorder from '@/components/ai/VoiceNoteRecorder';
 
-const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
+const _formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface MessagesTabProps {
   messages: import('./admin-tab-types').AdminMessageThread[];

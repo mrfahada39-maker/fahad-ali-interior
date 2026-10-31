@@ -1,31 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Sparkles,
-  Radio,
-  Coins,
-  ClipboardList,
-  Users,
-  ShieldCheck,
-  TrendingUp,
-  Activity,
-  ArrowUpRight,
-  ExternalLink,
-  Calendar,
-  FileText,
-  Printer,
-  Download,
-  X,
-  Building2,
-  Hash,
-  CheckCircle2,
-  Phone,
-  Mail,
-  MapPin,
-  Clock,
-  Search,
-  ShoppingBag
-} from 'lucide-react';
+import { Sparkles, Coins, ClipboardList, Users, ShieldCheck, TrendingUp, ExternalLink, Calendar, FileText, Printer, Download, X, CheckCircle2, Phone, Mail, MapPin, Clock, Search, ShoppingBag } from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -140,7 +115,7 @@ interface OverviewTabProps {
   setActiveTab: (tab: string) => void;
 }
 
-export default function OverviewTab({ stats, analytics, orders, setActiveTab }: OverviewTabProps) {
+export default function OverviewTab({ stats, analytics: _analytics, orders, setActiveTab }: OverviewTabProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState<'all' | '7d' | '30d' | '1y' | 'custom'>('all');
   const [activeMetric, setActiveMetric] = useState<'revenue' | 'orders'>('revenue');
   const [customStartDate, setCustomStartDate] = useState<string>(() => {

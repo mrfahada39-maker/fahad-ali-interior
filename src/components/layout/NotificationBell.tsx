@@ -71,18 +71,16 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-export default function NotificationBell({ isSolid = true }: { isSolid?: boolean }) {
+export default function NotificationBell({ isSolid: _isSolid = true }: { isSolid?: boolean }) {
   const { data: session } = useSession();
   const [open, setOpen]           = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unread, setUnread]       = useState(0);
   const [loading, setLoading]     = useState(false);
-  const [mounted, setMounted]     = useState(false);
+
   const panelRef                  = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  
 
   // ── Fetch notifications ───────────────────────────────────────────────────
   const fetchNotifications = useCallback(async () => {

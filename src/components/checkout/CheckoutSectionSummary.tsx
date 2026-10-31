@@ -4,18 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import {
-  ShoppingBag,
-  ChevronDown,
-  Plus,
-  Minus,
-  Trash2,
-  Sparkles,
-  Tag,
-  CheckCircle2,
-  ArrowRight,
-  Lock,
-} from 'lucide-react';
+import { ShoppingBag, ChevronDown, Plus, Minus, Trash2, Sparkles, Tag, CheckCircle2, ArrowRight } from 'lucide-react';
 import { resolveImageUrl } from '@/lib/images';
 import { CartItem } from '@/store';
 import { AppliedCoupon } from './checkout-types';
@@ -47,7 +36,7 @@ export function CheckoutSectionSummary({
   handleItemQuantity,
   removeItem,
   itemsSubtotal,
-  shippingFee,
+  shippingFee: _shippingFee,
   taxAmount,
   discountAmount,
   grandTotal,

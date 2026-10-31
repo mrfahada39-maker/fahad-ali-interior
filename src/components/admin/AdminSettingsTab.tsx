@@ -2,31 +2,8 @@
 
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Store,
-  CreditCard,
-  Share2,
-  Eye,
-  EyeOff,
-  Shield,
-  Palette,
-  Sparkles,
-  Save,
-  Key,
-  Lock,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  CheckCircle2,
-  ShieldCheck,
-  Zap,
-  Globe,
-  Sliders,
-  DollarSign
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { Store, CreditCard, Share2, Eye, EyeOff, Shield, Palette, Sparkles, Save, Key, Lock, User, CheckCircle2, ShieldCheck } from 'lucide-react';
 import TwoFactorSetup from '@/components/auth/TwoFactorSetup';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 

@@ -239,7 +239,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
               alt="Fahad Ali Interior Luxury Living Room Showcase"
               fill
               priority
-              sizes="100vw"
+              sizes="(max-width: 1023px) 100vw, 0px"
               className="object-cover object-[78%_center] sm:object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[#FAF6F0]/95 via-[#FAF6F0]/70 via-55% to-transparent pointer-events-none" />

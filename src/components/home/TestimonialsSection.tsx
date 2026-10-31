@@ -4,14 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveImageUrl } from '@/lib/images';
-import { 
-  ArrowLeft,
-  ArrowRight,
-  Star, 
-  Quote,
-  MapPin,
-  Sparkles
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, Star, Quote, MapPin } from 'lucide-react';
 
 const DISTINCT_FALLBACK_AVATARS = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&q=75&fm=webp',

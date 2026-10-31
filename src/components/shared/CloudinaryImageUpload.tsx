@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useCallback } from 'react';
-import { UploadCloud, X, Loader2, ImageIcon, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { UploadCloud, X, Loader2, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import { useCloudinaryUpload, CloudinaryFolder, CloudinaryUploadResult } from '@/hooks/useCloudinaryUpload';
 
 interface CloudinaryImageUploadProps {

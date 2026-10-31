@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Heart, Eye, ArrowUpRight, ShoppingBag, Sparkles, Star } from 'lucide-react';
+import { Heart, Eye, ShoppingBag, Star } from 'lucide-react';
 import { useWishlistStore, useCartStore, useClientCacheStore } from '@/store';
 import { useIsInWishlist } from '@/hooks/use-is-in-wishlist';
 import Link from 'next/link';
@@ -33,7 +33,7 @@ interface ProductCardProps {
   layoutMode?: 'grid3' | 'grid4' | 'list';
 }
 
-export default function ProductCard({ product, index = 0, onQuickView, layoutMode = 'grid3' }: ProductCardProps) {
+export default function ProductCard({ product, index: _index = 0, onQuickView, layoutMode = 'grid3' }: ProductCardProps) {
   const router = useRouter();
   const toggleItem = useWishlistStore((s) => s.toggleItem);
   const wishlisted = useIsInWishlist(product.id);

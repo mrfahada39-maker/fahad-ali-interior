@@ -1,25 +1,11 @@
 'use client';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Radio,
-  Sparkles,
-  MapPin,
-  Smartphone,
-  Clock,
-  Coins,
-  Globe,
-  ShoppingBag,
-  ExternalLink,
-  Shield,
-  Activity,
-  Layers,
-  Laptop
-} from 'lucide-react';
+import { Sparkles, MapPin, Clock, Coins, Globe, ShoppingBag, Laptop } from 'lucide-react';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 import type { AdminTelemetry, AdminStats, AdminTelemetryVisitor } from './admin-tab-types';
 
-const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
+const _formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface AiRadarTabProps {
   telemetry: AdminTelemetry | null;

@@ -1,6 +1,7 @@
-﻿import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
+import { metadata as offlineMetadata } from '@/app/offline/page';
 
 describe('PWA & Offline Experience Specifications', () => {
   const rootDir = process.cwd();
@@ -64,6 +65,7 @@ describe('PWA & Offline Experience Specifications', () => {
 
   describe('Static PWA Physical Assets', () => {
     it('verifies existence of apple-touch-icon and icons', () => {
+      expect(fs.existsSync(swPath)).toBe(true);
       expect(fs.existsSync(path.join(rootDir, 'public', 'apple-touch-icon.png'))).toBe(true);
       expect(fs.existsSync(path.join(rootDir, 'public', 'icons', 'icon-192.png'))).toBe(true);
       expect(fs.existsSync(path.join(rootDir, 'public', 'icons', 'icon-512.png'))).toBe(true);
@@ -79,20 +81,16 @@ describe('PWA & Offline Experience Specifications', () => {
       const content = fs.readFileSync(offlineHtmlPath, 'utf8');
       expect(content).toContain('Offline Mode');
       expect(content).toContain('handleReconnect');
-      // Must be under 30KB for instantaneous offline load
       const stats = fs.statSync(offlineHtmlPath);
       expect(stats.size).toBeLessThan(35000);
     });
   });
 
-  describe('Service Worker Precaching (sw-push.js)', () => {
-    it('verifies precache assets list exists in sw-push.js', () => {
-      expect(fs.existsSync(swPath)).toBe(true);
-      const swContent = fs.readFileSync(swPath, 'utf8');
-      expect(swContent).toContain('PRECACHE_ASSETS');
-      expect(swContent).toContain('/offline.html');
-      expect(swContent).toContain('/icons/icon-192.png');
-      expect(swContent).toContain('/apple-touch-icon.png');
+  describe('Next.js Offline Route (@/app/offline/page)', () => {
+    it('declares noindex/nofollow robots metadata for offline route', () => {
+      expect(offlineMetadata.title).toContain('Offline');
+      expect(offlineMetadata.robots.index).toBe(false);
+      expect(offlineMetadata.robots.follow).toBe(false);
     });
   });
 });

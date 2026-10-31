@@ -4,36 +4,10 @@ import { logger } from '@/lib/logger';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FolderClosed,
-  RefreshCw,
-  Edit2,
-  Trash2,
-  Plus,
-  ExternalLink,
-  Sparkles,
-  Layers,
-  Eye,
-  Check,
-  X,
-  Tag,
-  Crown,
-  ShieldCheck,
-  Zap,
-  CheckCircle2,
-  ArrowUp,
-  ArrowDown,
-  Search,
-  Globe,
-  ImageIcon,
-  SlidersHorizontal,
-  Bookmark,
-  Hash
-} from 'lucide-react';
+import { FolderClosed, RefreshCw, Edit2, Trash2, Plus, ExternalLink, Sparkles, Layers, Eye, X, Tag, Crown, Zap, CheckCircle2, ArrowUp, ArrowDown, Search, Globe, ImageIcon, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
 import CloudinaryImageUpload from '@/components/shared/CloudinaryImageUpload';
-import { resolveImageUrl } from '@/lib/images';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 

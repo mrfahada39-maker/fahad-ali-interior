@@ -142,6 +142,15 @@ export default [
   },
   {
     files: [
+      "src/components/admin/**/*.tsx",
+      "src/components/shared/CloudinaryImageUpload.tsx",
+    ],
+    rules: {
+      "@next/next/no-img-element": "off",
+    },
+  },
+  {
+    files: [
       "src/lib/api-handlers/**/*.ts",
       "src/lib/validations/**/*.ts",
       "src/app/api/v1/[...path]/**/*.ts",

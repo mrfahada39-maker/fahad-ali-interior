@@ -3,27 +3,8 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import {
-  CreditCard,
-  ShieldCheck,
-  Truck,
-  Upload,
-  Building,
-  Copy,
-  Check,
-  Sparkles,
-  Lock,
-  Zap,
-  CheckCheck,
-  ChevronDown,
-  Loader2,
-} from 'lucide-react';
-import {
-  PaymentMethodType,
-  BankItem,
-  BANKS_LIST,
-  CheckoutBankCardPanel,
-} from '@/components/checkout/checkout-banks';
+import { CreditCard, ShieldCheck, Truck, Upload, Copy, Sparkles, CheckCheck, Loader2 } from 'lucide-react';
+import { PaymentMethodType, BankItem, CheckoutBankCardPanel } from '@/components/checkout/checkout-banks';
 import { RAAST_SBP_DETAILS, PAKISTAN_CITIES } from '@/lib/pakistan-localization';
 import { useSiteSettingsStore } from '@/store';
 import { CardDetails, DigitalPaymentDetails, CheckoutFormState } from './checkout-types';
@@ -77,7 +58,7 @@ export function CheckoutSectionPayment({
   setCardType,
   cardDetails,
   setCardDetails,
-  cardholderName,
+  cardholderName: _cardholderName,
   handleCardNumberChange,
   handleExpiryChange,
   dropdownRef,
@@ -96,14 +77,14 @@ export function CheckoutSectionPayment({
   copyToClipboard,
   copiedField,
   handleFileUpload,
-  paymentScreenshot,
+  paymentScreenshot: _paymentScreenshot,
   fileInputRef,
   placing,
   handlePlaceOrder,
   setCurrentSection,
   grandTotal,
-  formNotes,
-  handleInputChange,
+  formNotes: _formNotes,
+  handleInputChange: _handleInputChange,
 }: CheckoutSectionPaymentProps) {
   const siteSettings = useSiteSettingsStore((s) => s.settings);
   const activeJazzcash = siteSettings?.jazzcashNumber || process.env.NEXT_PUBLIC_JAZZCASH_NUMBER || '';

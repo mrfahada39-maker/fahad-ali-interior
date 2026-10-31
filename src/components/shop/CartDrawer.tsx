@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus, ShoppingBag, Trash2, ArrowRight, ShieldCheck, Sparkles, RefreshCw } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/store';
 import { useRouter } from 'next/navigation';
@@ -18,8 +18,6 @@ export default function CartDrawer() {
   const removeItem = useCartStore((s) => s.removeItem);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const getSubtotal = useCartStore((s) => s.getSubtotal);
-  const getGST = useCartStore((s) => s.getGST);
-  const getTotal = useCartStore((s) => s.getTotal);
   const clearCart = useCartStore((s) => s.clearCart);
   const appliedCoupon = useCartStore((s) => s.appliedCoupon);
   const router = useRouter();
