@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { WhatsAppService } from '@/lib/whatsapp';
 import { logger } from '@/lib/logger';
@@ -10,19 +11,30 @@ export async function GET(req: NextRequest) {
     // Enforce CRON_SECRET verification for Vercel Cron, or Admin Session for manual trigger
     const authHeader = req.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret) {
-      if (authHeader !== `Bearer ${cronSecret}`) {
-        logger.warn('[Daily Report Cron] Unauthorized invocation attempt rejected');
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let isAuthorized = false;
+
+    if (cronSecret && authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.slice(7).trim();
+      const tokenBuf = Buffer.from(token);
+      const secretBuf = Buffer.from(cronSecret);
+      if (tokenBuf.length === secretBuf.length && crypto.timingSafeEqual(tokenBuf, secretBuf)) {
+        isAuthorized = true;
       }
-    } else {
+    }
+
+    if (!isAuthorized) {
       const admin = await getVerifiedAdmin(req).catch(() => null);
-      if (!admin) {
-        return NextResponse.json(
-          { error: 'Unauthorized. CRON_SECRET or Admin authentication required.' },
-          { status: 401 }
-        );
+      if (admin) {
+        isAuthorized = true;
       }
+    }
+
+    if (!isAuthorized) {
+      logger.warn('[Daily Report Cron] Unauthorized invocation attempt rejected');
+      return NextResponse.json(
+        { error: 'Unauthorized. CRON_SECRET or Admin authentication required.' },
+        { status: 401 }
+      );
     }
 
     const success = await WhatsAppService.sendDailyReport();

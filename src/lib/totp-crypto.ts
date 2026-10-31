@@ -25,10 +25,13 @@ function getEncryptionKey(): Buffer {
     return crypto.createHash('sha256').update(totpKey).digest();
   }
 
-  const baseSeed = nextAuthSecret || process.env.DATABASE_URL?.trim();
-  if (baseSeed && baseSeed.length >= 16) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL: TOTP_ENC_KEY is not configured in production.');
+  }
+
+  if (nextAuthSecret && nextAuthSecret.length >= 16) {
     return crypto
-      .createHmac('sha256', baseSeed)
+      .createHmac('sha256', nextAuthSecret)
       .update('fai:totp-aes256-encryption-key:v1')
       .digest();
   }

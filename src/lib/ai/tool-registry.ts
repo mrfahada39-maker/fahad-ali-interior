@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
+import { verifyGuestOrderToken } from '@/lib/guest-order';
 
 export interface ToolDeclaration {
   name: string;
@@ -87,11 +88,12 @@ export const ENTERPRISE_AI_TOOLS: ToolDeclaration[] = [
   },
   {
     name: 'trackOrder',
-    description: 'Track real-time status of a customer order using order number or phone number.',
+    description: 'Track real-time status of a customer order using order number and authorized credentials.',
     parameters: {
       type: 'object',
       properties: {
         orderIdOrNumber: { type: 'string', description: 'Order reference number e.g. FAI-123456' },
+        guestToken: { type: 'string', description: 'Tamper-proof HMAC guest token issued at checkout' },
       },
       required: ['orderIdOrNumber'],
     },
@@ -112,6 +114,13 @@ export const ENTERPRISE_AI_TOOLS: ToolDeclaration[] = [
   },
 ];
 
+export interface AiToolContext {
+  userId?: string | null;
+  userEmail?: string | null;
+  role?: string | null;
+  isAdmin?: boolean;
+}
+
 export interface AiToolResult {
   success?: boolean;
   quoteId?: string;
@@ -126,11 +135,16 @@ export interface AiToolResult {
   paymentStatus?: string;
   trackingNumber?: string;
   totalAmount?: number;
+  error?: string;
   [key: string]: unknown;
 }
 
 export class AiToolExecutor {
-  static async executeTool(name: string, args: Record<string, unknown>): Promise<AiToolResult> {
+  static async executeTool(
+    name: string,
+    args: Record<string, unknown>,
+    context?: AiToolContext
+  ): Promise<AiToolResult> {
     switch (name) {
       case 'searchProducts': {
         const { query, category, maxPrice } = args;
@@ -211,33 +225,105 @@ export class AiToolExecutor {
       }
 
       case 'trackOrder': {
-        const { orderIdOrNumber } = args as { orderIdOrNumber?: string };
-        let order: Record<string, unknown> | null = null;
+        const { orderIdOrNumber, guestToken, token } = args as {
+          orderIdOrNumber?: string;
+          guestToken?: string;
+          token?: string;
+        };
+
+        if (!orderIdOrNumber || typeof orderIdOrNumber !== 'string') {
+          return {
+            success: false,
+            status: 'Invalid Order ID or Reference Number provided.',
+          };
+        }
+
+        let order: {
+          id: string;
+          userId: string;
+          status: string;
+          paymentStatus: string;
+          trackingNumber: string | null;
+          totalAmount: unknown;
+          shippingEmail: string | null;
+          user?: { id: string; email: string | null; role: string } | null;
+        } | null = null;
+
         try {
           order = await db.order.findFirst({
             where: { OR: [{ id: orderIdOrNumber }, { trackingNumber: orderIdOrNumber }] },
-            include: { items: { include: { product: true } } },
+            select: {
+              id: true,
+              userId: true,
+              status: true,
+              paymentStatus: true,
+              trackingNumber: true,
+              totalAmount: true,
+              shippingEmail: true,
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  role: true,
+                },
+              },
+            },
           });
         } catch (e) {
           logger.warn('Prisma order search', { detail: String(e) });
         }
 
-        if (order) {
+        if (!order) {
           return {
-            success: true,
-            orderNumber: String(order.id || ''),
-            status: String(order.status || 'PENDING'),
-            paymentStatus: String(order.paymentStatus || 'AWAITING_VERIFICATION'),
-            trackingNumber: String(order.trackingNumber || 'Pending Courier Assignment'),
-            totalAmount: Number(order.totalAmount),
-            estimatedDelivery: order.status === 'DELIVERED' ? 'Delivered' : '3–5 Business Days',
+            success: false,
+            orderNumber: orderIdOrNumber,
+            status: 'Order Not Found — Please verify your Order ID or contact our showroom concierge.',
+          };
+        }
+
+        // Authorization Guard: Require valid guest HMAC token or logged-in account owner / admin
+        const authedUserId = context?.userId || (typeof args.userId === 'string' ? args.userId : null);
+        const authedEmail = (
+          context?.userEmail ||
+          (typeof args.userEmail === 'string' ? args.userEmail : '') ||
+          ''
+        ).trim().toLowerCase();
+        const isAdmin = Boolean(context?.isAdmin || context?.role === 'ADMIN');
+
+        const isOwner = Boolean(
+          (authedUserId && order.userId === authedUserId) ||
+          (authedEmail && (
+            (order.shippingEmail && order.shippingEmail.trim().toLowerCase() === authedEmail) ||
+            (order.user?.email && order.user.email.trim().toLowerCase() === authedEmail)
+          ))
+        );
+
+        const hmacToken = String(guestToken || token || '').trim();
+        const orderEmail = (order.shippingEmail || order.user?.email || '').trim().toLowerCase();
+        const isGuestTokenValid = Boolean(
+          hmacToken &&
+          orderEmail &&
+          (verifyGuestOrderToken(order.id, orderEmail, hmacToken) ||
+           (order.trackingNumber && verifyGuestOrderToken(order.trackingNumber, orderEmail, hmacToken)))
+        );
+
+        if (!isAdmin && !isOwner && !isGuestTokenValid) {
+          return {
+            success: false,
+            orderNumber: orderIdOrNumber,
+            error: 'Forbidden. Tracking requires a verified guest tracking token or logged-in account ownership.',
+            status: 'Access Denied — Please provide your verified guest tracking token or log in with the purchasing account.',
           };
         }
 
         return {
-          success: false,
-          orderNumber: orderIdOrNumber,
-          status: 'Order Not Found — Please verify your Order ID or contact our showroom concierge.',
+          success: true,
+          orderNumber: String(order.id || ''),
+          status: String(order.status || 'PENDING'),
+          paymentStatus: String(order.paymentStatus || 'AWAITING_VERIFICATION'),
+          trackingNumber: String(order.trackingNumber || 'Pending Courier Assignment'),
+          totalAmount: Number(order.totalAmount),
+          estimatedDelivery: order.status === 'DELIVERED' ? 'Delivered' : '3-5 Business Days',
         };
       }
 

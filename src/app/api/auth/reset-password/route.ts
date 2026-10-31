@@ -118,10 +118,18 @@ export async function POST(req: NextRequest) {
 
     // Invalidate all active user sessions and refresh tokens to prevent session hijacking
     await Promise.all([
-      revokeAllUserTokensAsync(user.id).catch(() => {}),
-      Promise.resolve(db.session?.deleteMany?.({ where: { userId: user.id } })).catch(() => {}),
-      Promise.resolve(db.refreshToken?.deleteMany?.({ where: { userId: user.id } })).catch(() => {}),
-      Promise.resolve(db.passwordResetToken?.deleteMany?.({ where: { userId: user.id } })).catch(() => {}),
+      revokeAllUserTokensAsync(user.id).catch((err: unknown) =>
+        logger.warn('Failed to revoke tokens on password reset:', { error: String(err), userId: user.id })
+      ),
+      Promise.resolve(db.session?.deleteMany?.({ where: { userId: user.id } })).catch((err: unknown) =>
+        logger.warn('Failed to delete sessions on password reset:', { error: String(err), userId: user.id })
+      ),
+      Promise.resolve(db.refreshToken?.deleteMany?.({ where: { userId: user.id } })).catch((err: unknown) =>
+        logger.warn('Failed to delete refresh tokens on password reset:', { error: String(err), userId: user.id })
+      ),
+      Promise.resolve(db.passwordResetToken?.deleteMany?.({ where: { userId: user.id } })).catch((err: unknown) =>
+        logger.warn('Failed to delete reset tokens on password reset:', { error: String(err), userId: user.id })
+      ),
     ]);
 
     return NextResponse.json({

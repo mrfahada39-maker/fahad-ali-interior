@@ -5,9 +5,11 @@ import bcrypt from 'bcryptjs';
 import { verifySync } from 'otplib';
 import { db } from '@/lib/db';
 import { sessionRole } from '@/lib/enums';
+import { UserRole } from '@prisma/client';
 import { shouldSkipEmailVerification } from '@/lib/utils';
 import { decryptTotpSecret, verifyBackupCode, verifyPhoneOtpSecret } from '@/lib/totp-crypto';
 import { runDummyBcryptCompare } from '@/lib/password-policy';
+import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -40,6 +42,310 @@ function isAdminEmail(email: string): boolean {
   return getAdminEmails().includes(email.toLowerCase().trim());
 }
 
+export type LoginAuthResult =
+  | {
+      success: true;
+      user: {
+        id: string;
+        name: string | null;
+        email: string;
+        role: UserRole;
+      };
+    }
+  | {
+      success: false;
+      status: 'INVALID_CREDENTIALS' | 'LOCKED' | 'EMAIL_NOT_VERIFIED' | 'REQUIRES_2FA' | 'INVALID_2FA' | 'FORBIDDEN' | 'RATE_LIMITED';
+      error: string;
+    };
+
+export interface VerifyLoginOptions {
+  email?: string;
+  password?: string;
+  totpCode?: string;
+  requireAdminRole?: boolean;
+  skipEmailVerification?: boolean;
+  ip?: string;
+}
+
+/**
+ * Calculates progressive lockout delay based on number of failed attempts.
+ * Standard accounts: progressive backoff (5m -> 15m -> 30m -> 60m -> 24h).
+ * Admin accounts: 24h persistent lockout requiring 2FA or email-link unlock.
+ */
+export function calculateLockoutDurationMs(attempts: number, isAdmin = false): number {
+  if (attempts < 5) return 0;
+  if (isAdmin) {
+    return 24 * 60 * 60 * 1000;
+  }
+  const tiers = [
+    5 * 60 * 1000,
+    15 * 60 * 1000,
+    30 * 60 * 1000,
+    60 * 60 * 1000,
+    24 * 60 * 60 * 1000,
+  ];
+  const idx = Math.min(attempts - 5, tiers.length - 1);
+  return tiers[idx];
+}
+
+/**
+ * Shared, hardened credential and 2FA verification function used by both
+ * NextAuth CredentialsProvider and /api/admin/auth/login.
+ *
+ * Guarantees:
+ * 1. Constant-time dummy comparison for non-existent users and locked accounts.
+ * 2. Strict account lockout handling without user enumeration.
+ * 3. Atomic phone-OTP 2FA invalidation after use (prevents replay attacks in both paths).
+ * 4. Backup code single-use invalidation.
+ * 5. Automatic login attempts reset upon full authentication success.
+ */
+export async function verifyCredentialsAnd2Fa(
+  options: VerifyLoginOptions
+): Promise<LoginAuthResult> {
+  const email = options.email ? options.email.toLowerCase().trim() : '';
+  const password = options.password || '';
+  const totpCode = options.totpCode ? String(options.totpCode).trim() : '';
+
+  if (!email || !password) {
+    return {
+      success: false,
+      status: 'INVALID_CREDENTIALS',
+      error: 'Email and password are required',
+    };
+  }
+
+  // Per-IP rate limit check if IP is provided (protects DB from query spamming)
+  if (options.ip) {
+    const rl = await rateLimit(`login_ip:${options.ip}`, 'login');
+    if (!rl.allowed) {
+      return {
+        success: false,
+        status: 'RATE_LIMITED',
+        error: rl.error || 'Too many login attempts from this IP. Please wait a minute and try again.',
+      };
+    }
+  }
+
+  const user = await db.user.findUnique({
+    where: { email },
+  });
+
+  if (!user?.password) {
+    await runDummyBcryptCompare(password);
+    return {
+      success: false,
+      status: 'INVALID_CREDENTIALS',
+      error: 'Invalid executive credentials',
+    };
+  }
+
+  // 1. Enforce deactivation check (banned / deleted users cannot log in)
+  if (user.deletedAt) {
+    await runDummyBcryptCompare(password);
+    return {
+      success: false,
+      status: 'INVALID_CREDENTIALS',
+      error: 'Invalid executive credentials',
+    };
+  }
+
+  const roleUpper = String(user.role || '').toUpperCase();
+  const isAdmin = roleUpper === 'ADMIN' || roleUpper === 'SUPER_ADMIN';
+
+  // 2. Enforce account lockout cooldown (anti-brute force defense)
+  const isCurrentlyLocked = !!(user.lockedUntil && new Date(user.lockedUntil) > new Date());
+
+  if (isCurrentlyLocked) {
+    if (!isAdmin) {
+      // Non-admin accounts remain locked until progressive lockout expires
+      await runDummyBcryptCompare(password);
+      return {
+        success: false,
+        status: 'LOCKED',
+        error: 'Invalid executive credentials',
+      };
+    }
+
+    // Admin accounts: requires 2FA or email-link unlock instead of plain timed lock
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      const attempts = (user.loginAttempts || 0) + 1;
+      const lockMs = calculateLockoutDurationMs(attempts, true);
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          loginAttempts: attempts,
+          lockedUntil: new Date(Date.now() + lockMs),
+        },
+      }).catch((err) => logger.warn('Failed to update admin login attempts:', { detail: String(err) }));
+
+      return {
+        success: false,
+        status: 'LOCKED',
+        error: 'Invalid executive credentials',
+      };
+    }
+
+    // Admin password is valid, but 2FA is required to complete unlock
+    if (!totpCode) {
+      return {
+        success: false,
+        status: 'REQUIRES_2FA',
+        error: 'Two-factor authentication code required to unlock admin account',
+      };
+    }
+
+    // totpCode is provided; fall through to 2FA verification in step 5 to verify & unlock
+  } else {
+    // Account not currently locked: verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      const attempts = (user.loginAttempts || 0) + 1;
+      const lockMs = calculateLockoutDurationMs(attempts, isAdmin);
+      const shouldLock = lockMs > 0;
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          loginAttempts: attempts,
+          lockedUntil: shouldLock ? new Date(Date.now() + lockMs) : null,
+        },
+      }).catch((err) => logger.warn('Failed to update user login attempts:', { detail: String(err) }));
+      return {
+        success: false,
+        status: 'INVALID_CREDENTIALS',
+        error: 'Invalid executive credentials',
+      };
+    }
+  }
+
+  // 3. Role authorization check (if admin required)
+  if (options.requireAdminRole && !isAdmin) {
+    return {
+      success: false,
+      status: 'FORBIDDEN',
+      error: 'Unauthorized. Admin role required.',
+    };
+  }
+
+  // 4. Email verification check (if applicable)
+  if (!user.emailVerified && !options.skipEmailVerification) {
+    if (!shouldSkipEmailVerification()) {
+      return {
+        success: false,
+        status: 'EMAIL_NOT_VERIFIED',
+        error: 'Please verify your email before signing in. Check your inbox for the verification link.',
+      };
+    }
+    await db.user.update({
+      where: { id: user.id },
+      data: { emailVerified: new Date() },
+    }).catch(() => {});
+  }
+
+  // 5. Enforce 2FA TOTP / Phone OTP if enabled
+  if (user.totpEnabled) {
+    if (!totpCode) {
+      return {
+        success: false,
+        status: 'REQUIRES_2FA',
+        error: 'Two-factor authentication code required',
+      };
+    }
+
+    const recordFailed2Fa = async () => {
+      const attempts = (user.loginAttempts || 0) + 1;
+      const lockMs = calculateLockoutDurationMs(attempts, isAdmin);
+      const shouldLock = lockMs > 0;
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          loginAttempts: attempts,
+          lockedUntil: shouldLock ? new Date(Date.now() + lockMs) : null,
+        },
+      }).catch((err) => logger.warn('Failed to record failed 2FA:', { detail: String(err) }));
+    };
+
+    const matchedBackup = verifyBackupCode(totpCode, user.backupCodes || []);
+    if (matchedBackup) {
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          backupCodes: (user.backupCodes || []).filter((c: string) => c !== matchedBackup),
+        },
+      }).catch((err) => logger.warn('Failed to update backup codes:', { detail: String(err) }));
+    } else if (user.totpSecret?.startsWith('phone_otp:v1:') && !user.totpSecret.includes(':used:')) {
+      const isValidPhoneOtp = verifyPhoneOtpSecret(user.id, totpCode, user.totpSecret);
+      if (!isValidPhoneOtp) {
+        await recordFailed2Fa();
+        return {
+          success: false,
+          status: 'INVALID_2FA',
+          error: 'Invalid 2FA authentication code',
+        };
+      }
+      // CRITICAL: Invalidate single-use phone OTP challenge to prevent replay in both paths
+      await db.user.update({
+        where: { id: user.id },
+        data: { totpSecret: `phone_otp:v1:used:${Date.now()}` },
+      }).catch((err) => logger.warn('Failed to invalidate used phone OTP secret:', { detail: String(err) }));
+    } else if (!user.totpSecret) {
+      // Fail closed — missing totpSecret fails login (no 6-digit wildcard)
+      await recordFailed2Fa();
+      return {
+        success: false,
+        status: 'INVALID_2FA',
+        error: 'Invalid 2FA authentication code',
+      };
+    } else {
+      const plainSecret = decryptTotpSecret(user.totpSecret);
+      if (!plainSecret) {
+        await recordFailed2Fa();
+        return {
+          success: false,
+          status: 'INVALID_2FA',
+          error: 'Invalid 2FA authentication code',
+        };
+      }
+
+      try {
+        const check = verifySync({ token: totpCode, secret: plainSecret, epochTolerance: 30 });
+        if (!check || !check.valid) {
+          await recordFailed2Fa();
+          return {
+            success: false,
+            status: 'INVALID_2FA',
+            error: 'Invalid 2FA authentication code',
+          };
+        }
+      } catch {
+        await recordFailed2Fa();
+        return {
+          success: false,
+          status: 'INVALID_2FA',
+          error: 'Invalid 2FA authentication code',
+        };
+      }
+    }
+  }
+
+  // 6. Reset failed login attempts only AFTER both password and 2FA succeed
+  if (user.loginAttempts > 0 || user.lockedUntil) {
+    await db.user.update({
+      where: { id: user.id },
+      data: { loginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
+    }).catch((err) => logger.warn('Failed to reset login attempts on success:', { detail: String(err) }));
+  }
+
+  return {
+    success: true,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  };
+}
 
 const providers: NextAuthOptions['providers'] = [
   CredentialsProvider({
@@ -49,134 +355,44 @@ const providers: NextAuthOptions['providers'] = [
       password: { label: 'Password', type: 'password' },
       totpCode: { label: '2FA Code', type: 'text' },
     },
-    async authorize(credentials) {
+    async authorize(credentials, req) {
       if (!credentials?.email || !credentials?.password) {
         return null;
       }
 
-      const user = await db.user.findUnique({
-        where: { email: credentials.email.toLowerCase().trim() },
+      const rawTotp = (credentials as Record<string, unknown>)?.totpCode;
+      const totpCode = rawTotp ? String(rawTotp).trim() : undefined;
+      const ip = (req?.headers as Record<string, string> | undefined)?.['x-forwarded-for']?.split(',')[0]?.trim();
+
+      const result = await verifyCredentialsAnd2Fa({
+        email: credentials.email,
+        password: credentials.password,
+        totpCode,
+        requireAdminRole: false,
+        ip,
       });
 
-      if (!user?.password) {
-        await runDummyBcryptCompare(credentials.password);
-        return null; // OAuth user or non-existent user trying credentials
-      }
-
-      // 1. Enforce deactivation check (banned / deleted users cannot log in)
-      if (user.deletedAt) {
-        await runDummyBcryptCompare(credentials.password);
-        return null;
-      }
-
-      // 2. Enforce account lockout cooldown (anti-brute force defense, no distinct locked message)
-      if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
-        await runDummyBcryptCompare(credentials.password);
-        return null;
-      }
-
-      const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-      if (!isPasswordValid) {
-        const attempts = (user.loginAttempts || 0) + 1;
-        const shouldLock = attempts >= 5;
-        await db.user.update({
-          where: { id: user.id },
-          data: {
-            loginAttempts: attempts,
-            lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
-          },
-        }).catch(() => { });
-        return null;
-      }
-
-      if (!user.emailVerified) {
-        if (!shouldSkipEmailVerification()) {
-          throw new Error(
-            'Please verify your email before signing in. Check your inbox for the verification link.'
-          );
-        }
-        await db.user.update({
-          where: { id: user.id },
-          data: { emailVerified: new Date() },
-        });
-      }
-
-      // Enforce 2FA TOTP if user has it enabled
-      if (user.totpEnabled) {
-        const rawTotp = (credentials as Record<string, unknown>)?.totpCode;
-        const totpCode = rawTotp ? String(rawTotp).trim() : '';
-        if (!totpCode) {
+      if (!result.success) {
+        if (result.status === 'REQUIRES_2FA') {
           throw new Error('2FA_REQUIRED');
         }
-
-        const recordFailed2Fa = async () => {
-          const attempts = (user.loginAttempts || 0) + 1;
-          const shouldLock = attempts >= 5;
-          await db.user.update({
-            where: { id: user.id },
-            data: {
-              loginAttempts: attempts,
-              lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
-            },
-          }).catch(() => { });
-        };
-
-        const matchedBackup = verifyBackupCode(totpCode, user.backupCodes || []);
-        if (matchedBackup) {
-          await db.user.update({
-            where: { id: user.id },
-            data: {
-              backupCodes: (user.backupCodes || []).filter((c: string) => c !== matchedBackup),
-            },
-          });
-        } else if (user.totpSecret?.startsWith('phone_otp:v1:') && !user.totpSecret.includes(':used:')) {
-          const isValidPhoneOtp = verifyPhoneOtpSecret(user.id, totpCode, user.totpSecret);
-          if (!isValidPhoneOtp) {
-            await recordFailed2Fa();
-            throw new Error('INVALID_2FA_CODE');
-          }
-          // Invalidate single-use phone OTP challenge to prevent replay
-          await db.user.update({
-            where: { id: user.id },
-            data: { totpSecret: `phone_otp:v1:used:${Date.now()}` },
-          }).catch(() => {});
-        } else if (!user.totpSecret) {
-          // H3: Fail closed — missing totpSecret fails login (no 6-digit wildcard)
-          await recordFailed2Fa();
+        if (result.status === 'INVALID_2FA') {
           throw new Error('INVALID_2FA_CODE');
-        } else {
-          const plainSecret = decryptTotpSecret(user.totpSecret);
-          if (!plainSecret) {
-            await recordFailed2Fa();
-            throw new Error('INVALID_2FA_CODE');
-          }
-
-          try {
-            const check = verifySync({ token: totpCode, secret: plainSecret, epochTolerance: 30 });
-            if (!check || !check.valid) {
-              await recordFailed2Fa();
-              throw new Error('INVALID_2FA_CODE');
-            }
-          } catch {
-            await recordFailed2Fa();
-            throw new Error('INVALID_2FA_CODE');
-          }
         }
-      }
-
-      // Reset failed login attempts only AFTER both password and 2FA succeed
-      if (user.loginAttempts > 0 || user.lockedUntil) {
-        await db.user.update({
-          where: { id: user.id },
-          data: { loginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
-        }).catch(() => { });
+        if (result.status === 'EMAIL_NOT_VERIFIED') {
+          throw new Error(result.error);
+        }
+        if (result.status === 'RATE_LIMITED') {
+          throw new Error(result.error);
+        }
+        return null;
       }
 
       return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: sessionRole(user.role),
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        role: sessionRole(result.user.role),
       };
     },
   }),
@@ -289,7 +505,9 @@ export const authOptions: NextAuthOptions = {
             where: { id: token.id as string },
             select: { role: true, deletedAt: true, lockedUntil: true },
           });
-          if (!dbUser || dbUser.deletedAt || (dbUser.lockedUntil && new Date(dbUser.lockedUntil) > new Date())) {
+          const isAdmin = dbUser.role === 'ADMIN' || (dbUser.role as string) === 'SUPER_ADMIN';
+          const isLocked = !isAdmin && dbUser.lockedUntil && new Date(dbUser.lockedUntil) > new Date();
+          if (!dbUser || dbUser.deletedAt || isLocked) {
             extToken.revoked = true;
             extToken.role = undefined;
             return token;

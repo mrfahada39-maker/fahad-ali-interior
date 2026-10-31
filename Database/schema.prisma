@@ -218,7 +218,7 @@ model Order {
   createdBy         String?
   updatedBy         String?
   deletedAt         DateTime?
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User            @relation(fields: [userId], references: [id], onDelete: Restrict)
   items             OrderItem[]
   tracking          OrderTracking[]
 

@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { WhatsAppService } from '@/lib/whatsapp';
 import { Prisma } from '@prisma/client';
+import { getSiteUrl } from '@/lib/utils';
 
 /**
  * WhatsApp Admin Copilot
@@ -76,7 +77,7 @@ export class WhatsAppAdminCopilot {
         return (
           `✅ *Alhamdulillah Sir, is waqt koi pending order nahi hai!*\n\n` +
           `Tamam orders ki payment verify ho chuki hai. Naya order aane par aapko foran notification mil jayegi.\n\n` +
-          `🌐 *Live Orders Dashboard:*\n👉 https://fahad-ali-interior.vercel.app/admin`
+          `🌐 *Live Orders Dashboard:*\n👉 ${getSiteUrl()}/admin`
         );
       }
 
@@ -454,7 +455,7 @@ export class WhatsAppAdminCopilot {
       }
 
       msg += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-      msg += `🌐 *Admin Inquiries Tab:*\n👉 https://fahad-ali-interior.vercel.app/admin`;
+      msg += `🌐 *Admin Inquiries Tab:*\n👉 ${getSiteUrl()}/admin`;
 
       return msg;
     } catch (err) {

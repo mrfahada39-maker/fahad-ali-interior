@@ -1,10 +1,11 @@
 import { logger } from '@/lib/logger';
 import webPush from 'web-push';
 import { db } from '@/lib/db';
+import { SITE_CONFIG } from '@/lib/site-config';
 
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@fahadali.com';
+const vapidSubject = process.env.VAPID_SUBJECT || SITE_CONFIG.emails.pushSubject;
 
 let isConfigured = false;
 if (vapidPublicKey && vapidPrivateKey) {

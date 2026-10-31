@@ -7,7 +7,7 @@ let ephemeralDevAiSecret: string | null = null;
 /**
  * Retrieve dedicated secret for AI session binding.
  * Uses AI_SESSION_SECRET when configured, or derives a cryptographically domain-separated
- * HMAC-SHA256 secret from NEXTAUTH_SECRET / DATABASE_URL.
+ * HMAC-SHA256 secret without DATABASE_URL fallbacks.
  */
 export function getAiSessionSecret(): string {
   const aiSecret = process.env.AI_SESSION_SECRET?.trim();
@@ -22,10 +22,13 @@ export function getAiSessionSecret(): string {
     return aiSecret;
   }
 
-  const baseSeed = nextAuthSecret || process.env.DATABASE_URL?.trim();
-  if (baseSeed && baseSeed.length >= 16) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL: AI_SESSION_SECRET is not configured in production.');
+  }
+
+  if (nextAuthSecret && nextAuthSecret.length >= 16) {
     return crypto
-      .createHmac('sha256', baseSeed)
+      .createHmac('sha256', nextAuthSecret)
       .update('fai:ai-session-binding-secret:v1')
       .digest('hex');
   }

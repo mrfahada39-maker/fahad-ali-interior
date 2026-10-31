@@ -41,6 +41,11 @@ export interface UseCloudinaryUploadReturn {
     file: File,
     folder?: CloudinaryFolder,
   ) => Promise<CloudinaryUploadResult | null>;
+  /** Direct signed upload straight to Cloudinary, bypassing Vercel ~4.5MB body limits */
+  uploadDirect: (
+    file: File,
+    folder?: CloudinaryFolder,
+  ) => Promise<CloudinaryUploadResult | null>;
   /** Upload multiple files to Cloudinary (max 10) */
   uploadMultiple: (
     files: File[],
@@ -94,12 +99,114 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
 
   const clearError = useCallback(() => setError(null), []);
 
+  // ── Direct signed upload (bypasses Vercel ~4.5MB body limit) ──────────────
+  const uploadDirect = useCallback(
+    async (
+      file: File,
+      folder: CloudinaryFolder = 'products',
+    ): Promise<CloudinaryUploadResult | null> => {
+      setUploading(true);
+      setError(null);
+      setProgress(0);
+
+      try {
+        const allowedTypes = [
+          'image/jpeg', 'image/png', 'image/webp',
+          'image/gif', 'image/svg+xml',
+          'video/mp4', 'video/quicktime', 'video/webm',
+        ];
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error(`File type "${file.type}" is not allowed`);
+        }
+
+        const isVideo = file.type.startsWith('video/');
+        const maxBytes = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
+        if (file.size > maxBytes) {
+          const maxMB = maxBytes / 1024 / 1024;
+          throw new Error(`File is too large. Max size: ${maxMB}MB`);
+        }
+
+        setProgress(15);
+
+        // 1. Request signature from backend
+        const signRes = await apiFetch(
+          `/api/v1/uploads/sign?folder=${encodeURIComponent(folder)}`,
+          { method: 'POST' }
+        );
+
+        if (!signRes.ok) {
+          let msg = 'Failed to obtain upload signature';
+          try {
+            const errBody = (await signRes.json()) as Record<string, unknown>;
+            msg = (errBody.error as string) || (errBody.message as string) || msg;
+          } catch {}
+          throw new Error(msg);
+        }
+
+        const signData = (await signRes.json()) as {
+          signature: string;
+          timestamp: number;
+          apiKey: string;
+          cloudName: string;
+          folder: string;
+          uploadUrl: string;
+        };
+
+        setProgress(40);
+
+        // 2. Direct upload to Cloudinary (bypassing Vercel body limits)
+        const directFormData = new FormData();
+        directFormData.append('file', file);
+        directFormData.append('api_key', signData.apiKey);
+        directFormData.append('timestamp', String(signData.timestamp));
+        directFormData.append('folder', signData.folder);
+        directFormData.append('signature', signData.signature);
+
+        const cRes = await fetch(signData.uploadUrl, {
+          method: 'POST',
+          body: directFormData,
+        });
+
+        setProgress(85);
+
+        if (!cRes.ok) {
+          let msg = 'Direct upload to Cloudinary failed';
+          try {
+            const cErr = (await cRes.json()) as { error?: { message?: string } };
+            msg = cErr.error?.message || msg;
+          } catch {}
+          throw new Error(msg);
+        }
+
+        const cBody = await cRes.json();
+        const result = parseUploadResponse(cBody);
+        if (!result) throw new Error('Invalid response from cloud storage');
+
+        setProgress(100);
+        return result;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Direct upload failed';
+        setError(msg);
+        return null;
+      } finally {
+        setUploading(false);
+        setTimeout(() => setProgress(0), 600);
+      }
+    },
+    []
+  );
+
   // ── Single file upload ───────────────────────────────────────────────────
   const upload = useCallback(
     async (
       file: File,
       folder: CloudinaryFolder = 'products',
     ): Promise<CloudinaryUploadResult | null> => {
+      // Automatically route files > 4MB through direct signed upload to avoid Vercel's ~4.5MB body limit
+      if (file.size > 4 * 1024 * 1024) {
+        return uploadDirect(file, folder);
+      }
+
       setUploading(true);
       setError(null);
       setProgress(0);
@@ -138,8 +245,8 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
         if (!res.ok) {
           let msg = 'Upload failed';
           try {
-            const errBody = await res.json() as Record<string, unknown>;
-            msg = (errBody.message as string) || msg;
+            const errBody = (await res.json()) as Record<string, unknown>;
+            msg = (errBody.error as string) || (errBody.message as string) || msg;
           } catch { /* ignore */ }
           throw new Error(msg);
         }
@@ -160,7 +267,7 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
         setTimeout(() => setProgress(0), 600);
       }
     },
-    [],
+    [uploadDirect],
   );
 
   // ── Multiple files upload ────────────────────────────────────────────────
@@ -193,8 +300,8 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
         if (!res.ok) {
           let msg = 'Upload failed';
           try {
-            const errBody = await res.json() as Record<string, unknown>;
-            msg = (errBody.message as string) || msg;
+            const errBody = (await res.json()) as Record<string, unknown>;
+            msg = (errBody.error as string) || (errBody.message as string) || msg;
           } catch { /* ignore */ }
           throw new Error(msg);
         }
@@ -246,5 +353,5 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
     [],
   );
 
-  return { upload, uploadMultiple, deleteFile, uploading, progress, error, clearError };
+  return { upload, uploadDirect, uploadMultiple, deleteFile, uploading, progress, error, clearError };
 }

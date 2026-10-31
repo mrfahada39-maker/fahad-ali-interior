@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Calendar, User, Sparkles, ArrowRight } from 'lucide-react';
 import StoreShell from '@/components/layout/StoreShell';
+import JsonLd from '@/components/layout/JsonLd';
 import { db } from '@/lib/db';
+import { getSiteUrl } from '@/lib/utils';
 import type { EditorialArticle } from '@/lib/editorial-fallback';
 
 export const revalidate = 60;
@@ -100,16 +102,13 @@ export default async function BlogDetailPage({ params }: RouteProps) {
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://fahadaliinterior.com/blog/${article.slug}`,
+      '@id': `${getSiteUrl()}/blog/${article.slug}`,
     },
   };
 
   return (
     <StoreShell showFooter={true}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
-      />
+      <JsonLd data={blogPostingSchema} />
       <main className="min-h-screen bg-[#FAF8F5] text-[#2C1E18] font-sans pt-28 pb-20">
         <article className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="mb-6">

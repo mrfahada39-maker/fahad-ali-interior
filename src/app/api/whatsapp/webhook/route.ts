@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  const configuredToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || process.env.ADMIN_TOKEN_SECRET;
+  const configuredToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
 
   if (mode === 'subscribe' && token && configuredToken && token === configuredToken) {
     logger.info('[WhatsApp Webhook] Handshake verified successfully with Meta');
@@ -35,7 +35,13 @@ export async function POST(req: NextRequest) {
     const rawBody = await req.text().catch(() => '');
     const appSecret = (process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET || '').trim();
     const signatureHeader = req.headers.get('x-hub-signature-256');
-    if (appSecret && (signatureHeader || process.env.NODE_ENV === 'production')) {
+    // Fail closed: if the secret is missing, or the signature is missing or invalid, return 401 in every environment except an explicit test mode
+    const isExplicitTestMode = process.env.WHATSAPP_TEST_MODE === 'true';
+    if (!isExplicitTestMode) {
+      if (!appSecret) {
+        logger.error('[WhatsApp Webhook Security] Missing WHATSAPP_APP_SECRET');
+        return NextResponse.json({ error: 'Webhook verification secret not configured' }, { status: 401 });
+      }
       if (!signatureHeader || !signatureHeader.startsWith('sha256=')) {
         return NextResponse.json({ error: 'Missing or invalid X-Hub-Signature-256' }, { status: 401 });
       }
@@ -70,7 +76,6 @@ export async function POST(req: NextRequest) {
       [
         (process.env.ADMIN_WHATSAPP_NUMBER || '').replace(/\D/g, ''),
         (process.env.WHATSAPP_NUM || '').replace(/\D/g, ''),
-        (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '').replace(/\D/g, ''),
       ].filter(Boolean) as string[]
     );
 
@@ -227,7 +232,12 @@ export async function POST(req: NextRequest) {
               isNew: true,
             },
           })
-          ?.catch(() => { });
+          ?.catch((err: unknown) =>
+            logger.warn('Failed to persist WhatsApp verified notification:', {
+              error: String(err),
+              orderId: order.id,
+            })
+          );
       }
 
       await db.auditLog
@@ -239,10 +249,20 @@ export async function POST(req: NextRequest) {
             metadata: { senderPhone, source: 'Meta WhatsApp Interactive Button' },
           },
         })
-        ?.catch(() => { });
+        ?.catch((err: unknown) =>
+          logger.warn('Failed to persist WhatsApp verified audit log:', {
+            error: String(err),
+            orderId: order.id,
+          })
+        );
 
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'verify');
-      await WhatsAppService.sendCustomerOrderApproved(order).catch(() => { });
+      await WhatsAppService.sendCustomerOrderApproved(order).catch((err: unknown) =>
+        logger.warn('WhatsApp sendCustomerOrderApproved failed in webhook:', {
+          error: String(err),
+          orderId: order.id,
+        })
+      );
     } else if (action === 'hold') {
       await db.order.update({
         where: { id: order.id },
@@ -262,11 +282,21 @@ export async function POST(req: NextRequest) {
               isNew: true,
             },
           })
-          ?.catch(() => { });
+          ?.catch((err: unknown) =>
+            logger.warn('Failed to persist WhatsApp hold notification:', {
+              error: String(err),
+              orderId: order.id,
+            })
+          );
       }
 
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'hold');
-      await WhatsAppService.sendCustomerOrderHold(order).catch(() => { });
+      await WhatsAppService.sendCustomerOrderHold(order).catch((err: unknown) =>
+        logger.warn('WhatsApp sendCustomerOrderHold failed in webhook:', {
+          error: String(err),
+          orderId: order.id,
+        })
+      );
     } else if (action === 'reject') {
       // Revert stock atomically
       const runTx = db.$transaction.bind(db) as unknown as <T>(
@@ -303,11 +333,21 @@ export async function POST(req: NextRequest) {
               isNew: true,
             },
           })
-          ?.catch(() => { });
+          ?.catch((err: unknown) =>
+            logger.warn('Failed to persist WhatsApp rejected notification:', {
+              error: String(err),
+              orderId: order.id,
+            })
+          );
       }
 
       await WhatsAppService.sendAdminActionAck(senderPhone, order.id, 'reject');
-      await WhatsAppService.sendCustomerOrderRejected(order).catch(() => { });
+      await WhatsAppService.sendCustomerOrderRejected(order).catch((err: unknown) =>
+        logger.warn('WhatsApp sendCustomerOrderRejected failed in webhook:', {
+          error: String(err),
+          orderId: order.id,
+        })
+      );
     }
 
     return NextResponse.json({ success: true, action, orderId: order.id });

@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import StoreShell from '@/components/layout/StoreShell';
+import JsonLd from '@/components/layout/JsonLd';
 import FAQPage from './FAQPage';
 import { faqCategories } from '@/lib/faq-data';
 
@@ -36,10 +37,7 @@ export default function FAQ() {
 
   return (
     <StoreShell showFooter={true}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      <JsonLd data={faqSchema} />
       <FAQPage />
     </StoreShell>
   );

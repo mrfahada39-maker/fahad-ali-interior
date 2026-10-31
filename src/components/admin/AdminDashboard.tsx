@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api-client';
 import { signOut } from 'next-auth/react';
 import { defaultProductImage } from '@/lib/images';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import { ADMIN_CACHE_KEY, saveSanitizedAdminBundle, clearAdminCache } from '@/lib/admin-cache';
 import dynamic from 'next/dynamic';
 import ProductsTab from './ProductsTab';
 import OrdersTab from './OrdersTab';
@@ -65,10 +66,11 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Synchronous cache snapshot for instant 0ms initial render (Zero blank page / zero loading delay)
+  // Non-personal metrics only; all customer orders, users, and messages are kept in-memory only.
   const [stats, setStats] = useState<AdminStats>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        const cached = localStorage.getItem(ADMIN_CACHE_KEY);
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed?.stats) return parsed.stats;
@@ -81,7 +83,7 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        const cached = localStorage.getItem(ADMIN_CACHE_KEY);
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed?.analytics) return parsed.analytics;
@@ -91,46 +93,9 @@ export default function AdminDashboard() {
     return null;
   });
 
-  const [products, setProducts] = useState<AdminProductSummary[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed?.products) {
-            return Array.isArray(parsed.products) ? parsed.products : (parsed.products?.products || []);
-          }
-        }
-      } catch { }
-    }
-    return [];
-  });
-
-  const [orders, setOrders] = useState<AdminOrderSummary[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed?.orders)) return parsed.orders;
-        }
-      } catch { }
-    }
-    return [];
-  });
-
-  const [users, setUsers] = useState<AdminCustomerSummary[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed?.users)) return parsed.users;
-        }
-      } catch { }
-    }
-    return [];
-  });
+  const [products, setProducts] = useState<AdminProductSummary[]>([]);
+  const [orders, setOrders] = useState<AdminOrderSummary[]>([]);
+  const [users, setUsers] = useState<AdminCustomerSummary[]>([]);
 
   const [categories, setCategories] = useState<Array<{ id?: string; name: string; [key: string]: unknown }>>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -153,50 +118,15 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const [messages, setMessages] = useState<AdminMessageThread[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed?.messages)) return parsed.messages;
-        }
-      } catch { }
-    }
-    return [];
-  });
-
-  const [reviews, setReviews] = useState<AdminReviewSummary[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed?.reviews)) return parsed.reviews;
-        }
-      } catch { }
-    }
-    return [];
-  });
-
+  const [messages, setMessages] = useState<AdminMessageThread[]>([]);
+  const [reviews, setReviews] = useState<AdminReviewSummary[]>([]);
   const [blogs, setBlogs] = useState<AdminBlogSummary[]>([]);
-  const [inquiries, setInquiries] = useState<AdminInquirySummary[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed?.inquiries)) return parsed.inquiries;
-        }
-      } catch { }
-    }
-    return [];
-  });
+  const [inquiries, setInquiries] = useState<AdminInquirySummary[]>([]);
 
   const [siteSettings, setSiteSettings] = useState<AdminSiteSettings>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        const cached = localStorage.getItem(ADMIN_CACHE_KEY);
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed?.siteSettings) return parsed.siteSettings;
@@ -206,23 +136,10 @@ export default function AdminDashboard() {
     return {};
   });
 
-  const [adminAccount, setAdminAccount] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed?.account) {
-            return {
-              name: parsed.account.name || 'Fahad Ali',
-              email: parsed.account.email || BUSINESS_CONTACT.adminEmail,
-              phone: parsed.account.phone || BUSINESS_CONTACT.phone,
-            };
-          }
-        }
-      } catch { }
-    }
-    return { name: 'Fahad Ali', email: BUSINESS_CONTACT.adminEmail, phone: BUSINESS_CONTACT.phone };
+  const [adminAccount, setAdminAccount] = useState({
+    name: 'Fahad Ali',
+    email: BUSINESS_CONTACT.adminEmail,
+    phone: BUSINESS_CONTACT.phone,
   });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState({ current: false, next: false, confirm: false });
@@ -360,9 +277,7 @@ export default function AdminDashboard() {
     }
 
     if (saveToCache && typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('fahad_admin_live_bundle', JSON.stringify(bundle));
-      } catch { }
+      saveSanitizedAdminBundle(bundle as unknown as Record<string, unknown>);
     }
   }, [applyMessageThreads]);
 
@@ -401,20 +316,25 @@ export default function AdminDashboard() {
   }, [applyBundle]);
 
   useEffect(() => {
-    // 0ms Instant SWR Cache Hydration (Render immediately without waiting)
+    // 0ms Instant SWR Cache Hydration for non-personal metrics only
     if (typeof window !== 'undefined') {
       try {
-        const cached = localStorage.getItem('fahad_admin_live_bundle');
+        const cached = localStorage.getItem(ADMIN_CACHE_KEY);
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (parsed && parsed.stats) {
-            applyBundle(parsed, false);
+          // Purge legacy cache if it contains any sensitive customer PII
+          if (parsed?.orders || parsed?.users || parsed?.messages || parsed?.inquiries || parsed?.account) {
+            clearAdminCache();
+          } else if (parsed) {
+            if (parsed.stats) setStats(parsed.stats);
+            if (parsed.analytics) setAnalytics(parsed.analytics);
+            if (parsed.siteSettings) setSiteSettings(parsed.siteSettings);
           }
         }
       } catch { }
     }
     loadAll();
-  }, [applyBundle, loadAll]);
+  }, [loadAll]);
 
   // Fast 6-second background live sync loop + instant sync on tab focus
   useEffect(() => {
@@ -896,6 +816,7 @@ export default function AdminDashboard() {
     if (res.ok) {
       toast.success('Password changed. Please login again.');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      clearAdminCache();
       setTimeout(() => {
         signOut({ callbackUrl: '/?auth=login' });
       }, 800);

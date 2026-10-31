@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     const normPhone = normalizePakistaniPhone(phone);
-    const verification = verifyOtpChallengeToken(normPhone, code, token);
+    const verification = await verifyOtpChallengeToken(normPhone, code, token);
 
     if (!verification.valid) {
       return NextResponse.json(

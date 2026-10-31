@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client';
 import { moveToRecycleBin } from '@/lib/recycle-bin';
 
@@ -121,7 +122,12 @@ export async function PUT(req: NextRequest) {
             isNew: true,
           },
         })
-        ?.catch(() => {});
+        ?.catch((err: unknown) =>
+          logger.warn('Failed to persist admin order status update notification:', {
+            error: String(err),
+            orderId: updated.id,
+          })
+        );
     }
 
     return NextResponse.json({

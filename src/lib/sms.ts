@@ -63,9 +63,18 @@ export class SmsService {
       }
     }
 
-    // Development / Local / Fallback mock dispatch
-    const isDevOrTest = process.env.NODE_ENV !== 'production';
-    logger.info(`[SIM TEXT SMS OTP DISPATCH] 6-digit code for +${normPhone}`);
+    // In production: Fail closed if SMS gateway delivery is unconfigured or failed
+    if (process.env.NODE_ENV === 'production') {
+      return {
+        success: false,
+        error: 'SMS service is not available in production without valid credentials.',
+        channel: 'SMS',
+      };
+    }
+
+    // Development / Local / Fallback mock dispatch (development or test environments)
+    const isDevOrTest = process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development';
+    logger.info(`[SIM TEXT SMS OTP DISPATCH] Verification code dispatched for +${normPhone}`);
 
     return {
       success: true,

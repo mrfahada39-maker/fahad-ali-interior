@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon_Serverless-4169E1?logo=postgresql)](https://neon.tech/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/Tests-486%20Passed-brightgreen)](https://jestjs.io/)
+[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen)](https://jestjs.io/)
 
 Enterprise-grade e-commerce storefront, real-time AI interior design concierge (`👑 Senior Sales`), and executive administration suite for **Fahad Ali Interior** (Chiniot & Lahore, Pakistan).
 
@@ -27,13 +27,17 @@ Enterprise-grade e-commerce storefront, real-time AI interior design concierge (
 ## 💻 Tech Stack & Architecture
 
 - **Framework**: Next.js 16 (App Router, React 19, Server Components, Incremental Static Regeneration - ISR)
-- **Language**: TypeScript 5 (Strict Mode, 100% type safety)
-- **Database & ORM**: PostgreSQL via Neon Serverless, Prisma ORM 6
+- **Language**: TypeScript 5 (Strict Mode, 100% type safety, zero `any`)
+- **Database & ORM**: PostgreSQL via Neon Serverless, Prisma ORM 6 with locked baseline migrations
 - **Distributed Cache & Rate Limiting**: Upstash Redis (`@upstash/ratelimit`, `@upstash/redis`)
-- **Authentication**: NextAuth.js (JWT strategy with periodic role/status re-verification, TOTP 2FA via RFC-6238, dedicated isolated Admin HMAC session tokens)
+- **Authentication**:
+  - NextAuth.js JWT strategy with periodic role/status re-verification
+  - Isolated timing-safe HMAC-SHA256 Admin session tokens (`fai_admin_token`) signed via `ADMIN_TOKEN_SECRET`
+  - Two-Factor Authentication (TOTP via RFC-6238 encrypted at rest with AES-256-GCM, and single-use Phone OTP)
 - **Multi-Provider AI Concierge**: Groq Cloud (Llama-3.3-70B / 120B), Google Gemini 2.0 Flash, OpenAI GPT-4o-mini, WebRTC audio/video consultations
 - **Styling & Animation**: Tailwind CSS v4, Framer Motion, GSAP, Radix UI primitives, Lucide Icons
-- **Media Delivery**: Cloudinary CDN with magic-byte verification and SVG sanitization
+- **Media Delivery**: Cloudinary CDN with signed direct uploads (`/api/v1/uploads/sign`) and magic-byte verification
+- **Integrations**: WhatsApp Business Webhooks with fail-closed `X-Hub-Signature-256` HMAC validation
 - **Offline PWA**: Serwist Service Worker with offline catalog fallback
 
 ### Directory Structure
@@ -55,11 +59,15 @@ src/
 ├── components/
 │   ├── admin/                   # Admin tabs, analytics charts, and data tables
 │   ├── checkout/                # Interactive 3D Pakistani bank card preview
+│   ├── layout/JsonLd.tsx        # Centralized script-escaped JSON-LD with CSP nonce injection
 │   └── VoiceAiModal.tsx         # Bilingual Urdu/English voice consultation modal with live waveform
 ├── lib/
 │   ├── ai/                      # MultiProviderLlm, AgentRouter (Sales, Interior, Quote, Support), RAG
 │   ├── admin-auth.ts            # Timing-safe HMAC-SHA256 admin token minting and validation
-│   ├── rate-limit.ts            # Distributed sliding-window edge rate limiting
+│   ├── auth.ts                  # Unified credentials and 2FA authentication
+│   ├── rate-limit.ts            # Distributed sliding-window edge rate limiting via Upstash Redis
+│   ├── site-config.ts           # Centralized brand, domains, and contact email config
+│   ├── user-deletion.ts         # User privacy anonymization with Order.user restrict protection
 │   └── db.ts                    # Resilient Prisma database client pool
 └── proxy.ts                     # Request proxy: strict CSP nonces, CSRF origin verification, auth guards
 ```
@@ -71,13 +79,18 @@ src/
 1. **👑 Senior Sales AI Concierge**:
    - High-capacity LLM answering (Groq / Gemini) with 3,000 max tokens per response.
    - Comprehensive markdown tables, live stock querying, PKR pricing, and bilingual Roman Urdu/English fluency.
+   - Authorized AI tools: order tracking gated behind guest HMAC tokens or session ownership.
 2. **Pakistani Localization**:
    - Custom payment methods: Cash on Delivery (COD), Direct Bank Transfer (Raast / IBFT), JazzCash, Easypaisa.
    - White-Glove delivery logistics (Lahore, Karachi, Islamabad, Rawalpindi, Faisalabad, Multan, and nationwide).
+   - Centralized sales tax (GST) and shipping calculations derived directly from database settings.
 3. **Hardened Enterprise Security**:
    - Strict Content Security Policy (CSP) with dynamic per-request cryptographic nonces in production.
    - Isolated cryptographic signing secrets for User sessions, Admin tokens, and TOTP 2FA encryption (AES-256-GCM).
-   - Upstash Redis edge rate-limiting preventing brute-force and scraping.
+   - Domain-separated HKDF-SHA256 key derivation (`derivePurposeSecret`).
+   - Upstash Redis edge rate-limiting and OTP throttle protection (`fai:otp:*`).
+   - Progressive account lockout with external DoS immunity for active sessions.
+   - Privacy-first admin cache: zero customer PII in browser `localStorage`.
 4. **SEO & Canonical URLs**:
    - Next.js dynamic metadata with canonical link tags configured across all routes (`/`, `/shop`, `/product/[id]`, `/about`, `/contact`, `/faq`, `/privacy`, `/terms`).
    - Automated dynamic XML sitemap (`/sitemap.xml`) and search crawler directives (`/robots.txt`).
@@ -87,7 +100,7 @@ src/
 ## 🚀 Local Development Setup
 
 ### 1. Prerequisites
-- **Node.js**: `>= 20.12.0` (Recommended: LTS Node.js 22+)
+- **Node.js**: `>= 20.12.0` (Recommended: LTS Node.js 20 or 22)
 - **NPM**: `>= 10.x`
 - **PostgreSQL Database**: Neon Serverless account or local PostgreSQL instance
 - **Upstash Redis**: Free tier account at [console.upstash.com](https://console.upstash.com)
@@ -111,7 +124,7 @@ cp .env.example .env
 Fill in the values in `.env` (refer to the [Environment Variables Reference](#-environment-variables-reference) below).
 
 ### 5. Initialize the Database
-Generate the Prisma Client and push the schema to your PostgreSQL database:
+Generate the Prisma Client and apply migrations:
 ```bash
 npm run db:generate
 npm run db:migrate:dev
@@ -131,30 +144,34 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🔐 Environment Variables Reference
 
-| Variable | Required | Description |
+| Variable | Required in Prod | Description |
 | :--- | :---: | :--- |
 | `DATABASE_URL` | **Yes** | PostgreSQL connection pool URL (Neon connection string with SSL). |
 | `DIRECT_DATABASE_URL` | **Yes** | Direct PostgreSQL connection URL for Prisma migrations. |
-| `NEXTAUTH_SECRET` | **Yes** | 32-byte random hex string used to encrypt NextAuth JWT sessions. |
-| `NEXTAUTH_URL` | **Yes** | Canonical app URL (e.g. `http://localhost:3000` or production URL). |
-| `NEXT_PUBLIC_APP_URL` | **Yes** | Public frontend URL for client-side API requests. |
-| `ADMIN_TOKEN_SECRET` | **Yes** | Separate 32-byte hex secret dedicated exclusively to signing admin HMAC tokens. |
-| `TOTP_ENC_KEY` | **Yes** | 32-byte hex key for AES-256-GCM encryption of 2FA secrets at rest. |
-| `AI_SESSION_SECRET` | **Yes** | 32-byte hex secret for cryptographically bound AI session cookies. |
-| `ADMIN_EMAILS` | **Yes** | Comma-separated list of emails with administrative privileges. |
-| `UPSTASH_REDIS_REST_URL` | **Yes** | Upstash Redis REST URL for distributed rate limiting. |
+| `NEXTAUTH_SECRET` | **Yes** | 32+ byte random hex string used to encrypt NextAuth JWT sessions. |
+| `ADMIN_TOKEN_SECRET` | **Yes** | 32+ byte hex secret dedicated exclusively to signing admin HMAC tokens (`fai_admin_token`). |
+| `TOTP_ENC_KEY` | **Yes** | 32+ byte hex key for AES-256-GCM encryption of 2FA secrets at rest. |
+| `AI_SESSION_SECRET` | **Yes** | 32+ byte hex secret for cryptographically bound AI session cookies. |
+| `CRON_SECRET` | **Yes** | 32+ byte hex secret protecting automated scheduled cron jobs. |
+| `WHATSAPP_APP_SECRET` | **Yes** | Meta app secret used for fail-closed `X-Hub-Signature-256` webhook verification. |
+| `UPSTASH_REDIS_REST_URL` | **Yes** | Upstash Redis REST URL (`https://...`) for distributed rate limiting & OTP storage. |
 | `UPSTASH_REDIS_REST_TOKEN` | **Yes** | Upstash Redis REST authentication token. |
-| `GROQ_API_KEY` | **Yes** | Groq Cloud API key powering the primary high-speed AI Concierge LLM. |
+| `NEXTAUTH_URL` | **Yes** | Canonical app URL (e.g. `https://fahad-ali-interior.vercel.app`). |
+| `NEXT_PUBLIC_APP_URL` | **Yes** | Public frontend URL for client-side API requests. |
+| `NEXT_PUBLIC_SITE_URL` | **Yes** | Public canonical site URL. |
+| `ORDER_TOKEN_SECRET` | Optional | Optional explicit secret for guest order HMAC tokens (derives from `NEXTAUTH_SECRET` via HKDF if omitted). |
+| `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Optional | Webhook challenge handshake token configured in Meta App Dashboard. |
+| `GROQ_API_KEY` | Optional | Groq Cloud API key powering the primary high-speed AI Concierge LLM. |
 | `GEMINI_API_KEY` | Optional | Google Gemini API key for multimodal room analyzer and fallback LLM. |
 | `OPENAI_API_KEY` | Optional | OpenAI API key for secondary LLM fallback. |
-| `CLOUDINARY_CLOUD_NAME` | **Yes** | Cloudinary cloud identifier for furniture media uploads. |
-| `CLOUDINARY_API_KEY` | **Yes** | Cloudinary API access key. |
-| `CLOUDINARY_API_SECRET` | **Yes** | Cloudinary API access secret. |
-| `SMTP_HOST` | **Yes** | SMTP server address (e.g. `smtp.gmail.com`). |
-| `SMTP_PORT` | **Yes** | SMTP port (`465` for SSL/TLS, `587` for STARTTLS). |
-| `SMTP_USER` | **Yes** | SMTP authentication email address. |
-| `SMTP_PASS` | **Yes** | SMTP application-specific password. |
-| `WHATSAPP_NUM` | Optional | Direct WhatsApp concierge phone number in international format. |
+| `CLOUDINARY_CLOUD_NAME` | Optional | Cloudinary cloud identifier for furniture media uploads. |
+| `CLOUDINARY_API_KEY` | Optional | Cloudinary API access key. |
+| `CLOUDINARY_API_SECRET` | Optional | Cloudinary API access secret. |
+| `SMTP_HOST` | Optional | SMTP server address (e.g. `smtp.gmail.com`). |
+| `SMTP_PORT` | Optional | SMTP port (`465` for SSL/TLS, `587` for STARTTLS). |
+| `SMTP_USER` | Optional | SMTP authentication email address. |
+| `SMTP_PASS` | Optional | SMTP application-specific password. |
+| `WHATSAPP_NUM` | Optional | Direct WhatsApp concierge phone number in international format (`92300...`). |
 
 > [!TIP]
 > Generate secure 32-byte cryptographic hex keys in your terminal using:
@@ -174,7 +191,7 @@ All available project scripts configured in `package.json`:
 | `npm run build` | Compiles production build using Webpack and executes build pruning. |
 | `npm start` | Launches optimized production server on port 3000. |
 | `npm run lint` | Runs ESLint 9 across all TypeScript and React files with zero error tolerance. |
-| `npm run test:unit` | Executes Jest unit and security penetration test suite (486 tests). |
+| `npm run test:unit` | Executes Jest unit and security penetration test suite. |
 | `npm run test:e2e` | Runs Playwright end-to-end browser tests across Chromium, Firefox, and WebKit. |
 | `npm run test:ci` | Comprehensive CI pipeline running lint, unit tests, and E2E tests. |
 | `npm run db:generate` | Generates TypeScript types for the Prisma client from schema. |
@@ -220,13 +237,12 @@ npm run test:unit
 ```
 
 ### Verification Matrix
-- **Test Suites**: **38 passed, 38 total**
-- **Individual Tests**: **486 passed, 486 total**
 - **Static Analysis**: TypeScript (`npx tsc --noEmit`) ➔ **0 errors**
 - **Code Linter**: ESLint (`npm run lint`) ➔ **0 errors, 0 warnings**
 - **Cryptographic Nonce**: CSP nonces generated dynamically per request in production.
 - **Client IP Protection**: Trusted proxy resolution prevents IP header spoofing.
-- **Admin Tokens**: Mandatory 24-hour expiration with timing-safe HMAC verification.
+- **Admin Tokens**: Isolated timing-safe HMAC verification with server-side revocation.
+- **Supply-Chain Integrity**: GitHub Actions CI with Node 20, lint (`npx eslint .`), typecheck (`npx tsc --noEmit`), unit tests (`npx jest --maxWorkers=2`), and security audit (`npm audit --audit-level=high`).
 
 ---
 

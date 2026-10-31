@@ -1,12 +1,12 @@
 import crypto from 'crypto';
+import { derivePurposeSecret } from '@/lib/env';
 
+/**
+ * Retrieves the cryptographic secret for guest order tracking.
+ * Uses domain-separated HKDF derivation to avoid secret reuse and eliminate hardcoded tokens.
+ */
 export function getGuestSecret(): string {
-  return (
-    process.env.ADMIN_TOKEN_SECRET ||
-    process.env.AI_SESSION_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    'fai-guest-order-secret-2026'
-  );
+  return derivePurposeSecret('guest-order-token', process.env.GUEST_ORDER_TOKEN_SECRET);
 }
 
 /**

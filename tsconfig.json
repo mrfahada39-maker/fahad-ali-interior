@@ -18,6 +18,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
     "plugins": [
       {
         "name": "next"
@@ -26,9 +27,6 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@backend/*": [
-        "./Backend/src/*"
       ],
       "@database/*": [
         "./Database/*"
@@ -44,7 +42,6 @@
   ],
   "exclude": [
     "node_modules",
-    "Backend",
     "Database"
   ]
 }

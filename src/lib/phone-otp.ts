@@ -1,8 +1,12 @@
 import crypto from 'crypto';
+import { Redis } from '@upstash/redis';
 import { WhatsAppService } from '@/lib/whatsapp';
 import { SmsService } from '@/lib/sms';
 import { logger } from '@/lib/logger';
 import { isValidPakistaniPhone } from '@/lib/pakistan-localization';
+import { isRateLimitConfigured } from '@/lib/rate-limit';
+import { derivePurposeSecret } from '@/lib/env';
+import { getSiteUrl } from '@/lib/utils';
 
 /**
  * Masks a Pakistani phone number for private display (e.g. +92 300 ••••567).
@@ -20,8 +24,29 @@ export function maskPakistaniPhone(phone: string): string {
 }
 
 /**
- * In-memory rate limiting and attempt tracker for phone OTPs.
- * Tracks per-phone rate limits to prevent SMS/WhatsApp spam and brute-force attacks.
+ * Upstash Redis client singleton for distributed rate limiting and attempt tracking.
+ */
+let redisInstance: Redis | null = null;
+
+export function setOtpRedisClient(client: Redis | null): void {
+  redisInstance = client;
+}
+
+function getOtpRedis(): Redis | null {
+  if (redisInstance) return redisInstance;
+  if (isRateLimitConfigured()) {
+    try {
+      redisInstance = Redis.fromEnv();
+      return redisInstance;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * In-memory rate limiting and attempt tracker fallback for phone OTPs (used in local development and unit tests).
  */
 interface RateLimitRecord {
   lastSentAt: number;
@@ -32,10 +57,14 @@ interface RateLimitRecord {
 
 const otpRateLimitMap = new Map<string, RateLimitRecord>();
 
+export function clearOtpRateLimits(): void {
+  otpRateLimitMap.clear();
+}
+
 const COOLDOWN_SECONDS = 45;
 const MAX_SENDS_PER_WINDOW = 10;
-const WINDOW_DURATION_MS = 10 * 60 * 1000; // 10 minutes
-const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const WINDOW_DURATION_SECONDS = 600; // 10 minutes
+const OTP_TTL_MS = 10 * 60 * 1000;   // 10 minutes
 const MAX_VERIFY_ATTEMPTS = 5;
 
 /**
@@ -55,21 +84,13 @@ export function normalizePakistaniPhone(phone: string): string {
 
 /**
  * Retrieves the cryptographic secret used to sign OTP challenge tokens.
+ * Uses domain-separated HKDF derivation to avoid secret reuse without DATABASE_URL fallbacks.
  */
 function getPhoneOtpSecret(): string {
-  const secret =
-    process.env.ADMIN_TOKEN_SECRET ||
-    process.env.AI_SESSION_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    process.env.DATABASE_URL;
-
-  if (secret && secret.length >= 16) {
-    return secret;
-  }
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('CRITICAL: Phone OTP token signing secret is not configured in production.');
-  }
-  return 'dev-phone-otp-token-signing-key';
+  return derivePurposeSecret(
+    'otp-token',
+    process.env.PHONE_OTP_SECRET || process.env.OTP_TOKEN_SECRET
+  );
 }
 
 /**
@@ -105,13 +126,160 @@ export function createOtpChallengeToken(
 }
 
 /**
- * Validates a submitted 6-digit code against the HMAC signed challenge token.
+ * Distributed rate-limiting helpers for cooldown and send window checks.
  */
-export function verifyOtpChallengeToken(
+async function checkPhoneRateLimit(normPhone: string): Promise<{
+  allowed: boolean;
+  cooldownSeconds?: number;
+  error?: string;
+}> {
+  const redis = getOtpRedis();
+  if (redis) {
+    try {
+      const cooldownTtl = await redis.ttl(`fai:otp:cooldown:${normPhone}`);
+      if (cooldownTtl > 0) {
+        return {
+          allowed: false,
+          cooldownSeconds: cooldownTtl,
+          error: `Please wait ${cooldownTtl} second${cooldownTtl > 1 ? 's' : ''} before requesting another verification code.`,
+        };
+      }
+
+      const count = await redis.get<number>(`fai:otp:send_count:${normPhone}`);
+      if (count !== null && Number(count) >= MAX_SENDS_PER_WINDOW) {
+        return {
+          allowed: false,
+          error: 'Maximum verification attempts reached for this number. Please try again after 10 minutes.',
+        };
+      }
+
+      return { allowed: true };
+    } catch (err) {
+      logger.warn('[PhoneOTP Redis Check Error, fallback to memory tracker]:', { detail: String(err) });
+    }
+  }
+
+  // Memory fallback
+  const now = Date.now();
+  const record = otpRateLimitMap.get(normPhone);
+  if (record) {
+    if (now - record.firstSentAt > WINDOW_DURATION_SECONDS * 1000) {
+      otpRateLimitMap.delete(normPhone);
+    } else {
+      const elapsedSeconds = Math.floor((now - record.lastSentAt) / 1000);
+      if (elapsedSeconds < COOLDOWN_SECONDS) {
+        const remaining = COOLDOWN_SECONDS - elapsedSeconds;
+        return {
+          allowed: false,
+          error: `Please wait ${remaining} second${remaining > 1 ? 's' : ''} before requesting another verification code.`,
+          cooldownSeconds: remaining,
+        };
+      }
+      if (record.sendCount >= MAX_SENDS_PER_WINDOW) {
+        return {
+          allowed: false,
+          error: 'Maximum verification attempts reached for this number. Please try again after 10 minutes.',
+        };
+      }
+    }
+  }
+  return { allowed: true };
+}
+
+async function recordOtpSent(normPhone: string): Promise<void> {
+  const redis = getOtpRedis();
+  if (redis) {
+    try {
+      await redis.set(`fai:otp:cooldown:${normPhone}`, '1', { ex: COOLDOWN_SECONDS });
+      const newCount = await redis.incr(`fai:otp:send_count:${normPhone}`);
+      if (newCount === 1) {
+        await redis.expire(`fai:otp:send_count:${normPhone}`, WINDOW_DURATION_SECONDS);
+      }
+      await redis.del(`fai:otp:verify_attempts:${normPhone}`);
+    } catch (err) {
+      logger.warn('[PhoneOTP Redis Record Error]:', { detail: String(err) });
+    }
+  }
+
+  const now = Date.now();
+  const existing = otpRateLimitMap.get(normPhone);
+  if (existing && now - existing.firstSentAt <= WINDOW_DURATION_SECONDS * 1000) {
+    existing.lastSentAt = now;
+    existing.sendCount += 1;
+    otpRateLimitMap.set(normPhone, existing);
+  } else {
+    otpRateLimitMap.set(normPhone, {
+      lastSentAt: now,
+      sendCount: 1,
+      firstSentAt: now,
+      attempts: 0,
+    });
+  }
+  otpRateLimitMap.delete(`verify:${normPhone}`);
+}
+
+async function getVerifyAttempts(normPhone: string): Promise<number> {
+  const redis = getOtpRedis();
+  if (redis) {
+    try {
+      const count = await redis.get<number>(`fai:otp:verify_attempts:${normPhone}`);
+      if (count !== null) return Number(count);
+    } catch (err) {
+      logger.warn('[PhoneOTP Redis GetAttempts Error]:', { detail: String(err) });
+    }
+  }
+  const rlKey = `verify:${normPhone}`;
+  return otpRateLimitMap.get(rlKey)?.attempts ?? 0;
+}
+
+async function recordFailedVerifyAttempt(normPhone: string): Promise<number> {
+  let redisAttempts: number | null = null;
+  const redis = getOtpRedis();
+  if (redis) {
+    try {
+      redisAttempts = await redis.incr(`fai:otp:verify_attempts:${normPhone}`);
+      if (redisAttempts === 1) {
+        await redis.expire(`fai:otp:verify_attempts:${normPhone}`, WINDOW_DURATION_SECONDS);
+      }
+    } catch (err) {
+      logger.warn('[PhoneOTP Redis RecordFailedAttempt Error]:', { detail: String(err) });
+    }
+  }
+
+  const rlKey = `verify:${normPhone}`;
+  const record = otpRateLimitMap.get(rlKey) || {
+    lastSentAt: Date.now(),
+    sendCount: 0,
+    firstSentAt: Date.now(),
+    attempts: 0,
+  };
+  record.attempts += 1;
+  otpRateLimitMap.set(rlKey, record);
+
+  return redisAttempts !== null ? redisAttempts : record.attempts;
+}
+
+async function resetVerifyAttempts(normPhone: string): Promise<void> {
+  const redis = getOtpRedis();
+  if (redis) {
+    try {
+      await redis.del(`fai:otp:verify_attempts:${normPhone}`);
+    } catch (err) {
+      logger.warn('[PhoneOTP Redis ResetAttempts Error]:', { detail: String(err) });
+    }
+  }
+  otpRateLimitMap.delete(`verify:${normPhone}`);
+}
+
+/**
+ * Validates a submitted 6-digit code against the HMAC signed challenge token.
+ * Tracks verify attempts per phone in Upstash Redis to prevent brute-force attacks.
+ */
+export async function verifyOtpChallengeToken(
   phone: string,
   inputOtp: string,
   token: string
-): { valid: boolean; error?: string } {
+): Promise<{ valid: boolean; error?: string }> {
   if (!phone || !inputOtp || !token) {
     return { valid: false, error: 'Phone number, 6-digit code, and token are required' };
   }
@@ -124,16 +292,9 @@ export function verifyOtpChallengeToken(
   const normPhone = normalizePakistaniPhone(phone);
   const secret = getPhoneOtpSecret();
 
-  // Rate-limit attempt tracking to prevent brute-force (max 5 tries)
-  const rlKey = `verify:${normPhone}`;
-  const record = otpRateLimitMap.get(rlKey) || {
-    lastSentAt: Date.now(),
-    sendCount: 0,
-    firstSentAt: Date.now(),
-    attempts: 0,
-  };
-
-  if (record.attempts >= MAX_VERIFY_ATTEMPTS) {
+  // Rate-limit attempt tracking to prevent brute-force (max 5 tries) across distributed instances
+  const currentAttempts = await getVerifyAttempts(normPhone);
+  if (currentAttempts >= MAX_VERIFY_ATTEMPTS) {
     return {
       valid: false,
       error: 'Maximum verification attempts exceeded. Please request a new verification code.',
@@ -175,17 +336,16 @@ export function verifyOtpChallengeToken(
     const hashBuf = Buffer.from(tokenOtpHash);
     const calcBuf = Buffer.from(calculatedOtpHash);
     if (hashBuf.length !== calcBuf.length || !crypto.timingSafeEqual(hashBuf, calcBuf)) {
-      record.attempts += 1;
-      otpRateLimitMap.set(rlKey, record);
-      const remaining = MAX_VERIFY_ATTEMPTS - record.attempts;
+      const attempts = await recordFailedVerifyAttempt(normPhone);
+      const remaining = Math.max(0, MAX_VERIFY_ATTEMPTS - attempts);
       return {
         valid: false,
         error: `Incorrect verification code. ${remaining > 0 ? `${remaining} attempts remaining.` : 'Code locked.'}`,
       };
     }
 
-    // Success: reset attempts
-    otpRateLimitMap.delete(rlKey);
+    // Success: reset attempts in Upstash Redis and local memory
+    await resetVerifyAttempts(normPhone);
     return { valid: true };
   } catch {
     return { valid: false, error: 'Failed to verify OTP code' };
@@ -236,7 +396,8 @@ export function isPhoneVerifiedTokenValid(phone: string, token: string): boolean
 }
 
 /**
- * Sends a 6-digit OTP code to the customer via WhatsApp or cellular SMS text (with fallback logging for dev/testing).
+ * Sends a 6-digit OTP code to the customer via WhatsApp or cellular SMS text.
+ * Enforces distributed rate limits and fails closed in production if delivery fails.
  */
 export async function sendOtpToPhone(
   phone: string,
@@ -261,63 +422,30 @@ export async function sendOtpToPhone(
   }
 
   const normPhone = normalizePakistaniPhone(phone);
-  const now = Date.now();
 
-  // Check rate limit
-  const record = otpRateLimitMap.get(normPhone);
-  if (record) {
-    // Window expiration reset
-    if (now - record.firstSentAt > WINDOW_DURATION_MS) {
-      otpRateLimitMap.delete(normPhone);
-    } else {
-      // Cooldown check
-      const elapsedSeconds = Math.floor((now - record.lastSentAt) / 1000);
-      if (elapsedSeconds < COOLDOWN_SECONDS) {
-        const remaining = COOLDOWN_SECONDS - elapsedSeconds;
-        return {
-          success: false,
-          error: `Please wait ${remaining} second${remaining > 1 ? 's' : ''} before requesting another verification code.`,
-          cooldownSeconds: remaining,
-        };
-      }
-      // Maximum send limit in window
-      if (record.sendCount >= MAX_SENDS_PER_WINDOW) {
-        return {
-          success: false,
-          error: 'Maximum verification attempts reached for this number. Please try again after 10 minutes.',
-        };
-      }
-    }
+  // Check distributed rate limit / cooldown via Upstash Redis
+  const limitCheck = await checkPhoneRateLimit(normPhone);
+  if (!limitCheck.allowed) {
+    return {
+      success: false,
+      error: limitCheck.error || 'Rate limit exceeded.',
+      cooldownSeconds: limitCheck.cooldownSeconds,
+    };
   }
 
   // Generate 6-digit OTP and challenge token
   const otp = customOtp || generate6DigitOtp();
   const { token } = createOtpChallengeToken(normPhone, otp);
 
-  // Update rate limit tracker
-  const existing = otpRateLimitMap.get(normPhone);
-  if (existing && now - existing.firstSentAt <= WINDOW_DURATION_MS) {
-    existing.lastSentAt = now;
-    existing.sendCount += 1;
-    otpRateLimitMap.set(normPhone, existing);
-  } else {
-    otpRateLimitMap.set(normPhone, {
-      lastSentAt: now,
-      sendCount: 1,
-      firstSentAt: now,
-      attempts: 0,
-    });
-  }
-
-  // Reset verify attempts for this phone
-  otpRateLimitMap.delete(`verify:${normPhone}`);
+  // Record send in Redis and local tracker (sets 45s cooldown, increments window count, resets verify attempts)
+  await recordOtpSent(normPhone);
 
   const isDevOrTest = process.env.NODE_ENV !== 'production';
 
   // ── Dispatch via Cellular SMS ──
   if (channelPref === 'SMS') {
     const smsRes = await SmsService.sendOtpMessage(normPhone, otp);
-    if (smsRes.success) {
+    if (smsRes.success && (smsRes.channel === 'SMS' || isDevOrTest)) {
       return {
         success: true,
         token,
@@ -356,7 +484,7 @@ Yeh code agle 10 minute ke liye valid hai. Baraye meherbani yeh code kisi ke sat
       `Code: ${otp}`,
       'Login Security OTP',
       `Aapka 6-digit WhatsApp login verification code: ${otp}. Valid for 10 minutes.`,
-      'https://fahadali.pk/login',
+      `${getSiteUrl()}/login`,
     ]);
     if (tmplOk) sentViaWhatsApp = true;
   } catch (tmplErr) {
@@ -374,15 +502,22 @@ Yeh code agle 10 minute ke liye valid hai. Baraye meherbani yeh code kisi ke sat
     };
   }
 
-  // If WhatsApp API credentials are not set (e.g. localhost, testing, dev, or live fallback)
-  logger.info(`[DEV / TEST OTP DISPATCH] 6-digit code for ${normPhone}: ${otp} (channel: ${channelPref})`);
+  // In production: FAIL CLOSED if WhatsApp/SMS delivery fails. Return a real error.
+  if (process.env.NODE_ENV === 'production') {
+    return {
+      success: false,
+      error: 'Failed to deliver verification code. Please check your phone number or try again later.',
+    };
+  }
+
+  // Development / test fallback only — NEVER log the plain OTP code
+  logger.info(`[DEV / TEST OTP DISPATCH] Verification code dispatched for ${normPhone} (channel: ${channelPref})`);
 
   return {
     success: true,
     token,
     cooldownSeconds: COOLDOWN_SECONDS,
     channel: 'DEV_LOG',
-    ...(isDevOrTest ? { devCode: otp } : {}),
+    devCode: otp,
   };
 }
-

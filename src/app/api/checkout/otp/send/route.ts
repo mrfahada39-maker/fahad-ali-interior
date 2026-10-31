@@ -5,11 +5,11 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit';
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req);
-    const rl = await rateLimit(`otp_send_ip:${ip}`, 'api');
+    const rl = await rateLimit(`otp_send_ip:${ip}`, 'otpSend');
     if (!rl.allowed) {
       return NextResponse.json(
-        { error: 'Too many OTP requests from this connection. Please wait.' },
-        { status: 429 }
+        { error: rl.error || 'Too many OTP requests from this connection. Please wait.' },
+        { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
       );
     }
 

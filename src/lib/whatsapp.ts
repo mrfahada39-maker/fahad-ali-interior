@@ -3,8 +3,9 @@ import type { Order, Product, OrderItem } from '@prisma/client';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { PaymentAuditResult } from '@/lib/ai/payment-verifier';
-import { getAdminTokenSecret } from '@/lib/admin-auth';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import { derivePurposeSecret } from '@/lib/env';
+import { getSiteUrl } from '@/lib/utils';
 
 export interface WhatsAppOrderItem {
   name?: string;
@@ -33,6 +34,14 @@ export interface WhatsAppCustomerOrderInput {
 }
 
 /**
+ * Retrieves dedicated cryptographic secret for order action tokens.
+ * Uses domain-separated HKDF derivation to avoid candidate secret fallbacks.
+ */
+export function getOrderActionSecret(): string {
+  return derivePurposeSecret('order-action-token', process.env.ORDER_ACTION_SECRET);
+}
+
+/**
  * Generate a tamper-proof HMAC-SHA256 token for 1-Tap WhatsApp action links.
  * Token expires in 72 hours.
  */
@@ -42,7 +51,7 @@ export function generateOrderActionToken(
 ): string {
   const timestamp = Math.floor(Date.now() / 1000);
   const payload = `${orderId}:${action}:${timestamp}`;
-  const secret = getAdminTokenSecret();
+  const secret = getOrderActionSecret();
   const hmac = crypto
     .createHmac('sha256', secret)
     .update(payload)
@@ -51,7 +60,7 @@ export function generateOrderActionToken(
 }
 
 /**
- * Verifies a 1-Tap action token against candidate secrets.
+ * Verifies a 1-Tap action token using dedicated domain-separated HMAC secret.
  */
 export function verifyOrderActionToken(
   orderId: string,
@@ -71,35 +80,16 @@ export function verifyOrderActionToken(
     }
 
     const payload = `${orderId}:${action}:${timestamp}`;
-    const candidateSecrets = Array.from(
-      new Set(
-        [
-          process.env.ADMIN_TOKEN_SECRET,
-          process.env.NEXTAUTH_SECRET,
-          getAdminTokenSecret(),
-        ].filter(Boolean) as string[]
-      )
-    );
+    const secret = getOrderActionSecret();
+    const expectedHmac = crypto
+      .createHmac('sha256', secret)
+      .update(payload)
+      .digest('hex');
 
-    for (const secret of candidateSecrets) {
-      const expectedHmac = crypto
-        .createHmac('sha256', secret)
-        .update(payload)
-        .digest('hex');
-
-      try {
-        if (
-          crypto.timingSafeEqual(
-            Buffer.from(receivedHmac, 'hex'),
-            Buffer.from(expectedHmac, 'hex')
-          )
-        ) {
-          return true;
-        }
-      } catch {}
-    }
-
-    return false;
+    const receivedBuf = Buffer.from(receivedHmac, 'hex');
+    const expectedBuf = Buffer.from(expectedHmac, 'hex');
+    if (receivedBuf.length !== expectedBuf.length) return false;
+    return crypto.timingSafeEqual(receivedBuf, expectedBuf);
   } catch (e) {
     logger.warn('Token verification error:', { detail: String(e) });
     return false;
@@ -496,7 +486,7 @@ ${itemsList}
         })
         .join('\n') || '  ▫️ Furniture Suite';
 
-      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+      const trackingUrl = `${getSiteUrl()}/orders/track?id=${order.id}`;
 
       const addressParts = [
         order.shippingAddress,
@@ -628,7 +618,7 @@ ${deliveryAddress}
         })
         .join('\n') || '  ▫️ Furniture Suite';
 
-      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+      const trackingUrl = `${getSiteUrl()}/orders/track?id=${order.id}`;
 
       const addressParts = [
         order.shippingAddress,
@@ -692,7 +682,7 @@ ${itemsList}
         .map((i: WhatsAppOrderItem) => `  ▫️ ${i.name || i.productName || 'Piece'} (x${i.quantity || 1})`)
         .join('\n') || '  ▫️ Bespoke Furniture Suite';
 
-      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+      const trackingUrl = `${getSiteUrl()}/orders/track?id=${order.id}`;
       const activeTracking = trackingNumber || order.trackingNumber || 'En Route (Dispatched)';
 
       const message = `🏛️ *FAHAD ALI INTERIOR — DISPATCH NOTICE*
@@ -740,7 +730,7 @@ Hamari delivery team pohnchne se pehle aapko direct call karegi aur safe in-room
 
       const shortId = order.id.slice(-8).toUpperCase();
       const customerName = order.shippingName || 'Valued Client';
-      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+      const trackingUrl = `${getSiteUrl()}/orders/track?id=${order.id}`;
 
       const message = `🏛️ *FAHAD ALI INTERIOR — PAYMENT STATUS*
 ━━━━━━━━━━━━━━━━━━━━
@@ -782,7 +772,7 @@ Jaise hi bank se clearance complete hogi, aapko notification mil jayegi aur prod
 
       const shortId = order.id.slice(-8).toUpperCase();
       const customerName = order.shippingName || 'Valued Client';
-      const trackingUrl = `https://fahad-ali-interior.vercel.app/orders/track?id=${order.id}`;
+      const trackingUrl = `${getSiteUrl()}/orders/track?id=${order.id}`;
 
       const message = `🏛️ *FAHAD ALI INTERIOR — PAYMENT ALERT*
 ━━━━━━━━━━━━━━━━━━━━
@@ -1038,7 +1028,7 @@ ${stockSection}
 
 ━━━━━━━━━━━━━━━━━━━━
 🌐 *Live Admin Control Center:*
-👉 https://fahad-ali-interior.vercel.app/admin
+👉 ${getSiteUrl()}/admin
 
 _Sent automatically by Fahad Ali Interior Executive AI Bot_`;
     } catch (err) {
@@ -1067,7 +1057,7 @@ _Sent automatically by Fahad Ali Interior Executive AI Bot_`;
 
 ━━━━━━━━━━━━━━━━━━━━
 🌐 *Live Admin Control Center:*
-👉 https://fahad-ali-interior.vercel.app/admin
+👉 ${getSiteUrl()}/admin
 
 _Sent automatically by Fahad Ali Interior Executive AI Bot_`;
     }

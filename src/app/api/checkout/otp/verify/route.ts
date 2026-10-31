@@ -9,11 +9,11 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit';
 export async function POST(req: NextRequest) {
   try {
     const ip = getClientIp(req);
-    const rl = await rateLimit(`otp_verify_ip:${ip}`, 'api');
+    const rl = await rateLimit(`otp_verify_ip:${ip}`, 'otpVerify');
     if (!rl.allowed) {
       return NextResponse.json(
-        { error: 'Too many verification attempts from this connection. Please wait.' },
-        { status: 429 }
+        { error: rl.error || 'Too many verification attempts from this connection. Please wait.' },
+        { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
       );
     }
 
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const check = verifyOtpChallengeToken(phone, otp, token);
+    const check = await verifyOtpChallengeToken(phone, otp, token);
     if (!check.valid) {
       return NextResponse.json(
         { error: check.error || 'Invalid or expired verification code.' },

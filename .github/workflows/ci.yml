@@ -2,9 +2,9 @@ name: Continuous Integration (CI)
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, master, develop, refactor/code-quality ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ main, master, develop, refactor/code-quality ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -34,7 +34,7 @@ jobs:
         run: npm run db:generate
 
       - name: Lint Frontend
-        run: npm run lint
+        run: npx eslint .
 
       - name: Typecheck Frontend
         run: npx tsc --noEmit
@@ -61,11 +61,15 @@ jobs:
       - name: Run Root Unit Tests
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/test_db' }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-at-least-32-characters-long-key' }}
-          TOTP_ENC_KEY: ${{ secrets.TOTP_ENC_KEY || 'test-totp-enc-key-at-least-32-characters-long!' }}
-          ADMIN_TOKEN_SECRET: ${{ secrets.ADMIN_TOKEN_SECRET || 'test-admin-token-secret-32-characters-long!' }}
-          AI_SESSION_SECRET: ${{ secrets.AI_SESSION_SECRET || 'test-ai-session-secret-32-characters-long!' }}
-        run: npm run test:unit -- --passWithNoTests
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-at-least-32-characters-long-key-1' }}
+          TOTP_ENC_KEY: ${{ secrets.TOTP_ENC_KEY || 'test-totp-enc-key-at-least-32-characters-long-2' }}
+          ADMIN_TOKEN_SECRET: ${{ secrets.ADMIN_TOKEN_SECRET || 'test-admin-token-secret-32-characters-long-3' }}
+          AI_SESSION_SECRET: ${{ secrets.AI_SESSION_SECRET || 'test-ai-session-secret-32-characters-long-4' }}
+          WHATSAPP_APP_SECRET: ${{ secrets.WHATSAPP_APP_SECRET || 'test-whatsapp-app-secret-32-characters-5' }}
+          WHATSAPP_WEBHOOK_VERIFY_TOKEN: ${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'test-whatsapp-verify-token-32-chars-6' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || 'test-cron-secret-at-least-32-characters-long-7' }}
+          ORDER_TOKEN_SECRET: ${{ secrets.ORDER_TOKEN_SECRET || 'test-order-token-secret-32-characters-long-8' }}
+        run: npx jest --maxWorkers=2 --forceExit
 
   security-audit:
     name: Security Vulnerability Audit
@@ -81,7 +85,7 @@ jobs:
           cache: 'npm'
 
       - name: Audit Root Dependencies
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --audit-level=high
 
   build-verification:
     name: Build Verification
@@ -107,10 +111,14 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://test_mock:test_mock@localhost:5432/test_db' }}
           DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL || secrets.DATABASE_URL || 'postgresql://test_mock:test_mock@localhost:5432/test_db' }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-at-least-32-characters-long-key' }}
-          TOTP_ENC_KEY: ${{ secrets.TOTP_ENC_KEY || 'test-totp-enc-key-at-least-32-characters-long!' }}
-          ADMIN_TOKEN_SECRET: ${{ secrets.ADMIN_TOKEN_SECRET || 'test-admin-token-secret-32-characters-long!' }}
-          AI_SESSION_SECRET: ${{ secrets.AI_SESSION_SECRET || 'test-ai-session-secret-32-characters-long!' }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'test-secret-at-least-32-characters-long-key-1' }}
+          TOTP_ENC_KEY: ${{ secrets.TOTP_ENC_KEY || 'test-totp-enc-key-at-least-32-characters-long-2' }}
+          ADMIN_TOKEN_SECRET: ${{ secrets.ADMIN_TOKEN_SECRET || 'test-admin-token-secret-32-characters-long-3' }}
+          AI_SESSION_SECRET: ${{ secrets.AI_SESSION_SECRET || 'test-ai-session-secret-32-characters-long-4' }}
+          WHATSAPP_APP_SECRET: ${{ secrets.WHATSAPP_APP_SECRET || 'test-whatsapp-app-secret-32-characters-5' }}
+          WHATSAPP_WEBHOOK_VERIFY_TOKEN: ${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'test-whatsapp-verify-token-32-chars-6' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || 'test-cron-secret-at-least-32-characters-long-7' }}
+          ORDER_TOKEN_SECRET: ${{ secrets.ORDER_TOKEN_SECRET || 'test-order-token-secret-32-characters-long-8' }}
           NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED: 'false'
           SKIP_ENV_VALIDATION: 'true'
         run: npm run build

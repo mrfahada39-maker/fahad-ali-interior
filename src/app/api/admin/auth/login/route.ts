@@ -1,13 +1,9 @@
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { verifySync } from 'otplib';
-import { db } from '@/lib/db';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
-import { decryptTotpSecret, verifyBackupCode, verifyPhoneOtpSecret } from '@/lib/totp-crypto';
 import { getAdminTokenSecret } from '@/lib/admin-auth';
-import { runDummyBcryptCompare } from '@/lib/password-policy';
+import { verifyCredentialsAnd2Fa } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,134 +16,68 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json().catch(() => null);
-    const email = body?.email?.toLowerCase()?.trim();
-    const password = body?.password;
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const email = typeof body?.email === 'string' ? body.email.toLowerCase().trim() : '';
+    const password = typeof body?.password === 'string' ? body.password : '';
+    const totpCode =
+      body?.totpCode !== undefined && body?.totpCode !== null
+        ? String(body.totpCode).trim()
+        : undefined;
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    const user = await db.user.findUnique({
-      where: { email },
+    const authResult = await verifyCredentialsAnd2Fa({
+      email,
+      password,
+      totpCode,
+      requireAdminRole: true,
+      skipEmailVerification: true,
+      ip,
     });
 
-    if (!user || !user.password) {
-      await runDummyBcryptCompare(password);
-      return NextResponse.json({ error: 'Invalid executive credentials' }, { status: 401 });
-    }
-
-    // Check account lockout (no distinct locked message to prevent enumeration)
-    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
-      await runDummyBcryptCompare(password);
-      return NextResponse.json(
-        { error: 'Invalid executive credentials' },
-        { status: 401 }
-      );
-    }
-
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      const attempts = (user.loginAttempts || 0) + 1;
-      const shouldLock = attempts >= 5;
-      await db.user.update({
-        where: { id: user.id },
-        data: {
-          loginAttempts: attempts,
-          lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
-        },
-      });
-      return NextResponse.json({ error: 'Invalid executive credentials' }, { status: 401 });
-    }
-
-    // Check 2FA TOTP if enabled
-    if (user.totpEnabled) {
-      const totpCode = body?.totpCode?.toString()?.trim();
-      if (!totpCode) {
+    if (!authResult.success) {
+      if (authResult.status === 'RATE_LIMITED') {
+        return NextResponse.json({ error: authResult.error }, { status: 429 });
+      }
+      if (authResult.status === 'REQUIRES_2FA') {
         return NextResponse.json(
-          { requires2fa: true, message: 'Two-factor authentication code required' },
+          { requires2fa: true, message: authResult.error },
           { status: 200 }
         );
       }
-
-      const recordFailed2Fa = async () => {
-        const attempts = (user.loginAttempts || 0) + 1;
-        const shouldLock = attempts >= 5;
-        await db.user.update({
-          where: { id: user.id },
-          data: {
-            loginAttempts: attempts,
-            lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null,
-          },
-        }).catch(() => {});
-      };
-
-      const matchedBackup = verifyBackupCode(totpCode, user.backupCodes || []);
-      if (matchedBackup) {
-        await db.user.update({
-          where: { id: user.id },
-          data: {
-            backupCodes: (user.backupCodes || []).filter((c: string) => c !== matchedBackup),
-          },
-        }).catch(() => {});
-      } else if (user.totpSecret?.startsWith('phone_otp:v1:')) {
-        const isValidPhoneOtp = verifyPhoneOtpSecret(user.id, totpCode, user.totpSecret);
-        if (!isValidPhoneOtp) {
-          await recordFailed2Fa();
-          return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
-        }
-      } else if (!user.totpSecret) {
-        // H3: Fail closed — if totpSecret missing, fail login (no 6-digit wildcard)
-        await recordFailed2Fa();
-        return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
-      } else {
-        const plainSecret = decryptTotpSecret(user.totpSecret);
-        if (!plainSecret) {
-          await recordFailed2Fa();
-          return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
-        }
-
-        try {
-          const check = verifySync({ token: totpCode, secret: plainSecret, epochTolerance: 30 });
-          if (!check || !check.valid) {
-            await recordFailed2Fa();
-            return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
-          }
-        } catch {
-          await recordFailed2Fa();
-          return NextResponse.json({ error: 'Invalid 2FA authentication code' }, { status: 401 });
-        }
+      if (authResult.status === 'FORBIDDEN') {
+        return NextResponse.json({ error: authResult.error }, { status: 403 });
       }
-    }
-
-    // Reset failed attempts on success
-    if (user.loginAttempts > 0 || user.lockedUntil) {
-      await db.user.update({
-        where: { id: user.id },
-        data: { loginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
-      });
-    }
-
-    const roleUpper = String(user.role).toUpperCase();
-    if (roleUpper !== 'ADMIN' && roleUpper !== 'SUPER_ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized. Admin role required.' }, { status: 403 });
+      if (authResult.status === 'LOCKED') {
+        return NextResponse.json({ error: authResult.error }, { status: 423 });
+      }
+      return NextResponse.json({ error: authResult.error }, { status: 401 });
     }
 
     const secret = getAdminTokenSecret();
     if (!secret || secret.length < 32) {
-      return NextResponse.json({ error: 'Authentication security error: ADMIN_TOKEN_SECRET is invalid or missing.' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Authentication security error: ADMIN_TOKEN_SECRET is invalid or missing.' },
+        { status: 500 }
+      );
     }
+
     const timestamp = Date.now();
-    const signature = crypto.createHmac('sha256', secret).update(`${user.id}:${timestamp}`).digest('hex');
-    const token = `fai_token_${user.id}_${timestamp}_${signature}`;
+    const signature = crypto
+      .createHmac('sha256', secret)
+      .update(`${authResult.user.id}:${timestamp}`)
+      .digest('hex');
+    const token = `fai_token_${authResult.user.id}_${timestamp}_${signature}`;
 
     const res = NextResponse.json({
       success: true,
       // Token intentionally NOT returned in response body — set in httpOnly cookie only
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name || 'Executive Admin',
+        id: authResult.user.id,
+        email: authResult.user.email,
+        name: authResult.user.name || 'Executive Admin',
         role: 'ADMIN',
       },
     });

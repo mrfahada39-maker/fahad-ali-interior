@@ -79,10 +79,13 @@ function buildContentSecurityPolicy(
   isProduction: boolean,
   httpsOnly: boolean
 ): string {
-  const isTest = process.env.NODE_ENV === 'test';
-  const scriptSrc = isTest
-    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com`
-    : `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"} https://va.vercel-scripts.com https://vitals.vercel-insights.com https://apis.google.com`;
+  // Enforce per-request nonce with 'strict-dynamic' in production and test environments.
+  // Never emit 'unsafe-inline' or 'unsafe-eval' in production.
+  // In development, Turbopack and React Fast Refresh require 'unsafe-eval' and 'unsafe-inline'.
+  const isDev = !isProduction && process.env.NODE_ENV !== 'test';
+  const scriptSrc = isDev
+    ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com https://apis.google.com`
+    : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com https://vitals.vercel-insights.com https://apis.google.com`;
 
   const styleDirectives = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -94,11 +97,11 @@ function buildContentSecurityPolicy(
     "default-src 'self'",
     scriptSrc,
     ...styleDirectives,
-    "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://va.vercel-scripts.com",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://*.unsplash.com https://*.googleusercontent.com https://va.vercel-scripts.com",
     "media-src 'self' data: blob: https://res.cloudinary.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "manifest-src 'self' data: blob:",
-    `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://va.vercel-scripts.com https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com ${wsHosts}`,
+    `connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://va.vercel-scripts.com https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://api.cloudinary.com https://graph.facebook.com https://*.googleapis.com ${wsHosts}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -166,11 +169,37 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set('x-nonce', nonce);
   requestHeaders.set('x-request-id', requestId);
 
-  if (pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.match(/\.[a-zA-Z0-9]+$/)) {
+  const normalizedPath = pathname.toLowerCase();
+
+  // ── L5 Hardened Static Asset Bypass Protection ──
+  // Sensitive application prefixes must NEVER bypass rate limiting, authentication, or WAF checks,
+  // regardless of file extension tricks (e.g. /api/auth/login.json, /admin.png, /dashboard.js).
+  const isSensitivePrefix =
+    normalizedPath === '/api' ||
+    normalizedPath.startsWith('/api/') ||
+    normalizedPath.startsWith('/api.') ||
+    normalizedPath === '/admin' ||
+    normalizedPath.startsWith('/admin/') ||
+    normalizedPath.startsWith('/admin.') ||
+    normalizedPath === '/dashboard' ||
+    normalizedPath.startsWith('/dashboard/') ||
+    normalizedPath.startsWith('/dashboard.');
+
+  // Whitelist of strictly safe client media & bundle asset extensions
+  const STATIC_EXTENSIONS_REGEX =
+    /\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|bmp|mp4|webm|woff|woff2|ttf|eot|css|js|map|txt|xml|webmanifest)$/i;
+
+  const isStaticAsset =
+    !isSensitivePrefix &&
+    (normalizedPath.startsWith('/_next') ||
+      normalizedPath.startsWith('/favicon') ||
+      STATIC_EXTENSIONS_REGEX.test(pathname));
+
+  if (isStaticAsset) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith('/api/')) {
+  if (normalizedPath === '/api' || normalizedPath.startsWith('/api/')) {
     if (pathname.startsWith('/api/seed')) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
@@ -302,6 +331,22 @@ export async function proxy(request: NextRequest) {
           { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
         );
       }
+    } else if (pathname.endsWith('/checkout/otp/send') || pathname.includes('/checkout/otp/send')) {
+      const rl = await rateLimit(`otp_send:${ip}`, 'otpSend');
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Too many OTP requests from this connection. Please wait.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
+    } else if (pathname.endsWith('/checkout/otp/verify') || pathname.includes('/checkout/otp/verify')) {
+      const rl = await rateLimit(`otp_verify:${ip}`, 'otpVerify');
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { error: rl.error || 'Too many verification attempts from this connection. Please wait.' },
+          { status: rl.reason === 'UNCONFIGURED' ? 503 : 429 }
+        );
+      }
     }
 
     const isWebhookOrPublicAction =
@@ -344,9 +389,24 @@ export async function proxy(request: NextRequest) {
     return apiRes;
   }
 
-  const isAdminPath = pathname !== '/admin/login' && adminPages.some((p) => pathname === p || pathname.startsWith(p + '/'));
-  const isDashboardPath = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
-  const isProtectedPath = protectedPages.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  const isAdminPath =
+    normalizedPath !== '/admin/login' &&
+    adminPages.some(
+      (p) =>
+        normalizedPath === p ||
+        normalizedPath.startsWith(p + '/') ||
+        normalizedPath.startsWith(p + '.')
+    );
+  const isDashboardPath =
+    normalizedPath === '/dashboard' ||
+    normalizedPath.startsWith('/dashboard/') ||
+    normalizedPath.startsWith('/dashboard.');
+  const isProtectedPath = protectedPages.some(
+    (p) =>
+      normalizedPath === p ||
+      normalizedPath.startsWith(p + '/') ||
+      normalizedPath.startsWith(p + '.')
+  );
 
   if (isAdminPath || isDashboardPath || isProtectedPath) {
     const token =
@@ -404,6 +464,11 @@ export default proxy;
 
 export const config = {
   matcher: [
+    '/api/:path*',
+    '/admin',
+    '/admin/:path*',
+    '/dashboard',
+    '/dashboard/:path*',
     '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.json|offline.html|sw-push.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|bmp|mp4|webm)).*)',
   ],
 };

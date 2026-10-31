@@ -4,7 +4,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { Redis } from '@upstash/redis';
+import { derivePurposeSecret } from '@/lib/env';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 /** Maximum lifetime for signed admin bearer tokens (24 hours in ms - hardened security baseline) */
 export const ADMIN_TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -33,13 +35,10 @@ function getRevocationRedis(): Redis | null {
   return null;
 }
 
-let ephemeralDevAdminSecret: string | null = null;
-
 /**
  * Retrieve dedicated canonical signing secret for admin tokens.
  * Uses ADMIN_TOKEN_SECRET when configured, or derives a cryptographically domain-separated
- * HMAC-SHA256 key from NEXTAUTH_SECRET / DATABASE_URL so serverless instances never crash
- * at module import time when optional env vars are omitted.
+ * key via HKDF without DATABASE_URL fallbacks.
  */
 export function getAdminTokenSecret(): string {
   const adminSecret = process.env.ADMIN_TOKEN_SECRET?.trim();
@@ -54,18 +53,11 @@ export function getAdminTokenSecret(): string {
     return adminSecret;
   }
 
-  const baseSeed = nextAuthSecret || process.env.DATABASE_URL?.trim();
-  if (baseSeed && baseSeed.length >= 16) {
-    return crypto
-      .createHmac('sha256', baseSeed)
-      .update('fai:admin-token-signing-secret:v1')
-      .digest('hex');
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('CRITICAL: ADMIN_TOKEN_SECRET is not configured in production.');
   }
 
-  if (!ephemeralDevAdminSecret) {
-    ephemeralDevAdminSecret = crypto.randomBytes(32).toString('hex');
-  }
-  return ephemeralDevAdminSecret;
+  return derivePurposeSecret('admin-token');
 }
 
 export interface ParsedAdminToken {
@@ -141,7 +133,11 @@ async function persistRevokedSignature(signature: string): Promise<void> {
           },
         },
       })
-      ?.catch?.(() => null),
+      ?.catch?.((err: unknown) =>
+        logger.warn('Failed to persist audit log for admin token revocation:', {
+          error: String(err),
+        })
+      ),
   ]);
 }
 
@@ -186,7 +182,11 @@ async function persistUserTokensRevoked(userId: string, timestamp: number): Prom
           },
         },
       })
-      ?.catch?.(() => null),
+      ?.catch?.((err: unknown) =>
+        logger.warn('Failed to persist audit log for user tokens revocation:', {
+          error: String(err),
+        })
+      ),
   ]);
 }
 
@@ -417,11 +417,19 @@ export async function getVerifiedUser(
     .catch(() => null);
 
   if (!user || user.deletedAt) return null;
-  if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) return null;
 
   const role = String(user.role || '').toUpperCase();
+  const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+
+  // Security Hardening (M10):
+  // An established, cryptographically-signed admin session must NOT be rendered unusable
+  // by external unauthenticated attacker password-spray attempts that trigger lockedUntil.
+  // lockedUntil gates the unauthenticated login endpoint, whereas active sessions are invalidated by revocation,
+  // expiry, deletion (deletedAt), or role demotion.
+  if (!isAdmin && user.lockedUntil && new Date(user.lockedUntil) > new Date()) return null;
+
   if (options?.requireAdminRole) {
-    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+    if (!isAdmin) {
       return null;
     }
   }

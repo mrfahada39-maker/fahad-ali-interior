@@ -31,6 +31,81 @@ import {
   signVerifiedPhoneToken,
   isPhoneVerifiedTokenValid,
 } from '@/lib/phone-otp';
+import {
+  calculateOrderTotals,
+  type PricingCartItem,
+  type PricingCoupon,
+} from '@/lib/order-pricing';
+
+export const UNPAID_STOCK_RESERVATION_TTL_MS = 30 * 60 * 1000; // 30-minute stock reservation timeout
+
+/**
+ * Releases reserved stock and coupon usages for unpaid orders exceeding reservation TTL.
+ * Reverts stock count back to product inventory and marks expired orders as CANCELLED.
+ */
+export async function releaseExpiredStockReservations(
+  reservationTtlMs: number = UNPAID_STOCK_RESERVATION_TTL_MS
+): Promise<number> {
+  const cutoff = new Date(Date.now() - reservationTtlMs);
+  try {
+    const expiredOrders = await db.order.findMany({
+      where: {
+        status: 'PENDING',
+        paymentStatus: 'PENDING',
+        paymentMethod: { not: 'COD' },
+        paymentScreenshot: null,
+        createdAt: { lt: cutoff },
+        deletedAt: null,
+      },
+      include: { items: true },
+    });
+
+    if (!expiredOrders || expiredOrders.length === 0) return 0;
+
+    let releasedCount = 0;
+    for (const order of expiredOrders) {
+      const runTx = db.$transaction.bind(db) as unknown as <T>(
+        fn: (tx: typeof db) => Promise<T>
+      ) => Promise<T>;
+
+      await runTx(async (tx) => {
+        // 1. Mark order as CANCELLED with audit note
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            status: 'CANCELLED',
+            shippingNotes: `${order.shippingNotes || ''} [STOCK_RESERVATION_EXPIRED]`.trim(),
+          },
+        });
+
+        // 2. Return reserved stock back to product inventory
+        if (order.items && order.items.length > 0) {
+          for (const item of order.items) {
+            if (item.productId && item.quantity > 0) {
+              await tx.product.updateMany({
+                where: { id: item.productId },
+                data: { stockCount: { increment: item.quantity } },
+              });
+            }
+          }
+        }
+
+        // 3. Revert coupon usage count if applied
+        if (order.couponCode) {
+          await tx.coupon.updateMany({
+            where: { code: order.couponCode, usedCount: { gt: 0 } },
+            data: { usedCount: { decrement: 1 } },
+          });
+        }
+      });
+      releasedCount++;
+    }
+    return releasedCount;
+  } catch (error) {
+    logger.warn('Failed to release expired stock reservations', { detail: String(error) });
+    return 0;
+  }
+}
 
 export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextResponse | null> {
   const { method, segment, normalizedSegment, req } = ctx;
@@ -99,14 +174,17 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
     const user = await getUserFromSessionOrToken(req);
     if (method === 'GET') {
       if (!user?.id) return NextResponse.json([]);
-      const items = await db.wishlistItem
-        .findMany({
+      try {
+        const items = await db.wishlistItem.findMany({
           where: { userId: user.id },
           include: { product: true },
           orderBy: { createdAt: 'desc' },
-        })
-        .catch(() => []);
-      return NextResponse.json(items);
+        });
+        return NextResponse.json(items);
+      } catch (err) {
+        logger.error('Failed to retrieve wishlist items:', err, { userId: user.id });
+        return NextResponse.json({ error: 'Failed to retrieve wishlist items' }, { status: 500 });
+      }
     }
     if (method === 'POST') {
       if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -114,24 +192,39 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       if (!body.productId) {
         return NextResponse.json({ error: 'productId is required' }, { status: 400 });
       }
-      const item = await db.wishlistItem
-        .create({
+      try {
+        const item = await db.wishlistItem.create({
           data: { userId: user.id, productId: body.productId },
           include: { product: true },
-        })
-        .catch(() => null);
-      return NextResponse.json(item || { success: true });
+        });
+        return NextResponse.json(item, { status: 201 });
+      } catch (err) {
+        logger.error('Failed to add item to wishlist:', err, {
+          userId: user.id,
+          productId: body.productId,
+        });
+        return NextResponse.json({ error: 'Failed to add item to wishlist' }, { status: 500 });
+      }
     }
     if (method === 'DELETE') {
       if (!user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       const id = req.nextUrl.searchParams.get('id');
       const productId = req.nextUrl.searchParams.get('productId');
-      if (id) {
-        await db.wishlistItem.deleteMany({ where: { id, userId: user.id } }).catch(() => { });
-      } else if (productId) {
-        await db.wishlistItem.deleteMany({ where: { userId: user.id, productId } }).catch(() => { });
+      try {
+        if (id) {
+          await db.wishlistItem.deleteMany({ where: { id, userId: user.id } });
+        } else if (productId) {
+          await db.wishlistItem.deleteMany({ where: { userId: user.id, productId } });
+        }
+        return NextResponse.json({ success: true });
+      } catch (err) {
+        logger.error('Failed to remove item from wishlist:', err, {
+          userId: user.id,
+          id,
+          productId,
+        });
+        return NextResponse.json({ error: 'Failed to remove item from wishlist' }, { status: 500 });
       }
-      return NextResponse.json({ success: true });
     }
   }
 
@@ -225,7 +318,7 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
         { status: 400 }
       );
     }
-    const check = verifyOtpChallengeToken(phone, otp, token);
+    const check = await verifyOtpChallengeToken(phone, otp, token);
     if (!check.valid) {
       return NextResponse.json(
         { error: check.error || 'Invalid or expired verification code.' },
@@ -294,6 +387,9 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       );
     }
 
+    // Auto-release expired unpaid stock reservations so timed-out inventory is returned to catalog
+    await releaseExpiredStockReservations();
+
     const formattedItems: Array<{
       productId: string;
       name: string;
@@ -341,13 +437,57 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       });
     }
 
-    const subtotal = formattedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const gst = 0;
+    const rawMethod = String(body.paymentMethod || 'COD').toUpperCase();
+    let validPaymentMethod: 'COD' | 'JAZZCASH' | 'EASYPAISA' | 'BANK' = 'COD';
+    if (rawMethod.includes('JAZZ')) validPaymentMethod = 'JAZZCASH';
+    else if (rawMethod.includes('EASY')) validPaymentMethod = 'EASYPAISA';
+    else if (
+      rawMethod.includes('BANK') ||
+      rawMethod.includes('RAAST') ||
+      rawMethod.includes('CARD')
+    )
+      validPaymentMethod = 'BANK';
+    else validPaymentMethod = 'COD';
 
-    let verifiedDiscount = 0;
+    const shippingInfo = (body.shippingInfo || {}) as Record<string, unknown>;
+    const shippingName = String(
+      body.shippingName || shippingInfo.name || body.name || 'Valued Customer'
+    );
+    const shippingPhone = String(
+      body.shippingPhone || shippingInfo.phone || body.phone || '+92 300 0000000'
+    );
+    const shippingEmail = String(body.shippingEmail || shippingInfo.email || body.email || '');
+    const shippingAddress = String(
+      body.shippingAddress || shippingInfo.address || body.address || 'Lahore, Pakistan'
+    );
+    const shippingCity = String(body.shippingCity || shippingInfo.city || body.city || 'Lahore');
+    const shippingProvince = String(
+      body.shippingProvince || shippingInfo.province || body.province || 'Punjab'
+    );
+    const isPhoneVerified = isPhoneVerifiedTokenValid(
+      shippingPhone,
+      String(body.verifiedPhoneToken || '')
+    );
+
+    // M4 Requirement 1: Require verified phone for guest COD orders
+    const isGuestOrder = !user?.id || targetUserId === 'guest_system_account';
+    if (isGuestOrder && validPaymentMethod === 'COD') {
+      if (!isPhoneVerified) {
+        return NextResponse.json(
+          {
+            error:
+              'Cash on Delivery (COD) for guest checkout requires phone number verification via WhatsApp/SMS OTP. Please verify your phone number to proceed.',
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     let appliedCoupon: {
       id: string;
       code: string;
+      discount: unknown;
+      discountType: string;
       maxUses: number;
       usedCount: number;
     } | null = null;
@@ -379,19 +519,39 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
         );
       }
 
-      if (targetUserId && targetUserId !== 'guest_system_account' && db.order?.findFirst) {
-        const alreadyUsedByUser = await db.order
+      // M4 Requirement 3: Enforce one-coupon-per-customer for guests too (by verified phone/email)
+      const cleanEmail = (shippingEmail || '').trim().toLowerCase();
+      const cleanPhone = normalizePakistaniPhone(shippingPhone) || shippingPhone.trim();
+
+      const orConditions: Array<Record<string, unknown>> = [];
+      if (targetUserId && targetUserId !== 'guest_system_account') {
+        orConditions.push({ userId: targetUserId });
+      }
+      if (cleanEmail && cleanEmail.includes('@') && !cleanEmail.endsWith('@fahadali.orders')) {
+        orConditions.push({ shippingEmail: cleanEmail });
+      }
+      if (cleanPhone && cleanPhone.length >= 10 && cleanPhone !== '+92 300 0000000') {
+        orConditions.push({ shippingPhone: cleanPhone });
+        const digitsOnly = cleanPhone.replace(/\D/g, '');
+        if (digitsOnly.length >= 10) {
+          orConditions.push({ shippingPhone: { contains: digitsOnly.slice(-10) } });
+        }
+      }
+
+      if (orConditions.length > 0 && db.order?.findFirst) {
+        const alreadyUsed = await db.order
           .findFirst({
             where: {
-              userId: targetUserId,
               couponCode: dbCoupon.code,
               deletedAt: null,
               status: { not: 'CANCELLED' },
+              OR: orConditions,
             },
             select: { id: true },
           })
           .catch(() => null);
-        if (alreadyUsedByUser) {
+
+        if (alreadyUsed) {
           return NextResponse.json(
             { error: 'You have already redeemed this promotional coupon on a previous order.' },
             { status: 400 }
@@ -399,7 +559,8 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
         }
       }
 
-      const meetsMinAmount = subtotal >= Number(dbCoupon.minOrderAmount || 0);
+      const rawSubtotal = formattedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+      const meetsMinAmount = rawSubtotal >= Number(dbCoupon.minOrderAmount || 0);
       if (!meetsMinAmount) {
         return NextResponse.json(
           {
@@ -410,43 +571,37 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
       }
 
       appliedCoupon = dbCoupon;
-      if (dbCoupon.discountType === 'PERCENTAGE') {
-        verifiedDiscount = Math.round((subtotal * Number(dbCoupon.discount)) / 100);
-      } else {
-        verifiedDiscount = Number(dbCoupon.discount);
-      }
     }
 
-    const discount = Math.min(subtotal, Math.max(0, verifiedDiscount));
-    const totalAmount = Math.max(0, subtotal + gst - discount);
-
-    const rawMethod = String(body.paymentMethod || 'COD').toUpperCase();
-    let validPaymentMethod: 'COD' | 'JAZZCASH' | 'EASYPAISA' | 'BANK' = 'COD';
-    if (rawMethod.includes('JAZZ')) validPaymentMethod = 'JAZZCASH';
-    else if (rawMethod.includes('EASY')) validPaymentMethod = 'EASYPAISA';
-    else if (
-      rawMethod.includes('BANK') ||
-      rawMethod.includes('RAAST') ||
-      rawMethod.includes('CARD')
-    )
-      validPaymentMethod = 'BANK';
-    else validPaymentMethod = 'COD';
-
-    const shippingInfo = body.shippingInfo || {};
-    const shippingName =
-      body.shippingName || shippingInfo.name || body.name || 'Valued Customer';
-    const shippingPhone =
-      body.shippingPhone || shippingInfo.phone || body.phone || '+92 300 0000000';
-    const shippingEmail = body.shippingEmail || shippingInfo.email || body.email || '';
-    const shippingAddress =
-      body.shippingAddress || shippingInfo.address || body.address || 'Lahore, Pakistan';
-    const shippingCity = body.shippingCity || shippingInfo.city || body.city || 'Lahore';
-    const shippingProvince =
-      body.shippingProvince || shippingInfo.province || body.province || 'Punjab';
-    const isPhoneVerified = isPhoneVerifiedTokenValid(
-      shippingPhone,
-      String(body.verifiedPhoneToken || '')
+    // M4 Requirement 4: Replace inline pricing with calculateOrderTotals including real shipping and GST settings
+    const settings = (await db.settings.findFirst().catch(() => null)) as Record<string, unknown> | null;
+    const shippingFee = Number(
+      settings?.shippingFee ?? (process.env.SHIPPING_FEE ? Number(process.env.SHIPPING_FEE) : 0)
     );
+    const taxRate = Number(
+      settings?.gstRate ?? (process.env.GST_RATE ? Number(process.env.GST_RATE) : 0)
+    );
+
+    const pricingCartItems: PricingCartItem[] = formattedItems.map((item) => ({
+      id: item.productId,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+
+    const pricingCoupon: PricingCoupon | null = appliedCoupon
+      ? {
+          code: appliedCoupon.code,
+          percent: appliedCoupon.discountType === 'PERCENTAGE' ? Number(appliedCoupon.discount) : undefined,
+          fixed: appliedCoupon.discountType !== 'PERCENTAGE' ? Number(appliedCoupon.discount) : undefined,
+        }
+      : null;
+
+    const totals = calculateOrderTotals(pricingCartItems, pricingCoupon, shippingFee, taxRate);
+    const subtotal = totals.itemsSubtotal;
+    const discount = totals.discountAmount;
+    const gst = totals.taxAmount;
+    const totalAmount = totals.grandTotal;
+
     const verifiedTag = isPhoneVerified ? ' [PHONE_VERIFIED_WHATSAPP]' : '';
     const rawNotes = body.shippingNotes || shippingInfo.notes || body.notes || '';
     const shippingNotes = rawNotes ? `${rawNotes}${verifiedTag}` : verifiedTag.trim();
@@ -538,21 +693,28 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
             include: { items: true },
           });
 
-          await tx.auditLog
-            .create({
-              data: {
-                userId: targetUserId,
-                action: 'ORDER_PLACED',
-                entity: 'Order',
-                entityId: order.id,
-                metadata: {
-                  totalAmount: Number(totalAmount),
-                  itemCount: formattedItems.length,
-                  paymentMethod: validPaymentMethod,
+          if (tx.auditLog?.create) {
+            await Promise.resolve(
+              tx.auditLog.create({
+                data: {
+                  userId: targetUserId,
+                  action: 'ORDER_PLACED',
+                  entity: 'Order',
+                  entityId: order.id,
+                  metadata: {
+                    totalAmount: Number(totalAmount),
+                    itemCount: formattedItems.length,
+                    paymentMethod: validPaymentMethod,
+                  },
                 },
-              },
-            })
-            .catch(() => null);
+              })
+            ).catch((err) =>
+              logger.warn('Failed to write audit log for price override:', {
+                detail: String(err),
+                orderId: order.id,
+              })
+            );
+          }
 
           return order;
         },
@@ -615,7 +777,12 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
                 where: { id: newOrder.id },
                 data: { paymentGatewayRef: audit.transactionId },
               })
-              .catch(() => null);
+              .catch((err) =>
+                logger.warn('Failed to update paymentGatewayRef with transactionId:', {
+                  error: String(err),
+                  orderId: newOrder.id,
+                })
+              );
           }
 
           await db.auditLog
@@ -636,7 +803,12 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
                 },
               },
             })
-            .catch(() => null);
+            .catch((err) =>
+              logger.warn('Failed to persist AI payment audit log:', {
+                error: String(err),
+                orderId: newOrder.id,
+              })
+            );
         } catch (auditErr) {
           logger.warn('[Payment Verifier Exception]:', { detail: String(auditErr) });
         }
@@ -731,7 +903,12 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
             isNew: true,
           },
         })
-        ?.catch(() => { });
+        ?.catch((err: unknown) =>
+          logger.warn('Failed to persist order placed notification:', {
+            error: String(err),
+            orderId: newOrder.id,
+          })
+        );
     }
 
     const guestTrackingToken = newOrder.shippingEmail
@@ -995,33 +1172,75 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
 
       // Trigger automated WhatsApp notification to customer
       if (updateData.paymentStatus === 'PAID') {
-        WhatsAppService.sendCustomerOrderApproved(updated).catch(() => { });
+        WhatsAppService.sendCustomerOrderApproved(updated).catch((err: unknown) =>
+          logger.warn('WhatsApp sendCustomerOrderApproved failed:', {
+            error: String(err),
+            orderId: updated.id,
+          })
+        );
       } else if (updateData.status === 'SHIPPED' || updateData.status === 'DELIVERED') {
-        const tracking = typeof updateData.trackingNumber === 'string' ? updateData.trackingNumber : (updated.trackingNumber ?? undefined);
-        WhatsAppService.sendCustomerOrderShipped(updated, tracking).catch(() => { });
+        const tracking =
+          typeof updateData.trackingNumber === 'string'
+            ? updateData.trackingNumber
+            : (updated.trackingNumber ?? undefined);
+        WhatsAppService.sendCustomerOrderShipped(updated, tracking).catch((err: unknown) =>
+          logger.warn('WhatsApp sendCustomerOrderShipped failed:', {
+            error: String(err),
+            orderId: updated.id,
+          })
+        );
       } else if (updateData.paymentStatus === 'AWAITING_VERIFICATION') {
-        WhatsAppService.sendCustomerOrderHold(updated).catch(() => { });
+        WhatsAppService.sendCustomerOrderHold(updated).catch((err: unknown) =>
+          logger.warn('WhatsApp sendCustomerOrderHold failed:', {
+            error: String(err),
+            orderId: updated.id,
+          })
+        );
       } else if (updateData.paymentStatus === 'FAILED' || updateData.status === 'CANCELLED') {
-        WhatsAppService.sendCustomerOrderRejected(updated).catch(() => { });
+        WhatsAppService.sendCustomerOrderRejected(updated).catch((err: unknown) =>
+          logger.warn('WhatsApp sendCustomerOrderRejected failed:', {
+            error: String(err),
+            orderId: updated.id,
+          })
+        );
         // Restock product inventory when order is cancelled or rejected
         if (updated.items && updated.items.length > 0) {
           await Promise.all(
             updated.items.map(async (item: DbOrderItemRecord) => {
               if (item.productId && item.quantity) {
-                await db.product.update({
-                  where: { id: item.productId },
-                  data: { stockCount: { increment: item.quantity } },
-                }).catch(() => {});
+                await db.product
+                  .update({
+                    where: { id: item.productId },
+                    data: { stockCount: { increment: item.quantity } },
+                  })
+                  .catch((err: unknown) =>
+                    logger.error('Failed to restock product inventory for cancelled order:', err, {
+                      productId: item.productId,
+                      orderId: updated.id,
+                    })
+                  );
               }
             })
-          ).catch(() => {});
+          ).catch((err: unknown) =>
+            logger.error('Failed during bulk restock batch for cancelled order:', err, {
+              orderId: updated.id,
+            })
+          );
         }
         // Restore coupon usage count
         if (updated.couponCode) {
-          await db.coupon.update({
-            where: { code: updated.couponCode },
-            data: { usedCount: { decrement: 1 } },
-          }).catch(() => {});
+          await db.coupon
+            .update({
+              where: { code: updated.couponCode },
+              data: { usedCount: { decrement: 1 } },
+            })
+            .catch((err: unknown) =>
+              logger.warn('Failed to revert coupon usage count for cancelled order:', {
+                error: String(err),
+                couponCode: updated.couponCode,
+                orderId: updated.id,
+              })
+            );
         }
       }
 
@@ -1040,7 +1259,12 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
               isNew: true,
             },
           })
-          ?.catch(() => { });
+          ?.catch((err: unknown) =>
+            logger.warn('Failed to persist order status updated notification:', {
+              error: String(err),
+              orderId: updated.id,
+            })
+          );
       }
 
       return NextResponse.json({

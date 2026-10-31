@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import tls from 'tls';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import { SITE_CONFIG } from '@/lib/site-config';
 
 export interface OrderEmailData {
   orderId: string;
@@ -33,7 +34,7 @@ function sendSmtpTls({
   port = Number(process.env.SMTP_PORT) || 465,
   user = process.env.SMTP_USER,
   pass = process.env.SMTP_PASS,
-  from = process.env.SMTP_FROM || (process.env.SMTP_USER ? `Fahad Ali Interior <${process.env.SMTP_USER}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>'),
+  from = SITE_CONFIG.emails.fromHeader,
   to,
   subject,
   html,
@@ -197,7 +198,7 @@ function sendSmtpTls({
 export async function sendOrderConfirmationEmail(order: OrderEmailData): Promise<{ success: boolean; error?: string }> {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
+  const from = SITE_CONFIG.emails.fromHeader;
 
   const itemsHtml = order.items
     .map(
@@ -598,7 +599,7 @@ export async function sendPasswordResetEmail({
 }): Promise<{ success: boolean; error?: string }> {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
+  const from = SITE_CONFIG.emails.fromHeader;
 
   if (!user || !pass) {
     logger.warn('[SMTP UNCONFIGURED] SMTP credentials missing. Returning graceful success for sendPasswordResetEmail.');
@@ -725,7 +726,7 @@ export async function sendVerificationEmail({
 }): Promise<{ success: boolean; error?: string }> {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM || (user ? `Fahad Ali Interior <${user}>` : 'Fahad Ali Interior <no-reply@fahadaliinterior.com>');
+  const from = SITE_CONFIG.emails.fromHeader;
 
   if (!user || !pass) {
     logger.warn('[SMTP UNCONFIGURED] SMTP credentials missing. Returning graceful success for sendVerificationEmail.');

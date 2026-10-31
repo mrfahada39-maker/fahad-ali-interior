@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { validateEnv } from '@/lib/env';
+import { validateEnv, assertProductionEnv } from '@/lib/env';
 import { logger } from '@/lib/logger';
 
 const SLOW_QUERY_THRESHOLD_MS =
@@ -12,6 +12,8 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+// Fail fast during production startup if critical secrets are missing or colliding
+assertProductionEnv();
 const envStatus = validateEnv();
 const isProd = process.env.NODE_ENV === 'production';
 // During `next build`, Next.js may evaluate server route modules.

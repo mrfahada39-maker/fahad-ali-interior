@@ -6,6 +6,10 @@ import { logger } from '@/lib/logger';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
 
+/**
+ * GET: Renders a secure, interactive confirmation page.
+ * GET requests NEVER mutate database state (protects against pre-fetchers, crawlers, and accidental taps).
+ */
 export async function GET(req: NextRequest) {
   // Block automated WhatsApp / Email / Social link-preview crawlers from mutating order state on prefetch
   const ua = (req.headers.get('user-agent') || '').toLowerCase();
@@ -125,6 +129,158 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // ── L6 Hardening: GET Renders Confirmation Page (Never mutates database state) ──
+    return new NextResponse(
+      renderConfirmationPage(order, action as 'verify' | 'hold' | 'reject', token),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
+  } catch (err) {
+    logger.error('[Order Action GET Error]', err);
+    return new NextResponse(renderHtmlPage('Internal Server Error', 'An unexpected error occurred while loading the order.', 'error'), {
+      status: 500,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
+}
+
+/**
+ * POST: Executes the state-changing action after deliberate user confirmation.
+ */
+export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const rl = await rateLimit(`order_action_post:${ip}`, 'api');
+  if (!rl.allowed) {
+    return new NextResponse(
+      renderHtmlPage('Too Many Requests', 'Rate limit exceeded. Please wait a minute and try again.', 'error'),
+      { status: 429, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+    );
+  }
+
+  let orderId = '';
+  let action = '';
+  let token = '';
+
+  const contentType = req.headers.get('content-type') || '';
+  if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
+    try {
+      const formData = await req.formData();
+      orderId = String(formData.get('id') || '');
+      action = String(formData.get('action') || '');
+      token = String(formData.get('token') || '');
+    } catch {
+      // Fallback
+    }
+  } else if (contentType.includes('application/json')) {
+    try {
+      const json = await req.json();
+      orderId = String(json.id || '');
+      action = String(json.action || '');
+      token = String(json.token || '');
+    } catch {
+      // Fallback
+    }
+  }
+
+  if (!orderId || !action || !token) {
+    const searchParams = req.nextUrl.searchParams;
+    orderId = orderId || searchParams.get('id') || '';
+    action = action || searchParams.get('action') || '';
+    token = token || searchParams.get('token') || '';
+  }
+
+  if (!orderId || !action || !token) {
+    return new NextResponse(renderHtmlPage('Invalid Request', 'Missing required verification parameters.', 'error'), {
+      status: 400,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
+
+  if (!['verify', 'hold', 'reject'].includes(action)) {
+    return new NextResponse(renderHtmlPage('Invalid Action', 'Action must be verify, hold, or reject.', 'error'), {
+      status: 400,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
+
+  // Cryptographic token verification or authenticated admin session
+  const isValid = verifyOrderActionToken(orderId, action, token);
+  const isAdminSession = !isValid && (await getVerifiedAdmin(req).catch(() => null));
+  if (!isValid && !isAdminSession) {
+    return new NextResponse(
+      renderHtmlPage('Security Token Expired or Invalid', 'This 1-Tap authorization link is either expired or tampered.', 'error'),
+      {
+        status: 403,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      }
+    );
+  }
+
+  try {
+    const order = await db.order.findFirst({
+      where: {
+        OR: [{ id: orderId }, { id: { endsWith: orderId } }],
+        deletedAt: null,
+      },
+      include: { items: true },
+    });
+
+    if (!order) {
+      return new NextResponse(renderHtmlPage('Order Not Found', `No active order found with ID: ${escapeHtml(orderId)}`, 'error'), {
+        status: 404,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      });
+    }
+
+    const shortId = order.id.slice(-6).toUpperCase();
+    const amount = Number(order.totalAmount).toLocaleString();
+
+    // State machine integrity checks
+    if (order.status === 'CANCELLED' && action !== 'reject') {
+      return new NextResponse(
+        renderHtmlPage(
+          'Order Already Cancelled',
+          `Order #${shortId} was previously cancelled and closed.`,
+          'warning',
+          shortId,
+          amount,
+          'cancelled'
+        ),
+        { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+      );
+    }
+    if ((order.status === 'SHIPPED' || order.status === 'DELIVERED') && action === 'reject') {
+      return new NextResponse(
+        renderHtmlPage(
+          'Cannot Cancel Finalized Order',
+          `Order #${shortId} has already been ${order.status}. Stock cannot be returned.`,
+          'error',
+          shortId,
+          amount,
+          order.status
+        ),
+        { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+      );
+    }
+    if (order.paymentStatus === 'PAID' && action === 'verify') {
+      return new NextResponse(
+        renderHtmlPage(
+          'Order Already Verified',
+          `Order #${shortId} has already been verified and paid.`,
+          'success',
+          shortId,
+          amount,
+          'paid'
+        ),
+        { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+      );
+    }
+
     if (action === 'verify') {
       await db.order.update({
         where: { id: order.id },
@@ -145,7 +301,12 @@ export async function GET(req: NextRequest) {
               isNew: true,
             },
           })
-          ?.catch(() => {});
+          ?.catch((err: unknown) =>
+            logger.warn('Failed to persist payment verified notification:', {
+              error: String(err),
+              orderId: order.id,
+            })
+          );
       }
 
       await db.auditLog
@@ -157,8 +318,18 @@ export async function GET(req: NextRequest) {
             metadata: { source: 'WhatsApp 1-Tap Link', orderId: order.id },
           },
         })
-        ?.catch(() => {});
-      await WhatsAppService.sendCustomerOrderApproved(order).catch(() => {});
+        ?.catch((err: unknown) =>
+          logger.warn('Failed to persist payment verified audit log:', {
+            error: String(err),
+            orderId: order.id,
+          })
+        );
+      await WhatsAppService.sendCustomerOrderApproved(order).catch((err: unknown) =>
+        logger.warn('WhatsApp sendCustomerOrderApproved failed in action route:', {
+          error: String(err),
+          orderId: order.id,
+        })
+      );
 
       return new NextResponse(
         renderHtmlPage(
@@ -191,9 +362,19 @@ export async function GET(req: NextRequest) {
               isNew: true,
             },
           })
-          ?.catch(() => {});
+          ?.catch((err: unknown) =>
+            logger.warn('Failed to persist order hold notification:', {
+              error: String(err),
+              orderId: order.id,
+            })
+          );
       }
-      await WhatsAppService.sendCustomerOrderHold(order).catch(() => {});
+      await WhatsAppService.sendCustomerOrderHold(order).catch((err: unknown) =>
+        logger.warn('WhatsApp sendCustomerOrderHold failed in action route:', {
+          error: String(err),
+          orderId: order.id,
+        })
+      );
 
       return new NextResponse(
         renderHtmlPage(
@@ -243,9 +424,19 @@ export async function GET(req: NextRequest) {
               isNew: true,
             },
           })
-          ?.catch(() => {});
+          ?.catch((err: unknown) =>
+            logger.warn('Failed to persist order rejected notification:', {
+              error: String(err),
+              orderId: order.id,
+            })
+          );
       }
-      await WhatsAppService.sendCustomerOrderRejected(order).catch(() => {});
+      await WhatsAppService.sendCustomerOrderRejected(order).catch((err: unknown) =>
+        logger.warn('WhatsApp sendCustomerOrderRejected failed in action route:', {
+          error: String(err),
+          orderId: order.id,
+        })
+      );
 
       return new NextResponse(
         renderHtmlPage(
@@ -261,7 +452,7 @@ export async function GET(req: NextRequest) {
 
     return new NextResponse('Action Completed', { status: 200 });
   } catch (err) {
-    logger.error('[Order Action Link Error]', err);
+    logger.error('[Order Action POST Error]', err);
     return new NextResponse(renderHtmlPage('Internal Server Error', 'An unexpected error occurred while updating the order.', 'error'), {
       status: 500,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -276,6 +467,200 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function renderConfirmationPage(
+  order: {
+    id: string;
+    totalAmount: unknown;
+    shippingName?: string | null;
+    paymentMethod?: string | null;
+  },
+  action: 'verify' | 'hold' | 'reject',
+  token: string
+): string {
+  const shortId = order.id.slice(-6).toUpperCase();
+  const amount = Number(order.totalAmount).toLocaleString();
+  const safeCustomer = escapeHtml(order.shippingName || 'VIP Client');
+  const safePaymentMethod = escapeHtml(order.paymentMethod || 'Bank Transfer');
+
+  const actionMeta = {
+    verify: {
+      title: 'Authorize Order Payment',
+      subtitle: `Please review order details and confirm payment verification for Order <strong>#${shortId}</strong>.`,
+      btnText: '✓ Confirm & Authorize Payment',
+      btnColor: '#10B981',
+      badgeBg: '#ECFDF5',
+      badgeColor: '#10B981',
+      badgeIcon: '✓',
+      badgeText: 'Payment Verification',
+    },
+    hold: {
+      title: 'Place Order on 24-48h Hold',
+      subtitle: `Please confirm that Order <strong>#${shortId}</strong> requires 24–48 hours interbank settlement verification.`,
+      btnText: '⏳ Confirm 24-48h Hold',
+      btnColor: '#D97706',
+      badgeBg: '#FFFBEB',
+      badgeColor: '#D97706',
+      badgeIcon: '⏳',
+      badgeText: 'Settlement Hold',
+    },
+    reject: {
+      title: 'Reject & Restock Order',
+      subtitle: `Please confirm that you wish to <strong>cancel</strong> Order <strong>#${shortId}</strong> and restore reserved inventory.`,
+      btnText: '✕ Confirm Order Rejection & Restock',
+      btnColor: '#EF4444',
+      badgeBg: '#FEF2F2',
+      badgeColor: '#EF4444',
+      badgeIcon: '✕',
+      badgeText: 'Order Rejection',
+    },
+  }[action];
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${actionMeta.title} | Fahad Ali Interior</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #FAF7F2;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1F1612;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #E7DDD0;
+      border-radius: 24px;
+      padding: 36px 28px;
+      max-width: 460px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 12px 36px rgba(44,30,24,0.08);
+    }
+    .badge-icon {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: ${actionMeta.badgeBg};
+      color: ${actionMeta.badgeColor};
+      font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px auto;
+      border: 2px solid ${actionMeta.badgeColor}40;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 900;
+      margin: 0 0 10px 0;
+      color: #1F1612;
+      font-family: Georgia, serif;
+    }
+    p {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #6B5B52;
+      margin: 0 0 24px 0;
+    }
+    .details {
+      background: #FCFAF7;
+      border: 1px solid #EFE8DD;
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 26px;
+      text-align: left;
+      font-size: 13px;
+    }
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .details-row:last-child {
+      margin-bottom: 0;
+    }
+    .btn-submit {
+      display: block;
+      width: 100%;
+      background: ${actionMeta.btnColor};
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 14px ${actionMeta.btnColor}40;
+      transition: opacity 0.2s;
+    }
+    .btn-submit:hover {
+      opacity: 0.92;
+    }
+    .cancel-link {
+      display: inline-block;
+      margin-top: 18px;
+      color: #8C6239;
+      font-size: 12px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .cancel-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge-icon">${actionMeta.badgeIcon}</div>
+    <h1>${actionMeta.title}</h1>
+    <p>${actionMeta.subtitle}</p>
+
+    <div class="details">
+      <div class="details-row">
+        <span style="color:#8C6239;font-weight:bold;">Order Number:</span>
+        <span style="font-weight:900;">#${shortId}</span>
+      </div>
+      <div class="details-row">
+        <span style="color:#8C6239;font-weight:bold;">Client Name:</span>
+        <span style="font-weight:700;">${safeCustomer}</span>
+      </div>
+      <div class="details-row">
+        <span style="color:#8C6239;font-weight:bold;">Total Amount:</span>
+        <span style="font-weight:900;">PKR ${amount}</span>
+      </div>
+      <div class="details-row">
+        <span style="color:#8C6239;font-weight:bold;">Payment Method:</span>
+        <span style="font-weight:700;text-transform:uppercase;">${safePaymentMethod}</span>
+      </div>
+      <div class="details-row">
+        <span style="color:#8C6239;font-weight:bold;">Requested Action:</span>
+        <span style="color:${actionMeta.badgeColor};font-weight:900;text-transform:uppercase;">${actionMeta.badgeText}</span>
+      </div>
+    </div>
+
+    <form method="POST" action="/api/orders/action">
+      <input type="hidden" name="id" value="${escapeHtml(order.id)}" />
+      <input type="hidden" name="action" value="${escapeHtml(action)}" />
+      <input type="hidden" name="token" value="${escapeHtml(token)}" />
+      <button type="submit" class="btn-submit">${actionMeta.btnText}</button>
+    </form>
+
+    <a href="/admin" class="cancel-link">Return to Admin Terminal</a>
+  </div>
+</body>
+</html>`;
 }
 
 function renderHtmlPage(
@@ -411,5 +796,3 @@ function renderHtmlPage(
 </body>
 </html>`;
 }
-
-export const POST = GET;

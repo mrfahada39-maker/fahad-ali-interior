@@ -44,6 +44,7 @@ server.log
 # Test Reports, Artifacts & Temporary Files
 coverage/
 test-results/
+eslint_report.json
 playwright-report/
 public/test-results/
 .lighthouseci/

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
+import { getToken } from 'next-auth/jwt';
 import { Redis } from '@upstash/redis';
 import { db } from '@/lib/db';
 import { getVerifiedAdmin } from '@/lib/admin-auth';
@@ -157,6 +159,77 @@ async function loadActiveCallSessions(now: number): Promise<CallSession[]> {
   return Array.from(sessionsMap.values());
 }
 
+interface ResolvedCaller {
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  aliases: string[];
+  isAdmin: boolean;
+  isAuthenticated: boolean;
+}
+
+/**
+ * Derives authentic caller identity strictly from verified authentication sessions:
+ * 1. Admin session via verified admin token (cookie or header)
+ * 2. Customer session via verified NextAuth JWT
+ * 3. Fallback to scoped anonymous guest identity (preventing spoofing of other users, admins, or arbitrary aliases)
+ */
+async function resolveCallerIdentity(req: NextRequest, body: Record<string, unknown>): Promise<ResolvedCaller> {
+  // 1. Check for verified Admin session (fai_admin_token cookie or Bearer token)
+  const admin = await getVerifiedAdmin(req);
+  if (admin) {
+    const adminId = 'admin';
+    const adminEmail = (admin.email || 'concierge@fahadali.com').trim().toLowerCase();
+    const adminName = admin.name || 'Atelier Concierge';
+    const aliases = Array.from(new Set(['admin', admin.id, adminEmail].filter(Boolean)));
+    return {
+      userId: adminId,
+      userName: adminName,
+      userEmail: adminEmail,
+      aliases,
+      isAdmin: true,
+      isAuthenticated: true,
+    };
+  }
+
+  // 2. Check for verified NextAuth customer session
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  if (token && (token.id || token.sub)) {
+    const userId = String(token.id || token.sub);
+    const userEmail = token.email ? String(token.email).trim().toLowerCase() : undefined;
+    const userName = (token.name as string) || (typeof body.fromUserName === 'string' ? body.fromUserName : '') || 'Valued Client';
+    const aliases = Array.from(new Set([userId, ...(userEmail ? [userEmail] : [])]));
+    return {
+      userId,
+      userName,
+      userEmail,
+      aliases,
+      isAdmin: false,
+      isAuthenticated: true,
+    };
+  }
+
+  // 3. Unauthenticated guest caller
+  // Strictly prevent guests from claiming 'admin' or spoofing arbitrary user accounts/aliases
+  const rawId = typeof body.fromUserId === 'string' ? body.fromUserId.trim() : '';
+  const safeGuestId =
+    rawId && rawId !== 'admin' && !rawId.includes('@')
+      ? rawId
+      : `guest_${crypto.randomBytes(6).toString('hex')}`;
+  const safeGuestName =
+    typeof body.fromUserName === 'string' && body.fromUserName.trim()
+      ? body.fromUserName.trim().slice(0, 50)
+      : 'Guest Visitor';
+
+  return {
+    userId: safeGuestId,
+    userName: safeGuestName,
+    aliases: [safeGuestId],
+    isAdmin: false,
+    isAuthenticated: false,
+  };
+}
+
 export async function GET(req: NextRequest) {
   const target = req.nextUrl.searchParams.get('target') || '';
   if (target === 'admin') {
@@ -170,48 +243,46 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}));
-    const {
-      action,
-      fromUserId = 'client',
-      toUserId = 'admin',
-      fromUserName = 'Valued Client',
-      fromUserEmail,
-      toUserName,
-      toUserEmail,
-      callType = 'voice',
-      offerSdp,
-      answerSdp,
-      candidate,
-      userAliases = [],
-    } = body;
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const rawFromUserId = typeof body.fromUserId === 'string' ? body.fromUserId.trim() : '';
+    const rawAliases = Array.isArray(body.userAliases) ? (body.userAliases as string[]) : [];
 
-    // Verify admin identity if caller claims to be admin
-    if (fromUserId === 'admin' || (Array.isArray(userAliases) && userAliases.includes('admin'))) {
+    // Verify admin identity if caller attempts to claim admin privileges
+    if (rawFromUserId === 'admin' || rawAliases.includes('admin')) {
       const isAdmin = Boolean(await getVerifiedAdmin(req));
       if (!isAdmin) {
         return NextResponse.json({ error: 'Unauthorized: Admin authentication required.' }, { status: 403 });
       }
     }
 
-    const now = Date.now();
-    const allAliases: string[] = Array.from(
-      new Set([fromUserId, fromUserEmail, ...(Array.isArray(userAliases) ? userAliases : [])].filter(Boolean))
-    );
+    // Derive authentic caller identity strictly from verified session
+    const caller = await resolveCallerIdentity(req, body);
 
-    const sessionKey = [fromUserId, toUserId].filter(Boolean).sort().join('_') || fromUserId || 'global_call';
+    const action = typeof body.action === 'string' ? body.action : '';
+    const toUserId = typeof body.toUserId === 'string' && body.toUserId ? body.toUserId : 'admin';
+    const toUserName = typeof body.toUserName === 'string' ? body.toUserName : undefined;
+    const toUserEmail = typeof body.toUserEmail === 'string' ? body.toUserEmail : undefined;
+    const callType = body.callType === 'video' ? 'video' : 'voice';
+    const offerSdp = body.offerSdp as RTCSessionDescriptionInit | Record<string, unknown> | null | undefined;
+    const answerSdp = body.answerSdp as RTCSessionDescriptionInit | Record<string, unknown> | null | undefined;
+    const candidate = body.candidate as
+      | (RTCIceCandidateInit & { candidate?: unknown; sdpMid?: unknown; sdpMLineIndex?: unknown })
+      | undefined;
+
+    const now = Date.now();
+    const sessionKey = [caller.userId, toUserId].filter(Boolean).sort().join('_') || caller.userId || 'global_call';
 
     // ── INITIATE CALL ──────────────────────────────────────────────────────────
     if (action === 'initiate') {
       const session: CallSession = {
         id: sessionKey,
-        fromUserId: String(fromUserId || 'client'),
-        fromUserName: String(fromUserName || 'Valued Client'),
-        fromUserEmail: fromUserEmail ? String(fromUserEmail) : undefined,
-        toUserId: String(toUserId || 'admin'),
-        toUserName: toUserName ? String(toUserName) : undefined,
-        toUserEmail: toUserEmail ? String(toUserEmail) : undefined,
-        callType: callType === 'video' ? 'video' : 'voice',
+        fromUserId: caller.userId,
+        fromUserName: caller.userName,
+        fromUserEmail: caller.userEmail,
+        toUserId,
+        toUserName,
+        toUserEmail,
+        callType,
         status: 'outgoing',
         offerSdp: offerSdp || null,
         candidates: [],
@@ -226,7 +297,7 @@ export async function POST(req: NextRequest) {
 
     // ── ACCEPT CALL ────────────────────────────────────────────────────────────
     if (action === 'accept') {
-      const session = allSessions.find((s) => matchesSession(s, sessionKey, fromUserId, allAliases)) || null;
+      const session = allSessions.find((s) => matchesSession(s, sessionKey, caller.userId, caller.aliases)) || null;
 
       if (session) {
         session.status = 'connected';
@@ -242,7 +313,7 @@ export async function POST(req: NextRequest) {
 
     // ── CANDIDATE EXCHANGE ────────────────────────────────────────────────────
     if (action === 'candidate' && candidate) {
-      const session = allSessions.find((s) => matchesSession(s, sessionKey, fromUserId, allAliases)) || null;
+      const session = allSessions.find((s) => matchesSession(s, sessionKey, caller.userId, caller.aliases)) || null;
 
       if (session) {
         session.candidates = session.candidates || [];
@@ -251,11 +322,17 @@ export async function POST(req: NextRequest) {
           typeof rawCand === 'object' && rawCand !== null && !('candidate' in candidate)
             ? candidate
             : {
-                candidate: typeof rawCand === 'string' ? rawCand : rawCand?.candidate || '',
-                sdpMid: candidate.sdpMid !== undefined ? candidate.sdpMid : rawCand?.sdpMid,
+                candidate:
+                  typeof rawCand === 'string' ? rawCand : (rawCand as { candidate?: string })?.candidate || '',
+                sdpMid:
+                  candidate.sdpMid !== undefined
+                    ? (candidate.sdpMid as string | null)
+                    : (rawCand as { sdpMid?: string | null })?.sdpMid,
                 sdpMLineIndex:
-                  candidate.sdpMLineIndex !== undefined ? candidate.sdpMLineIndex : rawCand?.sdpMLineIndex,
-                fromUserId: fromUserId || 'client',
+                  candidate.sdpMLineIndex !== undefined
+                    ? (candidate.sdpMLineIndex as number | null)
+                    : (rawCand as { sdpMLineIndex?: number | null })?.sdpMLineIndex,
+                fromUserId: caller.userId,
               };
         session.candidates.push(candPayload);
         session.updatedAt = now;
@@ -267,7 +344,7 @@ export async function POST(req: NextRequest) {
 
     // ── END CALL ──────────────────────────────────────────────────────────────
     if (action === 'end' || action === 'decline') {
-      const matching = allSessions.filter((s) => matchesSession(s, sessionKey, fromUserId, allAliases));
+      const matching = allSessions.filter((s) => matchesSession(s, sessionKey, caller.userId, caller.aliases));
       for (const s of matching) {
         s.status = 'ended';
         s.updatedAt = now;
@@ -291,7 +368,7 @@ export async function POST(req: NextRequest) {
       };
 
       const sorted = allSessions.filter(isLiveOrRecent).sort(prioritySort);
-      const found = sorted.find((s) => matchesSession(s, sessionKey, fromUserId, allAliases)) || null;
+      const found = sorted.find((s) => matchesSession(s, sessionKey, caller.userId, caller.aliases)) || null;
 
       return NextResponse.json({ session: found, success: true });
     }

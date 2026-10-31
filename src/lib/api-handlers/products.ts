@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
 import { safeApiErrorResponse } from '@/lib/api-error';
 import { validateImageBuffer } from '@/lib/image-validator';
 import { moveToRecycleBin } from '@/lib/recycle-bin';
@@ -26,8 +27,121 @@ function parseSafePrice(val: unknown): number {
   return Math.min(Math.max(Math.round(parsed * 100) / 100, 0), 9999999999999.99);
 }
 
+async function uploadBufferToCloudinary(params: {
+  buffer: Buffer;
+  mimeType: string;
+  folder: string;
+  cloudName: string;
+  apiKey: string;
+  apiSecret: string;
+}): Promise<{
+  url: string;
+  secureUrl: string;
+  publicId: string;
+  format: string;
+  resourceType: string;
+  width?: number;
+  height?: number;
+  bytes: number;
+}> {
+  const { buffer, mimeType, folder, cloudName, apiKey, apiSecret } = params;
+  const base64 = `data:${mimeType};base64,${buffer.toString('base64')}`;
+  const timestamp = Math.round(Date.now() / 1000);
+  const paramsToSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+  const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
+
+  const cFormData = new FormData();
+  cFormData.append('file', base64);
+  cFormData.append('api_key', apiKey);
+  cFormData.append('timestamp', String(timestamp));
+  cFormData.append('folder', folder);
+  cFormData.append('signature', signature);
+
+  const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: 'POST',
+    body: cFormData,
+  });
+
+  if (!cRes.ok) {
+    const errText = await cRes.text().catch(() => '');
+    throw new Error(errText || `Cloudinary rejected upload with status ${cRes.status}`);
+  }
+
+  const cData = (await cRes.json()) as Record<string, unknown>;
+  const secureUrl = (cData.secure_url as string) || (cData.url as string) || '';
+  return {
+    url: secureUrl,
+    secureUrl,
+    publicId: (cData.public_id as string) || '',
+    format: (cData.format as string) || 'jpg',
+    resourceType: (cData.resource_type as string) || 'image',
+    width: typeof cData.width === 'number' ? cData.width : undefined,
+    height: typeof cData.height === 'number' ? cData.height : undefined,
+    bytes: typeof cData.bytes === 'number' ? cData.bytes : buffer.length,
+  };
+}
+
 export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<NextResponse | null> {
   const { method, segment, normalizedSegment, req } = ctx;
+
+  // Direct Signed Upload Route (Bypasses Vercel ~4.5MB request body limit)
+  if (
+    (method === 'POST' || method === 'GET') &&
+    (normalizedSegment === 'uploads/sign' ||
+      normalizedSegment.startsWith('uploads/sign/') ||
+      segment.startsWith('uploads/sign') ||
+      segment.startsWith('v1/uploads/sign'))
+  ) {
+    const user = await getUserFromSessionOrToken(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized. Sign in to upload images.' }, { status: 401 });
+    }
+
+    const rawFolder = req.nextUrl.searchParams.get('folder') || 'fahad-ali-interior/products';
+    const sanitizedFolder =
+      rawFolder.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\/+/g, '/').slice(0, 80) ||
+      'fahad-ali-interior/products';
+    const isClientAllowedFolder =
+      sanitizedFolder.endsWith('/receipts') ||
+      sanitizedFolder.endsWith('/avatars') ||
+      sanitizedFolder.endsWith('/reviews') ||
+      sanitizedFolder === 'receipts' ||
+      sanitizedFolder === 'avatars' ||
+      sanitizedFolder === 'reviews';
+
+    if (!requireAdmin(user) && !isClientAllowedFolder) {
+      return NextResponse.json(
+        { error: 'Forbidden. Admin privileges required to upload catalog assets.' },
+        { status: 403 }
+      );
+    }
+
+    const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+    const API_KEY = process.env.CLOUDINARY_API_KEY;
+    const API_SECRET = process.env.CLOUDINARY_API_SECRET;
+
+    if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+      logger.error('Cloudinary configuration missing for signed upload');
+      return NextResponse.json(
+        { error: 'Image upload failed. Storage service is not configured.' },
+        { status: 503 }
+      );
+    }
+
+    const timestamp = Math.round(Date.now() / 1000);
+    const paramsToSign = `folder=${sanitizedFolder}&timestamp=${timestamp}${API_SECRET}`;
+    const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
+
+    return NextResponse.json({
+      success: true,
+      signature,
+      timestamp,
+      apiKey: API_KEY,
+      cloudName: CLOUD_NAME,
+      folder: sanitizedFolder,
+      uploadUrl: `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
+    });
+  }
 
   // Uploads Image (Protected)
   if (
@@ -43,7 +157,9 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
     }
 
     const rawFolder = req.nextUrl.searchParams.get('folder') || 'fahad-ali-interior/products';
-    const sanitizedFolder = rawFolder.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\/+/g, '/').slice(0, 80) || 'fahad-ali-interior/products';
+    const sanitizedFolder =
+      rawFolder.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\/+/g, '/').slice(0, 80) ||
+      'fahad-ali-interior/products';
     const isClientAllowedFolder =
       sanitizedFolder.endsWith('/receipts') ||
       sanitizedFolder.endsWith('/avatars') ||
@@ -72,67 +188,44 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const base64 = `data:${validation.mimeType};base64,${buffer.toString('base64')}`;
-
     const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
     const API_KEY = process.env.CLOUDINARY_API_KEY;
     const API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
-    if (CLOUD_NAME && API_KEY && API_SECRET) {
-      const timestamp = Math.round(Date.now() / 1000);
-      const paramsToSign = `folder=${folder}&timestamp=${timestamp}${API_SECRET}`;
-      const signature = crypto.createHash('sha1').update(paramsToSign).digest('hex');
-
-      const cFormData = new FormData();
-      cFormData.append('file', base64);
-      cFormData.append('api_key', API_KEY);
-      cFormData.append('timestamp', String(timestamp));
-      cFormData.append('folder', folder);
-      cFormData.append('signature', signature);
-
-      try {
-        const cRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-          method: 'POST',
-          body: cFormData,
-        });
-        if (cRes.ok) {
-          const cData = await cRes.json();
-          const result = {
-            url: cData.secure_url || cData.url,
-            secureUrl: cData.secure_url || cData.url,
-            publicId: cData.public_id,
-            format: cData.format || 'jpg',
-            resourceType: cData.resource_type || 'image',
-            width: cData.width,
-            height: cData.height,
-            bytes: cData.bytes || buffer.length,
-          };
-          return NextResponse.json({
-            success: true,
-            data: result,
-            url: result.secureUrl,
-            secureUrl: result.secureUrl,
-          });
-        }
-      } catch {}
+    if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+      logger.error('Cloudinary configuration missing for image upload');
+      return NextResponse.json(
+        { error: 'Image upload failed. Storage service is not configured.' },
+        { status: 503 }
+      );
     }
 
-    const localResult = {
-      url: base64,
-      secureUrl: base64,
-      publicId: `local_${Date.now()}`,
-      format: validation.mimeType?.split('/')[1] || 'jpg',
-      resourceType: 'image',
-      bytes: buffer.length,
-    };
-    return NextResponse.json({
-      success: true,
-      data: localResult,
-      url: localResult.secureUrl,
-      secureUrl: localResult.secureUrl,
-    });
+    try {
+      const result = await uploadBufferToCloudinary({
+        buffer,
+        mimeType: validation.mimeType || 'image/jpeg',
+        folder,
+        cloudName: CLOUD_NAME,
+        apiKey: API_KEY,
+        apiSecret: API_SECRET,
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: result,
+        url: result.secureUrl,
+        secureUrl: result.secureUrl,
+      });
+    } catch (uploadErr) {
+      logger.error('Cloudinary image upload failed:', uploadErr);
+      return NextResponse.json(
+        { error: 'Image upload failed. Cloud storage service rejected the file or was unreachable.' },
+        { status: 502 }
+      );
+    }
   }
 
+  // Uploads Multiple Images (Protected)
   if (
     method === 'POST' &&
     (segment.startsWith('uploads/multiple') || segment.startsWith('v1/uploads/multiple'))
@@ -141,11 +234,44 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized. Sign in to upload images.' }, { status: 401 });
     }
+
+    const rawFolder = req.nextUrl.searchParams.get('folder') || 'fahad-ali-interior/products';
+    const sanitizedFolder =
+      rawFolder.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\/+/g, '/').slice(0, 80) ||
+      'fahad-ali-interior/products';
+    const isClientAllowedFolder =
+      sanitizedFolder.endsWith('/receipts') ||
+      sanitizedFolder.endsWith('/avatars') ||
+      sanitizedFolder.endsWith('/reviews') ||
+      sanitizedFolder === 'receipts' ||
+      sanitizedFolder === 'avatars' ||
+      sanitizedFolder === 'reviews';
+
+    if (!requireAdmin(user) && !isClientAllowedFolder) {
+      return NextResponse.json(
+        { error: 'Forbidden. Admin privileges required to upload catalog assets.' },
+        { status: 403 }
+      );
+    }
+
     const formData = await req.formData().catch(() => null);
     const files = (formData?.getAll('files') || []) as File[];
     if (!files || files.length === 0) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 });
     }
+
+    const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+    const API_KEY = process.env.CLOUDINARY_API_KEY;
+    const API_SECRET = process.env.CLOUDINARY_API_SECRET;
+
+    if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+      logger.error('Cloudinary configuration missing for multiple upload');
+      return NextResponse.json(
+        { error: 'Image upload failed. Storage service is not configured.' },
+        { status: 503 }
+      );
+    }
+
     const results = [];
     for (const file of files) {
       const bytes = await file.arrayBuffer();
@@ -154,15 +280,24 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
       if (!validation.valid) {
         return NextResponse.json({ error: validation.error }, { status: 400 });
       }
-      const base64 = `data:${validation.mimeType};base64,${buffer.toString('base64')}`;
-      results.push({
-        url: base64,
-        secureUrl: base64,
-        publicId: `local_${Date.now()}`,
-        format: validation.mimeType?.split('/')[1] || 'jpg',
-        resourceType: 'image',
-        bytes: buffer.length,
-      });
+
+      try {
+        const result = await uploadBufferToCloudinary({
+          buffer,
+          mimeType: validation.mimeType || 'image/jpeg',
+          folder: sanitizedFolder,
+          cloudName: CLOUD_NAME,
+          apiKey: API_KEY,
+          apiSecret: API_SECRET,
+        });
+        results.push(result);
+      } catch (uploadErr) {
+        logger.error('Cloudinary multiple image item upload failed:', uploadErr);
+        return NextResponse.json(
+          { error: 'One or more images failed to upload to cloud storage.' },
+          { status: 502 }
+        );
+      }
     }
     return NextResponse.json({ success: true, data: results });
   }

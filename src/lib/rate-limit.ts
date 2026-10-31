@@ -16,6 +16,8 @@ export const RATE_LIMITS = {
   admin: { windowMs: 60 * 1000, maxRequests: 200 },
   api: { windowMs: 60 * 1000, maxRequests: 300 },
   upload: { windowMs: 60 * 1000, maxRequests: 15 },       // Anti-DDoS storage protection
+  otpSend: { windowMs: 60 * 1000, maxRequests: 5 },       // Per-IP OTP dispatch flood limit
+  otpVerify: { windowMs: 60 * 1000, maxRequests: 15 },    // Per-IP OTP verification flood limit
 } as const;
 
 type LimitName = keyof typeof RATE_LIMITS;

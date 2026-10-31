@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Home, Settings, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import { clearAdminCache } from '@/lib/admin-cache';
 import { tabs } from '@/components/admin/admin-tab-types';
 import { DashboardStoreNavbar } from '@/components/shared/DashboardStoreNavbar';
 
@@ -109,7 +110,10 @@ export function AdminNavigationChrome({
 
           <div className="relative group/nav">
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => {
+                clearAdminCache();
+                signOut({ callbackUrl: '/' });
+              }}
               className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-500/15 via-red-500/10 to-rose-600/20 text-rose-600 hover:text-white hover:bg-gradient-to-br hover:from-rose-500 hover:to-red-600 flex items-center justify-center border-2 border-rose-400/40 hover:border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.25)] hover:shadow-[0_0_22px_rgba(244,63,94,0.6)] relative cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95"
             >
               <LogOut size={18} className="stroke-[2.3] group-hover/nav:-translate-x-0.5 transition-transform" />
