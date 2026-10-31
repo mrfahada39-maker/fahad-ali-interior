@@ -213,8 +213,8 @@ Return ONLY a valid JSON object matching this schema:
       detectedFurniture: targetCategory === 'Bedroom'
         ? ['King Size Bed Frame', 'Twin Nightstands', 'Hardwood Flooring']
         : targetCategory === 'Dining Room'
-        ? ['Dining Table Area', 'Chandelier Lighting', 'Buffet Credenza']
-        : ['Sectional Sofa Seating', 'Center Coffee Table', 'Hardwood Flooring'],
+          ? ['Dining Table Area', 'Chandelier Lighting', 'Buffet Credenza']
+          : ['Sectional Sofa Seating', 'Center Coffee Table', 'Hardwood Flooring'],
       recommendedStyle: 'Classic Royal Sheesham Upholstered Aesthetic',
       suggestedProducts: defaultSuggestions,
       designAdvice: defaultSuggestions.length > 0
