@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
     }
 
     // State machine integrity guard
-    if (order.status === 'CANCELLED' && action !== 'reject') {
+    if (order.status === 'CANCELLED') {
       return NextResponse.json({ error: 'Order is already cancelled' }, { status: 400 });
     }
     if ((order.status === 'SHIPPED' || order.status === 'DELIVERED') && action === 'reject') {

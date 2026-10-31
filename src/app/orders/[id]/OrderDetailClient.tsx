@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle, Phone, MapPin, CreditCard,
-  Printer, Copy, Check, MessageSquare, ExternalLink, RefreshCw, Sparkles, ShieldCheck
+  Printer, Copy, Check, MessageSquare, ExternalLink, RefreshCw, Sparkles, ShieldCheck,
+  AlertTriangle, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -111,8 +112,42 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [guestEmail, setGuestEmail] = useState('');
+  const [guestToken, setGuestToken] = useState('');
   const [guestVerifying, setGuestVerifying] = useState(false);
   const [needsGuestVerification, setNeedsGuestVerification] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelReason, setCancelReason] = useState('Changed mind / ordered by mistake');
+
+  const handleCancelOrder = async () => {
+    if (!order?.id || cancelling) return;
+    setCancelling(true);
+    try {
+      const res = await apiFetchJsonWithStatus<{ success?: boolean; message?: string; error?: string }>(
+        `/api/v1/orders/${encodeURIComponent(order.id)}/cancel`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reason: cancelReason,
+            email: guestEmail || (order.shippingEmail ?? undefined),
+            token: guestToken || undefined,
+          }),
+        }
+      );
+      if (res.status === 200 && res.data?.success) {
+        toast.success(res.data.message || 'Order successfully cancelled');
+        setOrder((prev) => (prev ? { ...prev, status: 'CANCELLED', paymentStatus: 'FAILED' } : null));
+        setShowCancelModal(false);
+      } else {
+        toast.error(res.data?.error || 'Failed to cancel order');
+      }
+    } catch {
+      toast.error('Network error while cancelling order. Please contact our 24/7 concierge.');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   const handleVerifyGuestEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,6 +189,8 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
       const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
       const urlEmail = (searchParams?.get('email') || '').trim();
       const urlToken = (searchParams?.get('token') || searchParams?.get('guestToken') || '').trim();
+      if (urlEmail && isMounted) setGuestEmail(urlEmail);
+      if (urlToken && isMounted) setGuestToken(urlToken);
 
       const querySuffix = urlEmail || urlToken
         ? `?email=${encodeURIComponent(urlEmail)}&token=${encodeURIComponent(urlToken)}`
@@ -388,6 +425,16 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
               <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to My Orders
             </Link>
             <div className="flex items-center gap-2">
+              {order.status?.toUpperCase() === 'PENDING' && (
+                <button
+                  type="button"
+                  onClick={() => setShowCancelModal(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-serif font-bold uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-300 hover:bg-rose-100 px-3.5 py-2 rounded-xl transition-all shadow-2xs cursor-pointer"
+                  title="Cancel Pending Order"
+                >
+                  <XCircle size={14} /> Cancel Order
+                </button>
+              )}
               <button
                 onClick={printReceipt}
                 className="inline-flex items-center gap-1.5 text-xs font-serif font-bold uppercase tracking-wider text-[#221814] bg-white border border-[#E8DFC8] hover:border-[#D4AF37] px-3.5 py-2 rounded-xl transition-all shadow-2xs cursor-pointer"
@@ -670,6 +717,68 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
 
         </motion.div>
       </div>
+
+      {/* Order Cancellation Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full max-w-md bg-white border border-[#DECDBB] rounded-3xl p-6 sm:p-7 shadow-2xl relative"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mb-4 mx-auto">
+              <AlertTriangle size={24} />
+            </div>
+
+            <h3 className="font-serif text-lg sm:text-xl font-black text-[#221814] text-center mb-2">
+              Cancel Order #{formattedId}?
+            </h3>
+            <p className="text-xs sm:text-sm text-[#7A6354] text-center mb-5 leading-relaxed">
+              Are you sure you wish to cancel this commission? Reserved inventory will be immediately released back to our public gallery.
+            </p>
+
+            <div className="space-y-1.5 mb-6 text-left">
+              <label htmlFor="cancel-reason-select" className="block text-xs font-serif font-bold text-[#221814]">
+                Cancellation Reason:
+              </label>
+              <select
+                id="cancel-reason-select"
+                aria-label="Cancellation Reason"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full bg-[#FAF7F2] border border-[#DECDBB] rounded-xl px-3 py-2 text-xs text-[#221814] font-medium focus:outline-hidden focus:ring-1 focus:ring-[#B88E4B]"
+              >
+                <option value="Changed mind / ordered by mistake">Changed mind / ordered by mistake</option>
+                <option value="Need to change delivery address or phone">Need to change delivery address or phone</option>
+                <option value="Want to apply a different voucher code">Want to apply a different voucher code</option>
+                <option value="Want to modify selected items or wood finish">Want to modify selected items or wood finish</option>
+                <option value="Concierge assistance required">Concierge assistance required</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelling}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[#DECDBB] text-stone-700 hover:bg-[#FAF6F0] font-serif font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-60"
+              >
+                Keep Order
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelOrder}
+                disabled={cancelling}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-serif font-bold text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {cancelling ? <Loader2 size={14} className="animate-spin text-white" /> : <XCircle size={14} />}
+                <span>Confirm Cancel</span>
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

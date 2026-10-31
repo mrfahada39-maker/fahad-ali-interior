@@ -154,21 +154,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/shop',
-        destination: '/#signature-categories',
-        permanent: true,
-      },
-      {
-        source: '/shop/categories',
-        destination: '/#signature-categories',
-        permanent: true,
-      },
-      {
-        source: '/shop/:slug*',
-        destination: '/#signature-categories',
-        permanent: true,
-      },
-      {
         source: '/shipping',
         destination: '/faq#delivery',
         permanent: true,

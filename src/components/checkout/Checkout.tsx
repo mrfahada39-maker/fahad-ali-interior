@@ -516,6 +516,7 @@ export default function Checkout() {
 
   const handlePlaceOrder = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (placing) return;
 
     if (!form.name.trim() || !form.phone.trim() || !form.email.trim() || !form.email.includes('@') || !form.address.trim()) {
       toast.error('Please complete Full Name, valid Email, Phone Number, and Shipping Address');

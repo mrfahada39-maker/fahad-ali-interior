@@ -1109,6 +1109,157 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
     });
   }
 
+  // 2.35 POST /orders/:id/cancel or /v1/orders/:id/cancel (Customer Order Cancellation)
+  if (
+    method === 'POST' &&
+    (segment.endsWith('/cancel') || normalizedSegment.endsWith('/cancel')) &&
+    (segment.startsWith('orders/') || segment.startsWith('v1/orders/'))
+  ) {
+    const rawOrderId = normalizedSegment.replace(/^v1\//, '').replace(/^orders\//, '').replace(/\/cancel$/, '');
+    const cleanOrderId = decodeURIComponent(rawOrderId).replace(/^[#\s]+/, '').trim();
+
+    const order = (await db.order.findFirst({
+      where: {
+        OR: [
+          { id: cleanOrderId },
+          ...(cleanOrderId.length >= 6 ? [{ id: { endsWith: cleanOrderId, mode: 'insensitive' as const } }] : []),
+          { id: { equals: cleanOrderId, mode: 'insensitive' } },
+        ],
+        deletedAt: null,
+      },
+      include: { items: true },
+    })) as DbOrderRecord | null;
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    const user = await getUserFromSessionOrToken(req);
+    const isAdmin = requireAdmin(user);
+    const isOwner = Boolean(user?.id && order.userId === user.id);
+
+    // Guest verification fallback
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const guestEmail = String(body.email || req.nextUrl.searchParams.get('email') || '').trim().toLowerCase();
+    const guestToken = String(body.token || req.nextUrl.searchParams.get('token') || '').trim();
+    const orderEmail = (order.shippingEmail || '').trim().toLowerCase();
+
+    const isEmailMatch = Boolean(guestEmail && orderEmail && guestEmail === orderEmail);
+    const isTokenMatch = Boolean(
+      guestToken &&
+      orderEmail &&
+      (verifyGuestOrderToken(order.id, orderEmail, guestToken) ||
+        verifyGuestOrderToken(cleanOrderId, orderEmail, guestToken))
+    );
+
+    if (!isAdmin && !isOwner && !isEmailMatch && !isTokenMatch) {
+      return NextResponse.json(
+        { error: 'Forbidden. You are not authorized to cancel this order.' },
+        { status: 403 }
+      );
+    }
+
+    // State machine check: cannot cancel already cancelled or shipped orders
+    if (order.status === 'CANCELLED') {
+      return NextResponse.json(
+        { error: 'This order has already been cancelled.' },
+        { status: 400 }
+      );
+    }
+
+    if (order.status === 'SHIPPED' || order.status === 'DELIVERED') {
+      return NextResponse.json(
+        {
+          error: `Cannot cancel order in ${order.status} state. Please contact our 24/7 concierge for assistance.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const reason = typeof body.reason === 'string' ? body.reason.trim() : 'Customer requested cancellation';
+
+    // Execute atomic cancellation, inventory restock, and coupon count reversion
+    const runTx = db.$transaction.bind(db) as unknown as <T>(
+      fn: (tx: typeof db) => Promise<T>,
+      options?: { maxWait?: number; timeout?: number }
+    ) => Promise<T>;
+
+    const updatedOrder = await runTx(
+      async (tx) => {
+        // 1. Restock items atomically
+        if (order.items && order.items.length > 0) {
+          for (const item of order.items) {
+            if (item.productId && item.quantity) {
+              await tx.product.updateMany({
+                where: { id: item.productId, deletedAt: null },
+                data: { stockCount: { increment: item.quantity } },
+              });
+            }
+          }
+        }
+
+        // 2. Revert coupon usage count
+        if (order.couponCode) {
+          await tx.coupon.updateMany({
+            where: { code: order.couponCode, usedCount: { gt: 0 } },
+            data: { usedCount: { decrement: 1 } },
+          });
+        }
+
+        // 3. Update order status
+        const cancelled = await tx.order.update({
+          where: { id: order.id },
+          data: {
+            status: 'CANCELLED',
+            paymentStatus: 'FAILED',
+            shippingNotes: `${order.shippingNotes || ''} [CANCELLED_BY_CUSTOMER: ${reason}]`.trim(),
+          },
+          include: { items: true },
+        });
+
+        // 4. Audit log
+        if (tx.auditLog?.create) {
+          await tx.auditLog.create({
+            data: {
+              userId: user?.id || order.userId || 'guest',
+              action: 'ORDER_CANCELLED_BY_CUSTOMER',
+              entity: 'Order',
+              entityId: order.id,
+              metadata: {
+                reason,
+                orderId: order.id,
+                totalAmount: Number(order.totalAmount),
+              },
+            },
+          }).catch(() => {});
+        }
+
+        return cancelled;
+      },
+      { maxWait: 15000, timeout: 25000 }
+    );
+
+    // Dispatch WhatsApp cancellation notification
+    WhatsAppService.sendCustomerOrderRejected(updatedOrder).catch((err: unknown) =>
+      logger.warn('WhatsApp sendCustomerOrderRejected failed:', {
+        error: String(err),
+        orderId: updatedOrder.id,
+      })
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: 'Your order has been successfully cancelled and all reserved items have been restored.',
+      order: {
+        ...updatedOrder,
+        totalAmount: Number(updatedOrder.totalAmount),
+        subtotal: Number(updatedOrder.subtotal),
+        discount: Number(updatedOrder.discount),
+        gst: Number(updatedOrder.gst),
+      },
+    });
+  }
+
   // 11. PUT & PATCH /admin/orders
   if (
     (method === 'PUT' || method === 'PATCH') &&
@@ -1164,6 +1315,18 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
     if (rawBody.trackingNumber !== undefined) updateData.trackingNumber = rawBody.trackingNumber;
 
     try {
+      const existingOrder = db.order.findUnique
+        ? await Promise.resolve(
+            db.order.findUnique({
+              where: { id: rawBody.id },
+              select: { id: true, status: true, paymentStatus: true, couponCode: true },
+            })
+          ).catch(() => null)
+        : null;
+
+      const wasAlreadyCancelledOrFailed =
+        existingOrder?.status === 'CANCELLED' || existingOrder?.paymentStatus === 'FAILED';
+
       const updated = await db.order.update({
         where: { id: rawBody.id },
         data: updateData,
@@ -1196,21 +1359,24 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
             orderId: updated.id,
           })
         );
-      } else if (updateData.paymentStatus === 'FAILED' || updateData.status === 'CANCELLED') {
+      } else if (
+        (updateData.paymentStatus === 'FAILED' || updateData.status === 'CANCELLED') &&
+        !wasAlreadyCancelledOrFailed
+      ) {
         WhatsAppService.sendCustomerOrderRejected(updated).catch((err: unknown) =>
           logger.warn('WhatsApp sendCustomerOrderRejected failed:', {
             error: String(err),
             orderId: updated.id,
           })
         );
-        // Restock product inventory when order is cancelled or rejected
+        // Restock product inventory when order is cancelled or rejected (only once)
         if (updated.items && updated.items.length > 0) {
           await Promise.all(
             updated.items.map(async (item: DbOrderItemRecord) => {
               if (item.productId && item.quantity) {
                 await db.product
-                  .update({
-                    where: { id: item.productId },
+                  .updateMany({
+                    where: { id: item.productId, deletedAt: null },
                     data: { stockCount: { increment: item.quantity } },
                   })
                   .catch((err: unknown) =>
@@ -1227,11 +1393,11 @@ export async function handleOrderRoutes(ctx: ApiDispatchContext): Promise<NextRe
             })
           );
         }
-        // Restore coupon usage count
+        // Restore coupon usage count (only once)
         if (updated.couponCode) {
           await db.coupon
-            .update({
-              where: { code: updated.couponCode },
+            .updateMany({
+              where: { code: updated.couponCode, usedCount: { gt: 0 } },
               data: { usedCount: { decrement: 1 } },
             })
             .catch((err: unknown) =>

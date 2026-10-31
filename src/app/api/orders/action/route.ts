@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
     const amount = Number(order.totalAmount).toLocaleString();
 
     // State machine integrity checks
-    if (order.status === 'CANCELLED' && action !== 'reject') {
+    if (order.status === 'CANCELLED') {
       return new NextResponse(
         renderHtmlPage(
           'Order Already Cancelled',
@@ -241,7 +241,7 @@ export async function POST(req: NextRequest) {
     const amount = Number(order.totalAmount).toLocaleString();
 
     // State machine integrity checks
-    if (order.status === 'CANCELLED' && action !== 'reject') {
+    if (order.status === 'CANCELLED') {
       return new NextResponse(
         renderHtmlPage(
           'Order Already Cancelled',

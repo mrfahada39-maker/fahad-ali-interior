@@ -102,10 +102,48 @@ export async function PUT(req: NextRequest) {
       updateData.trackingNumber = body.trackingNumber;
     }
 
+    const existingOrder = db.order.findUnique
+      ? await Promise.resolve(
+          db.order.findUnique({
+            where: { id: body.id },
+            include: { items: true },
+          })
+        ).catch(() => null)
+      : null;
+
+    const wasAlreadyCancelledOrFailed =
+      existingOrder?.status === 'CANCELLED' || existingOrder?.paymentStatus === 'FAILED';
+
     const updated = await db.order.update({
       where: { id: body.id },
       data: updateData,
     });
+
+    const isNowCancelledOrFailed =
+      updateData.status === 'CANCELLED' || updateData.paymentStatus === 'FAILED';
+
+    if (isNowCancelledOrFailed && !wasAlreadyCancelledOrFailed && existingOrder) {
+      if (existingOrder.items && existingOrder.items.length > 0) {
+        for (const item of existingOrder.items) {
+          if (item.productId && item.quantity) {
+            await db.product
+              ?.updateMany({
+                where: { id: item.productId, deletedAt: null },
+                data: { stockCount: { increment: item.quantity } },
+              })
+              .catch(() => {});
+          }
+        }
+      }
+      if (existingOrder.couponCode) {
+        await db.coupon
+          ?.updateMany({
+            where: { code: existingOrder.couponCode, usedCount: { gt: 0 } },
+            data: { usedCount: { decrement: 1 } },
+          })
+          .catch(() => {});
+      }
+    }
 
     if (updated.userId && (updateData.status || updateData.paymentStatus)) {
       const shortId = updated.id.slice(-6).toUpperCase();

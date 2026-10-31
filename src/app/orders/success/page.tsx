@@ -2,12 +2,13 @@
 
 import StoreShell from '@/components/layout/StoreShell';
 import Link from 'next/link';
-import { Check, Package, Sparkles, Copy, ArrowRight, MessageSquare, Crown } from 'lucide-react';
+import { Check, Package, Sparkles, Copy, ArrowRight, MessageSquare, Crown, Printer, MapPin } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import { apiFetch } from '@/lib/api-client';
 
 function SuccessContent() {
   const params = useSearchParams();
@@ -16,6 +17,42 @@ function SuccessContent() {
   const token = params.get('token') || '';
   const displayId = (rawId.startsWith('order_') ? rawId.slice(6, 14) : rawId.slice(-8)).toUpperCase();
   const [copied, setCopied] = useState(false);
+
+  interface OrderSummaryItem {
+    name?: string;
+    productName?: string;
+    quantity?: number;
+    price?: number;
+    unitPrice?: number;
+  }
+
+  interface OrderSummaryData {
+    totalAmount?: number;
+    subtotal?: number;
+    items?: OrderSummaryItem[];
+    shippingAddress?: string;
+    shippingCity?: string;
+    paymentMethod?: string;
+  }
+
+  const [orderSummary, setOrderSummary] = useState<OrderSummaryData | null>(null);
+
+  useEffect(() => {
+    if (!rawId || rawId.startsWith('FA-')) return;
+    const cleanId = rawId.trim();
+    const query = email
+      ? `?email=${encodeURIComponent(email)}${token ? `&token=${encodeURIComponent(token)}` : ''}`
+      : '';
+    apiFetch(`/api/v1/orders/${encodeURIComponent(cleanId)}${query}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const ord = data?.order || data?.data || data;
+        if (ord && typeof ord === 'object' && (ord.id || ord.totalAmount)) {
+          setOrderSummary(ord as OrderSummaryData);
+        }
+      })
+      .catch(() => {});
+  }, [rawId, email, token]);
 
   const copyId = () => {
     navigator.clipboard.writeText(rawId);
@@ -64,7 +101,7 @@ function SuccessContent() {
           </p>
 
           {/* Order ID Pill with Copy Action */}
-          <div className="inline-flex items-center gap-2.5 bg-white border-[1.5px] border-[#E8DFC8] rounded-2xl px-5 py-2.5 mb-8 shadow-xs">
+          <div className="inline-flex items-center gap-2.5 bg-white border-[1.5px] border-[#E8DFC8] rounded-2xl px-5 py-2.5 mb-6 shadow-xs">
             <Package size={16} className="text-[#8C6239]" />
             <span className="font-serif text-xs sm:text-sm font-black text-[#221814] uppercase tracking-wider">
               Order Reference: #{displayId}
@@ -77,6 +114,52 @@ function SuccessContent() {
               {copied ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
             </button>
           </div>
+
+          {/* Order Summary & Receipt Preview Card */}
+          {orderSummary && (
+            <div className="bg-white/90 backdrop-blur-md border-[1.5px] border-[#E8DFC8] rounded-3xl p-5 sm:p-6 mb-8 text-left shadow-xs">
+              <div className="flex items-center justify-between pb-3 border-b border-[#EFE8DD] mb-3">
+                <span className="font-serif font-black text-xs sm:text-sm uppercase tracking-wider text-[#221814] flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-[#B88E4B]" />
+                  Order Receipt Summary
+                </span>
+                <span className="text-xs font-serif font-bold text-[#8C6239] uppercase">
+                  {orderSummary.paymentMethod?.replace('_', ' ') || 'Cash on Delivery'}
+                </span>
+              </div>
+
+              {orderSummary.items && orderSummary.items.length > 0 && (
+                <div className="space-y-2 mb-3">
+                  {orderSummary.items.map((it, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-xs text-[#5C483E]">
+                      <span className="font-medium truncate max-w-[240px] sm:max-w-xs">
+                        {it.productName || it.name || 'Artisan Furniture Piece'} × {it.quantity || 1}
+                      </span>
+                      <span className="font-serif font-bold text-[#221814] shrink-0">
+                        PKR {new Intl.NumberFormat('en-PK').format(Number(it.price || it.unitPrice || 0) * Number(it.quantity || 1))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {orderSummary.shippingCity && (
+                <div className="flex items-center gap-1.5 text-[11px] text-[#7A6354] pt-2 border-t border-[#EFE8DD]">
+                  <MapPin size={12} className="text-[#8C6239]" />
+                  <span>Delivering to: <strong className="text-[#221814]">{orderSummary.shippingAddress ? `${orderSummary.shippingAddress}, ` : ''}{orderSummary.shippingCity}</strong></span>
+                </div>
+              )}
+
+              {orderSummary.totalAmount !== undefined && (
+                <div className="flex justify-between items-center pt-3 mt-2 border-t border-[#DECDBB]">
+                  <span className="font-serif font-black text-xs uppercase tracking-wider text-[#7A6354]">Grand Total:</span>
+                  <span className="font-serif font-black text-base sm:text-lg text-[#8C6239]">
+                    PKR {new Intl.NumberFormat('en-PK').format(Number(orderSummary.totalAmount))}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </motion.div>
 
         {/* 3-Step What Happens Next Road Map */}
@@ -152,6 +235,15 @@ function SuccessContent() {
             <MessageSquare size={15} />
             <span>Confirm on WhatsApp</span>
           </a>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-[#FAF7F2] text-[#221814] border border-[#E8DFC8] hover:border-[#D4AF37] font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-95"
+          >
+            <Printer size={15} className="text-[#8C6239]" />
+            <span>Print Receipt</span>
+          </button>
 
           <Link
             href="/#signature-categories"
