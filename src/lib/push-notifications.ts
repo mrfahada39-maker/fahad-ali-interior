@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { logger } from '@/lib/logger';
 import webPush from 'web-push';
 import { db } from '@/lib/db';
@@ -23,11 +22,11 @@ export interface PushNotificationPayload {
   icon?: string;
   badge?: string;
   url?: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 export async function sendPushNotification(
-  subscription: { endpoint: string; keys: any },
+  subscription: { endpoint: string; keys: { p256dh: string; auth: string; [key: string]: string } },
   payload: PushNotificationPayload
 ): Promise<boolean> {
   if (!isConfigured) return false;
@@ -44,10 +43,11 @@ export async function sendPushNotification(
       },
     });
 
-    await webPush.sendNotification(subscription as any, formattedPayload);
+    await webPush.sendNotification(subscription as webPush.PushSubscription, formattedPayload);
     return true;
-  } catch (error: any) {
-    if (error?.statusCode === 404 || error?.statusCode === 410) {
+  } catch (error: unknown) {
+    const errObj = error as { statusCode?: number } | null;
+    if (errObj?.statusCode === 404 || errObj?.statusCode === 410) {
       try {
         await db.pushSubscription.deleteMany({
           where: { endpoint: subscription.endpoint },

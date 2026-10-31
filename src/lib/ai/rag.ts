@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 export class SiteKnowledgeEngine {
   static getFullSiteKnowledge(): string {
@@ -130,13 +129,22 @@ export function cosineSimilarity(vecA: number[], vecB: number[]): number {
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
+export interface KnowledgeDocMetadata {
+  id?: string;
+  name?: string;
+  category?: string | null;
+  price?: number;
+  image?: string | null;
+  [key: string]: unknown;
+}
+
 export interface IndexedDocument {
   id: string;
   documentId: string;
   documentType: 'product' | 'faq' | 'policy' | 'review' | 'blog';
   contentChunk: string;
   embedding: number[];
-  metadata: Record<string, any>;
+  metadata: KnowledgeDocMetadata;
 }
 
 const vectorStore: IndexedDocument[] = [];
@@ -146,7 +154,7 @@ export class VectorIndexer {
     documentId: string,
     documentType: 'product' | 'faq' | 'policy' | 'review' | 'blog',
     contentChunk: string,
-    metadata: Record<string, any> = {}
+    metadata: KnowledgeDocMetadata = {}
   ): Promise<IndexedDocument> {
     const embedding = await generateEmbedding(contentChunk);
     const indexedDoc: IndexedDocument = {
@@ -179,7 +187,7 @@ export class HybridSearchEngine {
     query: string,
     filters?: {
       documentType?: string;
-      category?: string;
+      category?: string | null;
       maxPrice?: number;
     },
     limit: number = 5
@@ -192,8 +200,8 @@ export class HybridSearchEngine {
 
     for (const doc of store) {
       if (filters?.documentType && doc.documentType !== filters.documentType) continue;
-      if (filters?.category && doc.metadata.category && doc.metadata.category.toLowerCase() !== filters.category.toLowerCase()) continue;
-      if (filters?.maxPrice && doc.metadata.price && doc.metadata.price > filters.maxPrice) continue;
+      if (Boolean(filters?.category && doc.metadata.category && String(doc.metadata.category).toLowerCase() !== String(filters.category).toLowerCase())) continue;
+      if (Boolean(filters?.maxPrice && doc.metadata.price && Number(doc.metadata.price) > filters.maxPrice)) continue;
 
       const semanticScore = cosineSimilarity(queryVector, doc.embedding);
 

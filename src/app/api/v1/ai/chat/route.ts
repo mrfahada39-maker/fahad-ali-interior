@@ -482,7 +482,7 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
           String(p.id),
           'product',
           `${p.name} ${p.category || ''} ${p.material || ''} ${p.description || ''}`,
-          { id: p.id, name: p.name, category: p.category, price: Number(p.price), image: p.image || p.images?.[0] }
+          { id: p.id, name: p.name, category: p.category, price: Number(p.price), image: p.image || p.images?.[0] || undefined }
         );
       }
     }
@@ -548,9 +548,9 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
           for (const doc of store.slice(0, 10)) {
             if (doc.documentType === 'product' && doc.metadata.id) {
               await db.productEmbedding.upsert({
-                where: { productId: doc.metadata.id },
+                where: { productId: String(doc.metadata.id) },
                 create: {
-                  productId: doc.metadata.id,
+                  productId: String(doc.metadata.id),
                   vector: doc.embedding,
                   modelName: 'text-embedding-3-small',
                 },

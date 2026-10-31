@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
 
@@ -113,14 +112,31 @@ export const ENTERPRISE_AI_TOOLS: ToolDeclaration[] = [
   },
 ];
 
+export interface AiToolResult {
+  success?: boolean;
+  quoteId?: string;
+  subtotal?: number;
+  currency?: string;
+  warrantyYears?: number;
+  isFreeShipping?: boolean;
+  shippingFee?: number;
+  products?: unknown[];
+  orderNumber?: string;
+  status?: string;
+  paymentStatus?: string;
+  trackingNumber?: string;
+  totalAmount?: number;
+  [key: string]: unknown;
+}
+
 export class AiToolExecutor {
-  static async executeTool(name: string, args: Record<string, any>): Promise<any> {
+  static async executeTool(name: string, args: Record<string, unknown>): Promise<AiToolResult> {
     switch (name) {
       case 'searchProducts': {
         const { query, category, maxPrice } = args;
-        let products: any[] = [];
+        let products: Array<Record<string, unknown>> = [];
         try {
-          const where: any = { deletedAt: null };
+          const where: Record<string, unknown> = { deletedAt: null };
           if (category) where.category = { contains: category, mode: 'insensitive' };
           if (maxPrice) where.price = { lte: maxPrice };
           if (query) {
@@ -157,8 +173,8 @@ export class AiToolExecutor {
       }
 
       case 'generateQuote': {
-        const { itemType, lengthInches, widthInches, woodStain, fabricType } = args;
-        const cubicFt = (lengthInches * widthInches * 48) / 1728;
+        const { itemType, lengthInches = 72, widthInches = 36, woodStain, fabricType } = args as { itemType?: string; lengthInches?: number; widthInches?: number; woodStain?: string; fabricType?: string };
+        const cubicFt = (Number(lengthInches) * Number(widthInches) * 48) / 1728;
         const rawWoodCost = Math.round(cubicFt * 2400);
         const laborCost = Math.round(rawWoodCost * 0.45 + 15000);
         const total = rawWoodCost + laborCost + 28000;
@@ -180,9 +196,10 @@ export class AiToolExecutor {
       }
 
       case 'calculateDelivery': {
-        const { city, orderAmount = 0 } = args;
-        const isMajorCity = ['lahore', 'karachi', 'islamabad', 'rawalpindi', 'faisalabad'].includes(city.toLowerCase());
-        const fee = orderAmount >= 100000 ? 0 : isMajorCity ? 3500 : 5500;
+        const { city = 'Lahore', orderAmount = 0 } = args as { city?: string; orderAmount?: number };
+        const cityStr = String(city || '').toLowerCase();
+        const isMajorCity = ['lahore', 'karachi', 'islamabad', 'rawalpindi', 'faisalabad'].includes(cityStr);
+        const fee = Number(orderAmount) >= 100000 ? 0 : isMajorCity ? 3500 : 5500;
         return {
           success: true,
           city,
@@ -194,8 +211,8 @@ export class AiToolExecutor {
       }
 
       case 'trackOrder': {
-        const { orderIdOrNumber } = args;
-        let order: any = null;
+        const { orderIdOrNumber } = args as { orderIdOrNumber?: string };
+        let order: Record<string, unknown> | null = null;
         try {
           order = await db.order.findFirst({
             where: { OR: [{ id: orderIdOrNumber }, { trackingNumber: orderIdOrNumber }] },
@@ -208,10 +225,10 @@ export class AiToolExecutor {
         if (order) {
           return {
             success: true,
-            orderNumber: order.id,
-            status: order.status || 'PENDING',
-            paymentStatus: order.paymentStatus || 'AWAITING_VERIFICATION',
-            trackingNumber: order.trackingNumber || 'Pending Courier Assignment',
+            orderNumber: String(order.id || ''),
+            status: String(order.status || 'PENDING'),
+            paymentStatus: String(order.paymentStatus || 'AWAITING_VERIFICATION'),
+            trackingNumber: String(order.trackingNumber || 'Pending Courier Assignment'),
             totalAmount: Number(order.totalAmount),
             estimatedDelivery: order.status === 'DELIVERED' ? 'Delivered' : '3–5 Business Days',
           };

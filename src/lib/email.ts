@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import tls from 'tls';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
@@ -188,8 +187,8 @@ function sendSmtpTls({
         socket.destroy();
         finish(false);
       });
-    } catch (e: any) {
-      logger.error('[SMTP CONNECT ERROR]', e.message);
+    } catch (e: unknown) {
+      logger.error('[SMTP CONNECT ERROR]', (e as Error)?.message);
       finish(false);
     }
   });
@@ -580,9 +579,9 @@ Concierge WhatsApp: ${BUSINESS_CONTACT.phone}
 
     await Promise.allSettled(promises);
     return { success: true };
-  } catch (err: any) {
-    logger.error('[SMTP ERROR]', err.message);
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    logger.error('[SMTP ERROR]', (err as Error)?.message);
+    return { success: false, error: (err as Error)?.message };
   }
 }
 
@@ -708,8 +707,8 @@ Lahore Flagship Showroom & Atelier, Pakistan.
       text: plainText,
     });
     return { success: sent, error: sent ? undefined : 'SMTP delivery failed' };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: (err as Error)?.message };
   }
 }
 
@@ -833,8 +832,8 @@ Lahore Flagship Showroom & Atelier, Pakistan.
       text: plainText,
     });
     return { success: sent, error: sent ? undefined : 'SMTP delivery failed' };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: (err as Error)?.message };
   }
 }
 

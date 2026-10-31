@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 // WebRTC STUN configurations for NAT traversal
@@ -118,18 +117,19 @@ export class WebRtcCallClient {
   private seenCandidates = new Set<string>();
 
   // Add remote ICE candidate with queueing & deduplication
-  async addIceCandidate(candidate: any) {
+  async addIceCandidate(candidate: RTCIceCandidateInit | { candidate?: string; sdpMid?: string | null; sdpMLineIndex?: number | null } | string) {
     if (!this.pc || !candidate) return;
-    const candStr = typeof candidate.candidate === 'string' ? candidate.candidate : (typeof candidate === 'string' ? candidate : '');
+    const candObj = typeof candidate === 'object' ? candidate : { candidate };
+    const candStr = typeof candObj.candidate === 'string' ? candObj.candidate : '';
     if (!candStr) return;
-    const key = `${candStr}_${candidate.sdpMid ?? ''}_${candidate.sdpMLineIndex ?? ''}`;
+    const key = `${candStr}_${candObj.sdpMid ?? ''}_${candObj.sdpMLineIndex ?? ''}`;
     if (this.seenCandidates.has(key)) return;
     this.seenCandidates.add(key);
 
     const init: RTCIceCandidateInit = {
       candidate: candStr,
-      sdpMid: candidate.sdpMid,
-      sdpMLineIndex: candidate.sdpMLineIndex,
+      sdpMid: candObj.sdpMid ?? undefined,
+      sdpMLineIndex: candObj.sdpMLineIndex ?? undefined,
     };
 
     try {

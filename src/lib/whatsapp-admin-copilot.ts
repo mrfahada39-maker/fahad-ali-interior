@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { WhatsAppService } from '@/lib/whatsapp';
@@ -84,12 +83,12 @@ export class WhatsAppAdminCopilot {
       let msg = `📋 *PENDING ORDERS FOR VERIFICATION (${pendingOrders.length} Found):*\n`;
       msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
 
-      pendingOrders.forEach((order: any, index: number) => {
+      pendingOrders.forEach((order: { id: string; shippingName?: string | null; shippingPhone?: string | null; totalAmount?: number | string | null; items: Array<{ name: string; quantity: number }>; paymentScreenshot?: string | null }, index: number) => {
         const shortId = order.id.slice(-6).toUpperCase();
         const clientName = order.shippingName || 'Client';
         const clientPhone = order.shippingPhone || 'N/A';
         const amount = Number(order.totalAmount).toLocaleString();
-        const items = order.items.map((i: any) => `${i.name} (x${i.quantity})`).join(', ') || 'Furniture Item';
+        const items = order.items.map((i: { name: string; quantity: number }) => `${i.name} (x${i.quantity})`).join(', ') || 'Furniture Item';
         const slip = order.paymentScreenshot ? '📸 Slip Attached' : '❌ No Slip';
 
         msg += `\n*${index + 1}. Order #${shortId}* (${slip})\n`;
@@ -229,7 +228,7 @@ export class WhatsAppAdminCopilot {
           take: 4,
           select: { name: true, stockCount: true },
         });
-        const samples = sampleProducts.map((p: any) => `• ${p.name} (Current: ${p.stockCount})`).join('\n');
+        const samples = sampleProducts.map((p: { name: string; stockCount?: number | null }) => `• ${p.name} (Current: ${p.stockCount})`).join('\n');
 
         return (
           `⚠️ Sir, "*${itemName}*" se milta julta koi furniture nahi mila.\n\n` +
@@ -428,7 +427,7 @@ export class WhatsAppAdminCopilot {
 
       if (inquiries.length > 0) {
         msg += `\n🛋️ *Custom Interior Inquiries:*\n`;
-        inquiries.forEach((inq: any, idx: number) => {
+        inquiries.forEach((inq: { roomType?: string | null; name?: string | null; budget?: number | string | null; description?: string | null; user?: { name?: string | null; phone?: string | null } | null }, idx: number) => {
           const clientName = inq.user?.name || 'Valued Client';
           const phone = inq.user?.phone || 'N/A';
           const budget = inq.budget ? `PKR ${Number(inq.budget).toLocaleString()}` : 'Flexible';
@@ -447,9 +446,10 @@ export class WhatsAppAdminCopilot {
 
       if (recentMessages.length > 0) {
         msg += `\n📩 *Recent Chat Messages:*\n`;
-        recentMessages.forEach((m: any, idx: number) => {
+        recentMessages.forEach((m: { text?: string | null; name?: string | null; sender?: string | null; user?: { name?: string | null } | null; createdAt?: Date | string | null }, idx: number) => {
           const sender = m.user?.name || m.sender || 'Client';
-          msg += `*${idx + 1}. ${sender}:* "${m.text.slice(0, 60)}..."\n`;
+          const txt = m.text ? m.text.slice(0, 60) : '';
+          msg += `*${idx + 1}. ${sender}:* "${txt}..."\n`;
         });
       }
 

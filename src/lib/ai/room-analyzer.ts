@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
 
@@ -37,7 +36,7 @@ export class RoomAnalyzer {
       targetCategory = 'Storage';
     }
 
-    let dbProducts: any[] = [];
+    let dbProducts: Array<{ id: string; name: string; price: number; image?: string; images?: string[]; category: string; description?: string | null }> = [];
     try {
       dbProducts = await db.product.findMany({
         where: {

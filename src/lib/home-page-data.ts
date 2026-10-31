@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
@@ -234,7 +233,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       return '8.5 ft × 6.5 ft × 34 in (Custom Sizing Available)';
     };
 
-    const formattedProducts = products.map((p: any) => {
+    const formattedProducts = products.map((p: { id: string; name: string; category: string; description: string | null; dimensions: string | null; price: number | string; [key: string]: unknown }) => {
       const cleanName = normalizeCatalogText(p.name, p.name);
       const cleanCategory = normalizeCatalogText(p.category, p.category);
       return {
@@ -247,7 +246,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       };
     }) as unknown as StorefrontProduct[];
 
-    const formattedCategories = categories.map((c: any) => {
+    const formattedCategories = categories.map((c: { name: string; items?: string | null; image?: string | null; description?: string | null; [key: string]: unknown }) => {
       const normalizedName = normalizeCatalogText(c.name, '');
       const cleanName = normalizedName.toLowerCase();
       const liveCount = categoryCountMap.get(cleanName) ?? 0;
@@ -263,7 +262,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       };
     });
 
-    const formattedReviews: HomeReview[] = (approvedReviewsList || []).map((r: any) => ({
+    const formattedReviews: HomeReview[] = (approvedReviewsList || []).map((r: { id: string; customerName?: string | null; rating?: number | string | null; comment?: string | null; createdAt?: string | Date | null; image?: string | null; product?: { name?: string | null; image?: string | null } | null; user?: { name?: string | null; email?: string | null; image?: string | null; avatar?: string | null } | null }) => ({
       id: r.id,
       customerName: r.customerName || r.user?.name || (r.user?.email ? r.user.email.split('@')[0] : 'Verified Patron'),
       rating: Number(r.rating) || 5,
@@ -275,7 +274,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
       },
       user: {
         name: r.user?.name || r.customerName || 'Verified Patron',
-        image: (r.user as any)?.avatar || (r.user as any)?.image || undefined,
+        image: r.user?.avatar || r.user?.image || undefined,
       },
     }));
 
@@ -300,7 +299,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
         foundedYear: settings.foundedYear || '2016',
         currency: settings.currency || 'PKR',
       } : empty.settings,
-      banners: banners.map((b: any) => ({
+      banners: banners.map((b: { id: string; title: string; subtitle?: string | null; link?: string | null; image: string; price?: number | null; colors?: string[] | null; [key: string]: unknown }) => ({
         id: b.id,
         title: b.title,
         subtitle: b.subtitle || null,

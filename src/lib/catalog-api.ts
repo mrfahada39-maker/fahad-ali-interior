@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { logger } from '@/lib/logger';
 /**
  * Storefront Product Data Layer (Direct PostgreSQL with in-memory caching)
@@ -8,7 +7,7 @@ import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
 
 // High-speed In-Memory RAM Cache (Instant Sub-1ms responses)
-const memoryCache = new Map<string, { data: any; expiry: number }>();
+const memoryCache = new Map<string, { data: unknown; expiry: number }>();
 
 export function clearCatalogMemoryCache(): void {
   memoryCache.clear();
@@ -70,7 +69,7 @@ export async function getStorefrontCategories(): Promise<string[]> {
       select: { name: true },
     });
     if (cats && cats.length > 0) {
-      const names = ['All', ...cats.map((c: any) => normalizeCatalogText(c.name, c.name))];
+      const names = ['All', ...cats.map((c: { name: string }) => normalizeCatalogText(c.name, c.name))];
       setCached(cacheKey, names, 120);
       return names;
     }
@@ -128,7 +127,7 @@ export async function getStorefrontProducts(limit = 50): Promise<StorefrontProdu
       take: limit,
       orderBy: { createdAt: 'desc' },
     });
-    const result = (products || []).map((p: any) => {
+    const result = (products || []).map((p: { id: string; name: string; category: string; description: string | null; dimensions: string | null; price: number | string; [key: string]: unknown }) => {
       const cleanName = normalizeCatalogText(p.name, p.name);
       const cleanCategory = normalizeCatalogText(p.category, p.category);
       return {
@@ -190,10 +189,10 @@ export async function getProductById(id: string): Promise<StorefrontProduct | nu
       },
     });
     if (p) {
-      const approvedReviews = (p as any).reviews || [];
+      const approvedReviews = (p as unknown as { reviews?: Array<{ rating?: number | string | null; createdAt?: Date | string | null }> }).reviews || [];
       const reviewCount = approvedReviews.length;
       const avgRating = reviewCount > 0
-        ? Number((approvedReviews.reduce((sum: number, r: any) => sum + (Number(r.rating) || 5), 0) / reviewCount).toFixed(1))
+        ? Number((approvedReviews.reduce((sum: number, r: { rating?: number | string | null }) => sum + (Number(r.rating) || 5), 0) / reviewCount).toFixed(1))
         : 5.0;
       const cleanName = normalizeCatalogText(p.name, p.name);
       const cleanCategory = normalizeCatalogText(p.category, p.category);
@@ -207,7 +206,7 @@ export async function getProductById(id: string): Promise<StorefrontProduct | nu
         price: Number(p.price),
         reviewCount,
         avgRating,
-        reviews: approvedReviews.map((r: any) => ({
+        reviews: approvedReviews.map((r: { createdAt?: Date | string | null; [key: string]: unknown }) => ({
           ...r,
           createdAt: typeof r.createdAt === 'object' && r.createdAt?.toISOString ? r.createdAt.toISOString() : String(r.createdAt || ''),
         })),

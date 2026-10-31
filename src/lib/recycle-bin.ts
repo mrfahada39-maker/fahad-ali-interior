@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { recordAuditLog } from '@/lib/db-utils';
@@ -79,7 +78,7 @@ export async function moveToRecycleBin(params: MoveToRecycleBinParams) {
 export async function listRecycleBinItems(params: ListRecycleBinParams = {}) {
   const { entityType = 'ALL', search, skip = 0, take = 50 } = params;
 
-  const where: any = {};
+  const where: Record<string, unknown> = {};
   if (entityType && entityType !== 'ALL') {
     where.entityType = entityType;
   }
@@ -131,21 +130,21 @@ export async function restoreFromRecycleBin(recycleBinId: string, actorUserId?: 
     throw new Error('Item not found in Recycle Bin');
   }
 
-  const payload = (entry.payload as any) || {};
-  let restoredRecord: any = null;
+  const payload = (entry.payload as Record<string, unknown>) || {};
+  let restoredRecord: unknown = null;
 
   switch (entry.entityType) {
     case 'CATEGORY': {
       const categoryData = {
         id: entry.entityId,
-        name: payload.name || entry.name,
-        description: payload.description || null,
-        image: payload.image || null,
-        icon: payload.icon || null,
-        items: payload.items || 'View Collection',
+        name: String(payload.name || entry.name),
+        description: typeof payload.description === 'string' ? payload.description : null,
+        image: typeof payload.image === 'string' ? payload.image : null,
+        icon: typeof payload.icon === 'string' ? payload.icon : null,
+        items: typeof payload.items === 'string' ? payload.items : '',
         isPromo: Boolean(payload.isPromo),
         order: Number(payload.order) || 0,
-        isActive: true,
+        isActive: payload.isActive !== false,
         deletedAt: null,
       };
 
@@ -163,18 +162,18 @@ export async function restoreFromRecycleBin(recycleBinId: string, actorUserId?: 
     case 'PRODUCT': {
       const productData = {
         id: entry.entityId,
-        name: payload.name || entry.name,
-        description: payload.description || null,
-        price: payload.price,
-        category: payload.category || 'General',
-        image: payload.image || '/cat-thumb-sofas-2x.webp',
-        material: payload.material || null,
-        dimensions: payload.dimensions || null,
+        name: String(payload.name || entry.name),
+        description: typeof payload.description === 'string' ? payload.description : null,
+        price: Number(payload.price) || 0,
+        category: typeof payload.category === 'string' ? payload.category : 'General',
+        image: typeof payload.image === 'string' ? payload.image : '/cat-thumb-sofas-2x.webp',
+        material: typeof payload.material === 'string' ? payload.material : null,
+        dimensions: typeof payload.dimensions === 'string' ? payload.dimensions : null,
         stockCount: Number(payload.stockCount) || 0,
         isPremium: Boolean(payload.isPremium),
-        specs: payload.specs || null,
-        images: Array.isArray(payload.images) ? payload.images : [],
-        categoryId: payload.categoryId || null,
+        specs: payload.specs ? (typeof payload.specs === 'string' ? payload.specs : JSON.stringify(payload.specs)) : null,
+        images: Array.isArray(payload.images) ? (payload.images as string[]) : [],
+        categoryId: typeof payload.categoryId === 'string' ? payload.categoryId : null,
         deletedAt: null,
       };
 
@@ -308,7 +307,7 @@ export async function permanentlyDeleteFromRecycleBin(recycleBinId: string, acto
  * Empty the RecycleBin completely or purge a specific section.
  */
 export async function emptyRecycleBin(entityType?: RecycleBinEntityType, actorUserId?: string) {
-  const where: any = {};
+  const where: Record<string, unknown> = {};
   if (entityType) {
     where.entityType = entityType;
   }

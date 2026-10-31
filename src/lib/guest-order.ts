@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import crypto from 'crypto';
 
 export function getGuestSecret(): string {
@@ -42,7 +41,7 @@ export function verifyGuestOrderToken(orderId: string, email: string, token: str
  * Sanitizes order data for guest view to strictly prevent leaking
  * other users' account details, internal notes, or sensitive fields.
  */
-export function sanitizeOrderForGuest(order: any) {
+export function sanitizeOrderForGuest(order: Record<string, unknown> | null | undefined) {
   if (!order) return null;
   const orderId = String(order.id || '');
   const email = String(order.shippingEmail || '');
@@ -67,7 +66,7 @@ export function sanitizeOrderForGuest(order: any) {
     couponCode: order.couponCode || null,
     guestToken: token,
     items: Array.isArray(order.items)
-      ? order.items.map((item: any) => ({
+      ? order.items.map((item: Record<string, unknown>) => ({
           id: item.id,
           productId: item.productId,
           name: item.name,

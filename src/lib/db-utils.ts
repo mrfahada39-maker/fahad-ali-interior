@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
@@ -42,13 +41,13 @@ export async function recordAuditLog(options: AuditLogOptions): Promise<void> {
  * Runs operations within an isolated Prisma transaction with tuned timeout limits.
  */
 export async function executeTransaction<T>(
-  action: (tx: any) => Promise<T>,
+  action: (tx: unknown) => Promise<T>,
   options?: { maxWait?: number; timeout?: number }
 ): Promise<T> {
   const maxWait = options?.maxWait ?? 5000;
   const timeout = options?.timeout ?? 10000;
 
-  return await (db as any).$transaction(action, {
+  return await (db as unknown as { $transaction: (fn: (tx: unknown) => Promise<T>, opts: { maxWait: number; timeout: number }) => Promise<T> }).$transaction(action, {
     maxWait,
     timeout,
   });
@@ -58,11 +57,11 @@ export async function executeTransaction<T>(
  * Standardized soft-delete helper that marks deletedAt and creates an audit record.
  */
 export async function softDeleteRecord(
-  modelDelegate: any,
+  modelDelegate: { update: (args: { where: { id: string }; data: { deletedAt: Date } }) => Promise<unknown> },
   id: string,
   entityName: string,
   actorUserId?: string
-): Promise<any> {
+): Promise<unknown> {
   const record = await modelDelegate.update({
     where: { id },
     data: { deletedAt: new Date() },

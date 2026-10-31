@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from '@prisma/client';
 import { validateEnv } from '@/lib/env';
 import { logger } from '@/lib/logger';
@@ -125,8 +124,8 @@ function createClient(): PrismaClient {
       }: {
         operation: string;
         model?: string;
-        args: any;
-        query: (args: any) => Promise<any>;
+        args: unknown;
+        query: (args: unknown) => Promise<unknown>;
       }) {
         if (isMockDatabase) {
           if (operation === 'findMany') return [];
@@ -168,7 +167,7 @@ export async function checkDatabaseHealth(): Promise<{
 }> {
   const start = Date.now();
   try {
-    await (db as any).$queryRawUnsafe('SELECT 1 as ping');
+    await (db as unknown as { $queryRawUnsafe: (q: string) => Promise<unknown> }).$queryRawUnsafe('SELECT 1 as ping');
     const latencyMs = Date.now() - start;
     return {
       ok: true,
@@ -176,12 +175,12 @@ export async function checkDatabaseHealth(): Promise<{
       dialect: 'postgresql',
       timestamp: new Date().toISOString(),
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       ok: false,
       latencyMs: Date.now() - start,
       dialect: 'postgresql',
-      error: err?.message || 'Database ping failed',
+      error: (err as Error)?.message || 'Database ping failed',
       timestamp: new Date().toISOString(),
     };
   }
