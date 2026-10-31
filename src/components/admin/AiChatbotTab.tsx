@@ -36,12 +36,17 @@ import { toast } from 'sonner';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 interface ChatMessageItem {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
+  id?: string;
+  role: 'user' | 'assistant' | 'system' | string;
   content: string;
   intent?: string;
   metadata?: Record<string, unknown>;
   createdAt?: string;
+  suggestedPrompts?: string[];
+  products?: { id: string; name: string; price: number; image?: string; category?: string }[];
+  quote?: { formattedTotal?: string; deliveryEstimateDays?: string; [key: string]: unknown };
+  whatsAppUrl?: string;
+  [key: string]: unknown;
 }
 
 interface ChatSessionItem {

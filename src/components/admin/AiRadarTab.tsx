@@ -1,6 +1,4 @@
 'use client';
-
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -19,22 +17,23 @@ import {
   Laptop
 } from 'lucide-react';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
+import type { AdminTelemetry, AdminStats, AdminTelemetryVisitor } from './admin-tab-types';
 
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
 interface AiRadarTabProps {
-  telemetry: import('./admin-tab-types').AdminTelemetry | null;
-  stats: import('./admin-tab-types').AdminStats;
+  telemetry: AdminTelemetry | null;
+  stats: AdminStats;
 }
 
 export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
   const [activeFilter, setActiveFilter] = useState<'all' | 'checkout' | 'cart' | 'viewing'>('all');
 
   // 100% REAL live active visitors from telemetry backend
-  const liveVisitors: import('./admin-tab-types').AdminTelemetryVisitor[] = Array.isArray(telemetry?.visitors) ? telemetry.visitors : [];
+  const liveVisitors: AdminTelemetryVisitor[] = Array.isArray(telemetry?.visitors) ? telemetry.visitors : [];
   const activeVisitorsCount: number = typeof telemetry?.activeVisitorsCount === 'number' ? telemetry.activeVisitorsCount : liveVisitors.length;
 
-  const filteredVisitors = liveVisitors.filter((v: import('./admin-tab-types').AdminTelemetryVisitor) => {
+  const filteredVisitors = liveVisitors.filter((v: AdminTelemetryVisitor) => {
     if (activeFilter === 'cart') return typeof v.status === 'string' && v.status.toLowerCase().includes('cart');
     if (activeFilter === 'checkout') return typeof v.status === 'string' && v.status.toLowerCase().includes('checkout');
     if (activeFilter === 'viewing') return typeof v.status === 'string' && (v.status.toLowerCase().includes('view') || v.status.toLowerCase().includes('brows'));
@@ -43,7 +42,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
   return (
     <div className="flex-1 flex flex-col justify-between gap-2.5 min-h-0 font-sans overflow-y-auto lg:overflow-hidden lg:h-full pr-0.5 pb-6 lg:pb-0">
-      
+
       {/* ── TOP LUXURY HEADER (SHORT, CLEAN & COMPACT FOR MOBILE) ── */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
@@ -106,7 +105,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
       {/* ── 4 KPI METRIC CARDS (ULTRA-MODERN, STYLISH & ANIMATED GLASS JEWEL EDITION WITH LUMINOUS BORDERS) ── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 shrink-0">
-        
+
         {/* Top Active Region */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -118,9 +117,9 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-amber-500/10" />
 
-          
 
-            <div className="flex justify-between items-start relative z-10">
+
+          <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
               TOP ACTIVE REGION
             </span>
@@ -131,7 +130,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
           <div className="mt-2 relative z-10">
             <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none truncate font-sans">
-              </h3>
+            </h3>
             <div className="mt-2.5 flex items-center">
               <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs bg-emerald-50 text-emerald-800 border-emerald-500/30">
                 <span className="relative flex h-1.5 w-1.5">
@@ -155,9 +154,9 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-blue-500/10" />
 
-          
 
-            <div className="flex justify-between items-start relative z-10">
+
+          <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
               DEVICE PLATFORM
             </span>
@@ -184,9 +183,9 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-purple-500/10" />
 
-          
 
-            <div className="flex justify-between items-start relative z-10">
+
+          <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
               ACTIVE ENGAGEMENT
             </span>
@@ -197,7 +196,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
           <div className="mt-2 relative z-10">
             <h3 className="text-[17px] sm:text-[26px] lg:text-[30px] font-black text-[#1F1612] tracking-tight leading-none truncate font-sans">
-              </h3>
+            </h3>
             <div className="mt-2.5 flex items-center">
               <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs bg-purple-50 text-purple-800 border-purple-500/30">
                 <span className="relative flex h-1.5 w-1.5">
@@ -221,9 +220,9 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
         >
           <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 opacity-80 sm:opacity-60 sm:group-hover:opacity-100 bg-[#B88E4B]/10" />
 
-          
 
-            <div className="flex justify-between items-start relative z-10">
+
+          <div className="flex justify-between items-start relative z-10">
             <span className="text-[9px] sm:text-[10.5px] font-black tracking-wider text-[#7A6354] uppercase truncate leading-tight">
               TOTAL REVENUE
             </span>
@@ -253,10 +252,10 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
       {/* ── INTERACTIVE RADAR SCANNER & VISITOR TELEMETRY STREAM (EXACT OVERVIEW PANEL QUALITY) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 flex-1 min-h-0">
-        
+
         {/* Left Column: Modern Premium Radar Scanner (5 Cols) */}
         <div className="lg:col-span-5 bg-white border border-[#E7DDD0] rounded-[20px] p-3.5 shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex flex-col justify-between h-full min-h-0 hover:border-[#B88E4B]/40 transition-all relative overflow-hidden group/radar">
-          
+
           {/* Header */}
           <div className="flex items-center justify-between border-b border-neutral-100 pb-2 shrink-0">
             <div>
@@ -273,15 +272,15 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
           {/* Interactive Modern Radar Screen */}
           <div className="flex-1 w-full min-h-0 relative my-1 flex items-center justify-center">
-            
+
             {/* Circular Tactical Radar Container */}
             <div className="relative w-[170px] h-[170px] rounded-full border-[2.5px] border-[#CBB393] bg-gradient-to-br from-[#FAF5EE] via-[#F4ECE0] to-[#ECE0CE] shadow-[inset_0_4px_18px_rgba(44,30,24,0.10),0_6px_20px_rgba(184,142,75,0.15)] flex items-center justify-center overflow-hidden">
-              
+
               {/* Concentric Golden Sonar Grid Rings */}
               <div className="absolute inset-3 rounded-full border border-[#B88E4B]/25 pointer-events-none" />
               <div className="absolute inset-8 rounded-full border border-[#B88E4B]/30 pointer-events-none" />
               <div className="absolute inset-13 rounded-full border border-[#B88E4B]/35 pointer-events-none" />
-              
+
               {/* Tactical Degree Coordinates */}
               <span className="absolute top-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">N 0°</span>
               <span className="absolute bottom-1 text-[8px] font-mono font-black text-[#8C6944] pointer-events-none tracking-widest">S 180°</span>
@@ -374,7 +373,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
 
         {/* Right Column: Real-Time Live Shopper Stream (7 Cols with High-Readability Cards) */}
         <div className="lg:col-span-7 bg-white border border-[#E7DDD0] rounded-[20px] p-4 shadow-[0_4px_20px_rgba(44,30,24,0.015)] flex flex-col justify-between h-full min-h-0 hover:border-[#B88E4B]/40 transition-all">
-          
+
           {/* Header & Filter Pills */}
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 pb-2 shrink-0">
             <div>
@@ -390,11 +389,10 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
                 <button
                   key={f}
                   onClick={() => setActiveFilter(f)}
-                  className={`px-3 py-1 rounded-lg uppercase tracking-wider text-[11px] font-black transition-all cursor-pointer ${
-                    activeFilter === f
-                      ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-xs'
-                      : 'text-stone-600 hover:text-[#221814]'
-                  }`}
+                  className={`px-3 py-1 rounded-lg uppercase tracking-wider text-[11px] font-black transition-all cursor-pointer ${activeFilter === f
+                    ? 'bg-gradient-to-r from-[#B88E4B] to-[#996515] text-white shadow-xs'
+                    : 'text-stone-600 hover:text-[#221814]'
+                    }`}
                 >
                   {f}
                 </button>
@@ -416,7 +414,7 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
               </div>
             ) : (
               <AnimatePresence>
-                {filteredVisitors.map((vis: import('./admin-tab-types').AdminTelemetryVisitor, idx: number) => (
+                {filteredVisitors.map((vis: AdminTelemetryVisitor, idx: number) => (
                   <motion.div
                     key={vis.id || idx}
                     initial={{ opacity: 0, y: 8 }}
@@ -440,20 +438,19 @@ export default function AiRadarTab({ telemetry, stats }: AiRadarTabProps) {
                         </span>
                       </div>
 
-                      <span className={`px-3 py-0.5 rounded-full text-[10.5px] font-black uppercase tracking-wider border ${
-                        typeof vis.status === 'string' && vis.status.includes('Checkout')
-                          ? 'bg-amber-50 text-amber-900 border-amber-300'
-                          : typeof vis.status === 'string' && vis.status.includes('Cart')
+                      <span className={`px-3 py-0.5 rounded-full text-[10.5px] font-black uppercase tracking-wider border ${typeof vis.status === 'string' && vis.status.includes('Checkout')
+                        ? 'bg-amber-50 text-amber-900 border-amber-300'
+                        : typeof vis.status === 'string' && vis.status.includes('Cart')
                           ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
                           : 'bg-blue-50 text-blue-900 border-blue-300'
-                      }`}>
+                        }`}>
                         {vis.status || 'Active'}
                       </span>
                     </div>
 
                     {/* Bottom Grid: Current Product + Location + Device (Large Bold Typography) */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1.5 border-t border-stone-200/60">
-                      
+
                       {/* Product */}
                       <div className="flex items-center gap-2 text-[#1F1612] truncate bg-white border border-[#EADBCE] px-2.5 py-1 rounded-lg">
                         <ShoppingBag size={13} className="text-[#B88E4B] shrink-0" />

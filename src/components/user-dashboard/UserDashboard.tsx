@@ -242,7 +242,7 @@ export default function UserDashboard() {
   }, []);
 
   const groupedProducts = useMemo(() => {
-    const map = new Map<string, UserCatalogProductRecord[]>();
+    const map = new Map<string, StorefrontProduct[]>();
     for (const p of products) {
       const cat = p.category || 'Living Room';
       if (!map.has(cat)) map.set(cat, []);

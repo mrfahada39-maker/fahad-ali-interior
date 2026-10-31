@@ -47,6 +47,7 @@ export interface CmsCategoryItem {
   isActive?: boolean;
   badge?: string;
   slug?: string;
+  _count?: { products?: number };
   [key: string]: unknown;
 }
 
@@ -152,7 +153,8 @@ export default function CmsTab() {
     });
   };
 
-  const handleMoveCategory = async (categoryId: string, direction: 'up' | 'down') => {
+  const handleMoveCategory = async (categoryId: string | undefined, direction: 'up' | 'down') => {
+    if (!categoryId) return;
     const currentIndex = categories.findIndex((c) => c.id === categoryId);
     if (currentIndex === -1) return;
 
@@ -185,7 +187,8 @@ export default function CmsTab() {
     }
   };
 
-  const handleDeleteCategory = async (id: string) => {
+  const handleDeleteCategory = async (id: string | undefined) => {
+    if (!id) return;
     if (!confirm('Are you sure you want to delete this showroom collection?')) return;
 
     const previousCategories = [...categories];
