@@ -1,183 +1,60 @@
-/**
- * Enterprise Resilience, Fault-Tolerance & Disaster Recovery Suite
- * Fahad Ali Haute Interior Architecture & Artisanal Furniture
- *
- * Scenarios:
- * 1. Neon PostgreSQL Database Timeout / Outage Graceful Degradation
- * 2. External Courier API Downtime & Retry Dispatch Queue
- * 3. Mobile Payment Gateway Disruption & Fallback Channel Routing
- * 4. Malformed JSON, Oversized Payloads & Corrupted Payload Resilience
- */
+import { describe, it, expect } from '@jest/globals';
+import { isTransientDbError } from '@/lib/db';
+import { safeApiErrorResponse } from '@/lib/api-error';
 
-describe('Enterprise Resilience, Fault-Tolerance & Disaster Recovery Suite', () => {
-
-  // ── 1. Database Connection Outage Graceful Degradation ──
-  describe('1. Database Connection Outage Graceful Degradation', () => {
-    const handleDatabaseQuery = async (simulateOutage: boolean): Promise<{ status: number; body: Record<string, any> }> => {
-      try {
-        if (simulateOutage) {
-          const timeoutErr: any = new Error('Connection timeout to Neon PostgreSQL pool');
-          timeoutErr.code = 'P1001'; // Can't reach database server
-          throw timeoutErr;
-        }
-        return { status: 200, body: { success: true, data: ['Product A', 'Product B'] } };
-      } catch (err: any) {
-        // High-level exception boundary
-        if (err.code === 'P1001' || err.message.includes('timeout')) {
-          return {
-            status: 503,
-            body: {
-              success: false,
-              error: 'SERVICE_UNAVAILABLE',
-              message: 'Our technical concierge is currently synchronizing high-security databases. Please retry shortly.',
-            },
-          };
-        }
-        return { status: 500, body: { success: false, error: 'INTERNAL_ERROR' } };
-      }
-    };
-
-    it('returns structured HTTP 503 rather than crashing Node.js server when DB is unreachable', async () => {
-      const res = await handleDatabaseQuery(true);
-
-      expect(res.status).toBe(503);
-      expect(res.body.success).toBe(false);
-      expect(res.body.error).toBe('SERVICE_UNAVAILABLE');
-      expect(res.body.message).toContain('technical concierge');
+describe('src/lib/db.ts & src/lib/api-error.ts Real Fault-Tolerance Verification', () => {
+  describe('isTransientDbError (Neon Serverless & Prisma Recovery)', () => {
+    it('recognizes standard Prisma transient connection error codes', () => {
+      expect(isTransientDbError({ code: 'P1001' })).toBe(true); // Can't reach database server
+      expect(isTransientDbError({ code: 'P1002' })).toBe(true); // Database server reached but timed out
+      expect(isTransientDbError({ code: 'P1008' })).toBe(true); // Operations timed out
+      expect(isTransientDbError({ code: 'P1017' })).toBe(true); // Server closed connection
+      expect(isTransientDbError({ code: 'P2024' })).toBe(true); // Pool acquisition timed out
     });
 
-    it('returns HTTP 200 with data during normal operational state', async () => {
-      const res = await handleDatabaseQuery(false);
+    it('recognizes transient connection error messages in Neon / Node.js networks', () => {
+      expect(isTransientDbError(new Error("Can't reach database server at neon.tech:5432"))).toBe(true);
+      expect(isTransientDbError(new Error('Connection terminated unexpectedly'))).toBe(true);
+      expect(isTransientDbError(new Error('read ECONNRESET'))).toBe(true);
+      expect(isTransientDbError(new Error('connect ETIMEDOUT'))).toBe(true);
+      expect(isTransientDbError(new Error('write EPIPE'))).toBe(true);
+      expect(isTransientDbError(new Error('NeonDbError: Connection timed out'))).toBe(true);
+    });
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.length).toBe(2);
+    it('returns false for permanent application errors (e.g. constraints, not found, syntax)', () => {
+      expect(isTransientDbError({ code: 'P2002' })).toBe(false); // Unique constraint violation
+      expect(isTransientDbError({ code: 'P2025' })).toBe(false); // Record not found
+      expect(isTransientDbError(new Error('Invalid column name: xyz'))).toBe(false);
+      expect(isTransientDbError(null)).toBe(false);
+      expect(isTransientDbError(undefined)).toBe(false);
     });
   });
 
-  // ── 2. External Courier API Downtime & Retry Queue ──
-  describe('2. External Courier API Downtime & Retry Queue', () => {
-    interface DispatchJob {
-      orderId: string;
-      carrier: 'TCS' | 'LEOPARDS';
-      status: 'BOOKED' | 'QUEUED_FOR_RETRY';
-      attempts: number;
-      trackingCode?: string;
-    }
+  describe('safeApiErrorResponse (Production Error Shield)', () => {
+    it('masks internal stack traces and returns generic error with requestId', async () => {
+      const internalDbError = new Error('FATAL: password authentication failed for user "postgres"');
+      const response = safeApiErrorResponse(internalDbError, 'Failed to process luxury order', 500);
 
-    const dispatchOrderWithFallback = async (
-      orderId: string,
-      carrier: 'TCS' | 'LEOPARDS',
-      externalApiFails: boolean
-    ): Promise<DispatchJob> => {
-      if (externalApiFails) {
-        // Fallback: Queue job for asynchronous background worker retry
-        return {
-          orderId,
-          carrier,
-          status: 'QUEUED_FOR_RETRY',
-          attempts: 1,
-        };
-      }
-
-      return {
-        orderId,
-        carrier,
-        status: 'BOOKED',
-        attempts: 1,
-        trackingCode: `${carrier}-LHE-998811`,
-      };
-    };
-
-    it('gracefully enqueues order into background retry queue when TCS API times out', async () => {
-      const job = await dispatchOrderWithFallback('ord_1001', 'TCS', true);
-
-      expect(job.status).toBe('QUEUED_FOR_RETRY');
-      expect(job.attempts).toBe(1);
-      expect(job.trackingCode).toBeUndefined();
+      expect(response.status).toBe(500);
+      const json = await response.json();
+      expect(json.error).toBe('Failed to process luxury order');
+      expect(json.requestId).toBeDefined();
+      expect(typeof json.requestId).toBe('string');
+      // Must not leak internal database password/credentials
+      expect(JSON.stringify(json)).not.toContain('FATAL');
+      expect(JSON.stringify(json)).not.toContain('password');
     });
 
-    it('generates immediate tracking code when TCS API is responsive', async () => {
-      const job = await dispatchOrderWithFallback('ord_1001', 'TCS', false);
+    it('honors custom status codes and request id headers', async () => {
+      const mockReq = new Request('https://fahad-ali-interior.com/api/test', {
+        headers: { 'x-request-id': 'req-luxury-custom-9988' },
+      });
+      const response = safeApiErrorResponse(new Error('Service busy'), 'Database busy', 503, mockReq);
 
-      expect(job.status).toBe('BOOKED');
-      expect(job.trackingCode).toBe('TCS-LHE-998811');
-    });
-  });
-
-  // ── 3. Payment Gateway Disruption & Fallback Routing ──
-  describe('3. Payment Gateway Disruption & Fallback Routing', () => {
-    interface PaymentAttempt {
-      method: 'JAZZCASH' | 'EASYPAISA';
-      orderTotal: number;
-    }
-
-    const routePaymentWithFallback = (attempt: PaymentAttempt, gatewayAvailable: boolean) => {
-      if (!gatewayAvailable) {
-        return {
-          success: false,
-          fallbackOffered: true,
-          suggestedAlternatives: [
-            { method: 'BANK_TRANSFER', description: 'Direct transfer to HBL/Meezan corporate IBAN with instant slip upload' },
-            { method: 'CONCIERGE_WHATSAPP', description: 'VIP Concierge WhatsApp coordination' },
-            { method: 'COD', description: 'Cash on White-Glove Delivery' },
-          ],
-        };
-      }
-
-      return { success: true, transactionId: `TXN_${Date.now()}` };
-    };
-
-    it('suggests Bank Transfer and WhatsApp Concierge alternatives when mobile wallet gateway is down', () => {
-      const result = routePaymentWithFallback({ method: 'JAZZCASH', orderTotal: 450000 }, false);
-
-      expect(result.success).toBe(false);
-      expect(result.fallbackOffered).toBe(true);
-      expect(result.suggestedAlternatives?.length).toBe(3);
-      expect(result.suggestedAlternatives?.[0].method).toBe('BANK_TRANSFER');
-    });
-  });
-
-  // ── 4. Malformed Payloads & Corrupted Inputs ──
-  describe('4. Malformed Payloads & Corrupted Inputs Resilience', () => {
-    const parseSafeJson = (rawBody: string): { success: boolean; data?: any; error?: string } => {
-      try {
-        if (!rawBody || rawBody.trim() === '') {
-          return { success: false, error: 'Empty payload body' };
-        }
-        if (rawBody.length > 1024 * 1024) {
-          // Payload too large (> 1MB)
-          return { success: false, error: 'Payload Too Large' };
-        }
-        const parsed = JSON.parse(rawBody);
-        return { success: true, data: parsed };
-      } catch {
-        return { success: false, error: 'Malformed JSON syntax' };
-      }
-    };
-
-    it('safely rejects truncated or malformed JSON payloads with 400 Bad Request error', () => {
-      const truncatedPayload = '{"clientName": "Malik", "city": "Lahore"'; // Missing closing brace
-      const result = parseSafeJson(truncatedPayload);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Malformed JSON syntax');
-    });
-
-    it('rejects payload exceeding 1MB maximum size threshold', () => {
-      const oversizedPayload = 'a'.repeat(2 * 1024 * 1024); // 2MB string
-      const result = parseSafeJson(oversizedPayload);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Payload Too Large');
-    });
-
-    it('parses valid JSON payloads smoothly', () => {
-      const validPayload = JSON.stringify({ product: 'Sheesham Bed', pricePKR: 385000 });
-      const result = parseSafeJson(validPayload);
-
-      expect(result.success).toBe(true);
-      expect(result.data.product).toBe('Sheesham Bed');
+      expect(response.status).toBe(503);
+      const json = await response.json();
+      expect(json.error).toBe('Database busy');
+      expect(json.requestId).toBe('req-luxury-custom-9988');
     });
   });
 });
