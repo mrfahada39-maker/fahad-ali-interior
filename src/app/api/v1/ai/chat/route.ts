@@ -12,6 +12,7 @@ import { getToken } from 'next-auth/jwt';
 import { AI_SESSION_COOKIE_NAME, signAiSessionId, verifyAiSessionCookie } from '@/lib/ai-session-binding';
 import { findActivePromo, type ActivePromo } from '@/lib/coupons';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import { AiToolExecutor } from '@/lib/ai/tool-registry';
 
 interface ChatProductItem {
   id: string;
@@ -458,6 +459,23 @@ ACTIVE STORE CATEGORIES: [${activeCatNames}].${activePromoContext}`;
     const llmResult = await MultiProviderLlm.generateCompletion(systemPrompt, llmMessages);
     if (llmResult && llmResult.text) {
       replyText = llmResult.text;
+
+      // Real-time Tool Calling integration for custom quotes and pricing
+      const qLower = sanitizedUserQuery.toLowerCase();
+      if (!generatedQuote && /(quote|custom|bespoke|size|dimension|feet|inch|sofa price|bed set|dining table)/i.test(qLower)) {
+        try {
+          const quoteTool = await AiToolExecutor.executeTool('generateQuote', {
+            itemType: qLower.includes('bed') ? 'Monarch King Bed Set' : qLower.includes('din') ? 'Imperial 8-Seater Dining Set' : 'Royal Chesterfield Sofa',
+            lengthInches: 84,
+            widthInches: 36,
+          });
+          if (quoteTool.success) {
+            generatedQuote = quoteTool as Record<string, unknown>;
+          }
+        } catch (err) {
+          logger.warn('AI Tool quotation execution notice', { detail: String(err) });
+        }
+      }
     } else {
       // High-Capacity Dynamic AI Generator Engine
       const dynamicResult = generateDynamicResponse(

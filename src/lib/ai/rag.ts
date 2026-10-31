@@ -68,7 +68,11 @@ export async function generateEmbedding(text: string): Promise<number[]> {
       if (res.ok) {
         const data = await res.json();
         if (data.embedding?.values) {
-          return data.embedding.values;
+          const vals: number[] = data.embedding.values;
+          if (vals.length === 768) {
+            return [...vals, ...vals];
+          }
+          return vals;
         }
       }
     } catch (e) {

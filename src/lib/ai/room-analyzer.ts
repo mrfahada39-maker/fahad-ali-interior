@@ -71,6 +71,25 @@ export class RoomAnalyzer {
     const geminiKey = process.env.GEMINI_API_KEY?.trim();
     const isValidGeminiKey = geminiKey && !geminiKey.startsWith('AQ.') && geminiKey.length > 20;
 
+    let base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, '');
+    let mimeType = 'image/jpeg';
+
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      try {
+        const imgRes = await fetch(imageUrl);
+        if (imgRes.ok) {
+          const contentType = imgRes.headers.get('content-type');
+          if (contentType && contentType.startsWith('image/')) {
+            mimeType = contentType;
+          }
+          const buf = await imgRes.arrayBuffer();
+          base64Data = Buffer.from(buf).toString('base64');
+        }
+      } catch (err) {
+        logger.warn('Remote image fetch for RoomAnalyzer vision', { detail: String(err) });
+      }
+    }
+
     if (isValidGeminiKey) {
       const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
       for (const model of models) {
@@ -94,7 +113,7 @@ Notes from client: ${rawNotes || 'None'}`;
                 {
                   parts: [
                     { text: promptText },
-                    { inlineData: { mimeType: 'image/jpeg', data: imageUrl.replace(/^data:image\/\w+;base64,/, '') } },
+                    { inlineData: { mimeType, data: base64Data } },
                   ],
                 },
               ],
@@ -147,7 +166,7 @@ Return ONLY a valid JSON object matching this schema:
             Authorization: `Bearer ${groqKey}`,
           },
           body: JSON.stringify({
-            model: 'openai/gpt-oss-120b',
+            model: 'llama-3.3-70b-versatile',
             messages: [
               { role: 'system', content: 'You are an interior architecture engine. Output ONLY valid JSON, no markdown codeblocks, no commentary.' },
               { role: 'user', content: groqPrompt },
