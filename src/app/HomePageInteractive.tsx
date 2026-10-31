@@ -63,6 +63,7 @@ const CATEGORIES: InteractiveCategory[] = [
   { name: 'Living Room' },
   { name: 'Bedroom' },
   { name: 'Dining' },
+  { name: 'Center Tables' },
   { name: 'Office' },
   { name: 'TV Units' },
   { name: 'Storage' },
