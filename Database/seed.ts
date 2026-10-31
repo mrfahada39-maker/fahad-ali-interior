@@ -1,5 +1,5 @@
 import { PrismaClient, UserRole, DiscountType } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 const db = new PrismaClient();
 
 const IMAGES = {
