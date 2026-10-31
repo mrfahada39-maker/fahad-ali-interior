@@ -75,7 +75,7 @@ describe('src/lib/utils.ts real module verification', () => {
     });
 
     it('skips verification in non-production when SMTP credentials are missing', () => {
-      process.env.NODE_ENV = 'development';
+      (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
       delete process.env.SKIP_EMAIL_VERIFICATION;
       delete process.env.SMTP_USER;
       delete process.env.SMTP_PASS;
@@ -83,7 +83,7 @@ describe('src/lib/utils.ts real module verification', () => {
     });
 
     it('skips verification when NEXTAUTH_URL contains localhost', () => {
-      process.env.NODE_ENV = 'production';
+      (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
       delete process.env.SKIP_EMAIL_VERIFICATION;
       process.env.SMTP_USER = 'smtp@user.com';
       process.env.SMTP_PASS = 'secret';
@@ -92,7 +92,7 @@ describe('src/lib/utils.ts real module verification', () => {
     });
 
     it('requires email verification in production with full credentials and real domain', () => {
-      process.env.NODE_ENV = 'production';
+      (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
       delete process.env.SKIP_EMAIL_VERIFICATION;
       process.env.SMTP_USER = 'smtp@user.com';
       process.env.SMTP_PASS = 'secret';

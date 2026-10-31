@@ -13,7 +13,8 @@ describe('Real All-Pages Infrastructure, Metadata, Sitemap & Robots Suite', () =
       expect(config.sitemap).toContain('/sitemap.xml');
       expect(Array.isArray(config.rules)).toBe(true);
 
-      const generalRule = config.rules.find(r => r.userAgent === '*');
+      const rules = (Array.isArray(config.rules) ? config.rules : [config.rules]) as Array<{ userAgent?: string | string[]; allow?: string | string[]; disallow?: string | string[] }>;
+      const generalRule = rules.find((r) => r.userAgent === '*');
       expect(generalRule).toBeDefined();
       expect(generalRule?.allow).toBe('/');
       expect(generalRule?.disallow).toContain('/api/');
@@ -23,7 +24,8 @@ describe('Real All-Pages Infrastructure, Metadata, Sitemap & Robots Suite', () =
 
     it('grants curated read access to responsible AI crawlers', () => {
       const config = robots();
-      const aiRule = config.rules.find(r => Array.isArray(r.userAgent) && r.userAgent.includes('GPTBot'));
+      const rules = (Array.isArray(config.rules) ? config.rules : [config.rules]) as Array<{ userAgent?: string | string[]; allow?: string | string[]; disallow?: string | string[] }>;
+      const aiRule = rules.find((r) => Array.isArray(r.userAgent) && r.userAgent.includes('GPTBot'));
       expect(aiRule).toBeDefined();
       expect(aiRule?.allow).toContain('/llms.txt');
     });
