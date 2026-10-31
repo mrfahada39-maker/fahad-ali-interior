@@ -300,7 +300,7 @@ async function fetchHomePageDataInternal(): Promise<HomePageData> {
         foundedYear: settings.foundedYear || '2016',
         currency: settings.currency || 'PKR',
       } : empty.settings,
-      banners: banners.map((b: { id: string; title: string; subtitle?: string | null; link?: string | null; image: string; price?: number | null; colors?: string[] | null; [key: string]: unknown }) => ({
+      banners: (banners || []).map((b: { id: string; title: string; subtitle?: string | null; link?: string | null; image: string; price?: unknown; colors?: unknown; [key: string]: unknown }) => ({
         id: b.id,
         title: b.title,
         subtitle: b.subtitle || null,
