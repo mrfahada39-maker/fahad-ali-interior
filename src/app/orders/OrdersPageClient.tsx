@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, Loader2, Sparkles, ChevronRight, Clock, Truck, CheckCircle2, XCircle, Search, ArrowRight, ShoppingBag, Eye } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+
 import { apiFetchJsonWithStatus, clearEnterpriseTokens } from '@/lib/api-client';
 import { ensureEnterpriseTokens } from '@/hooks/use-enterprise-auth-sync';
 import { resolveImageUrl } from '@/lib/images';
@@ -12,9 +11,41 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
 
+interface ClientOrderItem {
+  id?: string;
+  name?: string;
+  productName?: string;
+  title?: string;
+  quantity?: number;
+  price?: number;
+  image?: string;
+  product?: { name?: string; image?: string };
+  [key: string]: unknown;
+}
+
+interface ClientOrder {
+  id: string;
+  totalAmount?: number | string;
+  subtotal?: number | string;
+  status?: string;
+  paymentStatus?: string;
+  paymentMethod?: string;
+  shippingName?: string;
+  shippingEmail?: string;
+  shippingPhone?: string;
+  shippingAddress?: string;
+  shippingCity?: string;
+  shippingProvince?: string;
+  createdAt?: string | Date;
+  shippingInfo?: { name?: string; email?: string; phone?: string; address?: string };
+  user?: { name?: string; email?: string; phone?: string };
+  items?: ClientOrderItem[];
+  [key: string]: unknown;
+}
+
 const formatPrice = (n: number) => new Intl.NumberFormat('en-PK').format(n);
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status?: string) => {
   const s = (status || '').toLowerCase();
   switch (s) {
     case 'delivered':
@@ -56,11 +87,11 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function OrdersPageClient() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<ClientOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterTab, setFilterTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const router = useRouter();
+
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -72,7 +103,7 @@ export default function OrdersPageClient() {
           return;
         }
 
-        let result = await apiFetchJsonWithStatus<any>('/api/user/orders');
+        let result = await apiFetchJsonWithStatus<ClientOrder[]>('/api/user/orders');
 
         if (!result.ok && (result.status === 401 || result.status === 403)) {
           clearEnterpriseTokens();
@@ -86,7 +117,7 @@ export default function OrdersPageClient() {
           setOrders(Array.isArray(result.data) ? result.data : []);
         } else {
           // Fallback to /api/v1/orders
-          const fallbackRes = await apiFetchJsonWithStatus<any>('/api/v1/orders');
+          const fallbackRes = await apiFetchJsonWithStatus<ClientOrder[]>('/api/v1/orders');
           if (fallbackRes.ok && Array.isArray(fallbackRes.data)) {
             setOrders(fallbackRes.data);
           }
@@ -124,7 +155,7 @@ export default function OrdersPageClient() {
       const phoneDigits = rawPhone.replace(/\D/g, '');
       const phoneMatch = (rawPhone && rawPhone.includes(q)) || (digitsQ.length >= 3 && phoneDigits.includes(digitsQ));
 
-      const itemMatch = Array.isArray(order.items) && order.items.some((i: any) => {
+      const itemMatch = Array.isArray(order.items) && order.items.some((i: ClientOrderItem) => {
         const title = String(i.productName || i.name || i.title || '').toLowerCase();
         return title.includes(q) || (cleanQ.length > 0 && title.includes(cleanQ));
       });
@@ -239,7 +270,7 @@ export default function OrdersPageClient() {
           </motion.div>
         ) : (
           <div className="space-y-5">
-            {filteredOrders.map((order: any, idx: number) => {
+            {filteredOrders.map((order: ClientOrder, idx: number) => {
               const displayId = order.id ? (order.id.startsWith('order_') ? order.id.slice(6, 14) : order.id.slice(-8)).toUpperCase() : 'N/A';
               const rawItems = Array.isArray(order.items) ? order.items : [];
               const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent';
@@ -285,8 +316,8 @@ export default function OrdersPageClient() {
 
                   {/* Product Items Thumbnails */}
                   <div className="py-4 space-y-3">
-                    {rawItems.map((item: any, iIdx: number) => {
-                      const itemImg = resolveImageUrl(item.image || item.product?.image);
+                    {rawItems.map((item: ClientOrderItem, iIdx: number) => {
+                      const itemImg = resolveImageUrl(item.image || item.product?.image || '');
                       return (
                         <div key={item.id || iIdx} className="flex items-center justify-between gap-3 bg-[#FAF7F2]/80 rounded-2xl p-3 border border-[#EFE8DD]">
                           <div className="flex items-center gap-3 min-w-0">

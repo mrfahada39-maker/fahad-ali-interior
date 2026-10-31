@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import StoreShell from '@/components/layout/StoreShell';
 import Link from 'next/link';
-import { Check, Truck, Package, Sparkles, Copy, ArrowRight, MessageSquare, ShieldCheck, Crown } from 'lucide-react';
+import { Check, Package, Sparkles, Copy, ArrowRight, MessageSquare, Crown } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { toast } from 'sonner';

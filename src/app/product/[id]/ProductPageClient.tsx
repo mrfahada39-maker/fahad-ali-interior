@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,17 +7,30 @@ import { useRouter } from 'next/navigation';
 import {
   Star, Minus, Plus, Truck, ShieldCheck, Heart,
   Sparkles, CheckCircle2, ShoppingBag,
-  MessageSquare, ArrowRight, Share2, Compass, PenTool, X,
+  MessageSquare, ArrowRight, Share2, PenTool, X,
   Layers, Hammer, Clock, Ruler, Paintbrush, Award
 } from 'lucide-react';
 import type { StorefrontProduct } from '@/lib/types';
-import { resolveImageUrl, LOCAL_IMAGES } from '@/lib/images';
+import { resolveImageUrl } from '@/lib/images';
 import { useCartStore, useWishlistStore, useClientCacheStore, type CachedProduct } from '@/store';
 import { useIsInWishlist } from '@/hooks/use-is-in-wishlist';
 import { useSession } from 'next-auth/react';
 import { apiFetch } from '@/lib/api-client';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 import { toast } from 'sonner';
+
+interface ProductSpecs {
+  compareAtPrice?: number | string | null;
+  leadTime?: string | null;
+  warranty?: string | null;
+  woodType?: string | null;
+  dimensions?: string | null;
+  finish?: string | null;
+  assembly?: string | null;
+  generalMaterial?: string | null;
+  upholstery?: string | null;
+  [key: string]: unknown;
+}
 
 export default function ProductPageClient({
   initialProduct,
@@ -199,7 +211,7 @@ export default function ProductPageClient({
     ? Number((reviewsList.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / reviewsList.length).toFixed(1))
     : (product.avgRating ?? 5.0);
 
-  let parsedSpecs: any = {};
+  let parsedSpecs: ProductSpecs = {};
   try {
     if (product.specs) {
       parsedSpecs = typeof product.specs === 'string' ? JSON.parse(product.specs) : product.specs;

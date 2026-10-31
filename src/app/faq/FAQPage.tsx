@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -80,7 +79,7 @@ export default function FAQPage() {
     const loadSettings = async () => {
       try {
         const { apiFetchJson } = await import('@/lib/api-client');
-        const data = await apiFetchJson<any>('/api/public/settings');
+        const data = await apiFetchJson<{ contactPhone?: string }>('/api/public/settings');
         if (data && data.contactPhone) {
           setPhone(data.contactPhone);
         }

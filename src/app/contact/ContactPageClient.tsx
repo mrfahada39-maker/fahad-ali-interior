@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState } from 'react';
@@ -12,8 +11,7 @@ import {
   CheckCircle2, 
   Sparkles, 
   ShieldCheck, 
-  Crown,
-  Clock
+  Crown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';

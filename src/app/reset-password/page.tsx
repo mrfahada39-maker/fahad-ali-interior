@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -10,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { apiFetchJsonWithStatus } from '@/lib/api-client';
 import Link from 'next/link';
-import { KeyRound, Mail, Lock, CheckCircle2, ArrowRight, Eye, EyeOff, Sparkles, ShieldCheck } from 'lucide-react';
+import { KeyRound, Mail, Lock, CheckCircle2, ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();

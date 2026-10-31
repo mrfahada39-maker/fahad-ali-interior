@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
@@ -10,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { apiFetchJsonWithStatus } from '@/lib/api-client';
 import Link from 'next/link';
-import { MailCheck, Mail, ShieldCheck, CheckCircle2, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
+import { MailCheck, Mail, ShieldCheck, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();

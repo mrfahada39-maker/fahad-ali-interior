@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Metadata } from 'next';
 import StoreShell from '@/components/layout/StoreShell';
 import Link from 'next/link';
-import { Scale, Crown, ShieldCheck, Truck, RotateCcw, CheckCircle2, Phone, ArrowRight, Sparkles } from 'lucide-react';
+import { Scale, Crown, ShieldCheck, Truck, RotateCcw, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Terms of Sale & Royal Warranty | Fahad Ali Interior',

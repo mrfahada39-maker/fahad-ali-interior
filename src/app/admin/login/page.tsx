@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ShieldCheck, Lock, Mail, ArrowRight, Sparkles, Home, MessageCircle, Loader2, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowRight, Home, MessageCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminLoginPage() {
@@ -14,7 +13,7 @@ export default function AdminLoginPage() {
   const [totpCode, setTotpCode] = useState('');
   const [requires2FA, setRequires2FA] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [activeChannel, setActiveChannel] = useState<'WHATSAPP' | 'SMS'>('WHATSAPP');
+  const [_activeChannel, setActiveChannel] = useState<'WHATSAPP' | 'SMS'>('WHATSAPP');
   const [sendingChannel, setSendingChannel] = useState<'WHATSAPP' | 'SMS' | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const [maskedPhone, setMaskedPhone] = useState('');

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -6,6 +5,17 @@ import dynamic from 'next/dynamic';
 import { apiFetchJson } from '@/lib/api-client';
 import HomeSignatureCategories from '@/components/home/HomeSignatureCategories';
 import ModernLuxuryHero from '@/components/home/ModernLuxuryHero';
+import type { StorefrontProduct } from '@/lib/types';
+import type { TestimonialReviewItem } from '@/components/home/TestimonialsSection';
+
+export interface InteractiveCategory {
+  id?: string;
+  name: string;
+  image?: string;
+  count?: number;
+  items?: string;
+  [key: string]: unknown;
+}
 
 const TestimonialsSection = dynamic(
   () => import('@/components/home/TestimonialsSection'),
@@ -15,7 +25,7 @@ const TestimonialsSection = dynamic(
   }
 );
 
-function LazyTestimonials({ reviews, initialReviews }: { reviews: any[]; initialReviews?: any[] }) {
+function LazyTestimonials({ reviews }: { reviews: TestimonialReviewItem[] }) {
   const [shouldLoad, setShouldLoad] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -34,15 +44,14 @@ function LazyTestimonials({ reviews, initialReviews }: { reviews: any[]; initial
       },
       { rootMargin: '350px 0px' }
     );
-
     observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <div ref={ref} className="min-h-[300px]">
+    <div ref={ref}>
       {shouldLoad ? (
-        <TestimonialsSection reviews={reviews.length > 0 ? reviews : initialReviews} />
+        <TestimonialsSection reviews={reviews} />
       ) : (
         <div className="min-h-[300px] w-full bg-[#FAF6F0]" />
       )}
@@ -50,26 +59,24 @@ function LazyTestimonials({ reviews, initialReviews }: { reviews: any[]; initial
   );
 }
 
-const CATEGORIES = [
+const CATEGORIES: InteractiveCategory[] = [
   { name: 'Living Room' },
   { name: 'Bedroom' },
-  { name: 'Dining Room' },
+  { name: 'Dining' },
   { name: 'Office' },
-  { name: 'Sofas' },
-  { name: 'Coffee Tables' }, // Center Tables & Coffee Tables
   { name: 'TV Units' },
   { name: 'Storage' },
   { name: 'Outdoor' },
   { name: 'Accessories' },
 ];
 
-const REVIEWS: any[] = [];
+const REVIEWS: TestimonialReviewItem[] = [];
 
 interface HomePageInteractiveProps {
-  initialBanners?: any[];
-  initialCategories?: any[];
-  initialReviews?: any[];
-  initialProducts?: any[];
+  initialBanners?: unknown[];
+  initialCategories?: InteractiveCategory[];
+  initialReviews?: TestimonialReviewItem[];
+  initialProducts?: StorefrontProduct[];
 }
 
 export default function HomePageInteractive({
@@ -77,13 +84,13 @@ export default function HomePageInteractive({
   initialReviews = REVIEWS,
   initialProducts = [],
 }: HomePageInteractiveProps) {
-  const [categoriesList, setCategoriesList] = useState<any[]>(
+  const [categoriesList, setCategoriesList] = useState<InteractiveCategory[]>(
     initialCategories && initialCategories.length > 0 ? initialCategories : CATEGORIES
   );
-  const [reviewsList, setReviewsList] = useState<any[]>(
+  const [reviewsList, setReviewsList] = useState<TestimonialReviewItem[]>(
     initialReviews && initialReviews.length > 0 ? initialReviews : []
   );
-  const [productsList, setProductsList] = useState<any[]>(
+  const [productsList, setProductsList] = useState<StorefrontProduct[]>(
     initialProducts && initialProducts.length > 0 ? initialProducts : []
   );
 
@@ -97,7 +104,7 @@ export default function HomePageInteractive({
 
   useEffect(() => {
     const handleCatalogUpdated = () => {
-      apiFetchJson<any>('/api/public/home-bundle').then((data) => {
+      apiFetchJson<{ products?: StorefrontProduct[]; categories?: InteractiveCategory[]; reviews?: TestimonialReviewItem[] }>('/api/public/home-bundle').then((data) => {
         if (data?.products && Array.isArray(data.products)) setProductsList(data.products);
         if (data?.categories && Array.isArray(data.categories)) setCategoriesList(data.categories);
         if (data?.reviews && Array.isArray(data.reviews)) setReviewsList(data.reviews);
@@ -113,18 +120,10 @@ export default function HomePageInteractive({
   }, []);
 
   return (
-    <div className="contents">
-      {/* ── 100% SAME AS MOCKUP LUXURY HERO SECTION (DESKTOP + MOBILE) ── */}
+    <>
       <ModernLuxuryHero />
-
-      {/* ── SIGNATURE & CATEGORIES (INSTANT SSR WITH 60FPS SCROLLSPY STICKY PILLS) ── */}
-      <HomeSignatureCategories
-        products={productsList}
-        categories={categoriesList}
-      />
-
-      {/* ── 3D COVERFLOW LUXURY TESTIMONIALS SECTION (DEFERRED ON INTERSECTION FOR 0ms TBT) ── */}
-      <LazyTestimonials reviews={reviewsList} initialReviews={initialReviews} />
-    </div>
+      <HomeSignatureCategories categories={categoriesList} products={productsList} />
+      <LazyTestimonials reviews={reviewsList} />
+    </>
   );
 }

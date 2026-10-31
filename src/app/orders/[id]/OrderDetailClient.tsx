@@ -1,16 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle, Phone, MapPin, CreditCard,
-  Printer, Copy, Check, MessageSquare, ExternalLink, RefreshCw, Sparkles, ShieldCheck, Crown
+  Printer, Copy, Check, MessageSquare, ExternalLink, RefreshCw, Sparkles, ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+
 import { apiFetchJsonWithStatus } from '@/lib/api-client';
 import { ensureEnterpriseTokens } from '@/hooks/use-enterprise-auth-sync';
 import { resolveImageUrl } from '@/lib/images';
@@ -54,9 +53,14 @@ function statusColor(status: string) {
 
 interface OrderItemRecord {
   id: string;
-  name: string;
-  price: number;
-  quantity: number;
+  name?: string;
+  productName?: string;
+  unitPrice?: number;
+  price?: number;
+  quantity?: number;
+  productId?: string;
+  product?: { id?: string; name?: string; image?: string; category?: string };
+  [key: string]: unknown;
   image?: string | null;
   size?: string | null;
   color?: string | null;
@@ -97,8 +101,8 @@ interface OrderRecord {
 }
 
 export default function OrderDetailClient({ orderId }: { orderId: string }) {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { status } = useSession();
+
   const addItemToCart = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
 
@@ -243,7 +247,7 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
     return () => {
       isMounted = false;
     };
-  }, [orderId, session, status, router]);
+  }, [orderId, status]);
 
   const copyOrderId = () => {
     if (!order?.id) return;
@@ -527,7 +531,7 @@ export default function OrderDetailClient({ orderId }: { orderId: string }) {
                   </div>
                 </div>
               ) : (
-                (order.items || []).map((item: any, idx: number) => {
+                (order.items || []).map((item: OrderItemRecord, idx: number) => {
                   const imgUrl = resolveImageUrl(item.image || item.product?.image);
                   const itemPrice = Number(item.unitPrice || item.price || 0);
                   const itemQty = Number(item.quantity || 1);

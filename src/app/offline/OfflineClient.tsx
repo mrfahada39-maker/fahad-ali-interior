@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -17,7 +16,7 @@ import { useSiteSettingsStore } from '@/store';
 
 export default function OfflineClient() {
   const [isChecking, setIsChecking] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
+  const [_isOnline, setIsOnline] = useState(false);
 
   const siteSettings = useSiteSettingsStore((s) => s.settings);
 
