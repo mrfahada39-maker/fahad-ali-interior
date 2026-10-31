@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { faqCategories } from '@/lib/faq-data';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
-const CATEGORY_ICONS: Record<string, any> = {
+const CATEGORY_ICONS: Record<string, import('lucide-react').LucideIcon> = {
   'Orders & Delivery': Truck,
   'Payment': CreditCard,
   'Products & Customization': Sparkles,

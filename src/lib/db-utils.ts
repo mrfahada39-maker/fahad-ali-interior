@@ -8,7 +8,7 @@ export interface AuditLogOptions {
   entityId?: string | null;
   ip?: string | null;
   userAgent?: string | null;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -24,7 +24,7 @@ export async function recordAuditLog(options: AuditLogOptions): Promise<void> {
         entityId: options.entityId || null,
         ip: options.ip || null,
         userAgent: options.userAgent || null,
-        metadata: options.metadata || undefined,
+        metadata: options.metadata ? (options.metadata as import('@prisma/client').Prisma.InputJsonValue) : undefined,
       },
     });
   } catch (err) {

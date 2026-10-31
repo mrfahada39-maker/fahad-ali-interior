@@ -27,23 +27,24 @@ const LuxuryCallModal = dynamic(() => import('@/components/ai/LuxuryCallModal'),
 import { useAdminCall } from '@/hooks/use-admin-call';
 import { AdminNavigationChrome } from '@/components/admin/AdminNavigationChrome';
 import { PaymentVerificationsTab } from '@/components/admin/PaymentVerificationsTab';
-import type {
-  AdminBundle,
-  AdminStats,
-  AdminAnalytics,
-  AdminTelemetry,
-  AdminProductSummary,
-  AdminOrderSummary,
-  AdminCustomerSummary,
-  AdminMessageThread,
-  AdminMessageItem,
-  AdminReviewSummary,
-  AdminBlogSummary,
-  BlogFormData,
-  AdminInquirySummary,
-  AdminSiteSettings,
+import {
+  type AdminBundle,
+  type AdminStats,
+  type AdminAnalytics,
+  type AdminTelemetry,
+  type AdminProductSummary,
+  type AdminOrderSummary,
+  type AdminCustomerSummary,
+  type AdminMessageThread,
+  type AdminMessageItem,
+  type AdminReviewSummary,
+  type AdminBlogSummary,
+  type BlogFormData,
+  type AdminInquirySummary,
+  type AdminSiteSettings,
+  STORE_SETTINGS_KEYS,
+  statusStyles,
 } from './admin-tab-types';
-import { STORE_SETTINGS_KEYS, statusStyles } from './admin-tab-types';
 
 import { useSiteSettingsStore } from '@/store';
 import { DEFAULT_ADMIN_STATS } from '@/lib/utils';

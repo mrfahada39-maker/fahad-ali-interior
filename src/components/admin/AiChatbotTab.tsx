@@ -89,7 +89,7 @@ export default function AiChatbotTab() {
   const [selectedIntentFilter, setSelectedIntentFilter] = useState<string | null>(null);
 
   // Live Simulator State
-  const [simulatorMessages, setSimulatorMessages] = useState<any[]>([
+  const [simulatorMessages, setSimulatorMessages] = useState<ChatMessageItem[]>([
     {
       role: 'assistant',
       content: "Assalam-o-Alaikum! Welcome to **FAHAD ALI INTERIOR** 👑\n\nMain aapka AI Executive Concierge hoon. Aap mujh se koi bhi sawal pooch sakte hain (jaise Sheesham sofa prices, custom bed sizing, delivery timeline, ya discount offers)!",

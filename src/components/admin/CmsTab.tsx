@@ -37,8 +37,21 @@ import { resolveImageUrl } from '@/lib/images';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 
 
+export interface CmsCategoryItem {
+  id?: string;
+  name: string;
+  image?: string;
+  description?: string;
+  items?: string | number;
+  order?: number;
+  isActive?: boolean;
+  badge?: string;
+  slug?: string;
+  [key: string]: unknown;
+}
+
 export default function CmsTab() {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<CmsCategoryItem[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [showCategoryForm, setShowCategoryForm] = useState(false);

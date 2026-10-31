@@ -9,7 +9,7 @@ export interface MoveToRecycleBinParams {
   entityType: RecycleBinEntityType;
   entityId: string;
   name: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   deletedBy?: string | null;
 }
 

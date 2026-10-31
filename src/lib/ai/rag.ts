@@ -200,8 +200,8 @@ export class HybridSearchEngine {
 
     for (const doc of store) {
       if (filters?.documentType && doc.documentType !== filters.documentType) continue;
-      if (Boolean(filters?.category && doc.metadata.category && String(doc.metadata.category).toLowerCase() !== String(filters.category).toLowerCase())) continue;
-      if (Boolean(filters?.maxPrice && doc.metadata.price && Number(doc.metadata.price) > filters.maxPrice)) continue;
+      if (filters?.category && doc.metadata.category && String(doc.metadata.category).toLowerCase() !== String(filters.category).toLowerCase()) continue;
+      if (filters?.maxPrice && doc.metadata.price && Number(doc.metadata.price) > filters.maxPrice) continue;
 
       const semanticScore = cosineSimilarity(queryVector, doc.embedding);
 
