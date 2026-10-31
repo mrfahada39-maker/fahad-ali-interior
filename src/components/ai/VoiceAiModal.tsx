@@ -1,8 +1,39 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Mic, MicOff, Volume2, VolumeX, X, Sparkles, Globe, Radio } from 'lucide-react';
+
+interface SpeechRecognitionResultItem {
+  transcript: string;
+  confidence: number;
+}
+interface SpeechRecognitionResultList {
+  [index: number]: {
+    [index: number]: SpeechRecognitionResultItem;
+  };
+}
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+interface ISpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+interface SpeechWindow extends Window {
+  SpeechRecognition?: { new (): ISpeechRecognition };
+  webkitSpeechRecognition?: { new (): ISpeechRecognition };
+}
 
 interface VoiceAiModalProps {
   isOpen: boolean;
@@ -17,13 +48,14 @@ export function VoiceAiModal({ isOpen, onClose, onTranscript }: VoiceAiModalProp
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [recognitionError, setRecognitionError] = useState<string | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
   // Initialize Speech Recognition with selected language
   const setupRecognition = useCallback((lang: 'ur-PK' | 'en-US') => {
     if (typeof window === 'undefined') return;
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const speechWin = window as SpeechWindow;
+    const SpeechRecognition = speechWin.SpeechRecognition || speechWin.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setRecognitionError('Speech recognition is not natively supported in this browser. Please use Chrome, Edge, or Safari.');
       return;
@@ -39,14 +71,14 @@ export function VoiceAiModal({ isOpen, onClose, onTranscript }: VoiceAiModalProp
       rec.interimResults = true;
       rec.lang = lang;
 
-      rec.onresult = (event: any) => {
+      rec.onresult = (event: SpeechRecognitionEvent) => {
         const current = event.resultIndex;
         const text = event.results[current][0].transcript;
         setTranscript(text);
         setRecognitionError(null);
       };
 
-      rec.onerror = (event: any) => {
+      rec.onerror = (event: SpeechRecognitionErrorEvent) => {
         if (event.error !== 'no-speech') {
           setRecognitionError(`Mic notice: ${event.error}. Please tap the mic to try again.`);
         }

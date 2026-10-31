@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -14,17 +13,79 @@ const VoiceAiModal = dynamic(
 );
 import { resolveImageUrl } from '@/lib/images';
 
+export interface AiEmployeeProduct {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+  category?: string;
+  [key: string]: unknown;
+}
+
+export interface AiEmployeeRoomAnalysis {
+  aestheticStyle?: string;
+  recommendedPalette?: string[];
+  suggestions?: string[];
+  [key: string]: unknown;
+}
+
+export interface AiEmployeeQuote {
+  quoteId?: string;
+  dimensions?: string;
+  woodStain?: string;
+  formattedTotal?: string;
+  finalTotalAmount?: number;
+  deliveryEstimateDays?: string;
+  [key: string]: unknown;
+}
+
+export interface AiEmployeeBundleItem {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+  category?: string;
+  [key: string]: unknown;
+}
+
+export interface AiEmployeeBundle {
+  title?: string;
+  description?: string;
+  savings?: number;
+  originalPrice?: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
+  items?: AiEmployeeBundleItem[];
+  [key: string]: unknown;
+}
+
 interface Message {
   id: string;
   sender: 'user' | 'ai';
   text: string;
-  products?: any[];
-  roomAnalysis?: any;
-  quote?: any;
-  bundle?: any;
+  products?: AiEmployeeProduct[];
+  roomAnalysis?: AiEmployeeRoomAnalysis;
+  quote?: AiEmployeeQuote;
+  bundle?: AiEmployeeBundle;
   whatsAppUrl?: string;
   suggestedPrompts?: string[];
   timestamp: string;
+}
+
+interface SpeechRecInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: () => void;
+  onresult: (e: { results: Array<Array<{ transcript: string }>> }) => void;
+  onerror: () => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+}
+interface SpeechRecWindow extends Window {
+  SpeechRecognition?: { new (): SpeechRecInstance };
+  webkitSpeechRecognition?: { new (): SpeechRecInstance };
 }
 
 export function AiEmployeeWidget() {
@@ -116,7 +177,7 @@ export function AiEmployeeWidget() {
     }
   };
   const addItem = useCartStore((s) => s.addItem);
-  const speechRecognitionRef = useRef<any>(null);
+  const speechRecognitionRef = useRef<SpeechRecInstance | null>(null);
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -237,7 +298,8 @@ export function AiEmployeeWidget() {
 
   const toggleMicListening = () => {
     if (typeof window === 'undefined') return;
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const win = window as SpeechRecWindow;
+    const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setVoiceModalOpen(true);
@@ -254,7 +316,7 @@ export function AiEmployeeWidget() {
       rec.lang = 'en-US';
 
       rec.onstart = () => setIsListeningMic(true);
-      rec.onresult = (e: any) => {
+      rec.onresult = (e: { results: Array<Array<{ transcript: string }>> }) => {
         const text = e.results[0][0].transcript;
         if (text) {
           setInputMessage(text);
@@ -373,9 +435,9 @@ export function AiEmployeeWidget() {
                     <div className="mt-3 p-3 rounded-xl bg-[#FAF6F0] border border-[#E2D4C3] text-stone-900 space-y-1.5 shadow-sm">
                       <div className="flex justify-between items-center text-[#8A5A2B] font-bold">
                         <span>Bespoke Estimate</span>
-                        <span className="font-mono text-xs text-[#9B6B38]">{m.quote.quoteId}</span>
+                        <span className="font-mono text-xs text-[#9B6B38]">{m.quote.quoteId || 'ESTIMATE'}</span>
                       </div>
-                      <p className="text-[11px] text-stone-600">{m.quote.dimensions} • {m.quote.woodStain}</p>
+                      <p className="text-[11px] text-stone-600">{m.quote.dimensions || 'Custom'} • {m.quote.woodStain || 'Sheesham'}</p>
                       <div className="pt-2 border-t border-[#EAE2D5] flex justify-between font-bold text-[#8A5A2B] text-sm">
                         <span>Total:</span>
                         <span>{m.quote.formattedTotal || `PKR ${m.quote.finalTotalAmount}`}</span>
@@ -394,14 +456,14 @@ export function AiEmployeeWidget() {
                           <h4 className="font-serif font-extrabold text-sm text-[#2C1810] mt-1">{m.bundle.title}</h4>
                         </div>
                         <span className="text-[10px] font-mono font-black text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-lg whitespace-nowrap">
-                          Save PKR {new Intl.NumberFormat('en-PK').format(m.bundle.savings)}
+                          Save PKR {new Intl.NumberFormat('en-PK').format(Number(m.bundle.savings) || 0)}
                         </span>
                       </div>
 
-                      <p className="text-[11px] text-stone-600 leading-snug">{m.bundle.description}</p>
+                      <p className="text-[11px] text-stone-600 leading-snug">{m.bundle.description || ''}</p>
 
                       <div className="space-y-1 pt-1.5 border-t border-[#EAE2D5]">
-                        {m.bundle.items?.map((item: any) => (
+                        {m.bundle.items?.map((item: AiEmployeeBundleItem) => (
                           <div key={item.id} className="flex justify-between items-center text-[11px]">
                             <span className="text-stone-700 font-medium truncate max-w-[210px]">• {item.name}</span>
                             <span className="font-mono text-[#8A5A2B] font-bold">PKR {new Intl.NumberFormat('en-PK').format(item.price)}</span>
@@ -412,16 +474,22 @@ export function AiEmployeeWidget() {
                       <div className="pt-2 border-t border-[#EAE2D5] flex items-center justify-between">
                         <div>
                           <span className="text-[10px] line-through text-stone-400 font-mono block">
-                            PKR {new Intl.NumberFormat('en-PK').format(m.bundle.originalPrice)}
+                            PKR {new Intl.NumberFormat('en-PK').format(Number(m.bundle.originalPrice) || 0)}
                           </span>
                           <span className="text-sm font-extrabold text-[#8A5A2B]">
-                            PKR {new Intl.NumberFormat('en-PK').format(m.bundle.discountedPrice)}
+                            PKR {new Intl.NumberFormat('en-PK').format(Number(m.bundle.discountedPrice) || 0)}
                           </span>
                         </div>
 
                         <button
                           onClick={() => {
-                            m.bundle.items?.forEach((item: any) => addItem(item));
+                            m.bundle?.items?.forEach((item: AiEmployeeBundleItem) => addItem({
+                              id: item.id,
+                              name: item.name,
+                              price: item.price,
+                              image: item.image || '/images/placeholder.jpg',
+                              category: item.category || 'Furniture',
+                            }));
                           }}
                           className="bg-[#8A5A2B] hover:bg-[#734820] text-white px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
                         >
@@ -434,7 +502,7 @@ export function AiEmployeeWidget() {
                   {/* Render Product Cards Grid */}
                   {m.products && m.products.length > 0 && (
                     <div className="mt-3 grid grid-cols-1 gap-2 pt-2 border-t border-[#EAE2D5]">
-                      {m.products.map((p: any) => (
+                      {m.products.map((p: AiEmployeeProduct) => (
                         <div key={p.id} className="p-2.5 rounded-xl bg-white border border-[#E5DDD0] hover:border-[#8A5A2B] flex items-center justify-between gap-3 shadow-sm transition-all">
                           <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-[#FAF7F2] border border-[#EAE2D5]">
                             <Image src={resolveImageUrl(p.image, p.category, 400)} alt={p.name} fill className="object-cover" />
@@ -446,7 +514,13 @@ export function AiEmployeeWidget() {
                             </span>
                           </div>
                           <button
-                            onClick={() => addItem(p)}
+                            onClick={() => addItem({
+                              id: p.id,
+                              name: p.name,
+                              price: p.price,
+                              image: p.image || '/images/placeholder.jpg',
+                              category: p.category || 'Furniture',
+                            })}
                             className="bg-[#8A5A2B] hover:bg-[#734820] text-white px-2.5 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                             title="Add to cart"
                           >

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 'use client';
 import { logger } from '@/lib/logger';
 
@@ -72,11 +71,15 @@ export default function TelemetryTracker() {
         }
 
         // Specific detection for Brave browser (which otherwise masquerades as Chrome)
-        if (typeof navigator !== 'undefined' && (navigator as any).brave) {
+        interface BraveNavigator extends Navigator {
+          brave?: { isBrave: () => Promise<boolean> };
+        }
+        const nav = typeof navigator !== 'undefined' ? (navigator as BraveNavigator) : undefined;
+        if (nav?.brave) {
           try {
-            const isBrave = await (navigator as any).brave.isBrave();
+            const isBrave = await nav.brave.isBrave();
             if (isBrave) browser = 'Brave';
-          } catch (_e) { /* Brave detection failed — use Chrome as fallback */ }
+          } catch { /* Brave detection failed — use Chrome as fallback */ }
         }
 
         if (!isSubscribed) return;

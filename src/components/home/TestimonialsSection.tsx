@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
@@ -30,9 +29,10 @@ export interface TestimonialReviewItem {
   customerName?: string | null;
   rating?: number;
   comment?: string | null;
+  image?: string | null;
   createdAt?: string;
-  product?: { name: string; image?: string | null };
-  user?: { name?: string | null; image?: string | null };
+  product?: { id?: string; name: string; image?: string | null };
+  user?: { name?: string | null; image?: string | null; avatar?: string | null };
 }
 
 interface TestimonialsSectionProps {
@@ -84,7 +84,7 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
     const uniqueReviews = (reviews || []).filter((r) => {
       const nameKey = (r.customerName || r.user?.name || 'Verified Patron').trim().toLowerCase();
       const commentKey = (r.comment || '').trim().toLowerCase();
-      const prodKey = ((r.product as any)?.id || r.product?.name || "").trim().toLowerCase();
+      const prodKey = (r.product?.id || r.product?.name || "").trim().toLowerCase();
       const isGenericShort = commentKey.length < 8 || ['good', 'nice', 'ok', 'okay', 'great'].includes(commentKey);
       const dedupKey = isGenericShort ? `${nameKey}::generic` : `${nameKey}::${prodKey}::${commentKey}`;
       if (seenKeys.has(dedupKey)) return false;
@@ -97,10 +97,10 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
       const ratingNum = Math.min(5, Math.max(1, Math.round(Number(r.rating) || 5)));
       const clientName = r.customerName || r.user?.name || 'Verified Patron';
       const initial = (clientName.trim().charAt(0) || 'V').toUpperCase();
-      const userCustomAvatar = (r.user as any)?.avatar || r.user?.image;
+      const userCustomAvatar = r.user?.avatar || r.user?.image;
       const fallbackRoom = 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg';
       const distinctAvatar = DISTINCT_FALLBACK_AVATARS[idx % DISTINCT_FALLBACK_AVATARS.length];
-      const rawRoom = (r as any).image || r.product?.image || fallbackRoom;
+      const rawRoom = r.image || r.product?.image || fallbackRoom;
       const roomImage = resolveImageUrl(rawRoom, 'Living Room', 600, 'good');
       const rawComment = (r.comment || '').trim();
       const reviewText = rawComment || 'Masterpiece solid Sheesham wood craftsmanship.';

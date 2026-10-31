@@ -95,7 +95,7 @@ export default function CustomersTab({ initialUsers = [] }: CustomersTabProps) {
     loyaltyPoints: Number(u.loyaltyPoints || 0),
     loyaltyTier: String(u.loyaltyTier || 'BRONZE'),
     totalSpent: Number(u.totalSpent || 0),
-    segment: ((u as Record<string, unknown>).segment as string) ?? 'New',
+    segment: ((u as Record<string, unknown>).segment as CustomerRow['segment']) || 'New',
     lastOrderDate: ((u as Record<string, unknown>).lastOrderDate as string) ?? null,
     lastOrderStatus: ((u as Record<string, unknown>).lastOrderStatus as string) ?? null,
     _count: ((u as Record<string, unknown>)._count as CustomerRow['_count']) || { orders: Number(u.totalOrders || 0), reviews: 0, wishlistItems: 0, messages: 0 },

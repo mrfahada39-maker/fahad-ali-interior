@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -70,19 +69,19 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     setLoading(true);
     try {
       // Direct live database query via /api/v1/products
-      const data = await fetchJson<any>(
+      const data = await fetchJson<Record<string, unknown>>(
         `/api/v1/products?search=${encodeURIComponent(searchQuery.trim())}&limit=16`,
       );
       
       let prods: Product[] = [];
       if (Array.isArray(data)) {
-        prods = data;
-      } else if (data?.products && Array.isArray(data.products)) {
-        prods = data.products;
-      } else if (data?.data?.products && Array.isArray(data.data.products)) {
-        prods = data.data.products;
-      } else if (data?.data && Array.isArray(data.data)) {
-        prods = data.data;
+        prods = data as unknown as Product[];
+      } else if (data && typeof data === 'object' && Array.isArray((data as Record<string, unknown>).products)) {
+        prods = (data as Record<string, unknown>).products as unknown as Product[];
+      } else if (data && typeof data === 'object' && Array.isArray((data as Record<string, unknown>).data)) {
+        prods = (data as Record<string, unknown>).data as unknown as Product[];
+
+
       }
 
       setResults(prods);
