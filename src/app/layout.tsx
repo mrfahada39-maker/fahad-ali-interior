@@ -200,7 +200,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <JsonLd data={organizationJsonLd} />
+        <JsonLd data={organizationJsonLd} nonce="org-ld-json" />
       </head>
       <body
         suppressHydrationWarning

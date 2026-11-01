@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { unstable_cache } from 'next/cache';
 import type { StorefrontProduct } from '@/lib/types';
 import { db } from '@/lib/db';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
@@ -93,7 +94,19 @@ const CACHE_TTL_MS = 45 * 1000; // 45 seconds high-speed RAM cache
 
 export function invalidateHomePageDataCache() {
   cachedHomePageData = null;
+  try {
+    const { revalidateTag } = require('next/cache');
+    revalidateTag('homepage-data');
+  } catch {}
 }
+
+const getCachedHomePageBundle = unstable_cache(
+  async () => {
+    return await fetchHomePageDataInternal();
+  },
+  ['home-page-data-v2'],
+  { revalidate: 120, tags: ['homepage-data', 'products', 'categories', 'settings'] }
+);
 
 export async function getHomePageData(): Promise<HomePageData> {
   const now = Date.now();
@@ -102,7 +115,7 @@ export async function getHomePageData(): Promise<HomePageData> {
   }
 
   try {
-    const data = await fetchHomePageDataInternal();
+    const data = await getCachedHomePageBundle();
     if (data && (data.products?.length > 0 || data.categories?.length > 0)) {
       cachedHomePageData = {
         data,
