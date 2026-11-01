@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { logger } from '@/lib/logger';
 import ReactDOM from 'react-dom';
 import type { Metadata, Viewport } from "next";
@@ -190,6 +191,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get('x-nonce') || undefined;
   const settings = await getCachedSettings();
   ReactDOM.preconnect('https://res.cloudinary.com', { crossOrigin: 'anonymous' });
   ReactDOM.preconnect('https://images.unsplash.com', { crossOrigin: 'anonymous' });
@@ -200,7 +202,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <JsonLd data={organizationJsonLd} nonce="org-ld-json" />
+        <JsonLd data={organizationJsonLd} nonce={nonce} />
       </head>
       <body
         suppressHydrationWarning
