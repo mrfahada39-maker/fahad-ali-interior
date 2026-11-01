@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
+import { getHomePageData } from '@/lib/home-page-data';
 import {
   listRecycleBinItems,
   restoreFromRecycleBin,
@@ -12,14 +13,11 @@ import {
 import { updateSettingsSchema } from '@/lib/validations/api-schemas';
 import {
   ApiDispatchContext,
-  DbCategoryRecord,
   DbMessageRecord,
   DbOrderItemRecord,
   DbOrderRecord,
   DbProductRecord,
-  DbReviewRecord,
   DbUserRecord,
-  fallbackCategories,
   getUserFromSessionOrToken,
   requireAdmin,
 } from './shared';
@@ -227,150 +225,25 @@ export async function handleSettingsAndBundleRoutes(
     });
   }
 
-  // 3.1 GET /public/home-bundle
+  // 3.1 GET /public/home-bundle (High-speed cached bundle to eliminate redundant cold DB queries)
   if (
     method === 'GET' &&
     (segment === 'public/home-bundle' || segment === 'v1/public/home-bundle')
   ) {
-    const [
-      products,
-      categories,
-      settings,
-      approvedReviewsCount,
-      completedOrders,
-      uniqueCustomers,
-      allProductsCount,
-      productGroups,
-      approvedReviewsList,
-    ] = await Promise.all([
-      db.product.findMany({ where: { deletedAt: null }, take: 12, orderBy: { createdAt: 'desc' } }),
-      db.category.findMany({ where: { deletedAt: null }, orderBy: { createdAt: 'asc' } }).catch(() => []),
-      db.settings.findFirst().catch(() => null),
-      db.review.count({ where: { deletedAt: null, status: 'APPROVED' } }).catch(() => 0),
-      db.order.count({ where: { deletedAt: null } }).catch(() => 0),
-      db.user.count({ where: { deletedAt: null } }).catch(() => 0),
-      db.product.count({ where: { deletedAt: null } }).catch(() => 0),
-      db.product
-        .groupBy({
-          by: ['category'],
-          where: { deletedAt: null },
-          _count: { id: true },
-        })
-        .catch(() => []),
-      db.review
-        .findMany({
-          where: { deletedAt: null, status: 'APPROVED' },
-          include: {
-            product: { select: { id: true, name: true, image: true, category: true } },
-            user: { select: { id: true, name: true, avatar: true, email: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 20,
-        })
-        .catch(() => []),
-    ]);
-
-    const categoryCountMap = new Map<string, number>();
-    for (const group of productGroups) {
-      if (group.category) {
-        categoryCountMap.set(group.category.trim().toLowerCase(), group._count.id);
-      }
-    }
-
-    const formattedProducts = (products as DbProductRecord[]).map((p: DbProductRecord) => ({
-      ...p,
-      price: Number(p.price),
-    }));
-
-    const formattedCategories = (categories as DbCategoryRecord[]).map((c: DbCategoryRecord) => {
-      const cleanName = (c.name || '').trim().toLowerCase();
-      const liveCount = categoryCountMap.get(cleanName) ?? 0;
-      return {
-        name: c.name,
-        count: liveCount,
-        image: c.image || '/cat-thumb-sofas-2x.webp',
-        description: c.description || 'Solid Sheesham Wood',
-        items:
-          liveCount > 0
-            ? `${liveCount} ${liveCount === 1 ? 'Item' : 'Items'} Available`
-            : 'Collection Available',
-      };
-    });
-
-    const formattedReviews = ((approvedReviewsList || []) as DbReviewRecord[]).map(
-      (r: DbReviewRecord) => ({
-        id: r.id,
-        customerName:
-          r.customerName ||
-          r.user?.name ||
-          (r.user?.email ? r.user.email.split('@')[0] : 'Verified Patron'),
-        rating: Number(r.rating) || 5,
-        comment: r.comment || '',
-        image: r.image || null,
-        createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
-        product: {
-          id: r.product?.id,
-          name: r.product?.name || 'Handcrafted Solid Sheesham',
-          image: r.product?.image || null,
-        },
-        user: {
-          name: r.user?.name || r.customerName || 'Verified Patron',
-          image: r.user?.avatar || null,
-        },
-      })
-    );
+    const homeData = await getHomePageData();
 
     return NextResponse.json(
       {
-        stats: {
-          products: allProductsCount || products.length,
-          approvedReviews: approvedReviewsCount,
-          completedOrders,
-          uniqueCustomers,
-        },
-        products: formattedProducts,
-        categories:
-          formattedCategories.length > 0
-            ? formattedCategories
-            : fallbackCategories.map((c) => ({
-                name: c.name,
-                count: 0,
-                image: null,
-                description: '',
-              })),
-        reviews: formattedReviews,
-        settings: settings
-          ? {
-              siteName: settings.siteName || 'Fahad Ali Interior',
-              contactPhone: settings.contactPhone || BUSINESS_CONTACT.phone,
-              adminEmail:
-                settings.adminEmail &&
-                !/@(gmail|yahoo|hotmail)\.com$/i.test(settings.adminEmail)
-                  ? settings.adminEmail
-                  : BUSINESS_CONTACT.supportEmail,
-              storeAddress: settings.storeAddress || BUSINESS_CONTACT.address,
-              socialInstagram: settings.socialInstagram || '',
-              socialFacebook: settings.socialFacebook || '',
-              socialWhatsapp: settings.socialWhatsapp || BUSINESS_CONTACT.whatsapp,
-              foundedYear: settings.foundedYear || '2020',
-              currency: settings.currency || 'PKR',
-            }
-          : {
-              siteName: 'Fahad Ali Interior',
-              contactPhone: BUSINESS_CONTACT.phone,
-              adminEmail: BUSINESS_CONTACT.supportEmail,
-              storeAddress: BUSINESS_CONTACT.address,
-              socialInstagram: '',
-              socialFacebook: '',
-              socialWhatsapp: BUSINESS_CONTACT.whatsapp,
-              foundedYear: '2020',
-              currency: 'PKR',
-            },
-        banners: [],
+        stats: homeData.stats,
+        products: homeData.products,
+        categories: homeData.categories,
+        reviews: homeData.reviews,
+        settings: homeData.settings,
+        banners: homeData.banners,
       },
       {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
         },
       }
     );

@@ -3,7 +3,8 @@ import { validateEnv, assertProductionEnv } from '@/lib/env';
 import { logger } from '@/lib/logger';
 
 const SLOW_QUERY_THRESHOLD_MS =
-  process.env.NODE_ENV === 'production' ? 200 : 8000;
+  Number(process.env.SLOW_QUERY_THRESHOLD_MS) ||
+  (process.env.NODE_ENV === 'production' ? 2500 : 8000);
 
 const MAX_TRANSIENT_RETRIES = 3;
 const BASE_RETRY_DELAY_MS = 150;
