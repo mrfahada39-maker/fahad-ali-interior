@@ -160,7 +160,11 @@ export async function handleSettingsAndBundleRoutes(
       user: o.user || null,
     }));
 
-    const totalRevenue = formattedOrders.reduce(
+    const nonCancelledOrders = formattedOrders.filter(
+      (o) => o.status !== 'CANCELLED' && o.paymentStatus !== 'FAILED'
+    );
+
+    const totalRevenue = nonCancelledOrders.reduce(
       (sum: number, o) => sum + Number(o.totalAmount),
       0
     );
@@ -176,7 +180,7 @@ export async function handleSettingsAndBundleRoutes(
     };
 
     const revenueByMonth: Record<string, number> = {};
-    formattedOrders.forEach((o) => {
+    nonCancelledOrders.forEach((o) => {
       const date = new Date(o.createdAt);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       revenueByMonth[monthKey] = (revenueByMonth[monthKey] || 0) + Number(o.totalAmount);
