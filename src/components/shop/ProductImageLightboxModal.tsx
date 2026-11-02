@@ -121,7 +121,7 @@ export default function ProductImageLightboxModal({
     setMounted(true);
   }, []);
 
-  // Compute strict pan bounds: the photo edge can NEVER leave the viewport edge (zero empty gap)
+  // Compute pan bounds with a comfortable, tasteful margin (thora thora sa gap)
   const getBounds = useCallback((zoom: number) => {
     const stage = stageRef.current;
     const img = imgRef.current;
@@ -132,16 +132,17 @@ export default function ProductImageLightboxModal({
     const stageW = stage.clientWidth;
     const stageH = stage.clientHeight;
 
-    const imgW = img.offsetWidth || stageW * 0.9;
+    const imgW = img.offsetWidth || stageW * 0.85;
     const imgH = img.offsetHeight || stageH * 0.6;
 
     const scaledW = imgW * zoom;
     const scaledH = imgH * zoom;
 
-    // If scaled image is within viewport, pan is strictly 0 (locked to center)
-    // If larger, only allow panning until the edge of the photo touches the screen border
-    const maxPanX = Math.max(0, (scaledW - stageW) / 2);
-    const maxPanY = Math.max(0, (scaledH - stageH) / 2);
+    // Tasteful breathing gap so photo doesn't feel suffocated
+    const TASTEFUL_GAP = 28;
+
+    const maxPanX = Math.max(0, (scaledW - stageW) / 2 + TASTEFUL_GAP);
+    const maxPanY = Math.max(0, (scaledH - stageH) / 2 + TASTEFUL_GAP);
 
     return { maxPanX, maxPanY };
   }, []);
@@ -265,7 +266,7 @@ export default function ProductImageLightboxModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose, handleNext, handlePrev, getBounds]);
 
-  // ── FOCAL POINT ZOOM TOWARD MOUSE CURSOR (WHEEL EVENT WITH STRICT BOUNDS) ──
+  // ── FOCAL POINT ZOOM TOWARD MOUSE CURSOR (WHEEL EVENT) ──
   useEffect(() => {
     if (!isOpen) return;
     const stage = stageRef.current;
@@ -310,7 +311,7 @@ export default function ProductImageLightboxModal({
     };
   }, [isOpen, getBounds]);
 
-  // ── CLICK ON ANY DETAIL TO ZOOM (CLAMPED TO ZERO GAP) ──
+  // ── CLICK ON ANY DETAIL TO ZOOM ──
   const handleImageClick = (e: React.MouseEvent) => {
     if (hasDraggedRef.current) {
       hasDraggedRef.current = false;
@@ -346,7 +347,7 @@ export default function ProductImageLightboxModal({
     }
   };
 
-  // ── MOUSE DRAG / PAN LOGIC (CLAMPED SO NO BLANK SPACE APPEARS) ──
+  // ── MOUSE DRAG / PAN LOGIC ──
   const handleMouseDown = (e: React.MouseEvent) => {
     if (zoomLevel <= 1) return;
     e.preventDefault();
@@ -505,8 +506,8 @@ export default function ProductImageLightboxModal({
       aria-label={`${product.name} Photo Lightbox`}
       className="fixed inset-0 z-[100] bg-gradient-to-b from-[#FDFCF9]/98 via-[#FAF7F2]/98 to-[#F5EFE6]/98 backdrop-blur-2xl flex flex-col justify-between select-none animate-in fade-in duration-200"
     >
-      {/* ── TOP HEADER (COMPACT & PROPORTIONAL) ── */}
-      <div className="relative z-50 flex items-center justify-between p-2.5 sm:p-4 bg-gradient-to-b from-[#FAF7F2]/95 via-[#FAF7F2]/80 to-transparent">
+      {/* ── TOP HEADER (BALANCED & CLEAN) ── */}
+      <div className="relative z-50 flex items-center justify-between p-3 sm:p-4 bg-gradient-to-b from-[#FAF7F2]/95 via-[#FAF7F2]/80 to-transparent">
         {/* Left: Close Button + Title */}
         <div className="flex items-center gap-2.5 sm:gap-3">
           <button
@@ -605,10 +606,10 @@ export default function ProductImageLightboxModal({
         </div>
       </div>
 
-      {/* ── MAIN IMAGE STAGE (PROPORTIONAL & PERFECTLY CLAMPED) ── */}
+      {/* ── MAIN IMAGE STAGE (BALANCED BREATHING ROOM & ELEGANT FRAMING) ── */}
       <div 
         ref={stageRef}
-        className="relative flex-1 w-full flex items-center justify-center overflow-hidden px-2 sm:px-6"
+        className="relative flex-1 w-full flex items-center justify-center overflow-hidden px-4 sm:px-12 py-3 sm:py-6"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -627,7 +628,7 @@ export default function ProductImageLightboxModal({
             e.stopPropagation();
             handlePrev();
           }}
-          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
+          className="absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
           title="Previous Photo (Left Arrow)"
           aria-label="Previous Photo"
         >
@@ -641,17 +642,17 @@ export default function ProductImageLightboxModal({
             e.stopPropagation();
             handleNext();
           }}
-          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
+          className="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
           title="Next Photo (Right Arrow)"
           aria-label="Next Photo"
         >
           <ChevronRight size={26} strokeWidth={2.4} />
         </button>
 
-        {/* CENTER PRODUCT IMAGE WITH HARD-CLAMPED PANNING (ZERO GAP) */}
+        {/* CENTER PRODUCT IMAGE WITH TASTEFUL BREATHING GAP */}
         <div 
           onClick={handleImageClick}
-          className="relative max-w-[96vw] max-h-[66vh] sm:max-h-[76vh] flex items-center justify-center will-change-transform z-10 select-none"
+          className="relative max-w-[88vw] sm:max-w-[82vw] max-h-[60vh] sm:max-h-[70vh] flex items-center justify-center will-change-transform z-10 select-none p-2 sm:p-3"
           style={{
             transform: `translate3d(${panPosition.x}px, ${panPosition.y}px, 0) scale(${zoomLevel})`,
             transformOrigin: 'center center',
@@ -674,7 +675,7 @@ export default function ProductImageLightboxModal({
             draggable={false}
             onLoad={() => setIsImgLoading(false)}
             onError={() => handleImgError(targetImg)}
-            className={`max-w-[92vw] max-h-[64vh] sm:max-h-[74vh] w-auto h-auto object-contain drop-shadow-[0_14px_30px_rgba(30,20,10,0.12)] select-none pointer-events-none rounded-xl transition-opacity duration-200 ${
+            className={`max-w-[86vw] sm:max-w-[80vw] max-h-[58vh] sm:max-h-[68vh] w-auto h-auto object-contain drop-shadow-[0_16px_36px_rgba(30,20,10,0.14)] select-none pointer-events-none rounded-2xl transition-opacity duration-200 ring-1 ring-black/5 ${
               isImgLoading ? 'opacity-0' : 'opacity-100'
             }`}
           />
@@ -682,7 +683,7 @@ export default function ProductImageLightboxModal({
       </div>
 
       {/* ── BOTTOM THUMBNAILS STRIP & QUICK ACTIONS ── */}
-      <div className="relative z-50 p-2.5 sm:p-3.5 bg-gradient-to-t from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent flex flex-col sm:flex-row items-center justify-between gap-2.5 border-t border-stone-200/60">
+      <div className="relative z-50 p-3 sm:p-4 bg-gradient-to-t from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-stone-200/60">
         {/* Left: Price Details */}
         <div className="hidden sm:flex items-center gap-3">
           <div>
@@ -696,10 +697,10 @@ export default function ProductImageLightboxModal({
         </div>
 
         {/* Center: Horizontal Thumbnail Strip (Shows all 5-6 photos with direct fast loading) */}
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-1.5">
           <div 
             data-scroll-container="horizontal"
-            className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto max-w-[94vw] sm:max-w-[60vw] py-0.5 px-1 scrollbar-hide"
+            className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto max-w-[92vw] sm:max-w-[60vw] py-0.5 px-1 scrollbar-hide"
           >
             {galleryImages.map((thumbUrl, idx) => {
               const isActive = idx === currentIndex;
@@ -712,7 +713,7 @@ export default function ProductImageLightboxModal({
                     setPanPosition({ x: 0, y: 0 });
                     setCurrentIndex(idx);
                   }}
-                  className={`relative w-13 h-10 sm:w-15 sm:h-11 rounded-lg overflow-hidden shrink-0 transition-all cursor-pointer bg-white border-2 ${
+                  className={`relative w-13 h-10 sm:w-15 sm:h-11 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer bg-white border-2 ${
                     isActive
                       ? 'border-[#C59B4B] ring-2 ring-[#C59B4B]/30 scale-105 shadow-[0_3px_12px_rgba(197,155,75,0.3)] opacity-100'
                       : 'border-stone-200/80 opacity-60 hover:opacity-100 hover:border-stone-300'
@@ -734,7 +735,7 @@ export default function ProductImageLightboxModal({
             })}
           </div>
 
-          <p className="text-[10px] text-stone-500 font-medium tracking-tight">
+          <p className="text-[11px] text-stone-500 font-medium tracking-tight">
             Double-click or pinch to zoom • Drag to explore
           </p>
         </div>
@@ -744,7 +745,7 @@ export default function ProductImageLightboxModal({
           <button
             type="button"
             onClick={handleAddToCart}
-            className="w-full sm:w-auto bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-105 active:scale-95 text-white font-bold text-xs sm:text-sm px-5 py-2.5 sm:py-2.5 rounded-full flex items-center justify-center gap-2 shadow-[0_3px_12px_rgba(184,142,75,0.25)] transition-all cursor-pointer"
+            className="w-full sm:w-auto bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-105 active:scale-95 text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(184,142,75,0.28)] transition-all cursor-pointer"
           >
             <ShoppingBag size={15} />
             <span>Add to Cart</span>
