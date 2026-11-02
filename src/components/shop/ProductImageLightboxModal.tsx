@@ -226,7 +226,6 @@ export default function ProductImageLightboxModal({
   }, [isOpen, onClose, handleNext, handlePrev]);
 
   // ── FOCAL POINT ZOOM TOWARD MOUSE CURSOR (WHEEL EVENT) ──
-  // Zooms into wherever the user's cursor is pointing, exactly like a phone gallery!
   useEffect(() => {
     if (!isOpen) return;
     const stage = stageRef.current;
@@ -236,7 +235,6 @@ export default function ProductImageLightboxModal({
       e.preventDefault();
 
       const rect = stage.getBoundingClientRect();
-      // Mouse coordinates relative to the center of the viewport
       const mx = e.clientX - (rect.left + rect.width / 2);
       const my = e.clientY - (rect.top + rect.height / 2);
 
@@ -253,13 +251,10 @@ export default function ProductImageLightboxModal({
         return;
       }
 
-      // Mathematical Focal Point formula:
-      // Preserves the invariant image point directly under the mouse pointer
       const ratio = nextZoom / currentZoom;
       const nextPanX = mx - (mx - currentPan.x) * ratio;
       const nextPanY = my - (my - currentPan.y) * ratio;
 
-      // Restrict pan bounds so image stays nicely on screen
       const maxPanX = (rect.width * (nextZoom - 0.4)) / 2;
       const maxPanY = (rect.height * (nextZoom - 0.4)) / 2;
 
@@ -277,7 +272,6 @@ export default function ProductImageLightboxModal({
   }, [isOpen]);
 
   // ── CLICK ON ANY DETAIL TO ZOOM DIRECTLY INTO THAT SPOT ──
-  // Clicking anywhere zooms into that exact detail; clicking again resets to 1x
   const handleImageClick = (e: React.MouseEvent) => {
     if (hasDraggedRef.current) {
       hasDraggedRef.current = false;
@@ -285,11 +279,9 @@ export default function ProductImageLightboxModal({
     }
 
     if (zoomLevel > 1) {
-      // Already zoomed: reset back to full view
       setZoomLevel(1);
       setPanPosition({ x: 0, y: 0 });
     } else {
-      // Zoom into the exact spot clicked
       const stage = stageRef.current;
       const targetZoom = 2.5;
 
@@ -302,7 +294,6 @@ export default function ProductImageLightboxModal({
       const mx = e.clientX - (rect.left + rect.width / 2);
       const my = e.clientY - (rect.top + rect.height / 2);
 
-      // Shift the clicked spot toward center of view
       const nextPanX = -mx * (targetZoom - 0.7);
       const nextPanY = -my * (targetZoom - 0.7);
 
@@ -360,7 +351,6 @@ export default function ProductImageLightboxModal({
   // ── TOUCH GESTURES: PINCH-TO-ZOOM + SINGLE FINGER PAN / SWIPE ──
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
-      // 2 fingers: pinch to zoom
       const t0 = e.touches[0];
       const t1 = e.touches[1];
       const dist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
@@ -391,7 +381,6 @@ export default function ProductImageLightboxModal({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && pinchStartRef.current) {
-      // Pinch to zoom centered on touch midpoint
       const t0 = e.touches[0];
       const t1 = e.touches[1];
       const currentDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
@@ -422,7 +411,6 @@ export default function ProductImageLightboxModal({
         });
       }
     } else if (e.touches.length === 1 && isDragging && zoomLevelRef.current > 1) {
-      // 1 finger pan while zoomed in
       const deltaX = e.touches[0].clientX - dragStartRef.current.x;
       const deltaY = e.touches[0].clientY - dragStartRef.current.y;
       if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
@@ -444,7 +432,6 @@ export default function ProductImageLightboxModal({
     pinchStartRef.current = null;
     setIsDragging(false);
 
-    // If at 1x, handle swipe to next/prev photo
     if (e.changedTouches.length === 1 && zoomLevelRef.current <= 1 && touchStartRef.current !== null) {
       const touchEnd = e.changedTouches[0].clientX;
       const diff = touchStartRef.current - touchEnd;
@@ -489,34 +476,34 @@ export default function ProductImageLightboxModal({
       role="dialog"
       aria-modal="true"
       aria-label={`${product.name} Photo Lightbox`}
-      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col justify-between select-none animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] bg-gradient-to-b from-[#FDFCF9]/98 via-[#FAF7F2]/98 to-[#F5EFE6]/98 backdrop-blur-2xl flex flex-col justify-between select-none animate-in fade-in duration-200"
     >
-      {/* ── TOP HEADER (CLOSE BUTTON, TITLE, ZOOM CONTROLS, COUNTER) ── */}
-      <div className="relative z-50 flex items-center justify-between p-3 sm:p-5 bg-gradient-to-b from-black/85 via-black/50 to-transparent">
+      {/* ── TOP HEADER (WARM LUXURY LIGHT THEME) ── */}
+      <div className="relative z-50 flex items-center justify-between p-3 sm:p-5 bg-gradient-to-b from-[#FAF7F2]/95 via-[#FAF7F2]/80 to-transparent">
         {/* Left: Close Button + Title */}
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-md"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-stone-100 active:scale-95 text-stone-800 flex items-center justify-center transition-all cursor-pointer border border-stone-200 shadow-sm hover:border-[#B88E4B]"
             title="Close Lightbox (Esc)"
             aria-label="Close Lightbox"
           >
-            <X size={20} />
+            <X size={20} strokeWidth={2.2} />
           </button>
 
           <div className="hidden xs:block text-left">
-            <h3 className="font-serif font-bold text-white text-sm sm:text-base leading-tight truncate max-w-[180px] sm:max-w-md">
+            <h3 className="font-serif font-bold text-stone-900 text-sm sm:text-base leading-tight truncate max-w-[180px] sm:max-w-md">
               {product.name}
             </h3>
-            <p className="text-[11px] text-[#C59B4B] font-semibold uppercase tracking-wider">
+            <p className="text-[11px] text-[#9A7030] font-bold uppercase tracking-wider">
               {product.category || 'Handcrafted Luxury'}
             </p>
           </div>
         </div>
 
         {/* Center: Image Counter (e.g. Photo 2 of 5) */}
-        <div className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white/10 border border-white/15 text-stone-200 text-xs sm:text-sm font-semibold shadow-xs">
+        <div className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white border border-stone-200 text-stone-700 text-xs sm:text-sm font-semibold shadow-xs">
           <Images size={14} className="text-[#C59B4B]" />
           <span>Photo {currentIndex + 1} of {totalImages}</span>
         </div>
@@ -534,7 +521,7 @@ export default function ProductImageLightboxModal({
               });
             }}
             disabled={zoomLevel <= 1}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all cursor-pointer border border-white/15"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-stone-100 disabled:opacity-40 disabled:cursor-not-allowed text-stone-800 flex items-center justify-center transition-all cursor-pointer border border-stone-200 shadow-2xs hover:border-[#B88E4B]"
             title="Zoom Out (-)"
             aria-label="Zoom Out"
           >
@@ -542,7 +529,7 @@ export default function ProductImageLightboxModal({
           </button>
 
           {/* Zoom Indicator */}
-          <span className="text-white text-xs font-bold w-12 text-center hidden sm:inline-block">
+          <span className="text-stone-800 text-xs font-bold w-12 text-center hidden sm:inline-block">
             {Math.round(zoomLevel * 100)}%
           </span>
 
@@ -551,7 +538,7 @@ export default function ProductImageLightboxModal({
             type="button"
             onClick={() => setZoomLevel((prev) => Math.min(4, Number((prev + 0.5).toFixed(1))))}
             disabled={zoomLevel >= 4}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all cursor-pointer border border-white/15"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-stone-100 disabled:opacity-40 disabled:cursor-not-allowed text-stone-800 flex items-center justify-center transition-all cursor-pointer border border-stone-200 shadow-2xs hover:border-[#B88E4B]"
             title="Zoom In (+)"
             aria-label="Zoom In"
           >
@@ -566,7 +553,7 @@ export default function ProductImageLightboxModal({
                 setZoomLevel(1);
                 setPanPosition({ x: 0, y: 0 });
               }}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#C59B4B] hover:bg-[#B88E4B] text-white flex items-center justify-center transition-all cursor-pointer shadow-md"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#C59B4B] hover:bg-[#B88E4B] text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
               title="Reset Zoom (0)"
               aria-label="Reset Zoom"
             >
@@ -576,7 +563,7 @@ export default function ProductImageLightboxModal({
         </div>
       </div>
 
-      {/* ── MAIN IMAGE STAGE (INTERACTIVE PAN & ZOOM, SIDE ARROWS) ── */}
+      {/* ── MAIN IMAGE STAGE (AIRY LUXURY PRESENTATION) ── */}
       <div 
         ref={stageRef}
         className="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden px-4"
@@ -591,48 +578,48 @@ export default function ProductImageLightboxModal({
           touchAction: 'none',
         }}
       >
-        {/* SIDE FLOATING PREV ARROW (<) - MATCHES FACEBOOK PHOTO VIEWER */}
+        {/* SIDE FLOATING PREV ARROW (<) - LUXURY WHITE CIRCLE */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             handlePrev();
           }}
-          className="absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] rounded-full bg-white/15 hover:bg-white/30 active:scale-90 text-white border border-white/25 shadow-2xl flex items-center justify-center transition-all hover:scale-110 cursor-pointer backdrop-blur-md"
+          className="absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-center transition-all hover:scale-110 cursor-pointer backdrop-blur-md"
           title="Previous Photo (Left Arrow)"
           aria-label="Previous Photo"
         >
           <ChevronLeft size={28} strokeWidth={2.5} />
         </button>
 
-        {/* SIDE FLOATING NEXT ARROW (>) - MATCHES FACEBOOK PHOTO VIEWER */}
+        {/* SIDE FLOATING NEXT ARROW (>) - LUXURY WHITE CIRCLE */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             handleNext();
           }}
-          className="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] rounded-full bg-white/15 hover:bg-white/30 active:scale-90 text-white border border-white/25 shadow-2xl flex items-center justify-center transition-all hover:scale-110 cursor-pointer backdrop-blur-md"
+          className="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-center transition-all hover:scale-110 cursor-pointer backdrop-blur-md"
           title="Next Photo (Right Arrow)"
           aria-label="Next Photo"
         >
           <ChevronRight size={28} strokeWidth={2.5} />
         </button>
 
-        {/* CENTER PRODUCT IMAGE WITH FOCAL ZOOM & PANNING */}
+        {/* CENTER PRODUCT IMAGE WITH FOCAL ZOOM & EXPANDED STAGE */}
         <div 
           onClick={handleImageClick}
-          className="relative max-w-[92vw] max-h-[75vh] flex items-center justify-center will-change-transform z-10 select-none"
+          className="relative max-w-[94vw] max-h-[78vh] sm:max-h-[82vh] flex items-center justify-center will-change-transform z-10 select-none"
           style={{
             transform: `translate3d(${panPosition.x}px, ${panPosition.y}px, 0) scale(${zoomLevel})`,
             transformOrigin: 'center center',
             transition: isDragging ? 'none' : 'transform 0.18s cubic-bezier(0.2, 0, 0.2, 1)',
           }}
         >
-          {/* High-res Loading Spinner */}
+          {/* Loading Spinner */}
           {isImgLoading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 min-h-[200px]">
-              <Loader2 size={36} className="text-[#C59B4B] animate-spin drop-shadow-md" />
+              <Loader2 size={38} className="text-[#C59B4B] animate-spin drop-shadow-md" />
             </div>
           )}
 
@@ -644,7 +631,7 @@ export default function ProductImageLightboxModal({
             draggable={false}
             onLoad={() => setIsImgLoading(false)}
             onError={() => handleImgError(targetImg)}
-            className={`max-w-[88vw] max-h-[70vh] sm:max-h-[75vh] w-auto h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)] select-none pointer-events-none rounded-xl transition-opacity duration-200 ${
+            className={`max-w-[90vw] max-h-[74vh] sm:max-h-[80vh] w-auto h-auto object-contain drop-shadow-[0_20px_45px_rgba(30,20,10,0.14)] select-none pointer-events-none rounded-2xl transition-opacity duration-200 ${
               isImgLoading ? 'opacity-0' : 'opacity-100'
             }`}
           />
@@ -653,29 +640,29 @@ export default function ProductImageLightboxModal({
         {/* Interactive Helper Hint */}
         {zoomLevel === 1 ? (
           <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 pointer-events-none z-20">
-            <span className="bg-black/75 backdrop-blur-md text-stone-300 text-[11px] font-medium px-4 py-1.5 rounded-full border border-white/15 shadow-lg flex items-center gap-1.5">
+            <span className="bg-white/95 backdrop-blur-md text-stone-700 text-[11px] font-medium px-4 py-1.5 rounded-full border border-stone-200/90 shadow-md flex items-center gap-1.5">
               <Sparkles size={12} className="text-[#C59B4B]" />
               <span>Click or scroll anywhere to zoom into that detail</span>
             </span>
           </div>
         ) : (
           <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 pointer-events-none z-20">
-            <span className="bg-black/75 backdrop-blur-md text-stone-300 text-[11px] font-medium px-4 py-1.5 rounded-full border border-white/15 shadow-lg flex items-center gap-1.5">
-              <span>Drag to move • Click or double-click to reset view</span>
+            <span className="bg-white/95 backdrop-blur-md text-stone-700 text-[11px] font-medium px-4 py-1.5 rounded-full border border-stone-200/90 shadow-md flex items-center gap-1.5">
+              <span>Drag to move • Click to reset view</span>
             </span>
           </div>
         )}
       </div>
 
       {/* ── BOTTOM THUMBNAILS STRIP & QUICK ACTIONS ── */}
-      <div className="relative z-50 p-3 sm:p-4 bg-gradient-to-t from-black/95 via-black/70 to-transparent flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="relative z-50 p-3 sm:p-4 bg-gradient-to-t from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-stone-200/60">
         {/* Left: Price Details */}
         <div className="hidden sm:flex items-center gap-3">
           <div>
-            <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider block leading-none mb-1">
+            <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider block leading-none mb-1">
               Price
             </span>
-            <span className="text-xl font-black text-white font-sans tracking-tight">
+            <span className="text-xl sm:text-2xl font-black text-stone-900 font-sans tracking-tight">
               Rs. {formatPrice(product.price)}
             </span>
           </div>
@@ -697,10 +684,10 @@ export default function ProductImageLightboxModal({
                   setPanPosition({ x: 0, y: 0 });
                   setCurrentIndex(idx);
                 }}
-                className={`relative w-14 h-11 sm:w-16 sm:h-12 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer bg-stone-900 ${
+                className={`relative w-14 h-11 sm:w-16 sm:h-12 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer bg-white border-2 ${
                   isActive
-                    ? 'ring-2 ring-[#C59B4B] scale-110 shadow-[0_0_14px_rgba(197,155,75,0.8)] opacity-100'
-                    : 'opacity-50 hover:opacity-100 ring-1 ring-white/20'
+                    ? 'border-[#C59B4B] ring-2 ring-[#C59B4B]/30 scale-105 shadow-[0_4px_16px_rgba(197,155,75,0.35)] opacity-100'
+                    : 'border-stone-200/80 opacity-60 hover:opacity-100 hover:border-stone-300'
                 }`}
                 aria-label={`View Photo ${idx + 1}`}
               >
@@ -724,7 +711,7 @@ export default function ProductImageLightboxModal({
           <button
             type="button"
             onClick={handleAddToCart}
-            className="w-full sm:w-auto bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-110 active:scale-95 text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+            className="w-full sm:w-auto bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-105 active:scale-95 text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(184,142,75,0.3)] transition-all cursor-pointer"
           >
             <ShoppingBag size={16} />
             <span>Add to Cart</span>
