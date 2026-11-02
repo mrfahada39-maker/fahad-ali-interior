@@ -11,7 +11,6 @@ import {
   RotateCcw, 
   ShoppingBag, 
   Images,
-  Sparkles,
   Loader2
 } from 'lucide-react';
 import { useCartStore } from '@/store';
@@ -105,6 +104,7 @@ export default function ProductImageLightboxModal({
   panPositionRef.current = panPosition;
 
   const stageRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0, startPanX: 0, startPanY: 0 });
   const hasDraggedRef = useRef(false);
   const touchStartRef = useRef<number | null>(null);
@@ -121,6 +121,31 @@ export default function ProductImageLightboxModal({
     setMounted(true);
   }, []);
 
+  // Compute strict pan bounds: the photo edge can NEVER leave the viewport edge (zero empty gap)
+  const getBounds = useCallback((zoom: number) => {
+    const stage = stageRef.current;
+    const img = imgRef.current;
+    if (!stage || !img) {
+      return { maxPanX: 0, maxPanY: 0 };
+    }
+
+    const stageW = stage.clientWidth;
+    const stageH = stage.clientHeight;
+
+    const imgW = img.offsetWidth || stageW * 0.9;
+    const imgH = img.offsetHeight || stageH * 0.6;
+
+    const scaledW = imgW * zoom;
+    const scaledH = imgH * zoom;
+
+    // If scaled image is within viewport, pan is strictly 0 (locked to center)
+    // If larger, only allow panning until the edge of the photo touches the screen border
+    const maxPanX = Math.max(0, (scaledW - stageW) / 2);
+    const maxPanY = Math.max(0, (scaledH - stageH) / 2);
+
+    return { maxPanX, maxPanY };
+  }, []);
+
   // Sync initial index & reset states on open
   useEffect(() => {
     if (isOpen) {
@@ -134,6 +159,8 @@ export default function ProductImageLightboxModal({
   // Reset loading whenever photo index changes
   useEffect(() => {
     setIsImgLoading(true);
+    setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
   }, [currentIndex]);
 
   // Lock body scroll when lightbox is active
@@ -208,13 +235,26 @@ export default function ProductImageLightboxModal({
       } else if (e.key === 'ArrowLeft') {
         handlePrev();
       } else if (e.key === '+' || e.key === '=') {
-        setZoomLevel((prev) => Math.min(4, Number((prev + 0.5).toFixed(1))));
+        const nextZoom = Math.min(3, Number((zoomLevelRef.current + 0.5).toFixed(1)));
+        const { maxPanX, maxPanY } = getBounds(nextZoom);
+        setZoomLevel(nextZoom);
+        setPanPosition((prev) => ({
+          x: Math.max(-maxPanX, Math.min(maxPanX, prev.x)),
+          y: Math.max(-maxPanY, Math.min(maxPanY, prev.y)),
+        }));
       } else if (e.key === '-') {
-        setZoomLevel((prev) => {
-          const next = Math.max(1, Number((prev - 0.5).toFixed(1)));
-          if (next === 1) setPanPosition({ x: 0, y: 0 });
-          return next;
-        });
+        const nextZoom = Math.max(1, Number((zoomLevelRef.current - 0.5).toFixed(1)));
+        if (nextZoom === 1) {
+          setZoomLevel(1);
+          setPanPosition({ x: 0, y: 0 });
+        } else {
+          const { maxPanX, maxPanY } = getBounds(nextZoom);
+          setZoomLevel(nextZoom);
+          setPanPosition((prev) => ({
+            x: Math.max(-maxPanX, Math.min(maxPanX, prev.x)),
+            y: Math.max(-maxPanY, Math.min(maxPanY, prev.y)),
+          }));
+        }
       } else if (e.key === '0') {
         setZoomLevel(1);
         setPanPosition({ x: 0, y: 0 });
@@ -223,9 +263,9 @@ export default function ProductImageLightboxModal({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, handleNext, handlePrev]);
+  }, [isOpen, onClose, handleNext, handlePrev, getBounds]);
 
-  // ── FOCAL POINT ZOOM TOWARD MOUSE CURSOR (WHEEL EVENT) ──
+  // ── FOCAL POINT ZOOM TOWARD MOUSE CURSOR (WHEEL EVENT WITH STRICT BOUNDS) ──
   useEffect(() => {
     if (!isOpen) return;
     const stage = stageRef.current;
@@ -243,10 +283,12 @@ export default function ProductImageLightboxModal({
 
       const zoomFactor = e.deltaY < 0 ? 1.25 : 0.8;
       let nextZoom = Number((currentZoom * zoomFactor).toFixed(2));
-      nextZoom = Math.min(4, Math.max(1, nextZoom));
+      nextZoom = Math.min(3, Math.max(1, nextZoom));
 
-      if (nextZoom === 1) {
-        setZoomLevel(1);
+      const { maxPanX, maxPanY } = getBounds(nextZoom);
+
+      if (nextZoom === 1 || (maxPanX === 0 && maxPanY === 0)) {
+        setZoomLevel(nextZoom);
         setPanPosition({ x: 0, y: 0 });
         return;
       }
@@ -254,9 +296,6 @@ export default function ProductImageLightboxModal({
       const ratio = nextZoom / currentZoom;
       const nextPanX = mx - (mx - currentPan.x) * ratio;
       const nextPanY = my - (my - currentPan.y) * ratio;
-
-      const maxPanX = (rect.width * (nextZoom - 0.4)) / 2;
-      const maxPanY = (rect.height * (nextZoom - 0.4)) / 2;
 
       setZoomLevel(nextZoom);
       setPanPosition({
@@ -269,9 +308,9 @@ export default function ProductImageLightboxModal({
     return () => {
       stage.removeEventListener('wheel', onWheelNative);
     };
-  }, [isOpen]);
+  }, [isOpen, getBounds]);
 
-  // ── CLICK ON ANY DETAIL TO ZOOM DIRECTLY INTO THAT SPOT ──
+  // ── CLICK ON ANY DETAIL TO ZOOM (CLAMPED TO ZERO GAP) ──
   const handleImageClick = (e: React.MouseEvent) => {
     if (hasDraggedRef.current) {
       hasDraggedRef.current = false;
@@ -283,10 +322,12 @@ export default function ProductImageLightboxModal({
       setPanPosition({ x: 0, y: 0 });
     } else {
       const stage = stageRef.current;
-      const targetZoom = 2.5;
+      const targetZoom = 2;
+      const { maxPanX, maxPanY } = getBounds(targetZoom);
 
       if (!stage) {
         setZoomLevel(targetZoom);
+        setPanPosition({ x: 0, y: 0 });
         return;
       }
 
@@ -294,21 +335,18 @@ export default function ProductImageLightboxModal({
       const mx = e.clientX - (rect.left + rect.width / 2);
       const my = e.clientY - (rect.top + rect.height / 2);
 
-      const nextPanX = -mx * (targetZoom - 0.7);
-      const nextPanY = -my * (targetZoom - 0.7);
-
-      const maxPanX = (rect.width * (targetZoom - 0.4)) / 2;
-      const maxPanY = (rect.height * (targetZoom - 0.4)) / 2;
+      const targetPanX = -mx * (targetZoom - 1);
+      const targetPanY = -my * (targetZoom - 1);
 
       setZoomLevel(targetZoom);
       setPanPosition({
-        x: Math.max(-maxPanX, Math.min(maxPanX, nextPanX)),
-        y: Math.max(-maxPanY, Math.min(maxPanY, nextPanY)),
+        x: Math.max(-maxPanX, Math.min(maxPanX, targetPanX)),
+        y: Math.max(-maxPanY, Math.min(maxPanY, targetPanY)),
       });
     }
   };
 
-  // ── MOUSE DRAG / PAN LOGIC ──
+  // ── MOUSE DRAG / PAN LOGIC (CLAMPED SO NO BLANK SPACE APPEARS) ──
   const handleMouseDown = (e: React.MouseEvent) => {
     if (zoomLevel <= 1) return;
     e.preventDefault();
@@ -330,11 +368,7 @@ export default function ProductImageLightboxModal({
       hasDraggedRef.current = true;
     }
 
-    const stage = stageRef.current;
-    const rect = stage ? stage.getBoundingClientRect() : { width: 1200, height: 800 };
-    const maxPanX = (rect.width * (zoomLevel - 0.2)) / 2;
-    const maxPanY = (rect.height * (zoomLevel - 0.2)) / 2;
-
+    const { maxPanX, maxPanY } = getBounds(zoomLevelRef.current);
     const newX = dragStartRef.current.startPanX + deltaX;
     const newY = dragStartRef.current.startPanY + deltaY;
 
@@ -386,13 +420,12 @@ export default function ProductImageLightboxModal({
       const currentDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
       const scaleDelta = currentDist / pinchStartRef.current.dist;
       let nextZoom = Number((pinchStartRef.current.initialZoom * scaleDelta).toFixed(2));
-      nextZoom = Math.min(4, Math.max(1, nextZoom));
+      nextZoom = Math.min(3, Math.max(1, nextZoom));
 
-      const stage = stageRef.current;
-      const rect = stage ? stage.getBoundingClientRect() : { width: 800, height: 600 };
+      const { maxPanX, maxPanY } = getBounds(nextZoom);
 
-      if (nextZoom === 1) {
-        setZoomLevel(1);
+      if (nextZoom === 1 || (maxPanX === 0 && maxPanY === 0)) {
+        setZoomLevel(nextZoom);
         setPanPosition({ x: 0, y: 0 });
       } else {
         const mx = pinchStartRef.current.midpoint.x;
@@ -400,9 +433,6 @@ export default function ProductImageLightboxModal({
         const ratio = nextZoom / pinchStartRef.current.initialZoom;
         const nextPanX = mx - (mx - pinchStartRef.current.initialPan.x) * ratio;
         const nextPanY = my - (my - pinchStartRef.current.initialPan.y) * ratio;
-
-        const maxPanX = (rect.width * (nextZoom - 0.3)) / 2;
-        const maxPanY = (rect.height * (nextZoom - 0.3)) / 2;
 
         setZoomLevel(nextZoom);
         setPanPosition({
@@ -416,10 +446,7 @@ export default function ProductImageLightboxModal({
       if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
         hasDraggedRef.current = true;
       }
-      const stage = stageRef.current;
-      const rect = stage ? stage.getBoundingClientRect() : { width: 800, height: 600 };
-      const maxPanX = (rect.width * (zoomLevelRef.current - 0.2)) / 2;
-      const maxPanY = (rect.height * (zoomLevelRef.current - 0.2)) / 2;
+      const { maxPanX, maxPanY } = getBounds(zoomLevelRef.current);
 
       setPanPosition({
         x: Math.max(-maxPanX, Math.min(maxPanX, dragStartRef.current.startPanX + deltaX)),
@@ -478,71 +505,86 @@ export default function ProductImageLightboxModal({
       aria-label={`${product.name} Photo Lightbox`}
       className="fixed inset-0 z-[100] bg-gradient-to-b from-[#FDFCF9]/98 via-[#FAF7F2]/98 to-[#F5EFE6]/98 backdrop-blur-2xl flex flex-col justify-between select-none animate-in fade-in duration-200"
     >
-      {/* ── TOP HEADER (WARM LUXURY LIGHT THEME) ── */}
-      <div className="relative z-50 flex items-center justify-between p-3 sm:p-5 bg-gradient-to-b from-[#FAF7F2]/95 via-[#FAF7F2]/80 to-transparent">
+      {/* ── TOP HEADER (COMPACT & PROPORTIONAL) ── */}
+      <div className="relative z-50 flex items-center justify-between p-2.5 sm:p-4 bg-gradient-to-b from-[#FAF7F2]/95 via-[#FAF7F2]/80 to-transparent">
         {/* Left: Close Button + Title */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-stone-100 active:scale-95 text-stone-800 flex items-center justify-center transition-all cursor-pointer border border-stone-200 shadow-sm hover:border-[#B88E4B]"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-stone-100 active:scale-95 text-stone-800 flex items-center justify-center transition-all cursor-pointer border border-stone-200 shadow-xs hover:border-[#B88E4B]"
             title="Close Lightbox (Esc)"
             aria-label="Close Lightbox"
           >
-            <X size={20} strokeWidth={2.2} />
+            <X size={18} strokeWidth={2.2} />
           </button>
 
           <div className="hidden xs:block text-left">
-            <h3 className="font-serif font-bold text-stone-900 text-sm sm:text-base leading-tight truncate max-w-[180px] sm:max-w-md">
+            <h3 className="font-serif font-bold text-stone-900 text-xs sm:text-base leading-tight truncate max-w-[170px] sm:max-w-md">
               {product.name}
             </h3>
-            <p className="text-[11px] text-[#9A7030] font-bold uppercase tracking-wider">
+            <p className="text-[10px] text-[#9A7030] font-bold uppercase tracking-wider">
               {product.category || 'Handcrafted Luxury'}
             </p>
           </div>
         </div>
 
         {/* Center: Image Counter (e.g. Photo 2 of 5) */}
-        <div className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white border border-stone-200 text-stone-700 text-xs sm:text-sm font-semibold shadow-xs">
-          <Images size={14} className="text-[#C59B4B]" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-700 text-xs font-semibold shadow-2xs">
+          <Images size={13} className="text-[#C59B4B]" />
           <span>Photo {currentIndex + 1} of {totalImages}</span>
         </div>
 
         {/* Right: Zoom Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           {/* Zoom Out */}
           <button
             type="button"
             onClick={() => {
-              setZoomLevel((prev) => {
-                const next = Math.max(1, Number((prev - 0.5).toFixed(1)));
-                if (next === 1) setPanPosition({ x: 0, y: 0 });
-                return next;
-              });
+              const nextZoom = Math.max(1, Number((zoomLevelRef.current - 0.5).toFixed(1)));
+              if (nextZoom === 1) {
+                setZoomLevel(1);
+                setPanPosition({ x: 0, y: 0 });
+              } else {
+                const { maxPanX, maxPanY } = getBounds(nextZoom);
+                setZoomLevel(nextZoom);
+                setPanPosition((prev) => ({
+                  x: Math.max(-maxPanX, Math.min(maxPanX, prev.x)),
+                  y: Math.max(-maxPanY, Math.min(maxPanY, prev.y)),
+                }));
+              }
             }}
             disabled={zoomLevel <= 1}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-stone-100 disabled:opacity-40 disabled:cursor-not-allowed text-stone-800 flex items-center justify-center transition-all cursor-pointer border border-stone-200 shadow-2xs hover:border-[#B88E4B]"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-stone-100 disabled:opacity-35 disabled:cursor-not-allowed text-stone-800 flex items-center justify-center transition-all cursor-pointer border border-stone-200 shadow-2xs hover:border-[#B88E4B]"
             title="Zoom Out (-)"
             aria-label="Zoom Out"
           >
-            <ZoomOut size={16} />
+            <ZoomOut size={15} />
           </button>
 
           {/* Zoom Indicator */}
-          <span className="text-stone-800 text-xs font-bold w-12 text-center hidden sm:inline-block">
+          <span className="text-stone-800 text-[11px] font-bold w-10 text-center hidden sm:inline-block">
             {Math.round(zoomLevel * 100)}%
           </span>
 
           {/* Zoom In */}
           <button
             type="button"
-            onClick={() => setZoomLevel((prev) => Math.min(4, Number((prev + 0.5).toFixed(1))))}
-            disabled={zoomLevel >= 4}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-stone-100 disabled:opacity-40 disabled:cursor-not-allowed text-stone-800 flex items-center justify-center transition-all cursor-pointer border border-stone-200 shadow-2xs hover:border-[#B88E4B]"
+            onClick={() => {
+              const nextZoom = Math.min(3, Number((zoomLevelRef.current + 0.5).toFixed(1)));
+              const { maxPanX, maxPanY } = getBounds(nextZoom);
+              setZoomLevel(nextZoom);
+              setPanPosition((prev) => ({
+                x: Math.max(-maxPanX, Math.min(maxPanX, prev.x)),
+                y: Math.max(-maxPanY, Math.min(maxPanY, prev.y)),
+              }));
+            }}
+            disabled={zoomLevel >= 3}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-stone-100 disabled:opacity-35 disabled:cursor-not-allowed text-stone-800 flex items-center justify-center transition-all cursor-pointer border border-stone-200 shadow-2xs hover:border-[#B88E4B]"
             title="Zoom In (+)"
             aria-label="Zoom In"
           >
-            <ZoomIn size={16} />
+            <ZoomIn size={15} />
           </button>
 
           {/* Reset Zoom */}
@@ -553,20 +595,20 @@ export default function ProductImageLightboxModal({
                 setZoomLevel(1);
                 setPanPosition({ x: 0, y: 0 });
               }}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#C59B4B] hover:bg-[#B88E4B] text-white flex items-center justify-center transition-all cursor-pointer shadow-sm"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#C59B4B] hover:bg-[#B88E4B] text-white flex items-center justify-center transition-all cursor-pointer shadow-xs"
               title="Reset Zoom (0)"
               aria-label="Reset Zoom"
             >
-              <RotateCcw size={15} />
+              <RotateCcw size={14} />
             </button>
           )}
         </div>
       </div>
 
-      {/* ── MAIN IMAGE STAGE (AIRY LUXURY PRESENTATION) ── */}
+      {/* ── MAIN IMAGE STAGE (PROPORTIONAL & PERFECTLY CLAMPED) ── */}
       <div 
         ref={stageRef}
-        className="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden px-4"
+        className="relative flex-1 w-full flex items-center justify-center overflow-hidden px-2 sm:px-6"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -578,38 +620,38 @@ export default function ProductImageLightboxModal({
           touchAction: 'none',
         }}
       >
-        {/* SIDE FLOATING PREV ARROW (<) - LUXURY WHITE CIRCLE */}
+        {/* SIDE FLOATING PREV ARROW (<) */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             handlePrev();
           }}
-          className="absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-center transition-all hover:scale-110 cursor-pointer backdrop-blur-md"
+          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
           title="Previous Photo (Left Arrow)"
           aria-label="Previous Photo"
         >
-          <ChevronLeft size={28} strokeWidth={2.5} />
+          <ChevronLeft size={26} strokeWidth={2.4} />
         </button>
 
-        {/* SIDE FLOATING NEXT ARROW (>) - LUXURY WHITE CIRCLE */}
+        {/* SIDE FLOATING NEXT ARROW (>) */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             handleNext();
           }}
-          className="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-center transition-all hover:scale-110 cursor-pointer backdrop-blur-md"
+          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
           title="Next Photo (Right Arrow)"
           aria-label="Next Photo"
         >
-          <ChevronRight size={28} strokeWidth={2.5} />
+          <ChevronRight size={26} strokeWidth={2.4} />
         </button>
 
-        {/* CENTER PRODUCT IMAGE WITH FOCAL ZOOM & EXPANDED STAGE */}
+        {/* CENTER PRODUCT IMAGE WITH HARD-CLAMPED PANNING (ZERO GAP) */}
         <div 
           onClick={handleImageClick}
-          className="relative max-w-[94vw] max-h-[78vh] sm:max-h-[82vh] flex items-center justify-center will-change-transform z-10 select-none"
+          className="relative max-w-[96vw] max-h-[66vh] sm:max-h-[76vh] flex items-center justify-center will-change-transform z-10 select-none"
           style={{
             transform: `translate3d(${panPosition.x}px, ${panPosition.y}px, 0) scale(${zoomLevel})`,
             transformOrigin: 'center center',
@@ -618,48 +660,33 @@ export default function ProductImageLightboxModal({
         >
           {/* Loading Spinner */}
           {isImgLoading && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 min-h-[200px]">
-              <Loader2 size={38} className="text-[#C59B4B] animate-spin drop-shadow-md" />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 min-h-[180px]">
+              <Loader2 size={36} className="text-[#C59B4B] animate-spin drop-shadow-xs" />
             </div>
           )}
 
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            ref={imgRef}
             key={currentImg}
             src={currentImg}
             alt={`${product.name} — Photo ${currentIndex + 1}`}
             draggable={false}
             onLoad={() => setIsImgLoading(false)}
             onError={() => handleImgError(targetImg)}
-            className={`max-w-[90vw] max-h-[74vh] sm:max-h-[80vh] w-auto h-auto object-contain drop-shadow-[0_20px_45px_rgba(30,20,10,0.14)] select-none pointer-events-none rounded-2xl transition-opacity duration-200 ${
+            className={`max-w-[92vw] max-h-[64vh] sm:max-h-[74vh] w-auto h-auto object-contain drop-shadow-[0_14px_30px_rgba(30,20,10,0.12)] select-none pointer-events-none rounded-xl transition-opacity duration-200 ${
               isImgLoading ? 'opacity-0' : 'opacity-100'
             }`}
           />
         </div>
-
-        {/* Interactive Helper Hint */}
-        {zoomLevel === 1 ? (
-          <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 pointer-events-none z-20">
-            <span className="bg-white/95 backdrop-blur-md text-stone-700 text-[11px] font-medium px-4 py-1.5 rounded-full border border-stone-200/90 shadow-md flex items-center gap-1.5">
-              <Sparkles size={12} className="text-[#C59B4B]" />
-              <span>Click or scroll anywhere to zoom into that detail</span>
-            </span>
-          </div>
-        ) : (
-          <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 pointer-events-none z-20">
-            <span className="bg-white/95 backdrop-blur-md text-stone-700 text-[11px] font-medium px-4 py-1.5 rounded-full border border-stone-200/90 shadow-md flex items-center gap-1.5">
-              <span>Drag to move • Click to reset view</span>
-            </span>
-          </div>
-        )}
       </div>
 
       {/* ── BOTTOM THUMBNAILS STRIP & QUICK ACTIONS ── */}
-      <div className="relative z-50 p-3 sm:p-4 bg-gradient-to-t from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-stone-200/60">
+      <div className="relative z-50 p-2.5 sm:p-3.5 bg-gradient-to-t from-[#FAF7F2] via-[#FAF7F2]/95 to-transparent flex flex-col sm:flex-row items-center justify-between gap-2.5 border-t border-stone-200/60">
         {/* Left: Price Details */}
         <div className="hidden sm:flex items-center gap-3">
           <div>
-            <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider block leading-none mb-1">
+            <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider block leading-none mb-0.5">
               Price
             </span>
             <span className="text-xl sm:text-2xl font-black text-stone-900 font-sans tracking-tight">
@@ -669,41 +696,47 @@ export default function ProductImageLightboxModal({
         </div>
 
         {/* Center: Horizontal Thumbnail Strip (Shows all 5-6 photos with direct fast loading) */}
-        <div 
-          data-scroll-container="horizontal"
-          className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto max-w-[92vw] sm:max-w-[60vw] py-1 px-2 scrollbar-hide"
-        >
-          {galleryImages.map((thumbUrl, idx) => {
-            const isActive = idx === currentIndex;
-            return (
-              <button
-                key={thumbUrl + idx}
-                type="button"
-                onClick={() => {
-                  setZoomLevel(1);
-                  setPanPosition({ x: 0, y: 0 });
-                  setCurrentIndex(idx);
-                }}
-                className={`relative w-14 h-11 sm:w-16 sm:h-12 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer bg-white border-2 ${
-                  isActive
-                    ? 'border-[#C59B4B] ring-2 ring-[#C59B4B]/30 scale-105 shadow-[0_4px_16px_rgba(197,155,75,0.35)] opacity-100'
-                    : 'border-stone-200/80 opacity-60 hover:opacity-100 hover:border-stone-300'
-                }`}
-                aria-label={`View Photo ${idx + 1}`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={thumbUrl}
-                  alt={`Thumbnail ${idx + 1}`}
-                  loading="eager"
-                  className="w-full h-full object-cover select-none pointer-events-none"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/cat-thumb-sofas-2x.webp';
+        <div className="flex flex-col items-center gap-1">
+          <div 
+            data-scroll-container="horizontal"
+            className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto max-w-[94vw] sm:max-w-[60vw] py-0.5 px-1 scrollbar-hide"
+          >
+            {galleryImages.map((thumbUrl, idx) => {
+              const isActive = idx === currentIndex;
+              return (
+                <button
+                  key={thumbUrl + idx}
+                  type="button"
+                  onClick={() => {
+                    setZoomLevel(1);
+                    setPanPosition({ x: 0, y: 0 });
+                    setCurrentIndex(idx);
                   }}
-                />
-              </button>
-            );
-          })}
+                  className={`relative w-13 h-10 sm:w-15 sm:h-11 rounded-lg overflow-hidden shrink-0 transition-all cursor-pointer bg-white border-2 ${
+                    isActive
+                      ? 'border-[#C59B4B] ring-2 ring-[#C59B4B]/30 scale-105 shadow-[0_3px_12px_rgba(197,155,75,0.3)] opacity-100'
+                      : 'border-stone-200/80 opacity-60 hover:opacity-100 hover:border-stone-300'
+                  }`}
+                  aria-label={`View Photo ${idx + 1}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={thumbUrl}
+                    alt={`Thumbnail ${idx + 1}`}
+                    loading="eager"
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/cat-thumb-sofas-2x.webp';
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="text-[10px] text-stone-500 font-medium tracking-tight">
+            Double-click or pinch to zoom • Drag to explore
+          </p>
         </div>
 
         {/* Right: Add to Cart Action Button */}
@@ -711,9 +744,9 @@ export default function ProductImageLightboxModal({
           <button
             type="button"
             onClick={handleAddToCart}
-            className="w-full sm:w-auto bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-105 active:scale-95 text-white font-bold text-xs sm:text-sm px-6 py-2.5 sm:py-3 rounded-full flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(184,142,75,0.3)] transition-all cursor-pointer"
+            className="w-full sm:w-auto bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-105 active:scale-95 text-white font-bold text-xs sm:text-sm px-5 py-2.5 sm:py-2.5 rounded-full flex items-center justify-center gap-2 shadow-[0_3px_12px_rgba(184,142,75,0.25)] transition-all cursor-pointer"
           >
-            <ShoppingBag size={16} />
+            <ShoppingBag size={15} />
             <span>Add to Cart</span>
           </button>
         </div>
