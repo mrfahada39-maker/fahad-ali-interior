@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Heart, Crown, ShoppingCart, Box, Share2, Star } from 'lucide-react';
+import { Heart, Crown, ShoppingCart, Box, Share2, Star, Images, Maximize2 } from 'lucide-react';
+import ProductImageLightboxModal from '@/components/shop/ProductImageLightboxModal';
 import { useWishlistStore, useCartStore, useClientCacheStore } from '@/store';
 import { useIsInWishlist } from '@/hooks/use-is-in-wishlist';
 import Link from 'next/link';
@@ -24,6 +25,7 @@ type ProductCardProduct = {
   avgRating?: number;
   reviewCount?: number;
   stockCount?: number;
+  images?: string[];
 };
 
 interface ProductCardProps {
@@ -40,6 +42,13 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
   const addItem = useCartStore((s) => s.addItem);
   const setCachedProduct = useClientCacheStore((s) => s.setProduct);
   const [imgError, setImgError] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  const handleOpenLightbox = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsLightboxOpen(true);
+  };
 
   // Desktop-only hover prefetch: never trigger main-thread RSC fetches during mobile touch scrolling
   const primeProductCache = () => {
@@ -281,6 +290,17 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
             className={wishlisted ? 'fill-rose-500 text-rose-500' : 'text-[#111827]'}
           />
         </button>
+
+        {/* Bottom-Right Floating Fullscreen Gallery & Zoom Button (Opens Facebook-Style Lightbox) */}
+        <button
+          type="button"
+          onClick={handleOpenLightbox}
+          className="absolute bottom-3 right-3 w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] min-h-[36px] rounded-full bg-black/60 hover:bg-black/85 active:scale-90 text-white border border-white/30 shadow-lg flex items-center justify-center transition-all z-10 hover:scale-110 cursor-pointer backdrop-blur-xs"
+          title="View Fullscreen HD Photos & Zoom (5-6 Views)"
+          aria-label="View Fullscreen HD Photos & Zoom"
+        >
+          <Maximize2 size={16} className="text-white" />
+        </button>
       </div>
 
       {/* ── CARD CONTENT ── */}
@@ -349,16 +369,16 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
             <span>Add to Cart</span>
           </button>
 
-          {/* 3D Preview Circular Button */}
+          {/* Fullscreen HD Gallery & Deep Zoom Button */}
           <button
             type="button"
-            onClick={handle3DPreview}
+            onClick={handleOpenLightbox}
             className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-stone-200/90 bg-white hover:bg-[#FAF6F0] hover:border-[#B88E4B] hover:text-[#B88E4B] active:scale-95 text-gray-800 flex flex-col items-center justify-center transition-all shadow-2xs shrink-0 cursor-pointer"
-            title="3D Preview"
-            aria-label="3D Preview"
+            title="Fullscreen HD Gallery & Zoom (5-6 Photos)"
+            aria-label="Fullscreen HD Gallery & Zoom"
           >
-            <Box size={14} strokeWidth={2} />
-            <span className="text-[8px] font-black leading-none mt-0.5 tracking-tight">3D</span>
+            <Images size={15} strokeWidth={2} />
+            <span className="text-[8px] font-black leading-none mt-0.5 tracking-tight">ZOOM</span>
           </button>
 
           {/* Share Circular Button */}
@@ -373,6 +393,13 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
           </button>
         </div>
       </div>
+
+      {/* ── FULLSCREEN PHOTO LIGHTBOX MODAL (FACEBOOK PHOTO VIEWER STYLE) ── */}
+      <ProductImageLightboxModal
+        product={product}
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+      />
     </div>
   );
 }
