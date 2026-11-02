@@ -135,7 +135,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
     return (
       <div
         data-testid="product-card"
-        className="group bg-white border border-stone-200/80 hover:border-[#233818] rounded-[24px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_36px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden"
+        className="group bg-white border border-stone-200/80 hover:border-[#B88E4B] rounded-[24px] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_36px_rgba(184,142,75,0.15)] transition-all duration-300 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden"
       >
         <div className="relative w-full sm:w-56 aspect-[4/3] rounded-[18px] overflow-hidden bg-[#FBF9F6] shrink-0 border border-stone-100">
           <Link
@@ -160,8 +160,8 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
 
           {/* Bestseller Badge */}
           <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
-            <span className="inline-flex items-center gap-1.5 bg-[#233818] text-white px-2.5 py-1 rounded-full text-[10px] font-semibold shadow-xs">
-              <Crown size={12} className="text-[#FBBF24] fill-[#FBBF24]" />
+            <span className="inline-flex items-center gap-1.5 bg-[#1F1A17] text-[#F3EADB] border border-[#B88E4B]/50 px-2.5 py-1 rounded-full text-[10px] font-semibold shadow-xs">
+              <Crown size={12} className="text-[#C59B4B] fill-[#C59B4B]" />
               <span>Bestseller</span>
             </span>
           </div>
@@ -169,7 +169,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
           <button
             type="button"
             onClick={handleWishlist}
-            className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white text-[#111827] border border-stone-200 shadow-sm flex items-center justify-center transition-all z-10 hover:scale-105 active:scale-95 cursor-pointer"
+            className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-white text-[#111827] hover:border-[#B88E4B]/60 border border-stone-200 shadow-sm flex items-center justify-center transition-all z-10 hover:scale-105 active:scale-95 cursor-pointer"
             aria-label="Toggle Wishlist"
           >
             <Heart size={16} className={wishlisted ? 'fill-rose-500 text-rose-500' : 'text-[#111827]'} />
@@ -179,7 +179,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
         <div className="flex-1 min-w-0 flex flex-col justify-between py-1 w-full relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#233818] bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#9A7030] bg-[#FAF5ED] border border-[#E8DFC8] px-2.5 py-0.5 rounded-full">
                 {product.category || 'Luxury'}
               </span>
               <div className="flex items-center gap-1 text-xs font-bold text-[#111827]">
@@ -194,7 +194,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
               onClick={handleProductClick}
               onMouseEnter={primeProductCache}
             >
-              <h3 className="text-lg font-bold text-[#111827] group-hover:text-[#233818] transition-colors">
+              <h3 className="text-lg font-bold text-[#111827] group-hover:text-[#B88E4B] transition-colors">
                 {product.name}
               </h3>
             </Link>
@@ -211,7 +211,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
               <span className="text-xs text-[#9CA3AF] line-through">
                 Rs. {formatPrice(originalPrice)}
               </span>
-              <span className="bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9] text-[10px] font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-[#FAF5ED] text-[#9A7030] border border-[#E8DFC8] text-[10px] font-bold px-2 py-0.5 rounded-full">
                 {discountPercent}% OFF
               </span>
             </div>
@@ -220,7 +220,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="px-5 py-2.5 rounded-full bg-[#233818] hover:bg-[#1A2C12] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
+                className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-110 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-[0_4px_14px_rgba(184,142,75,0.28)] inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <ShoppingCart size={15} /> Add to Cart
               </button>
@@ -234,7 +234,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
   return (
     <div
       data-testid="product-card"
-      className="group relative bg-white border border-stone-200/70 hover:border-stone-300 rounded-[28px] p-3 sm:p-3.5 shadow-[0_4px_24px_rgba(0,0,0,0.05)] hover:shadow-[0_14px_36px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col justify-between"
+      className="group relative bg-white border border-stone-200/70 hover:border-amber-300/80 rounded-[28px] p-3 sm:p-3.5 shadow-[0_4px_24px_rgba(0,0,0,0.05)] hover:shadow-[0_14px_36px_rgba(184,142,75,0.12)] transition-all duration-300 flex flex-col justify-between"
     >
       {/* ── TOP IMAGE CONTAINER ── */}
       <div className="relative aspect-[4/3] w-full rounded-[22px] overflow-hidden bg-[#FAF9F6] border border-stone-100/90 mb-3.5">
@@ -260,19 +260,19 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
           />
         </Link>
 
-        {/* Top-Left Bestseller Pill (Exact match to screenshot) */}
+        {/* Top-Left Bestseller Pill (Matches royal gold & espresso luxury scheme) */}
         <div className="absolute top-3 left-3 z-10 pointer-events-none">
-          <span className="inline-flex items-center gap-1.5 bg-[#233818] text-white px-3 py-1 rounded-full text-xs font-semibold shadow-xs">
-            <Crown size={14} className="text-[#FBBF24] fill-[#FBBF24]" />
+          <span className="inline-flex items-center gap-1.5 bg-[#1F1A17]/95 backdrop-blur-xs text-[#F3EADB] border border-[#B88E4B]/50 px-3 py-1 rounded-full text-xs font-semibold shadow-xs">
+            <Crown size={14} className="text-[#C59B4B] fill-[#C59B4B]" />
             <span>Bestseller</span>
           </span>
         </div>
 
-        {/* Top-Right Wishlist Button (Exact match to screenshot) */}
+        {/* Top-Right Wishlist Button */}
         <button
           type="button"
           onClick={handleWishlist}
-          className="absolute top-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white hover:bg-stone-50 text-[#111827] shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-stone-100 flex items-center justify-center transition-all z-10 hover:scale-110 active:scale-95 cursor-pointer"
+          className="absolute top-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white hover:bg-[#FAF6F0] text-[#111827] hover:border-[#B88E4B]/60 shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-stone-100 flex items-center justify-center transition-all z-10 hover:scale-110 active:scale-95 cursor-pointer"
           aria-label="Toggle Wishlist"
         >
           <Heart
@@ -294,7 +294,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
             onMouseEnter={primeProductCache}
             className="block"
           >
-            <h3 className="text-lg sm:text-[19px] font-bold text-[#111827] group-hover:text-[#233818] transition-colors leading-snug line-clamp-1">
+            <h3 className="text-lg sm:text-[19px] font-bold text-[#111827] group-hover:text-[#B88E4B] transition-colors leading-snug line-clamp-1">
               {product.name}
             </h3>
           </Link>
@@ -331,7 +331,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
             <span className="text-xs sm:text-sm text-[#9CA3AF] line-through font-sans">
               Rs. {formatPrice(originalPrice)}
             </span>
-            <span className="bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9] text-[11px] font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-[#FAF5ED] text-[#9A7030] border border-[#E8DFC8] text-[11px] font-bold px-2.5 py-0.5 rounded-full font-sans">
               {discountPercent}% OFF
             </span>
           </div>
@@ -339,11 +339,11 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
 
         {/* ── ACTION BUTTONS ROW ── */}
         <div className="flex items-center gap-2 pt-1 border-t border-stone-100/80">
-          {/* Main Add to Cart Pill Button */}
+          {/* Main Add to Cart Pill Button (Exact Color Match to Hero "Shop Collection" Button in Img 1) */}
           <button
             type="button"
             onClick={handleAddToCart}
-            className="flex-1 bg-[#233818] hover:bg-[#1A2C12] active:scale-95 text-white font-bold text-xs sm:text-sm py-2.5 sm:py-3 px-3.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer min-h-[44px]"
+            className="flex-1 bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-110 active:scale-95 text-white font-bold text-xs sm:text-sm py-2.5 sm:py-3 px-3.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-[0_4px_16px_rgba(184,142,75,0.28)] cursor-pointer min-h-[44px]"
           >
             <ShoppingCart size={16} strokeWidth={2.2} />
             <span>Add to Cart</span>
@@ -353,7 +353,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
           <button
             type="button"
             onClick={handle3DPreview}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-gray-200/90 bg-white hover:bg-stone-50 active:scale-95 text-gray-800 flex flex-col items-center justify-center transition-all shadow-2xs shrink-0 cursor-pointer"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-stone-200/90 bg-white hover:bg-[#FAF6F0] hover:border-[#B88E4B] hover:text-[#B88E4B] active:scale-95 text-gray-800 flex flex-col items-center justify-center transition-all shadow-2xs shrink-0 cursor-pointer"
             title="3D Preview"
             aria-label="3D Preview"
           >
@@ -365,7 +365,7 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
           <button
             type="button"
             onClick={handleShare}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-gray-200/90 bg-white hover:bg-stone-50 active:scale-95 text-gray-800 flex items-center justify-center transition-all shadow-2xs shrink-0 cursor-pointer"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full border border-stone-200/90 bg-white hover:bg-[#FAF6F0] hover:border-[#B88E4B] hover:text-[#B88E4B] active:scale-95 text-gray-800 flex items-center justify-center transition-all shadow-2xs shrink-0 cursor-pointer"
             title="Share Product"
             aria-label="Share Product"
           >
