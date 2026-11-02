@@ -283,34 +283,34 @@ export default function HomeSignatureCategories({
     <section
       ref={sectionTopRef}
       id="signature-categories"
-      className="w-full max-w-[1600px] 2xl:max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-16 relative z-10"
+      className="w-full max-w-[1600px] 2xl:max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-12 relative z-10"
     >
-      {/* ── SECTION HEADER ── */}
-      <div className="text-center mb-6 pt-2">
-        <div className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] shadow-xs mb-3.5">
-          <span className="text-[#B88E4B] text-sm font-bold">✦</span>
-          <span className="text-xs sm:text-[13px] font-black uppercase tracking-[0.25em] text-[#7A6354]">
+      {/* ── SECTION HEADER (LARGE, GRAND, PROMINENT TYPOGRAPHY) ── */}
+      <div className="text-center mb-5 sm:mb-6 pt-0">
+        <div className="inline-flex items-center gap-2.5 px-5 sm:px-6 py-2 rounded-full bg-[#FAF5EE] border border-[#E2D1BC] shadow-xs mb-3">
+          <span className="text-[#B88E4B] text-sm sm:text-base font-bold">✦</span>
+          <span className="text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-[#7A6354]">
             HAUTE COUTURE COLLECTIONS
           </span>
         </div>
-        <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-[#221814] tracking-tight leading-tight mb-2">
-          Signature <span className="font-serif italic font-normal text-[#C9A24D] mx-2 text-[1.08em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">Categories</span>
+        <h2 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-black text-[#221814] tracking-tight leading-[1.08] mb-2 sm:mb-2.5">
+          Signature <span className="font-serif italic font-normal text-[#C9A24D] mx-1.5 sm:mx-2 text-[1.12em]">&</span> <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#996515] bg-clip-text text-transparent font-serif">Categories</span>
         </h2>
-        <div className="flex items-center justify-center gap-3 my-2.5">
-          <div className="h-[1.5px] w-20 sm:w-28 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#B88E4B] shadow-[0_0_8px_#B88E4B]" />
-          <div className="h-[1.5px] w-20 sm:w-28 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
+        <div className="flex items-center justify-center gap-3 my-2 sm:my-2.5">
+          <div className="h-[2px] w-20 sm:w-32 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#B88E4B] shadow-[0_0_10px_#B88E4B]" />
+          <div className="h-[2px] w-20 sm:w-32 bg-gradient-to-r from-transparent via-[#B88E4B] to-transparent" />
         </div>
-        <p className="text-[#7A6048] text-xs sm:text-sm md:text-base font-serif italic max-w-xl mx-auto">
+        <p className="text-[#7A6048] text-sm sm:text-base md:text-lg font-serif italic max-w-2xl mx-auto leading-relaxed">
           100% Solid Seasoned Sheesham masterworks handcrafted for luxury living.
         </p>
       </div>
 
       {/* Invisible Sentinel right before category pills bar (detects when category bar pins at top) */}
-      <div ref={sentinelRef} className="h-0.5 w-full pointer-events-none -mt-2 mb-1" />
+      <div ref={sentinelRef} className="h-0.5 w-full pointer-events-none -mt-1 mb-0.5" />
 
       {/* ── STICKY CATEGORY PILLS BAR (PINS FLUSH AT TOP-0, NAVBAR AUTONOMOUSLY HIDES) ── */}
-      <div className="sticky top-0 z-40 bg-[#FCFAF7] md:bg-[#FCFAF7]/98 md:backdrop-blur-md py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-amber-200/70 shadow-[0_4px_16px_rgba(184,142,75,0.06)] mb-8 transition-all">
+      <div className="sticky top-0 z-40 bg-[#FCFAF7] md:bg-[#FCFAF7]/98 md:backdrop-blur-md py-2 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-amber-200/70 shadow-[0_4px_16px_rgba(184,142,75,0.06)] mb-5 sm:mb-6 transition-all">
         <div ref={pillsContainerRef} data-scroll-container="horizontal" className="flex gap-2.5 overflow-x-auto scrollbar-hide py-1">
           {categoryNames.map((cat) => {
             const isActive = activeCategory === cat;

@@ -225,7 +225,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
   )}`;
 
   return (
-    <div className="relative w-full bg-[#FAF6F0] text-[#1F1A17] overflow-hidden pt-[76px] sm:pt-20 lg:pt-28 pb-4 lg:pb-12">
+    <div className="relative w-full bg-[#FAF6F0] text-[#1F1A17] overflow-hidden pt-[76px] sm:pt-20 lg:pt-28 pb-2 lg:pb-4">
       {/* Subtle Warm Ivory Ambient Background Gradients (Desktop Hardware Optimized) */}
       <div className="hidden sm:block absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-[#F2E5D0]/60 via-[#F7EFE2]/40 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="hidden sm:block absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-[#EFE5D5]/50 via-transparent to-transparent rounded-full blur-2xl pointer-events-none" />
@@ -411,7 +411,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
 
         {/* ── SHOP BY CATEGORY SHELF (MATCHES USER SCREENSHOT 2 100%) ── */}
         <div 
-          className="w-[calc(100%+1.5rem)] -mx-3 sm:w-full sm:mx-0 mt-6 xl:mt-8"
+          className="w-[calc(100%+1.5rem)] -mx-3 sm:w-full sm:mx-0 mt-4 xl:mt-5"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
           onTouchStart={handleTouchStart}

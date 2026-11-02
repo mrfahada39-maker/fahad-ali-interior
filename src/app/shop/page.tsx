@@ -20,8 +20,8 @@ export default async function ShopCatalogPage() {
 
   return (
     <StoreShell showFooter={true}>
-      <main className="min-h-screen bg-[#FCFAF7] text-[#221814] font-sans pt-20 sm:pt-24">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+      <main className="min-h-screen bg-[#FCFAF7] text-[#221814] font-sans pt-14 sm:pt-16">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="sr-only">Fahad Ali Interior — Handcrafted Sheesham Furniture Catalog</h1>
         </div>
         <HomeSignatureCategories
@@ -32,4 +32,3 @@ export default async function ShopCatalogPage() {
     </StoreShell>
   );
 }
-
