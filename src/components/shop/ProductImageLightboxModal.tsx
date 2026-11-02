@@ -98,10 +98,22 @@ export default function ProductImageLightboxModal({
   const [isImgLoading, setIsImgLoading] = useState(true);
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
+  // Keep latest zoom & pan values in refs for native event listeners without closure lag
+  const zoomLevelRef = useRef(zoomLevel);
+  zoomLevelRef.current = zoomLevel;
+  const panPositionRef = useRef(panPosition);
+  panPositionRef.current = panPosition;
+
+  const stageRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0, startPanX: 0, startPanY: 0 });
   const hasDraggedRef = useRef(false);
   const touchStartRef = useRef<number | null>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
+  const pinchStartRef = useRef<{
+    dist: number;
+    initialZoom: number;
+    initialPan: { x: number; y: number };
+    midpoint: { x: number; y: number };
+  } | null>(null);
 
   const addItem = useCartStore((s) => s.addItem);
 
@@ -134,8 +146,15 @@ export default function ProductImageLightboxModal({
     };
   }, [isOpen]);
 
+  // Release dragging if mouse is lifted outside the browser window
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleGlobalMouseUp = () => setIsDragging(false);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [isDragging]);
+
   // Build the complete 5-6 picture gallery
-  // Uses all real uploaded product images first, supplemented with 100% reliable local high-res angles
   const galleryImages = useMemo(() => {
     const rawList: string[] = [];
     if (product.image) rawList.push(product.image);
@@ -189,10 +208,10 @@ export default function ProductImageLightboxModal({
       } else if (e.key === 'ArrowLeft') {
         handlePrev();
       } else if (e.key === '+' || e.key === '=') {
-        setZoomLevel((prev) => Math.min(3, prev + 0.5));
+        setZoomLevel((prev) => Math.min(4, Number((prev + 0.5).toFixed(1))));
       } else if (e.key === '-') {
         setZoomLevel((prev) => {
-          const next = Math.max(1, prev - 0.5);
+          const next = Math.max(1, Number((prev - 0.5).toFixed(1)));
           if (next === 1) setPanPosition({ x: 0, y: 0 });
           return next;
         });
@@ -206,7 +225,8 @@ export default function ProductImageLightboxModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose, handleNext, handlePrev]);
 
-  // Mouse wheel zoom in/out with passive: false to allow e.preventDefault() without console warnings
+  // ── FOCAL POINT ZOOM TOWARD MOUSE CURSOR (WHEEL EVENT) ──
+  // Zooms into wherever the user's cursor is pointing, exactly like a phone gallery!
   useEffect(() => {
     if (!isOpen) return;
     const stage = stageRef.current;
@@ -214,15 +234,40 @@ export default function ProductImageLightboxModal({
 
     const onWheelNative = (e: WheelEvent) => {
       e.preventDefault();
-      if (e.deltaY < 0) {
-        setZoomLevel((prev) => Math.min(3, Number((prev + 0.25).toFixed(2))));
-      } else {
-        setZoomLevel((prev) => {
-          const next = Math.max(1, Number((prev - 0.25).toFixed(2)));
-          if (next === 1) setPanPosition({ x: 0, y: 0 });
-          return next;
-        });
+
+      const rect = stage.getBoundingClientRect();
+      // Mouse coordinates relative to the center of the viewport
+      const mx = e.clientX - (rect.left + rect.width / 2);
+      const my = e.clientY - (rect.top + rect.height / 2);
+
+      const currentZoom = zoomLevelRef.current;
+      const currentPan = panPositionRef.current;
+
+      const zoomFactor = e.deltaY < 0 ? 1.25 : 0.8;
+      let nextZoom = Number((currentZoom * zoomFactor).toFixed(2));
+      nextZoom = Math.min(4, Math.max(1, nextZoom));
+
+      if (nextZoom === 1) {
+        setZoomLevel(1);
+        setPanPosition({ x: 0, y: 0 });
+        return;
       }
+
+      // Mathematical Focal Point formula:
+      // Preserves the invariant image point directly under the mouse pointer
+      const ratio = nextZoom / currentZoom;
+      const nextPanX = mx - (mx - currentPan.x) * ratio;
+      const nextPanY = my - (my - currentPan.y) * ratio;
+
+      // Restrict pan bounds so image stays nicely on screen
+      const maxPanX = (rect.width * (nextZoom - 0.4)) / 2;
+      const maxPanY = (rect.height * (nextZoom - 0.4)) / 2;
+
+      setZoomLevel(nextZoom);
+      setPanPosition({
+        x: Math.max(-maxPanX, Math.min(maxPanX, nextPanX)),
+        y: Math.max(-maxPanY, Math.min(maxPanY, nextPanY)),
+      });
     };
 
     stage.addEventListener('wheel', onWheelNative, { passive: false });
@@ -231,21 +276,48 @@ export default function ProductImageLightboxModal({
     };
   }, [isOpen]);
 
-  // Click to toggle zoom: 1x -> 2x -> 1x (ignoring drag releases)
+  // ── CLICK ON ANY DETAIL TO ZOOM DIRECTLY INTO THAT SPOT ──
+  // Clicking anywhere zooms into that exact detail; clicking again resets to 1x
   const handleImageClick = (e: React.MouseEvent) => {
     if (hasDraggedRef.current) {
       hasDraggedRef.current = false;
       return;
     }
-    if (zoomLevel === 1) {
-      setZoomLevel(2);
-    } else {
+
+    if (zoomLevel > 1) {
+      // Already zoomed: reset back to full view
       setZoomLevel(1);
       setPanPosition({ x: 0, y: 0 });
+    } else {
+      // Zoom into the exact spot clicked
+      const stage = stageRef.current;
+      const targetZoom = 2.5;
+
+      if (!stage) {
+        setZoomLevel(targetZoom);
+        return;
+      }
+
+      const rect = stage.getBoundingClientRect();
+      const mx = e.clientX - (rect.left + rect.width / 2);
+      const my = e.clientY - (rect.top + rect.height / 2);
+
+      // Shift the clicked spot toward center of view
+      const nextPanX = -mx * (targetZoom - 0.7);
+      const nextPanY = -my * (targetZoom - 0.7);
+
+      const maxPanX = (rect.width * (targetZoom - 0.4)) / 2;
+      const maxPanY = (rect.height * (targetZoom - 0.4)) / 2;
+
+      setZoomLevel(targetZoom);
+      setPanPosition({
+        x: Math.max(-maxPanX, Math.min(maxPanX, nextPanX)),
+        y: Math.max(-maxPanY, Math.min(maxPanY, nextPanY)),
+      });
     }
   };
 
-  // Mouse drag panning when zoomed in
+  // ── MOUSE DRAG / PAN LOGIC ──
   const handleMouseDown = (e: React.MouseEvent) => {
     if (zoomLevel <= 1) return;
     e.preventDefault();
@@ -266,9 +338,18 @@ export default function ProductImageLightboxModal({
     if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
       hasDraggedRef.current = true;
     }
+
+    const stage = stageRef.current;
+    const rect = stage ? stage.getBoundingClientRect() : { width: 1200, height: 800 };
+    const maxPanX = (rect.width * (zoomLevel - 0.2)) / 2;
+    const maxPanY = (rect.height * (zoomLevel - 0.2)) / 2;
+
+    const newX = dragStartRef.current.startPanX + deltaX;
+    const newY = dragStartRef.current.startPanY + deltaY;
+
     setPanPosition({
-      x: dragStartRef.current.startPanX + deltaX,
-      y: dragStartRef.current.startPanY + deltaY,
+      x: Math.max(-maxPanX, Math.min(maxPanX, newX)),
+      y: Math.max(-maxPanY, Math.min(maxPanY, newY)),
     });
   };
 
@@ -276,20 +357,103 @@ export default function ProductImageLightboxModal({
     setIsDragging(false);
   };
 
-  // Touch Swipe for mobile devices
+  // ── TOUCH GESTURES: PINCH-TO-ZOOM + SINGLE FINGER PAN / SWIPE ──
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartRef.current = e.touches[0].clientX;
+    if (e.touches.length === 2) {
+      // 2 fingers: pinch to zoom
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
+      const dist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+      const stage = stageRef.current;
+      const rect = stage ? stage.getBoundingClientRect() : { left: 0, top: 0, width: 0, height: 0 };
+      const midX = (t0.clientX + t1.clientX) / 2 - (rect.left + rect.width / 2);
+      const midY = (t0.clientY + t1.clientY) / 2 - (rect.top + rect.height / 2);
+
+      pinchStartRef.current = {
+        dist,
+        initialZoom: zoomLevelRef.current,
+        initialPan: { ...panPositionRef.current },
+        midpoint: { x: midX, y: midY },
+      };
+    } else if (e.touches.length === 1) {
+      touchStartRef.current = e.touches[0].clientX;
+      if (zoomLevelRef.current > 1) {
+        setIsDragging(true);
+        dragStartRef.current = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+          startPanX: panPositionRef.current.x,
+          startPanY: panPositionRef.current.y,
+        };
+      }
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchStartRef.current) {
+      // Pinch to zoom centered on touch midpoint
+      const t0 = e.touches[0];
+      const t1 = e.touches[1];
+      const currentDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+      const scaleDelta = currentDist / pinchStartRef.current.dist;
+      let nextZoom = Number((pinchStartRef.current.initialZoom * scaleDelta).toFixed(2));
+      nextZoom = Math.min(4, Math.max(1, nextZoom));
+
+      const stage = stageRef.current;
+      const rect = stage ? stage.getBoundingClientRect() : { width: 800, height: 600 };
+
+      if (nextZoom === 1) {
+        setZoomLevel(1);
+        setPanPosition({ x: 0, y: 0 });
+      } else {
+        const mx = pinchStartRef.current.midpoint.x;
+        const my = pinchStartRef.current.midpoint.y;
+        const ratio = nextZoom / pinchStartRef.current.initialZoom;
+        const nextPanX = mx - (mx - pinchStartRef.current.initialPan.x) * ratio;
+        const nextPanY = my - (my - pinchStartRef.current.initialPan.y) * ratio;
+
+        const maxPanX = (rect.width * (nextZoom - 0.3)) / 2;
+        const maxPanY = (rect.height * (nextZoom - 0.3)) / 2;
+
+        setZoomLevel(nextZoom);
+        setPanPosition({
+          x: Math.max(-maxPanX, Math.min(maxPanX, nextPanX)),
+          y: Math.max(-maxPanY, Math.min(maxPanY, nextPanY)),
+        });
+      }
+    } else if (e.touches.length === 1 && isDragging && zoomLevelRef.current > 1) {
+      // 1 finger pan while zoomed in
+      const deltaX = e.touches[0].clientX - dragStartRef.current.x;
+      const deltaY = e.touches[0].clientY - dragStartRef.current.y;
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        hasDraggedRef.current = true;
+      }
+      const stage = stageRef.current;
+      const rect = stage ? stage.getBoundingClientRect() : { width: 800, height: 600 };
+      const maxPanX = (rect.width * (zoomLevelRef.current - 0.2)) / 2;
+      const maxPanY = (rect.height * (zoomLevelRef.current - 0.2)) / 2;
+
+      setPanPosition({
+        x: Math.max(-maxPanX, Math.min(maxPanX, dragStartRef.current.startPanX + deltaX)),
+        y: Math.max(-maxPanY, Math.min(maxPanY, dragStartRef.current.startPanY + deltaY)),
+      });
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartRef.current === null) return;
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStartRef.current - touchEnd;
-    if (Math.abs(diff) > 45) {
-      if (diff > 0) {
-        handleNext();
-      } else {
-        handlePrev();
+    pinchStartRef.current = null;
+    setIsDragging(false);
+
+    // If at 1x, handle swipe to next/prev photo
+    if (e.changedTouches.length === 1 && zoomLevelRef.current <= 1 && touchStartRef.current !== null) {
+      const touchEnd = e.changedTouches[0].clientX;
+      const diff = touchStartRef.current - touchEnd;
+      if (Math.abs(diff) > 45) {
+        if (diff > 0) {
+          handleNext();
+        } else {
+          handlePrev();
+        }
       }
     }
     touchStartRef.current = null;
@@ -329,7 +493,7 @@ export default function ProductImageLightboxModal({
     >
       {/* ── TOP HEADER (CLOSE BUTTON, TITLE, ZOOM CONTROLS, COUNTER) ── */}
       <div className="relative z-50 flex items-center justify-between p-3 sm:p-5 bg-gradient-to-b from-black/85 via-black/50 to-transparent">
-        {/* Left: Close Button + Title (Matches Facebook top-left) */}
+        {/* Left: Close Button + Title */}
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -385,8 +549,8 @@ export default function ProductImageLightboxModal({
           {/* Zoom In */}
           <button
             type="button"
-            onClick={() => setZoomLevel((prev) => Math.min(3, Number((prev + 0.5).toFixed(1))))}
-            disabled={zoomLevel >= 3}
+            onClick={() => setZoomLevel((prev) => Math.min(4, Number((prev + 0.5).toFixed(1))))}
+            disabled={zoomLevel >= 4}
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all cursor-pointer border border-white/15"
             title="Zoom In (+)"
             aria-label="Zoom In"
@@ -420,9 +584,11 @@ export default function ProductImageLightboxModal({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
           cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in',
+          touchAction: 'none',
         }}
       >
         {/* SIDE FLOATING PREV ARROW (<) - MATCHES FACEBOOK PHOTO VIEWER */}
@@ -453,12 +619,14 @@ export default function ProductImageLightboxModal({
           <ChevronRight size={28} strokeWidth={2.5} />
         </button>
 
-        {/* CENTER PRODUCT IMAGE */}
+        {/* CENTER PRODUCT IMAGE WITH FOCAL ZOOM & PANNING */}
         <div 
           onClick={handleImageClick}
-          className="relative max-w-[92vw] max-h-[75vh] flex items-center justify-center transition-transform duration-150 ease-out will-change-transform z-10"
+          className="relative max-w-[92vw] max-h-[75vh] flex items-center justify-center will-change-transform z-10 select-none"
           style={{
-            transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
+            transform: `translate3d(${panPosition.x}px, ${panPosition.y}px, 0) scale(${zoomLevel})`,
+            transformOrigin: 'center center',
+            transition: isDragging ? 'none' : 'transform 0.18s cubic-bezier(0.2, 0, 0.2, 1)',
           }}
         >
           {/* High-res Loading Spinner */}
@@ -482,12 +650,18 @@ export default function ProductImageLightboxModal({
           />
         </div>
 
-        {/* Subtle Hint on First View */}
-        {zoomLevel === 1 && (
+        {/* Interactive Helper Hint */}
+        {zoomLevel === 1 ? (
           <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 pointer-events-none z-20">
-            <span className="bg-black/70 backdrop-blur-md text-stone-300 text-[11px] font-medium px-4 py-1.5 rounded-full border border-white/15 shadow-lg flex items-center gap-1.5">
+            <span className="bg-black/75 backdrop-blur-md text-stone-300 text-[11px] font-medium px-4 py-1.5 rounded-full border border-white/15 shadow-lg flex items-center gap-1.5">
               <Sparkles size={12} className="text-[#C59B4B]" />
-              <span>Scroll wheel or click to zoom in</span>
+              <span>Click or scroll anywhere to zoom into that detail</span>
+            </span>
+          </div>
+        ) : (
+          <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 pointer-events-none z-20">
+            <span className="bg-black/75 backdrop-blur-md text-stone-300 text-[11px] font-medium px-4 py-1.5 rounded-full border border-white/15 shadow-lg flex items-center gap-1.5">
+              <span>Drag to move • Click or double-click to reset view</span>
             </span>
           </div>
         )}
@@ -537,7 +711,6 @@ export default function ProductImageLightboxModal({
                   loading="eager"
                   className="w-full h-full object-cover select-none pointer-events-none"
                   onError={(e) => {
-                    // Fallback to local sofa thumb if an external asset ever fails
                     (e.target as HTMLImageElement).src = '/cat-thumb-sofas-2x.webp';
                   }}
                 />
