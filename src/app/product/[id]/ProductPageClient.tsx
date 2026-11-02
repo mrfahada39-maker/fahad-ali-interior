@@ -8,10 +8,11 @@ import {
   Star, Minus, Plus, Truck, ShieldCheck, Heart,
   Sparkles, CheckCircle2, ShoppingBag,
   MessageSquare, ArrowRight, Share2, PenTool, X,
-  Layers, Hammer, Clock, Ruler, Paintbrush, Award
+  Layers, Hammer, Clock, Ruler, Paintbrush, Award, Maximize2
 } from 'lucide-react';
 import type { StorefrontProduct } from '@/lib/types';
 import { resolveImageUrl } from '@/lib/images';
+import ProductImageLightboxModal from '@/components/shop/ProductImageLightboxModal';
 import { useCartStore, useWishlistStore, useClientCacheStore, type CachedProduct } from '@/store';
 import { useIsInWishlist } from '@/hooks/use-is-in-wishlist';
 import { useSession } from 'next-auth/react';
@@ -55,8 +56,7 @@ export default function ProductPageClient({
 
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
-  const [isZooming, setIsZooming] = useState(false);
-  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
@@ -108,13 +108,6 @@ export default function ProductPageClient({
 
   const maxStock = typeof product.stockCount === 'number' && product.stockCount > 0 ? product.stockCount : 10;
   const isOutOfStock = typeof product.stockCount === 'number' && product.stockCount <= 0;
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
-    setZoomPos({ x, y });
-  };
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -289,10 +282,8 @@ export default function ProductPageClient({
 
             {/* Main Interactive Stage with Luminous Border */}
             <div
-              className="relative aspect-[4/3] rounded-[26px] overflow-hidden bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 shadow-[0_8px_30px_rgba(184,142,75,0.12)] group cursor-crosshair"
-              onMouseEnter={() => setIsZooming(true)}
-              onMouseLeave={() => setIsZooming(false)}
-              onMouseMove={handleMouseMove}
+              className="relative aspect-[4/3] rounded-[26px] overflow-hidden bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 shadow-[0_8px_30px_rgba(184,142,75,0.12)] group cursor-pointer"
+              onClick={() => setIsLightboxOpen(true)}
             >
               {/* Ambient Radial Corner Glow */}
               <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full blur-2xl pointer-events-none bg-amber-500/15 opacity-80 z-10" />
@@ -303,20 +294,16 @@ export default function ProductPageClient({
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 55vw"
-                className={`object-cover transition-transform duration-300 ${
-                  isZooming ? 'scale-150' : 'scale-100'
-                }`}
-                style={
-                  isZooming
-                    ? { transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` }
-                    : undefined
-                }
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
 
               {/* Floating Wishlist Button */}
               <button
                 type="button"
-                onClick={handleWishlist}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleWishlist();
+                }}
                 className="absolute top-4 right-4 w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md border border-amber-300/70 text-[#221814] shadow-[0_3px_12px_rgba(184,142,75,0.2)] hover:bg-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-20 cursor-pointer"
                 aria-label={wishlisted ? 'Remove from Wishlist' : 'Save to Wishlist'}
               >
@@ -326,10 +313,20 @@ export default function ProductPageClient({
                 />
               </button>
 
-              {/* Hover Zoom Notice */}
-              <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                🔍 Hover to Magnify Grain Texture
-              </div>
+              {/* Fullscreen HD Gallery & Zoom Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsLightboxOpen(true);
+                }}
+                className="absolute bottom-4 right-4 bg-white/95 hover:bg-white text-[#221814] hover:text-[#B88E4B] border border-amber-300/80 shadow-[0_4px_16px_rgba(184,142,75,0.22)] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all hover:scale-105 active:scale-95 z-10 cursor-pointer backdrop-blur-md"
+                title="Fullscreen HD Gallery & Zoom"
+                aria-label="Fullscreen HD Gallery & Zoom"
+              >
+                <Maximize2 size={14} className="text-[#B88E4B]" />
+                <span>Click to Zoom & View All Photos</span>
+              </button>
             </div>
 
             {/* Thumbnail Showcase Carousel (Optimized 240px Thumbnails) */}
@@ -903,6 +900,23 @@ export default function ProductPageClient({
             </div>
           </div>
         )}
+
+        {/* Fullscreen Photo Lightbox Modal */}
+        <ProductImageLightboxModal
+          product={{
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            category: product.category || 'Luxury',
+            image: product.image,
+            images: product.images,
+            description: product.description,
+            material: product.material,
+          }}
+          isOpen={isLightboxOpen}
+          onClose={() => setIsLightboxOpen(false)}
+          initialIndex={activeImage}
+        />
 
       </div>
     </div>
