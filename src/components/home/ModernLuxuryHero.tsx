@@ -22,18 +22,88 @@ interface ModernLuxuryHeroProps {
   onShopClick?: () => void;
 }
 
-// Exactly 10 Luxury Categories matching screenshot images
+// Exactly 10 Luxury Categories with precise section targets matching HomeSignatureCategories
 const TEN_CATEGORIES = [
-  { name: 'L-Shape', href: '/#signature-categories', img: '/cat-thumb-lshape-2x.webp' },
-  { name: 'Beds', href: '/#signature-categories', img: '/cat-thumb-beds-2x.webp' },
-  { name: 'Dining', href: '/#signature-categories', img: '/cat-thumb-dining-2x.webp' },
-  { name: 'Coffee Chairs', href: '/#signature-categories', img: '/cat-thumb-chairs-2x.webp' },
-  { name: 'Center Tables', href: '/#signature-categories', img: '/cat-thumb-centertables-2x.webp' },
-  { name: 'Sofas', href: '/#signature-categories', img: '/cat-thumb-sofas-2x.webp' },
-  { name: 'Wardrobes', href: '/#signature-categories', img: '/cat-thumb-wardrobes-2x.webp' },
-  { name: 'TV Units', href: '/#signature-categories', img: '/cat-thumb-tvunits-2x.webp' },
-  { name: 'Consoles', href: '/#signature-categories', img: '/cat-thumb-accessories-2x.webp' },
-  { name: 'Showcases', href: '/#signature-categories', img: '/cat-thumb-showcase-2x.webp' },
+  { 
+    name: 'L-Shape', 
+    targetId: 'cat-section-sofas', 
+    fallbackId: 'cat-section-living-room', 
+    targetCat: 'Sofas', 
+    href: '/#cat-section-sofas', 
+    img: '/cat-thumb-lshape-2x.webp' 
+  },
+  { 
+    name: 'Beds', 
+    targetId: 'cat-section-bedroom', 
+    fallbackId: 'signature-categories', 
+    targetCat: 'Bedroom', 
+    href: '/#cat-section-bedroom', 
+    img: '/cat-thumb-beds-2x.webp' 
+  },
+  { 
+    name: 'Dining', 
+    targetId: 'cat-section-dining-room', 
+    fallbackId: 'signature-categories', 
+    targetCat: 'Dining Room', 
+    href: '/#cat-section-dining-room', 
+    img: '/cat-thumb-dining-2x.webp' 
+  },
+  { 
+    name: 'Coffee Chairs', 
+    targetId: 'cat-section-coffee-tables', 
+    fallbackId: 'cat-section-living-room', 
+    targetCat: 'Coffee Tables', 
+    href: '/#cat-section-coffee-tables', 
+    img: '/cat-thumb-chairs-2x.webp' 
+  },
+  { 
+    name: 'Center Tables', 
+    targetId: 'cat-section-coffee-tables', 
+    fallbackId: 'cat-section-living-room', 
+    targetCat: 'Coffee Tables', 
+    href: '/#cat-section-coffee-tables', 
+    img: '/cat-thumb-centertables-2x.webp' 
+  },
+  { 
+    name: 'Sofas', 
+    targetId: 'cat-section-sofas', 
+    fallbackId: 'cat-section-living-room', 
+    targetCat: 'Sofas', 
+    href: '/#cat-section-sofas', 
+    img: '/cat-thumb-sofas-2x.webp' 
+  },
+  { 
+    name: 'Wardrobes', 
+    targetId: 'cat-section-storage', 
+    fallbackId: 'cat-section-bedroom', 
+    targetCat: 'Storage', 
+    href: '/#cat-section-storage', 
+    img: '/cat-thumb-wardrobes-2x.webp' 
+  },
+  { 
+    name: 'TV Units', 
+    targetId: 'cat-section-tv-units', 
+    fallbackId: 'cat-section-living-room', 
+    targetCat: 'TV Units', 
+    href: '/#cat-section-tv-units', 
+    img: '/cat-thumb-tvunits-2x.webp' 
+  },
+  { 
+    name: 'Consoles', 
+    targetId: 'cat-section-accessories', 
+    fallbackId: 'cat-section-living-room', 
+    targetCat: 'Accessories', 
+    href: '/#cat-section-accessories', 
+    img: '/cat-thumb-accessories-2x.webp' 
+  },
+  { 
+    name: 'Showcases', 
+    targetId: 'cat-section-storage', 
+    fallbackId: 'cat-section-living-room', 
+    targetCat: 'Storage', 
+    href: '/#cat-section-storage', 
+    img: '/cat-thumb-showcase-2x.webp' 
+  },
 ];
 
 export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps) {
@@ -113,7 +183,39 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
       const el = document.getElementById(targetId);
       if (el) {
         e.preventDefault();
-        el.scrollIntoView({ behavior: 'smooth' });
+        const y = el.getBoundingClientRect().top + window.scrollY - 70;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+      }
+    }
+  };
+
+  const handleCategoryClick = (e: React.MouseEvent<HTMLAnchorElement>, cat: typeof TEN_CATEGORIES[0]) => {
+    if (onShopClick) {
+      e.preventDefault();
+      onShopClick();
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      const primaryEl = document.getElementById(cat.targetId);
+      const fallbackEl = cat.fallbackId ? document.getElementById(cat.fallbackId) : null;
+      const target = primaryEl || fallbackEl || document.getElementById('signature-categories');
+
+      if (target) {
+        e.preventDefault();
+        const y = target.getBoundingClientRect().top + window.scrollY - 70;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+
+        // Highlight matching category pill in HomeSignatureCategories
+        window.dispatchEvent(
+          new CustomEvent('fahad_select_category', {
+            detail: { category: cat.targetCat || cat.name },
+          })
+        );
+
+        if (window.history) {
+          window.history.pushState(null, '', `#${target.id}`);
+        }
       }
     }
   };
@@ -360,7 +462,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                 >
                   <Link
                     href={cat.href}
-                    onClick={(e) => handleSmoothScroll(e, cat.href)}
+                    onClick={(e) => handleCategoryClick(e, cat)}
                     className="group relative flex flex-col justify-between p-1.5 sm:p-2.5 rounded-[18px] sm:rounded-2xl bg-white border border-[#EAE1D5] shadow-xs hover:border-[#C59B4B] hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden aspect-[1.12/1] sm:aspect-[1.2/1] xl:aspect-[1.24/1]"
                   >
                     {/* Furniture Cutout Image (Wide Landscape Swatch, Snug Fit Without Dead Space) */}

@@ -13,44 +13,45 @@ interface HomeSignatureCategoriesProps {
 
 function isProductInCategory(p: StorefrontProduct, catName: string): boolean {
   const pCat = (p.category || '').toLowerCase().trim();
+  const pName = (p.name || '').toLowerCase().trim();
   const cName = catName.toLowerCase().trim();
-  if (!pCat) return false;
+  if (!pCat && !pName) return false;
 
   // Direct exact match
   if (pCat === cName) return true;
 
   if (cName === 'living room') {
-    return pCat === 'living room' || (pCat.includes('living') && !pCat.includes('dining'));
+    return pCat === 'living room' || pCat.includes('living') || pName.includes('sofa') || pCat.includes('sofa');
   }
   if (cName === 'bedroom') {
-    return pCat === 'bedroom' || pCat.includes('bed') || (p.name || '').toLowerCase().includes('bed');
+    return pCat === 'bedroom' || pCat.includes('bed') || pName.includes('bed');
   }
   if (cName === 'dining room') {
-    return pCat === 'dining room' || pCat.includes('dining') || (p.name || '').toLowerCase().includes('dining');
+    return pCat === 'dining room' || pCat.includes('dining') || pName.includes('dining');
   }
   if (cName === 'office') {
-    return pCat === 'office' || pCat.includes('desk') || (p.name || '').toLowerCase().includes('desk');
+    return pCat === 'office' || pCat.includes('desk') || pName.includes('desk');
   }
   if (cName === 'sofas') {
-    return pCat === 'sofas' || pCat.includes('sofa') || (p.name || '').toLowerCase().includes('sofa');
+    return pCat === 'sofas' || pCat.includes('sofa') || pName.includes('sofa') || pCat.includes('l-shape') || pName.includes('l-shape');
   }
   if (cName === 'coffee tables') {
-    return pCat === 'coffee tables' || pCat.includes('coffee') || pCat.includes('table') || pCat.includes('chair');
+    return pCat === 'coffee tables' || pCat.includes('coffee') || pCat.includes('table') || pCat.includes('chair') || pName.includes('table') || pName.includes('chair');
   }
   if (cName === 'tv units') {
-    return pCat === 'tv units' || pCat.includes('tv') || pCat.includes('media') || (p.name || '').toLowerCase().includes('tv');
+    return pCat === 'tv units' || pCat.includes('tv') || pCat.includes('media') || pName.includes('tv');
   }
   if (cName === 'storage') {
-    return pCat === 'storage' || pCat.includes('wardrobe') || pCat.includes('almirah') || pCat.includes('showcase') || pCat.includes('closet');
+    return pCat === 'storage' || pCat.includes('wardrobe') || pCat.includes('almirah') || pCat.includes('showcase') || pCat.includes('closet') || pName.includes('wardrobe');
   }
   if (cName === 'outdoor') {
     return pCat === 'outdoor' || pCat.includes('garden');
   }
   if (cName === 'accessories') {
-    return pCat === 'accessories' || pCat.includes('decor') || pCat.includes('lamp');
+    return pCat === 'accessories' || pCat.includes('decor') || pCat.includes('lamp') || pName.includes('console');
   }
 
-  return pCat.includes(cName) || cName.includes(pCat);
+  return pCat.includes(cName) || cName.includes(pCat) || pName.includes(cName);
 }
 
 function slugify(text: string): string {
@@ -113,9 +114,7 @@ export default function HomeSignatureCategories({
     const groups: { name: string; slug: string; products: StorefrontProduct[] }[] = [];
 
     for (const cat of validCats) {
-      const matching = products.filter(
-        (p) => !assignedIds.has(p.id) && isProductInCategory(p, cat)
-      );
+      const matching = products.filter((p) => isProductInCategory(p, cat));
       matching.forEach((p) => assignedIds.add(p.id));
       groups.push({
         name: cat,
@@ -189,6 +188,38 @@ export default function HomeSignatureCategories({
       container.scrollTo({ left: Math.max(0, targetScrollLeft), behavior: 'smooth' });
     }
   }, [activeCategory]);
+
+  // Listen to cross-component category selection events (e.g. from Hero "Shop by Category") and URL hashes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const onSelectCat = (e: Event) => {
+      const customEvent = e as CustomEvent<{ category: string }>;
+      if (customEvent.detail?.category) {
+        handlePillClick(customEvent.detail.category);
+      }
+    };
+
+    window.addEventListener('fahad_select_category', onSelectCat);
+
+    // Initial load hash navigation (e.g. /#cat-section-bedroom)
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#cat-section-')) {
+      const slug = hash.replace('#cat-section-', '');
+      const target = document.getElementById(`cat-section-${slug}`);
+      if (target) {
+        const catName = target.getAttribute('data-category');
+        if (catName) {
+          setActiveCategory(catName);
+          setExpandedCategories((prev) => ({ ...prev, [slug]: true }));
+        }
+      }
+    }
+
+    return () => {
+      window.removeEventListener('fahad_select_category', onSelectCat);
+    };
+  }, [categoryNames]);
 
   // Zero-Reflow Ultra-Performance Scrollspy with IntersectionObserver
   useEffect(() => {
@@ -304,7 +335,7 @@ export default function HomeSignatureCategories({
 
       {/* ── CATEGORY-BY-CATEGORY PRODUCT SECTIONS (INSTANT SSR, 60FPS SCROLLSPY) ── */}
       <div className="space-y-14 sm:space-y-20">
-        {groupedCategories.filter((group) => group.products.length > 0).map((group) => (
+        {groupedCategories.map((group) => (
           <div
             key={group.slug}
             id={`cat-section-${group.slug}`}
@@ -324,42 +355,68 @@ export default function HomeSignatureCategories({
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-xs font-serif italic text-[#7A6048]">
-                  {group.products.length} {group.products.length === 1 ? 'Masterpiece' : 'Masterpieces'} Available
+                  {group.products.length > 0
+                    ? `${group.products.length} ${group.products.length === 1 ? 'Masterpiece' : 'Masterpieces'} Available`
+                    : 'Custom Made-to-Order Commission'}
                 </span>
               </div>
             </div>
 
-            {/* Product Cards Grid (Initial 4 per category for low TBT + expand on click) */}
-            {(() => {
-              const isExpanded = !!expandedCategories[group.slug];
-              const visibleProducts = isExpanded ? group.products : group.products.slice(0, 6);
-              return (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                    {visibleProducts.map((product, idx) => (
-                      <ProductCard
-                        key={product.id || idx}
-                        product={product}
-                        index={idx}
-                      />
-                    ))}
-                  </div>
-
-                  {group.products.length > 6 && !isExpanded && (
-                    <div className="text-center mt-6 sm:mt-8">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedCategories((prev) => ({ ...prev, [group.slug]: true }))}
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-amber-300 bg-white hover:bg-[#FAF5EE] text-[#8C6222] text-xs font-bold uppercase tracking-wider transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer"
-                      >
-                        <span>View All {group.products.length} {group.name} Pieces</span>
-                        <ChevronRight size={14} />
-                      </button>
+            {/* Product Cards Grid OR Bespoke Custom Order Showcase Banner */}
+            {group.products.length > 0 ? (
+              (() => {
+                const isExpanded = !!expandedCategories[group.slug];
+                const visibleProducts = isExpanded ? group.products : group.products.slice(0, 6);
+                return (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                      {visibleProducts.map((product, idx) => (
+                        <ProductCard
+                          key={product.id || idx}
+                          product={product}
+                          index={idx}
+                        />
+                      ))}
                     </div>
-                  )}
-                </>
-              );
-            })()}
+
+                    {group.products.length > 6 && !isExpanded && (
+                      <div className="text-center mt-6 sm:mt-8">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedCategories((prev) => ({ ...prev, [group.slug]: true }))}
+                          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-amber-300 bg-white hover:bg-[#FAF5EE] text-[#8C6222] text-xs font-bold uppercase tracking-wider transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer"
+                        >
+                          <span>View All {group.products.length} {group.name} Pieces</span>
+                          <ChevronRight size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()
+            ) : (
+              <div className="rounded-[24px] bg-gradient-to-br from-[#FAF6F0] via-white to-[#FAF6F0] border-[1.5px] border-amber-300/60 p-6 sm:p-8 text-center shadow-xs">
+                <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#8C6222] bg-[#FAF5ED] px-3.5 py-1 rounded-full border border-amber-300/50 mb-2.5">
+                  <Sparkles size={12} className="text-[#B88E4B]" />
+                  <span>CUSTOM HANDCRAFTED COMMISSION</span>
+                </div>
+                <h4 className="font-serif font-black text-xl sm:text-2xl text-[#1F1A17] mb-2">
+                  Bespoke {group.name} Masterpieces
+                </h4>
+                <p className="text-stone-600 text-xs sm:text-sm max-w-lg mx-auto mb-5 leading-relaxed font-normal">
+                  Looking for bespoke {group.name.toLowerCase()} furniture? Every piece is custom-tailored to your exact architectural space in 100% solid seasoned Sheesham wood with traditional joinery.
+                </p>
+                <a
+                  href={`https://wa.me/923001234567?text=${encodeURIComponent(`Assalam-o-Alaikum Fahad Ali Interior! I am interested in custom bespoke ${group.name} designs.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-110 active:scale-95 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-full shadow-md transition-all cursor-pointer"
+                >
+                  <span>Request Custom {group.name} on WhatsApp</span>
+                  <ArrowRight size={15} />
+                </a>
+              </div>
+            )}
           </div>
         ))}
       </div>
