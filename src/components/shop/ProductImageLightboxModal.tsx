@@ -138,8 +138,8 @@ export default function ProductImageLightboxModal({
     const scaledW = imgW * zoom;
     const scaledH = imgH * zoom;
 
-    // Tasteful breathing gap so photo doesn't feel suffocated
-    const TASTEFUL_GAP = 28;
+    // Subtle, slim margin (reduced to ~10px-12px as requested)
+    const TASTEFUL_GAP = 10;
 
     const maxPanX = Math.max(0, (scaledW - stageW) / 2 + TASTEFUL_GAP);
     const maxPanY = Math.max(0, (scaledH - stageH) / 2 + TASTEFUL_GAP);
@@ -606,10 +606,10 @@ export default function ProductImageLightboxModal({
         </div>
       </div>
 
-      {/* ── MAIN IMAGE STAGE (BALANCED BREATHING ROOM & ELEGANT FRAMING) ── */}
+      {/* ── MAIN IMAGE STAGE (SLIM & BALANCED ~10PX-12PX GAP) ── */}
       <div 
         ref={stageRef}
-        className="relative flex-1 w-full flex items-center justify-center overflow-hidden px-4 sm:px-12 py-3 sm:py-6"
+        className="relative flex-1 w-full flex items-center justify-center overflow-hidden px-2 sm:px-6 py-1.5 sm:py-3"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -628,7 +628,7 @@ export default function ProductImageLightboxModal({
             e.stopPropagation();
             handlePrev();
           }}
-          className="absolute left-3 sm:left-8 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
           title="Previous Photo (Left Arrow)"
           aria-label="Previous Photo"
         >
@@ -642,17 +642,17 @@ export default function ProductImageLightboxModal({
             e.stopPropagation();
             handleNext();
           }}
-          className="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
           title="Next Photo (Right Arrow)"
           aria-label="Next Photo"
         >
           <ChevronRight size={26} strokeWidth={2.4} />
         </button>
 
-        {/* CENTER PRODUCT IMAGE WITH TASTEFUL BREATHING GAP */}
+        {/* CENTER PRODUCT IMAGE WITH SUBTLE ~10PX GAP */}
         <div 
           onClick={handleImageClick}
-          className="relative max-w-[88vw] sm:max-w-[82vw] max-h-[60vh] sm:max-h-[70vh] flex items-center justify-center will-change-transform z-10 select-none p-2 sm:p-3"
+          className="relative max-w-[92vw] sm:max-w-[88vw] max-h-[64vh] sm:max-h-[74vh] flex items-center justify-center will-change-transform z-10 select-none p-1 sm:p-1.5"
           style={{
             transform: `translate3d(${panPosition.x}px, ${panPosition.y}px, 0) scale(${zoomLevel})`,
             transformOrigin: 'center center',
@@ -675,7 +675,7 @@ export default function ProductImageLightboxModal({
             draggable={false}
             onLoad={() => setIsImgLoading(false)}
             onError={() => handleImgError(targetImg)}
-            className={`max-w-[86vw] sm:max-w-[80vw] max-h-[58vh] sm:max-h-[68vh] w-auto h-auto object-contain drop-shadow-[0_16px_36px_rgba(30,20,10,0.14)] select-none pointer-events-none rounded-2xl transition-opacity duration-200 ring-1 ring-black/5 ${
+            className={`max-w-[90vw] sm:max-w-[86vw] max-h-[62vh] sm:max-h-[72vh] w-auto h-auto object-contain drop-shadow-[0_12px_28px_rgba(30,20,10,0.12)] select-none pointer-events-none rounded-xl transition-opacity duration-200 ring-1 ring-black/5 ${
               isImgLoading ? 'opacity-0' : 'opacity-100'
             }`}
           />
