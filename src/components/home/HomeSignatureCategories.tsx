@@ -332,10 +332,10 @@ export default function HomeSignatureCategories({
             {/* Product Cards Grid (Initial 4 per category for low TBT + expand on click) */}
             {(() => {
               const isExpanded = !!expandedCategories[group.slug];
-              const visibleProducts = isExpanded ? group.products : group.products.slice(0, 4);
+              const visibleProducts = isExpanded ? group.products : group.products.slice(0, 6);
               return (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                     {visibleProducts.map((product, idx) => (
                       <ProductCard
                         key={product.id || idx}
@@ -345,7 +345,7 @@ export default function HomeSignatureCategories({
                     ))}
                   </div>
 
-                  {group.products.length > 4 && !isExpanded && (
+                  {group.products.length > 6 && !isExpanded && (
                     <div className="text-center mt-6 sm:mt-8">
                       <button
                         type="button"

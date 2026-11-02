@@ -187,76 +187,56 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
   return (
     <div
       data-testid="product-card"
-      className="group relative bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] rounded-[24px] p-3.5 shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_20px_45px_rgba(184,142,75,0.18)] transition-all duration-300 flex flex-col justify-between overflow-hidden"
+      tabIndex={0}
+      className="group relative aspect-[4/3] rounded-[24px] overflow-hidden bg-gradient-to-br from-white via-[#FCFAF7] to-[#FAF5EE] border-[1.5px] border-amber-300/80 hover:border-[#B88E4B] shadow-[0_4px_20px_rgba(184,142,75,0.08)] hover:shadow-[0_20px_45px_rgba(184,142,75,0.22)] transition-all duration-500 cursor-pointer focus:outline-none"
     >
-      <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.18)_0%,transparent_70%)] opacity-70 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(245,158,11,0.2)_0%,transparent_70%)] opacity-60 group-hover:opacity-100 transition-opacity z-10" />
 
-      <div className="relative aspect-[4/3] rounded-[18px] overflow-hidden bg-[#FAF5EE] mb-3.5 border border-amber-200/60">
-        <Link
-          href={`/product/${product.id}`}
-          prefetch={false}
-          onClick={handleProductClick}
-          onMouseEnter={primeProductCache}
-          className="block absolute inset-0 z-0"
-        >
-          <Image
-            src={imgSrc}
-            alt={product.name}
-            fill
-            loading="lazy"
-            decoding="async"
-            style={{ aspectRatio: '4/3' }}
-            className="object-cover transition-transform duration-700 group-hover:scale-108 aspect-[4/3]"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            onError={() => setImgError(true)}
-          />
-        </Link>
+      {/* 1. Full Furniture Product Image (Fills the entire card cleanly — matches user screenshot 1) */}
+      <Link
+        href={`/product/${product.id}`}
+        prefetch={false}
+        onClick={handleProductClick}
+        onMouseEnter={primeProductCache}
+        className="block absolute inset-0 z-0"
+        aria-label={product.name}
+      >
+        <Image
+          src={imgSrc}
+          alt={product.name}
+          fill
+          loading="lazy"
+          decoding="async"
+          style={{ aspectRatio: '4/3' }}
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          onError={() => setImgError(true)}
+        />
+      </Link>
 
-        {/* Top Badges */}
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10 pointer-events-none">
-          <span className="text-[9px] font-black uppercase tracking-wider bg-[#FAF5EE] text-[#8C6239] border border-amber-300/60 px-3 py-0.5 rounded-full shadow-2xs">
-            {product.category || 'Solid Wood'}
-          </span>
-        </div>
-
-        {/* Floating Wishlist Button (WCAG 44px Touch Target Compliant) */}
-        <button
-          type="button"
-          onClick={handleWishlist}
-          className="absolute top-2.5 right-2.5 w-11 h-11 sm:w-9 sm:h-9 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 rounded-xl bg-white/95 hover:bg-[#FAF5EE] text-[#221814] border border-amber-300/60 shadow-[0_2px_8px_rgba(184,142,75,0.15)] flex items-center justify-center transition-all z-10 hover:scale-110 active:scale-95 cursor-pointer"
-          aria-label="Toggle Wishlist"
-        >
-          <Heart
-            size={15}
-            className={wishlisted ? 'fill-rose-500 text-rose-500' : 'text-[#221814]'}
-          />
-        </button>
-
-        {/* Quick Actions Hover Overlay */}
-        <div className="absolute inset-x-2.5 bottom-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 flex items-center gap-2 z-10">
-          {onQuickView && (
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); onQuickView(product); }}
-              className="flex-1 bg-white hover:bg-[#FAF5EE] text-[#221814] text-[10.5px] font-black uppercase tracking-wider py-2.5 rounded-xl shadow-md border border-amber-300/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Eye size={13} /> Quick View
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            className="p-2.5 bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white rounded-xl shadow-md transition-colors cursor-pointer active:scale-95"
-            title="Add to Cart"
-            aria-label={`Add ${product.name} to cart`}
-          >
-            <ShoppingBag size={14} />
-          </button>
-        </div>
+      {/* 2. Top-Left Category Badge (Matches User Screenshot 1) */}
+      <div className="absolute top-3.5 left-3.5 z-20 pointer-events-none">
+        <span className="text-[11px] font-black uppercase tracking-wider bg-white/95 text-[#8C6222] border border-amber-300/80 px-4 py-1.5 rounded-full shadow-xs backdrop-blur-xs">
+          {product.category || 'Solid Wood'}
+        </span>
       </div>
 
-      <div className="flex flex-col justify-between flex-1 px-1 relative z-10">
-        <div>
+      {/* 3. Top-Right Wishlist Button (Matches User Screenshot 1) */}
+      <button
+        type="button"
+        onClick={handleWishlist}
+        className="absolute top-3.5 right-3.5 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-[#FAF5EE] text-[#221814] border border-amber-300/80 shadow-[0_2px_12px_rgba(184,142,75,0.18)] flex items-center justify-center transition-all z-20 hover:scale-110 active:scale-90 cursor-pointer backdrop-blur-xs"
+        aria-label="Toggle Wishlist"
+      >
+        <Heart
+          size={18}
+          className={wishlisted ? 'fill-rose-500 text-rose-500' : 'text-[#221814]'}
+        />
+      </button>
+
+      {/* 4. Bottom Details Overlay (Hidden normally, Smoothly Slides Up on Cursor Hover - Matches User Screenshot 2) */}
+      <div className="absolute inset-x-3 bottom-3 z-20 p-4 sm:p-4.5 rounded-[20px] bg-white/95 backdrop-blur-md border border-amber-300/80 shadow-[0_16px_36px_rgba(44,30,24,0.2)] transition-all duration-300 ease-out transform translate-y-[112%] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto flex flex-col justify-between">
+        <div className="mb-2.5">
           <Link
             href={`/product/${product.id}`}
             prefetch={false}
@@ -264,31 +244,44 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
             onMouseEnter={primeProductCache}
             className="block"
           >
-            <h3 className="text-[15px] sm:text-[16px] font-bold text-[#221814] group-hover:text-[#B88E4B] transition-colors font-serif leading-snug line-clamp-1">
+            <h3 className="text-base sm:text-lg font-black uppercase tracking-wide text-[#221814] hover:text-[#B88E4B] transition-colors font-serif leading-snug line-clamp-1">
               {product.name}
             </h3>
           </Link>
-          <p className="text-xs text-[#7A6048] font-medium line-clamp-1 mt-0.5">
-            {product.material || '100% Solid Seasoned Hardwood'}
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#8C6239] line-clamp-1 mt-0.5">
+            {product.category || product.material || 'SOFA SET'}
           </p>
         </div>
 
-        <div className="flex items-center justify-between pt-3 mt-3 border-t border-amber-200/60">
+        <div className="flex items-center justify-between pt-2.5 border-t border-amber-200/70">
           <div>
-            <span className="text-[9px] font-bold uppercase text-stone-400 tracking-wider block">Price</span>
+            <span className="text-[9px] font-black uppercase text-stone-400 tracking-widest block leading-none mb-1">Price</span>
             <span className="text-lg sm:text-xl font-black text-[#221814] font-sans tracking-tight">
               Rs. {formatPrice(product.price)}
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            className="bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-black uppercase tracking-wider shadow-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <ShoppingBag size={14} />
-            <span>Add</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {onQuickView && (
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(product); }}
+                className="w-10 h-10 rounded-xl bg-[#FAF5EE] border border-amber-300/60 hover:border-[#B88E4B] text-[#221814] flex items-center justify-center transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer"
+                title="Quick View"
+                aria-label="Quick View"
+              >
+                <Eye size={15} />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className="bg-gradient-to-r from-[#B88E4B] to-[#996515] hover:brightness-110 text-white px-4 py-2.5 min-h-[42px] rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <ShoppingBag size={15} />
+              <span>Add</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
