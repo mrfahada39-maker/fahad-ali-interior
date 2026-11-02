@@ -200,7 +200,7 @@ export default async function RootLayout({
   ReactDOM.prefetchDNS('https://fonts.gstatic.com');
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <JsonLd data={organizationJsonLd} nonce={nonce} />
       </head>

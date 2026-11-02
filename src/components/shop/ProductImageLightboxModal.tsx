@@ -101,6 +101,7 @@ export default function ProductImageLightboxModal({
   const dragStartRef = useRef({ x: 0, y: 0, startPanX: 0, startPanY: 0 });
   const hasDraggedRef = useRef(false);
   const touchStartRef = useRef<number | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   const addItem = useCartStore((s) => s.addItem);
 
@@ -205,19 +206,30 @@ export default function ProductImageLightboxModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose, handleNext, handlePrev]);
 
-  // Mouse wheel zoom in/out
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    if (e.deltaY < 0) {
-      setZoomLevel((prev) => Math.min(3, Number((prev + 0.25).toFixed(2))));
-    } else {
-      setZoomLevel((prev) => {
-        const next = Math.max(1, Number((prev - 0.25).toFixed(2)));
-        if (next === 1) setPanPosition({ x: 0, y: 0 });
-        return next;
-      });
-    }
-  };
+  // Mouse wheel zoom in/out with passive: false to allow e.preventDefault() without console warnings
+  useEffect(() => {
+    if (!isOpen) return;
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const onWheelNative = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        setZoomLevel((prev) => Math.min(3, Number((prev + 0.25).toFixed(2))));
+      } else {
+        setZoomLevel((prev) => {
+          const next = Math.max(1, Number((prev - 0.25).toFixed(2)));
+          if (next === 1) setPanPosition({ x: 0, y: 0 });
+          return next;
+        });
+      }
+    };
+
+    stage.addEventListener('wheel', onWheelNative, { passive: false });
+    return () => {
+      stage.removeEventListener('wheel', onWheelNative);
+    };
+  }, [isOpen]);
 
   // Click to toggle zoom: 1x -> 2x -> 1x (ignoring drag releases)
   const handleImageClick = (e: React.MouseEvent) => {
@@ -402,8 +414,8 @@ export default function ProductImageLightboxModal({
 
       {/* ── MAIN IMAGE STAGE (INTERACTIVE PAN & ZOOM, SIDE ARROWS) ── */}
       <div 
+        ref={stageRef}
         className="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden px-4"
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
