@@ -223,7 +223,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
   )}`;
 
   return (
-    <div className="relative w-full bg-[#FAF6F0] text-[#1F1A17] overflow-hidden pt-[76px] sm:pt-20 lg:pt-28 pb-4 lg:pb-6">
+    <div className="relative w-full bg-[#FAF6F0] text-[#1F1A17] overflow-hidden pt-[76px] sm:pt-20 lg:pt-22 pb-4 lg:pb-6">
       
       {/* ── LUXURY AMBIENT BACKGROUND GLOW & GEOMETRIC ACCENTS ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -329,7 +329,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
             {/* Ambient Background Glow behind image frame */}
             <div className="absolute inset-0 bg-gradient-to-tr from-[#C59B4B]/20 via-transparent to-[#9E7333]/15 rounded-[40px] blur-2xl transform scale-102 pointer-events-none" />
 
-            <div className="group relative w-full aspect-[4/3] max-w-[760px] 2xl:max-w-[820px] rounded-[32px] 2xl:rounded-[38px] overflow-hidden shadow-[0_25px_65px_rgba(44,30,24,0.12)] border-[2px] border-amber-300/60 bg-[#FAF6F0] transition-all duration-500 hover:shadow-[0_30px_80px_rgba(184,142,75,0.22)]">
+            <div className="group relative w-full aspect-[4/3] max-w-[760px] 2xl:max-w-[820px] max-h-[490px] xl:max-h-[520px] rounded-[32px] 2xl:rounded-[38px] overflow-hidden shadow-[0_25px_65px_rgba(44,30,24,0.12)] border-[2px] border-amber-300/60 bg-[#FAF6F0] transition-all duration-500 hover:shadow-[0_30px_80px_rgba(184,142,75,0.22)]">
               
               <Image
                 src="/hero-living-room-img1-4k.webp"

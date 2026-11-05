@@ -20,6 +20,7 @@ const AiEmployeeWidget = dynamic(
   () => import('@/components/ai/AiEmployeeWidget').then((m) => m.AiEmployeeWidget),
   { ssr: false }
 );
+const FloatingViewCartBar = dynamic(() => import('@/components/shop/FloatingViewCartBar'), { ssr: false });
 
 // Read at module level (server-evaluated at build time in Next.js)
 const googleEnabled =
@@ -89,6 +90,7 @@ export default function StoreShell({ children, showFooter = true, hideNavbar = f
       <BackToTop />
       <PWAInstallPrompt />
       <AiEmployeeWidget />
+      <FloatingViewCartBar />
     </div>
   );
 }
