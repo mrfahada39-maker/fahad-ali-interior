@@ -37,7 +37,7 @@ describe('Phone OTP Verification Engine', () => {
 
   it('correctly normalizes Pakistani phone numbers to E.164 without plus', () => {
     expect(normalizePakistaniPhone('0300 1234567')).toBe('923001234567');
-    expect(normalizePakistaniPhone('0321-3283301')).toBe('923213283301');
+    expect(normalizePakistaniPhone('0321-9876543')).toBe('923219876543');
     expect(normalizePakistaniPhone('+92 345 6789012')).toBe('923456789012');
     expect(normalizePakistaniPhone('923331122334')).toBe('923331122334');
   });

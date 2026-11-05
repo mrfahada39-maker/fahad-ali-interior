@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
     let targetPhone = user.phone || (isUserAdmin ? defaultAdminPhone : '');
 
     // Prevent Meta Cloud API deadlock: WhatsApp cannot dispatch to its own business phone number
-    const businessPhone = normalizePakistaniPhone(process.env.WHATSAPP_NUM || '923213283301');
-    const adminPhone = normalizePakistaniPhone(process.env.ADMIN_WHATSAPP_NUMBER || '923207006110');
+    const businessPhone = normalizePakistaniPhone(process.env.WHATSAPP_NUM || '');
+    const adminPhone = normalizePakistaniPhone(process.env.ADMIN_WHATSAPP_NUMBER || '');
     if (normalizePakistaniPhone(targetPhone) === businessPhone && adminPhone && adminPhone !== businessPhone) {
       targetPhone = adminPhone;
     }

@@ -70,7 +70,7 @@ const MAX_VERIFY_ATTEMPTS = 5;
 /**
  * Normalizes any Pakistani mobile number into international E.164 without plus:
  * e.g. "0300 1234567" -> "923001234567"
- *      "+92 321-3283301" -> "923213283301"
+ *      "+92 300-1234567" -> "923001234567"
  */
 export function normalizePakistaniPhone(phone: string): string {
   let cleaned = (phone || '').replace(/\D/g, '');

@@ -9,22 +9,25 @@ async function main() {
     throw new Error('Set SEED_ADMIN_PASSWORD (min 12 chars) to run seed.');
   }
 
-  // 1. Official Super Admin Account
+  // 1. Official Super Admin Account (loaded from environment variables)
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.SEED_ADMIN_EMAIL || 'admin@fahadali.pk';
+  const adminPhone = process.env.ADMIN_PHONE || process.env.NEXT_PUBLIC_CONTACT_PHONE || null;
+
   await db.user.upsert({
-    where: { email: 'mrfahada39@gmail.com' },
+    where: { email: adminEmail },
     update: {
       name: 'Fahad Ali',
       role: UserRole.ADMIN,
-      phone: '+92 321 3283301',
+      phone: adminPhone,
       emailVerified: new Date(),
       password: await bcrypt.hash(adminPassword, 12),
     },
     create: {
       name: 'Fahad Ali',
-      email: 'mrfahada39@gmail.com',
+      email: adminEmail,
       password: await bcrypt.hash(adminPassword, 12),
       role: UserRole.ADMIN,
-      phone: '+92 321 3283301',
+      phone: adminPhone,
       emailVerified: new Date(),
     },
   });
@@ -69,19 +72,19 @@ async function main() {
   const settings = await db.settings.findFirst();
   const settingsPayload = {
     siteName: 'Fahad Ali Interior',
-    adminEmail: 'concierge@fahadali.pk',
-    contactPhone: '+92 321 3283301',
-    storeAddress: 'Main Boulevard, Gulberg III, Lahore, Pakistan',
+    adminEmail: process.env.ADMIN_EMAIL || 'concierge@fahadali.pk',
+    contactPhone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '',
+    storeAddress: process.env.NEXT_PUBLIC_STORE_ADDRESS || 'Main Boulevard, Gulberg III, Lahore, Pakistan',
     foundedYear: '2016',
-    socialWhatsapp: 'https://wa.me/923213283301',
+    socialWhatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER.replace(/\D/g, '')}` : '',
     socialFacebook: '',
     socialInstagram: '',
-    accountTitle: 'Fahad Ali Interior',
-    jazzcashNumber: '03213283301',
-    easypaisaNumber: '03213283301',
-    bankName: 'Meezan Bank Limited',
-    accountNumber: '',
-    iban: '',
+    accountTitle: process.env.NEXT_PUBLIC_BANK_ACCOUNT_TITLE || 'Fahad Ali Interior',
+    jazzcashNumber: process.env.JAZZCASH_NUMBER || '',
+    easypaisaNumber: process.env.EASYPAISA_NUMBER || '',
+    bankName: process.env.NEXT_PUBLIC_BANK_NAME || 'Meezan Bank Limited',
+    accountNumber: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || '',
+    iban: process.env.NEXT_PUBLIC_BANK_IBAN || '',
   };
 
   if (!settings) {

@@ -24,7 +24,7 @@ FAHAD ALI INTERIOR — COMPLETE WEBSITE & SYSTEM SITEMAP
 - Checkout [/checkout]: White-glove delivery address, Cash on Delivery (COD) / Bank Transfer, order placement.
 - Order History & Tracking [/orders]: Order tracking status by Order ID (e.g. FAI-123456), estimated delivery days (3-5 days in-stock, 10-14 days custom).
 - About Us [/about]: Brand story, 30-day kiln seasoning process, 8-12% moisture control, artisan craftsmanship.
-- Showroom & Contact [/contact]: Flagship Showroom: Gulberg III, Lahore, Pakistan. Phone/WhatsApp: +92 321 3283301. Free Nationwide Shipping across Pakistan.
+- Showroom & Contact [/contact]: Flagship Showroom: Gulberg III, Lahore, Pakistan. Free Nationwide Shipping across Pakistan.
 - Terms & Privacy [/privacy, /terms]: 30-day money back / return policy, structural warranty terms.
 - Admin AI Intelligence Dashboard [/admin]: Revenue forecasting, stock turnover, AI discount generator, live orders.
 

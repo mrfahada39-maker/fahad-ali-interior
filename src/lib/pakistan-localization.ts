@@ -122,7 +122,7 @@ export function isValidPakistaniPhone(phone: string): boolean {
  */
 export const RAAST_SBP_DETAILS = {
   serviceName: 'Raast (State Bank of Pakistan)',
-  raastId: process.env.NEXT_PUBLIC_RAAST_ID || process.env.NEXT_PUBLIC_CONTACT_PHONE || '03213283301',
+  raastId: process.env.NEXT_PUBLIC_RAAST_ID || process.env.NEXT_PUBLIC_CONTACT_PHONE || '',
   accountTitle: process.env.NEXT_PUBLIC_BANK_ACCOUNT_TITLE || 'Fahad Ali Interior (Pvt) Ltd',
   accountNumber: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || '00000000000000',
   iban: process.env.NEXT_PUBLIC_BANK_IBAN || 'PK16MEZN0000000000000000',
