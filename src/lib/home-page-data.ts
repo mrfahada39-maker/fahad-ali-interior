@@ -96,7 +96,7 @@ export function invalidateHomePageDataCache() {
   cachedHomePageData = null;
   try {
     const { revalidateTag } = require('next/cache');
-    revalidateTag('homepage-data');
+    revalidateTag('homepage-data', 'max');
   } catch {}
 }
 
