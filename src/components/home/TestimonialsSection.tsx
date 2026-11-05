@@ -6,6 +6,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { resolveImageUrl } from '@/lib/images';
 import { ArrowLeft, ArrowRight, Star, Quote, MapPin } from 'lucide-react';
 
+const DISTINCT_FALLBACK_AVATARS = [
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=75&fm=webp',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=96&q=75&fm=webp',
+];
+
 export interface TestimonialReviewItem {
   id: string;
   customerName?: string | null;
@@ -98,7 +107,7 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
         rating: ratingNum,
         score: `${Number(r.rating || 5).toFixed(1)}`,
         avatar: userCustomAvatar || '',
-        fallbackAvatar: '',
+        fallbackAvatar: DISTINCT_FALLBACK_AVATARS[idx % DISTINCT_FALLBACK_AVATARS.length],
         roomImage,
         tag: '✓ Verified Purchase',
         ...theme,
