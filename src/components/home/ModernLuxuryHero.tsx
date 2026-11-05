@@ -6,18 +6,13 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   Crown, 
-  ShieldCheck, 
-  Truck, 
-  CreditCard, 
-  Headphones, 
   Play, 
   ArrowRight, 
   X,
   ChevronLeft,
   ChevronRight,
   MessageSquare,
-  Sparkles,
-  Award
+  Sparkles
 } from 'lucide-react';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
@@ -279,39 +274,11 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
             </h1>
 
             {/* 3. Subtitle */}
-            <p className="text-[15.5px] xl:text-[16.5px] text-[#5C4D44] leading-relaxed max-w-xl font-normal mb-6.5">
+            <p className="text-[15.5px] xl:text-[16.5px] text-[#5C4D44] leading-relaxed max-w-xl font-normal mb-8">
               Transform your sanctuary with 100% seasoned solid Sheesham timber, hand-tufted Italian fabrics, and heirloom architectural joinery handcrafted in Lahore.
             </p>
 
-            {/* 4. Luxury Trust Badges Row (Glassmorphic Micro-Cards) */}
-            <div className="grid grid-cols-4 gap-2.5 w-full max-w-xl mb-8">
-              {[
-                { icon: ShieldCheck, label: '10-Yr Warranty', desc: 'Solid Sheesham' },
-                { icon: Truck, label: 'White-Glove', desc: 'Pan-Pakistan' },
-                { icon: CreditCard, label: 'Safe Pay', desc: 'COD & RAAST' },
-                { icon: Headphones, label: 'Concierge', desc: '24/7 Support' }
-              ].map((badge) => {
-                const Icon = badge.icon;
-                return (
-                  <div 
-                    key={badge.label}
-                    className="group relative flex flex-col items-center justify-center p-3 rounded-2xl bg-white/90 hover:bg-white border border-[#E8DFC8]/90 hover:border-[#B88E4B] shadow-[0_3px_14px_rgba(44,30,24,0.04)] hover:shadow-[0_8px_25px_rgba(184,142,75,0.16)] text-center transition-all duration-300 hover:-translate-y-1 cursor-default backdrop-blur-xs"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3] border border-amber-300/60 flex items-center justify-center text-[#B88E4B] group-hover:scale-110 group-hover:bg-[#B88E4B] group-hover:text-white transition-all duration-300 mb-1.5 shadow-2xs">
-                      <Icon size={15} strokeWidth={2} />
-                    </div>
-                    <span className="text-[11px] font-bold text-[#221814] leading-tight block">
-                      {badge.label}
-                    </span>
-                    <span className="text-[9.5px] text-[#8C7A6D] font-medium leading-none mt-0.5 block">
-                      {badge.desc}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* 5. Modern CTAs: Shop Collection + Watch Video with Pulse Ripple */}
+            {/* Modern CTAs: Shop Collection + Watch Video with Pulse Ripple */}
             <div className="flex items-center gap-5">
               {/* Primary Glowing Button with Shimmer Sweep */}
               <Link
@@ -352,7 +319,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
 
           </motion.div>
 
-          {/* Right Column: Hero Living Room Visual with Floating Glass Badges */}
+          {/* Right Column: Hero Living Room Visual Showcase */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -374,28 +341,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
               />
               
               {/* Subtle Luxury Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/5 pointer-events-none" />
-
-              {/* Top-Right Floating Glass Badge: 10-Year Warranty */}
-              <div className="absolute top-4 right-4 z-20 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-amber-300/80 shadow-[0_4px_20px_rgba(0,0,0,0.15)] text-[#221814] text-xs font-bold transition-transform duration-300 group-hover:scale-105">
-                <Award size={15} className="text-[#C59B4B] fill-[#C59B4B]" />
-                <span>10-Year Structural Warranty</span>
-              </div>
-
-              {/* Bottom-Left Floating Glass Card: Atelier Signature */}
-              <div className="absolute bottom-4 left-4 z-20 flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl bg-white/90 backdrop-blur-md border border-amber-300/80 shadow-[0_8px_30px_rgba(0,0,0,0.18)] max-w-xs transition-transform duration-300 group-hover:scale-103">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#221814] to-[#3E2E25] flex items-center justify-center text-[#E5C989] shrink-0 shadow-xs">
-                  <Sparkles size={18} />
-                </div>
-                <div className="pr-1">
-                  <p className="text-[11.5px] font-black text-[#221814] leading-tight">
-                    100% Solid Seasoned Wood
-                  </p>
-                  <p className="text-[10px] text-[#7A6354] font-medium leading-none mt-0.5">
-                    Kiln-Dried • Anti-Termite Treated
-                  </p>
-                </div>
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/5 pointer-events-none" />
 
             </div>
           </motion.div>
@@ -454,28 +400,6 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* 4 Feature Badges on Mobile */}
-          <div className="w-full bg-white border border-[#EAE1D5] rounded-xl p-2 shadow-2xs grid grid-cols-4 divide-x divide-[#EFE7DC] text-center mt-2.5">
-            {[
-              { icon: ShieldCheck, title: 'Premium', sub: 'Quality' },
-              { icon: Truck, title: 'Safe & Fast', sub: 'Delivery' },
-              { icon: CreditCard, title: 'Secure', sub: 'Payments' },
-              { icon: Headphones, title: '24/7', sub: 'Support' }
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.sub} className="flex flex-col items-center justify-center px-1">
-                  <div className="w-5 h-5 rounded-full bg-[#FAF5ED] flex items-center justify-center text-[#B88E4B] mb-0.5">
-                    <Icon size={12} strokeWidth={1.8} />
-                  </div>
-                  <span className="text-[9.5px] font-bold text-[#2C1E18] leading-tight">
-                    {item.title} <br /> {item.sub}
-                  </span>
-                </div>
-              );
-            })}
           </div>
         </div>
 
