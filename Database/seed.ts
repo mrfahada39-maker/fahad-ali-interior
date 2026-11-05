@@ -1,13 +1,7 @@
-import { PrismaClient, UserRole, DiscountType } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-const db = new PrismaClient();
 
-const IMAGES = {
-  bed: '/cat-thumb-beds-2x.webp',
-  sofa: '/cat-thumb-sofas-2x.webp',
-  dining: '/cat-thumb-dining-2x.webp',
-  wardrobe: '/cat-thumb-wardrobes-2x.webp',
-};
+const db = new PrismaClient();
 
 async function main() {
   const adminPassword = process.env.SEED_ADMIN_PASSWORD;
@@ -15,8 +9,9 @@ async function main() {
     throw new Error('Set SEED_ADMIN_PASSWORD (min 12 chars) to run seed.');
   }
 
+  // 1. Official Super Admin Account
   await db.user.upsert({
-    where: { email: 'admin@fahadali.com' },
+    where: { email: 'mrfahada39@gmail.com' },
     update: {
       name: 'Fahad Ali',
       role: UserRole.ADMIN,
@@ -26,7 +21,7 @@ async function main() {
     },
     create: {
       name: 'Fahad Ali',
-      email: 'admin@fahadali.com',
+      email: 'mrfahada39@gmail.com',
       password: await bcrypt.hash(adminPassword, 12),
       role: UserRole.ADMIN,
       phone: '+92 321 3283301',
@@ -34,44 +29,20 @@ async function main() {
     },
   });
 
-  const productCount = await db.product.count({ where: { deletedAt: null } });
-  if (productCount === 0) {
-    const products = [
-      { name: 'Royal Sheesham King Bed', price: 385000, category: 'Bedroom', image: IMAGES.bed, stockCount: 8, isPremium: true },
-      { name: 'Lahore Velvet Queen Bed', price: 275000, category: 'Bedroom', image: IMAGES.bed, stockCount: 12 },
-      { name: 'Imperial Chesterfield Sofa Set', price: 685000, category: 'Sofas', image: IMAGES.sofa, stockCount: 5, isPremium: true },
-      { name: 'Karachi Contemporary L-Shape', price: 345000, category: 'Sofas', image: IMAGES.sofa, stockCount: 10 },
-      { name: 'Sultan 8-Seater Dining Table', price: 795000, category: 'Dining Room', image: IMAGES.dining, stockCount: 3, isPremium: true },
-      { name: 'Heritage Round Dining Set', price: 165000, category: 'Dining Room', image: IMAGES.dining, stockCount: 14 },
-      { name: 'Maharani Walk-In Wardrobe', price: 575000, category: 'Storage', image: IMAGES.wardrobe, stockCount: 4, isPremium: true },
-      { name: 'Classic Hinged Door Almirah', price: 185000, category: 'Storage', image: IMAGES.wardrobe, stockCount: 8 },
-    ];
-
-    for (const p of products) {
-      await db.product.create({
-        data: {
-          ...p,
-          description: `Handcrafted ${p.name} by Fahad Ali Interior.`,
-          material: 'Premium Wood',
-          dimensions: 'Custom',
-        },
-      });
-    }
-  }
-
+  // 2. Official Luxury Store Categories (Using verified local WebP photography)
   const categoryDefinitions = [
-    { name: 'Living Room', icon: 'Sofa', image: 'https://images.unsplash.com/photo-1583847268964-b28ce8f31586?auto=format&fit=crop&w=600&q=80', description: 'Premium living room furniture', order: 1 },
-    { name: 'Bedroom', icon: 'BedDouble', image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=600&q=80', description: 'Luxury bedroom furniture', order: 2 },
-    { name: 'Dining Room', icon: 'Coffee', image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=80', description: 'Exquisite dining sets', order: 3 },
-    { name: 'Office', icon: 'Monitor', image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=600&q=80', description: 'Modern office setups', order: 4 },
-    { name: 'Sofas', icon: 'Armchair', image: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=600&q=80', description: 'Comfortable & stylish sofas', order: 5 },
-    { name: 'Coffee Tables', icon: 'Table', image: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&w=600&q=80', description: 'Elegant coffee tables', order: 6 },
-    { name: 'TV Units', icon: 'Tv', image: 'https://images.unsplash.com/photo-1593696140826-c58b021acf8b?auto=format&fit=crop&w=600&q=80', description: 'Modern TV units', order: 7 },
-    { name: 'Storage', icon: 'Archive', image: 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1785011112/fahad-ali-interior/categories/on6j6aaprejwskrykplu.jpg', description: 'Smart storage solutions', order: 8 },
-    { name: 'Custom Furniture Solutions', icon: 'Sparkles', image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=600&q=80', description: 'Tailored to your space & style', isPromo: true, order: 9 },
-    { name: 'Outdoor', icon: 'Sun', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80', description: 'Outdoor living furniture', order: 10 },
-    { name: 'Kids Furniture', icon: 'Baby', image: 'https://images.unsplash.com/photo-1519643381401-22c77e60520e?auto=format&fit=crop&w=600&q=80', description: 'Safe & playful kids furniture', order: 11 },
-    { name: 'Accessories', icon: 'Lamp', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80', description: 'Decor & accessories', order: 12 },
+    { name: 'Living Room', icon: 'Sofa', image: '/cat-thumb-sofas-2x.webp', description: 'Handcrafted luxury living room suites', order: 1 },
+    { name: 'Bedroom', icon: 'BedDouble', image: '/cat-thumb-beds-2x.webp', description: 'Royal solid Sheesham bedroom suites', order: 2 },
+    { name: 'Dining Room', icon: 'Coffee', image: '/cat-thumb-dining-2x.webp', description: 'Exquisite royal dining tables and seating', order: 3 },
+    { name: 'Office', icon: 'Monitor', image: '/cat-thumb-chairs-2x.webp', description: 'Executive timber desks and luxury armchairs', order: 4 },
+    { name: 'Sofas', icon: 'Armchair', image: '/cat-thumb-sofas-2x.webp', description: 'Turkish velvet and Chesterfield sofas', order: 5 },
+    { name: 'Coffee Tables', icon: 'Table', image: '/cat-thumb-centertables-2x.webp', description: 'Brass-inlaid and carved center tables', order: 6 },
+    { name: 'TV Units', icon: 'Tv', image: '/cat-thumb-tvunits-2x.webp', description: 'Architectural media consoles and showcases', order: 7 },
+    { name: 'Storage', icon: 'Archive', image: '/cat-thumb-wardrobes-2x.webp', description: 'Bespoke walk-in and hinged wardrobes', order: 8 },
+    { name: 'Custom Furniture Solutions', icon: 'Sparkles', image: '/hero-living-room-img1-4k.webp', description: 'Tailored architectural commissions', isPromo: true, order: 9 },
+    { name: 'Outdoor', icon: 'Sun', image: '/cat-thumb-chairs-2x.webp', description: 'All-weather hardwood outdoor sets', order: 10 },
+    { name: 'Kids Furniture', icon: 'Baby', image: '/cat-thumb-beds-2x.webp', description: 'Handcrafted safe timber bedroom furniture', order: 11 },
+    { name: 'Accessories', icon: 'Lamp', image: '/cat-thumb-accessories-2x.webp', description: 'Luxury decor, consoles and brass lighting', order: 12 },
   ];
 
   for (const c of categoryDefinitions) {
@@ -85,7 +56,7 @@ async function main() {
         });
     const categoryData = {
       ...c,
-      items: c.isPromo ? '' : `${actualCount} ${actualCount === 1 ? 'Item' : 'Items'}`,
+      items: c.isPromo ? '' : `${actualCount} ${actualCount === 1 ? 'Masterpiece' : 'Masterpieces'}`,
     };
     await db.category.upsert({
       where: { name: c.name },
@@ -94,91 +65,35 @@ async function main() {
     });
   }
 
-  // ============================================================================
-  // DEMO DATA ONLY — Sample Promotional Coupons (Development / Staging Seed)
-  // ============================================================================
-  const demoCoupons = [
-    {
-      code: 'WELCOME10',
-      discount: 10,
-      discountType: DiscountType.PERCENTAGE,
-      minOrderAmount: 50000,
-      maxUses: 100,
-    },
-    {
-      code: 'FAHAD10',
-      discount: 10,
-      discountType: DiscountType.PERCENTAGE,
-      minOrderAmount: 0,
-      maxUses: 500,
-    },
-    {
-      code: 'VIP10',
-      discount: 10,
-      discountType: DiscountType.PERCENTAGE,
-      minOrderAmount: 50000,
-      maxUses: 200,
-    },
-    {
-      code: 'LUXURY10',
-      discount: 10,
-      discountType: DiscountType.PERCENTAGE,
-      minOrderAmount: 100000,
-      maxUses: 500,
-    },
-    {
-      code: 'FAHAD20',
-      discount: 20,
-      discountType: DiscountType.PERCENTAGE,
-      minOrderAmount: 250000,
-      maxUses: 100,
-    },
-    {
-      code: 'ROYAL50',
-      discount: 50000,
-      discountType: DiscountType.FIXED,
-      minOrderAmount: 300000,
-      maxUses: 50,
-    },
-  ];
-
-  for (const c of demoCoupons) {
-    await db.coupon.upsert({
-      where: { code: c.code },
-      update: {
-        discount: c.discount,
-        discountType: c.discountType,
-        minOrderAmount: c.minOrderAmount,
-        maxUses: c.maxUses,
-        isActive: true,
-        deletedAt: null,
-      },
-      create: c,
-    });
-  }
-  // === END DEMO COUPONS ===
-
+  // 3. Official Business Settings
   const settings = await db.settings.findFirst();
+  const settingsPayload = {
+    siteName: 'Fahad Ali Interior',
+    adminEmail: 'concierge@fahadali.pk',
+    contactPhone: '+92 321 3283301',
+    storeAddress: 'Main Boulevard, Gulberg III, Lahore, Pakistan',
+    foundedYear: '2016',
+    socialWhatsapp: 'https://wa.me/923213283301',
+    socialFacebook: '',
+    socialInstagram: '',
+    accountTitle: 'Fahad Ali Interior',
+    jazzcashNumber: '03213283301',
+    easypaisaNumber: '03213283301',
+    bankName: 'Meezan Bank Limited',
+    accountNumber: '',
+    iban: '',
+  };
+
   if (!settings) {
-    await db.settings.create({
-      data: {
-        siteName: 'Fahad Ali Interior',
-        adminEmail: 'info@fahadaliinterior.com',
-        contactPhone: '+92 321 3283301',
-        storeAddress: 'Main Boulevard, Gulberg III, Lahore, Pakistan',
-        foundedYear: '2020',
-        socialWhatsapp: 'https://wa.me/923213283301',
-        accountTitle: 'Fahad Ali Interior',
-        jazzcashNumber: '03213283301',
-        easypaisaNumber: '03213283301',
-        bankName: 'HBL',
-        accountNumber: '',
-        iban: '',
-      },
+    await db.settings.create({ data: settingsPayload });
+  } else {
+    await db.settings.update({
+      where: { id: settings.id },
+      data: settingsPayload,
     });
   }
 
-  console.log('Seed completed.');
+  console.log('Seed completed cleanly with zero dummy data.');
 }
 
 main()
