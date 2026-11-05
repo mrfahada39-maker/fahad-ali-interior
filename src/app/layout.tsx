@@ -63,7 +63,7 @@ const organizationJsonLd = {
   name: "Fahad Ali Interior",
   url: siteUrl,
   logo: "https://res.cloudinary.com/dfd8rzojj/image/upload/v1788039209/fahad-ali-interior/assets/fahad_ali_logo.svg",
-  image: `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80`,
+  image: `${siteUrl}/hero-living-room-img1-4k.webp`,
   description:
     "Handcrafted luxury furniture from Lahore, Pakistan. Premium 100% solid seasoned Sheesham wood beds, L-shape sofas, dining sets, and bespoke wardrobes with a 10-year structural and anti-termite guarantee.",
   telephone: BUSINESS_CONTACT.phone,

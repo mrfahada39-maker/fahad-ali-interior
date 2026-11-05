@@ -36,53 +36,6 @@ interface ProductImageLightboxModalProps {
   initialIndex?: number;
 }
 
-// 100% verified reliable local & Cloudinary detail photos for 5-6 multi-angle viewing
-const RELIABLE_CATEGORY_ANGLES: Record<string, string[]> = {
-  'Living Room': [
-    '/cat-thumb-sofas-2x.webp',
-    '/cat-thumb-lshape-2x.webp',
-    '/images/sofa_beige.webp',
-    '/hero-living-room-img1-4k.webp',
-  ],
-  Sofas: [
-    '/cat-thumb-sofas-2x.webp',
-    '/cat-thumb-lshape-2x.webp',
-    '/images/sofa_beige.webp',
-    '/hero-living-room-img1-4k.webp',
-  ],
-  Bedroom: [
-    '/cat-thumb-beds-2x.webp',
-    '/cat-thumb-wardrobes-2x.webp',
-    '/cat-thumb-showcase-2x.webp',
-    '/cat-thumb-accessories-2x.webp',
-  ],
-  Beds: [
-    '/cat-thumb-beds-2x.webp',
-    '/cat-thumb-wardrobes-2x.webp',
-    '/cat-thumb-showcase-2x.webp',
-    '/cat-thumb-accessories-2x.webp',
-  ],
-  'Dining Room': [
-    '/cat-thumb-dining-2x.webp',
-    '/cat-thumb-centertables-2x.webp',
-    '/cat-thumb-chairs-2x.webp',
-    '/cat-thumb-showcase-2x.webp',
-  ],
-  Dining: [
-    '/cat-thumb-dining-2x.webp',
-    '/cat-thumb-centertables-2x.webp',
-    '/cat-thumb-chairs-2x.webp',
-    '/cat-thumb-showcase-2x.webp',
-  ],
-};
-
-const DEFAULT_ANGLES = [
-  '/cat-thumb-sofas-2x.webp',
-  '/cat-thumb-beds-2x.webp',
-  '/cat-thumb-dining-2x.webp',
-  '/hero-living-room-img1-4k.webp',
-];
-
 export default function ProductImageLightboxModal({
   product,
   isOpen,
@@ -182,7 +135,7 @@ export default function ProductImageLightboxModal({
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, [isDragging]);
 
-  // Build the complete 5-6 picture gallery
+  // Build the gallery strictly from the product's actual uploaded images
   const galleryImages = useMemo(() => {
     const rawList: string[] = [];
     if (product.image) rawList.push(product.image);
@@ -193,19 +146,9 @@ export default function ProductImageLightboxModal({
     }
 
     const uniqueImages = Array.from(new Set(rawList.filter(Boolean)));
+    const targetImages = uniqueImages.length > 0 ? uniqueImages : (product.image ? [product.image] : []);
 
-    // Fill up to 5-6 angles using reliable local assets
-    const fallbacks = RELIABLE_CATEGORY_ANGLES[product.category] || DEFAULT_ANGLES;
-    const finalList = [...uniqueImages];
-
-    for (const fb of fallbacks) {
-      if (finalList.length >= 5) break;
-      if (!finalList.includes(fb)) {
-        finalList.push(fb);
-      }
-    }
-
-    return finalList.map((img) => resolveImageUrl(img, product.category, 1400, 'good'));
+    return targetImages.map((img) => resolveImageUrl(img, product.category, 1400, 'good'));
   }, [product.image, product.images, product.category]);
 
   const totalImages = galleryImages.length;
@@ -531,10 +474,17 @@ export default function ProductImageLightboxModal({
         </div>
 
         {/* Center: Image Counter (e.g. Photo 2 of 5) */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-700 text-xs font-semibold shadow-2xs">
-          <Images size={13} className="text-[#C59B4B]" />
-          <span>Photo {currentIndex + 1} of {totalImages}</span>
-        </div>
+        {totalImages > 1 ? (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-700 text-xs font-semibold shadow-2xs">
+            <Images size={13} className="text-[#C59B4B]" />
+            <span>Photo {currentIndex + 1} of {totalImages}</span>
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-700 text-xs font-semibold shadow-2xs">
+            <Images size={13} className="text-[#C59B4B]" />
+            <span>HD Detail View</span>
+          </div>
+        )}
 
         {/* Right: Zoom Controls */}
         <div className="flex items-center gap-1 sm:gap-1.5">
@@ -621,33 +571,37 @@ export default function ProductImageLightboxModal({
           touchAction: 'none',
         }}
       >
-        {/* SIDE FLOATING PREV ARROW (<) */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handlePrev();
-          }}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
-          title="Previous Photo (Left Arrow)"
-          aria-label="Previous Photo"
-        >
-          <ChevronLeft size={26} strokeWidth={2.4} />
-        </button>
+        {/* SIDE FLOATING PREV ARROW (<) - only when multiple photos exist */}
+        {totalImages > 1 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePrev();
+            }}
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
+            title="Previous Photo (Left Arrow)"
+            aria-label="Previous Photo"
+          >
+            <ChevronLeft size={26} strokeWidth={2.4} />
+          </button>
+        )}
 
-        {/* SIDE FLOATING NEXT ARROW (>) */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleNext();
-          }}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
-          title="Next Photo (Right Arrow)"
-          aria-label="Next Photo"
-        >
-          <ChevronRight size={26} strokeWidth={2.4} />
-        </button>
+        {/* SIDE FLOATING NEXT ARROW (>) - only when multiple photos exist */}
+        {totalImages > 1 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNext();
+            }}
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 sm:w-13 sm:h-13 min-w-[44px] min-h-[44px] rounded-full bg-white/95 hover:bg-white active:scale-90 text-stone-800 hover:text-[#9A7030] border border-stone-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.1)] flex items-center justify-center transition-all hover:scale-105 cursor-pointer backdrop-blur-md"
+            title="Next Photo (Right Arrow)"
+            aria-label="Next Photo"
+          >
+            <ChevronRight size={26} strokeWidth={2.4} />
+          </button>
+        )}
 
         {/* CENTER PRODUCT IMAGE WITH SUBTLE ~10PX GAP */}
         <div 
@@ -696,44 +650,43 @@ export default function ProductImageLightboxModal({
           </div>
         </div>
 
-        {/* Center: Horizontal Thumbnail Strip (Shows all 5-6 photos with direct fast loading) */}
+        {/* Center: Horizontal Thumbnail Strip (Only shown when multiple real photos exist) */}
         <div className="flex flex-col items-center gap-1.5">
-          <div 
-            data-scroll-container="horizontal"
-            className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto max-w-[92vw] sm:max-w-[60vw] py-0.5 px-1 scrollbar-hide"
-          >
-            {galleryImages.map((thumbUrl, idx) => {
-              const isActive = idx === currentIndex;
-              return (
-                <button
-                  key={thumbUrl + idx}
-                  type="button"
-                  onClick={() => {
-                    setZoomLevel(1);
-                    setPanPosition({ x: 0, y: 0 });
-                    setCurrentIndex(idx);
-                  }}
-                  className={`relative w-13 h-10 sm:w-15 sm:h-11 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer bg-white border-2 ${
-                    isActive
-                      ? 'border-[#C59B4B] ring-2 ring-[#C59B4B]/30 scale-105 shadow-[0_3px_12px_rgba(197,155,75,0.3)] opacity-100'
-                      : 'border-stone-200/80 opacity-60 hover:opacity-100 hover:border-stone-300'
-                  }`}
-                  aria-label={`View Photo ${idx + 1}`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={thumbUrl}
-                    alt={`Thumbnail ${idx + 1}`}
-                    loading="eager"
-                    className="w-full h-full object-cover select-none pointer-events-none"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/cat-thumb-sofas-2x.webp';
+          {totalImages > 1 && (
+            <div 
+              data-scroll-container="horizontal"
+              className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto max-w-[92vw] sm:max-w-[60vw] py-0.5 px-1 scrollbar-hide"
+            >
+              {galleryImages.map((thumbUrl, idx) => {
+                const isActive = idx === currentIndex;
+                return (
+                  <button
+                    key={thumbUrl + idx}
+                    type="button"
+                    onClick={() => {
+                      setZoomLevel(1);
+                      setPanPosition({ x: 0, y: 0 });
+                      setCurrentIndex(idx);
                     }}
-                  />
-                </button>
-              );
-            })}
-          </div>
+                    className={`relative w-13 h-10 sm:w-15 sm:h-11 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer bg-white border-2 ${
+                      isActive
+                        ? 'border-[#C59B4B] ring-2 ring-[#C59B4B]/30 scale-105 shadow-[0_3px_12px_rgba(197,155,75,0.3)] opacity-100'
+                        : 'border-stone-200/80 opacity-60 hover:opacity-100 hover:border-stone-300'
+                    }`}
+                    aria-label={`View Photo ${idx + 1}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={thumbUrl}
+                      alt={`Thumbnail ${idx + 1}`}
+                      loading="eager"
+                      className="w-full h-full object-cover select-none pointer-events-none"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <p className="text-[11px] text-stone-500 font-medium tracking-tight">
             Double-click or pinch to zoom • Drag to explore

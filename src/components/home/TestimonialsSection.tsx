@@ -6,17 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { resolveImageUrl } from '@/lib/images';
 import { ArrowLeft, ArrowRight, Star, Quote, MapPin } from 'lucide-react';
 
-const DISTINCT_FALLBACK_AVATARS = [
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&q=75&fm=webp',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=96&q=75&fm=webp',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=96&q=75&fm=webp',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=96&q=75&fm=webp',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&q=75&fm=webp',
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=96&q=75&fm=webp',
-];
-
-
-
 export interface TestimonialReviewItem {
   id: string;
   customerName?: string | null;
@@ -75,11 +64,14 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
   const testimonials = useMemo(() => {
     const seenKeys = new Set<string>();
     const uniqueReviews = (reviews || []).filter((r) => {
+      const rawComment = (r.comment || '').trim();
+      if (!rawComment || rawComment.length < 5) return false;
       const nameKey = (r.customerName || r.user?.name || 'Verified Patron').trim().toLowerCase();
-      const commentKey = (r.comment || '').trim().toLowerCase();
-      const prodKey = (r.product?.id || r.product?.name || "").trim().toLowerCase();
-      const isGenericShort = commentKey.length < 8 || ['good', 'nice', 'ok', 'okay', 'great'].includes(commentKey);
-      const dedupKey = isGenericShort ? `${nameKey}::generic` : `${nameKey}::${prodKey}::${commentKey}`;
+      const commentKey = rawComment.toLowerCase();
+      const prodKey = (r.product?.id || r.product?.name || '').trim().toLowerCase();
+      const isGenericShort = ['good', 'nice', 'ok', 'okay', 'great', 'yuuuuuuu'].includes(commentKey);
+      if (isGenericShort) return false;
+      const dedupKey = `${nameKey}::${prodKey}::${commentKey}`;
       if (seenKeys.has(dedupKey)) return false;
       seenKeys.add(dedupKey);
       return true;
@@ -91,12 +83,9 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
       const clientName = r.customerName || r.user?.name || 'Verified Patron';
       const initial = (clientName.trim().charAt(0) || 'V').toUpperCase();
       const userCustomAvatar = r.user?.avatar || r.user?.image;
-      const fallbackRoom = 'https://res.cloudinary.com/dfd8rzojj/image/upload/v1784925534/fahad-ali-interior/categories/s5onwnhftunjxnkl1atp.jpg';
-      const distinctAvatar = DISTINCT_FALLBACK_AVATARS[idx % DISTINCT_FALLBACK_AVATARS.length];
-      const rawRoom = r.image || r.product?.image || fallbackRoom;
+      const rawRoom = r.image || r.product?.image || '/hero-living-room-img1-4k.webp';
       const roomImage = resolveImageUrl(rawRoom, 'Living Room', 600, 'good');
-      const rawComment = (r.comment || '').trim();
-      const reviewText = rawComment || 'Masterpiece solid Sheesham wood craftsmanship.';
+      const reviewText = (r.comment || '').trim();
 
       return {
         id: r.id || `real-rev-${idx}`,
@@ -108,8 +97,8 @@ export default function TestimonialsSection({ reviews = [] }: TestimonialsSectio
         text: reviewText,
         rating: ratingNum,
         score: `${Number(r.rating || 5).toFixed(1)}`,
-        avatar: r.user?.image || distinctAvatar,
-        fallbackAvatar: distinctAvatar,
+        avatar: userCustomAvatar || '',
+        fallbackAvatar: '',
         roomImage,
         tag: '✓ Verified Purchase',
         ...theme,

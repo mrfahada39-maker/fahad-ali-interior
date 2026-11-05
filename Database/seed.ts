@@ -20,7 +20,7 @@ async function main() {
     update: {
       name: 'Fahad Ali',
       role: UserRole.ADMIN,
-      phone: '+92 300 1234567',
+      phone: '+92 321 3283301',
       emailVerified: new Date(),
       password: await bcrypt.hash(adminPassword, 12),
     },
@@ -29,7 +29,7 @@ async function main() {
       email: 'admin@fahadali.com',
       password: await bcrypt.hash(adminPassword, 12),
       role: UserRole.ADMIN,
-      phone: '+92 300 1234567',
+      phone: '+92 321 3283301',
       emailVerified: new Date(),
     },
   });
@@ -164,16 +164,16 @@ async function main() {
       data: {
         siteName: 'Fahad Ali Interior',
         adminEmail: 'info@fahadaliinterior.com',
-        contactPhone: '+92 300 1234567',
-        storeAddress: 'Gulberg III, Lahore, Pakistan',
+        contactPhone: '+92 321 3283301',
+        storeAddress: 'Main Boulevard, Gulberg III, Lahore, Pakistan',
         foundedYear: '2020',
-        socialWhatsapp: 'https://wa.me/923001234567',
+        socialWhatsapp: 'https://wa.me/923213283301',
         accountTitle: 'Fahad Ali Interior',
-        jazzcashNumber: '03001234567',
-        easypaisaNumber: '03001234567',
+        jazzcashNumber: '03213283301',
+        easypaisaNumber: '03213283301',
         bankName: 'HBL',
-        accountNumber: '12345678901234',
-        iban: 'PK00HABB0000000000000000',
+        accountNumber: '',
+        iban: '',
       },
     });
   }

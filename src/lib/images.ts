@@ -1,11 +1,11 @@
 /** Canonical local product/hero images — verified ultra-high-resolution luxury photography. */
 export const LOCAL_IMAGES = {
-  hero: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&fm=avif&q=85&w=1920',
-  bed: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&fm=avif&q=85&w=1200',
-  sofa: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&fm=avif&q=85&w=1200',
-  dining: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&fm=avif&q=85&w=1200',
-  wardrobe: 'https://images.unsplash.com/photo-1558997519-83ea9252def8?auto=format&fit=crop&fm=avif&q=85&w=1200',
-  chair: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&fm=avif&q=85&w=1200',
+  hero: '/hero-living-room-img1-4k.webp',
+  bed: '/cat-thumb-beds-2x.webp',
+  sofa: '/cat-thumb-sofas-2x.webp',
+  dining: '/cat-thumb-dining-2x.webp',
+  wardrobe: '/cat-thumb-wardrobes-2x.webp',
+  chair: '/cat-thumb-chairs-2x.webp',
 } as const;
 
 export type ImageCategory = keyof typeof LOCAL_IMAGES;

@@ -13,7 +13,8 @@ import {
   Plus, 
   Minus,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  MessageSquare
 } from 'lucide-react';
 
 import { useSiteSettingsStore } from '@/store';
@@ -86,29 +87,56 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Social Icons */}
+            {/* Verified Contact & Social Channels */}
             <div className="flex items-center gap-2.5 pt-1.5">
-              {[
-                { icon: Facebook, href: settings.socialFacebook || 'https://facebook.com/fahadaliinterior', label: 'Facebook' },
-                { icon: Instagram, href: settings.socialInstagram || 'https://instagram.com/fahadaliinterior', label: 'Instagram' },
-                { isPinterest: true, href: 'https://pinterest.com/fahadaliinterior', label: 'Pinterest' },
-                { icon: Youtube, href: 'https://youtube.com/@fahadaliinterior', label: 'YouTube' }
-              ].map((soc) => (
+              <a 
+                href={`https://wa.me/${BUSINESS_CONTACT.whatsapp}`}
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] hover:scale-110 hover:-translate-y-0.5 active:scale-95 transition-all shadow-2xs" 
+                aria-label="WhatsApp Concierge"
+                title="WhatsApp Concierge"
+              >
+                <MessageSquare size={15} />
+              </a>
+              <a 
+                href={`tel:${contactPhoneDial}`}
+                className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white hover:border-[#2C1E18] hover:scale-110 hover:-translate-y-0.5 active:scale-95 transition-all shadow-2xs" 
+                aria-label="Phone Concierge"
+                title="Call Concierge"
+              >
+                <Phone size={15} />
+              </a>
+              <a 
+                href={`mailto:${contactEmail}`}
+                className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white hover:border-[#2C1E18] hover:scale-110 hover:-translate-y-0.5 active:scale-95 transition-all shadow-2xs" 
+                aria-label="Email Concierge"
+                title="Email Concierge"
+              >
+                <Mail size={15} />
+              </a>
+              {settings.socialFacebook ? (
                 <a 
-                  key={soc.label}
-                  href={soc.href} 
+                  href={settings.socialFacebook}
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white hover:border-[#2C1E18] hover:scale-110 hover:-translate-y-0.5 active:scale-95 transition-all shadow-2xs" 
-                  aria-label={soc.label}
+                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2] hover:scale-110 hover:-translate-y-0.5 active:scale-95 transition-all shadow-2xs" 
+                  aria-label="Facebook"
                 >
-                  {soc.isPinterest ? (
-                    <span className="font-serif font-bold text-sm">P</span>
-                  ) : soc.icon && (
-                    <soc.icon size={16} />
-                  )}
+                  <Facebook size={16} />
                 </a>
-              ))}
+              ) : null}
+              {settings.socialInstagram ? (
+                <a 
+                  href={settings.socialInstagram}
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#E4405F] hover:text-white hover:border-[#E4405F] hover:scale-110 hover:-translate-y-0.5 active:scale-95 transition-all shadow-2xs" 
+                  aria-label="Instagram"
+                >
+                  <Instagram size={16} />
+                </a>
+              ) : null}
             </div>
           </div>
 
@@ -248,24 +276,53 @@ export default function Footer() {
               Fahad Ali Interior brings luxury, comfort, and timeless design together. Explore our exclusive furniture collections.
             </p>
             
-            {/* Centered Social Media Buttons */}
+            {/* Centered Verified Contact & Social Buttons */}
             <div className="flex items-center justify-center gap-3">
-              {[
-                { icon: Facebook, href: settings.socialFacebook || 'https://facebook.com/fahadaliinterior', label: 'Facebook' },
-                { icon: Instagram, href: settings.socialInstagram || 'https://instagram.com/fahadaliinterior', label: 'Instagram' },
-                { icon: Youtube, href: 'https://youtube.com/@fahadaliinterior', label: 'YouTube' }
-              ].map((soc) => (
+              <a 
+                href={`https://wa.me/${BUSINESS_CONTACT.whatsapp}`}
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#25D366] hover:text-white active:scale-95 transition-all" 
+                aria-label="WhatsApp Concierge"
+              >
+                <MessageSquare size={15} />
+              </a>
+              <a 
+                href={`tel:${contactPhoneDial}`}
+                className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white active:scale-95 transition-all" 
+                aria-label="Phone Concierge"
+              >
+                <Phone size={14} />
+              </a>
+              <a 
+                href={`mailto:${contactEmail}`}
+                className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white active:scale-95 transition-all" 
+                aria-label="Email Concierge"
+              >
+                <Mail size={14} />
+              </a>
+              {settings.socialFacebook ? (
                 <a 
-                  key={soc.label}
-                  href={soc.href} 
+                  href={settings.socialFacebook}
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#2C1E18] hover:text-white active:scale-95 transition-all" 
-                  aria-label={soc.label}
+                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#1877F2] hover:text-white active:scale-95 transition-all" 
+                  aria-label="Facebook"
                 >
-                  <soc.icon size={15} />
+                  <Facebook size={15} />
                 </a>
-              ))}
+              ) : null}
+              {settings.socialInstagram ? (
+                <a 
+                  href={settings.socialInstagram}
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="w-9 h-9 rounded-full border border-[#2C1E18]/20 flex items-center justify-center text-[#2C1E18] hover:bg-[#E4405F] hover:text-white active:scale-95 transition-all" 
+                  aria-label="Instagram"
+                >
+                  <Instagram size={15} />
+                </a>
+              ) : null}
             </div>
           </div>
 

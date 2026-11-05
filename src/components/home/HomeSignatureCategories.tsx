@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight, Sparkles } from 'lucide-react';
 import ProductCard from '@/components/shop/ProductCard';
 import type { StorefrontProduct } from '@/lib/types';
 import { useUiNavigationStore } from '@/store';
+import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
 interface HomeSignatureCategoriesProps {
   products: StorefrontProduct[];
@@ -407,7 +408,7 @@ export default function HomeSignatureCategories({
                   Looking for bespoke {group.name.toLowerCase()} furniture? Every piece is custom-tailored to your exact architectural space in 100% solid seasoned Sheesham wood with traditional joinery.
                 </p>
                 <a
-                  href={`https://wa.me/923001234567?text=${encodeURIComponent(`Assalam-o-Alaikum Fahad Ali Interior! I am interested in custom bespoke ${group.name} designs.`)}`}
+                  href={`https://wa.me/${BUSINESS_CONTACT.whatsapp}?text=${encodeURIComponent(`Assalam-o-Alaikum Fahad Ali Interior! I am interested in custom bespoke ${group.name} designs.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-110 active:scale-95 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-full shadow-md transition-all cursor-pointer"
