@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { 
   Crown, 
   ShieldCheck, 
@@ -14,7 +15,9 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  MessageSquare
+  MessageSquare,
+  Sparkles,
+  Award
 } from 'lucide-react';
 import { BUSINESS_CONTACT } from '@/lib/contact-config';
 
@@ -225,117 +228,184 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
   )}`;
 
   return (
-    <div className="relative w-full bg-[#FAF6F0] text-[#1F1A17] overflow-hidden pt-[76px] sm:pt-20 lg:pt-28 pb-2 lg:pb-4">
-      {/* Subtle Warm Ivory Ambient Background Gradients (Desktop Hardware Optimized) */}
-      <div className="hidden sm:block absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-[#F2E5D0]/60 via-[#F7EFE2]/40 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="hidden sm:block absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-[#EFE5D5]/50 via-transparent to-transparent rounded-full blur-2xl pointer-events-none" />
+    <div className="relative w-full bg-[#FAF6F0] text-[#1F1A17] overflow-hidden pt-[76px] sm:pt-20 lg:pt-28 pb-4 lg:pb-6">
+      
+      {/* ── LUXURY AMBIENT BACKGROUND GLOW & GEOMETRIC ACCENTS ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Subtle Luxury Diamond Dot Grid Pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(#C59B4B_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.09]" />
+        
+        {/* Animated Luminous Orbs */}
+        <div className="absolute -top-24 right-0 w-[650px] h-[650px] bg-gradient-to-bl from-[#EEDDC6]/70 via-[#F7EFE2]/40 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute -bottom-32 -left-20 w-[550px] h-[550px] bg-gradient-to-tr from-[#EAD6BF]/60 via-[#FAF2E6]/30 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }} />
+        <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+      </div>
 
       <div className="relative z-10 max-w-[1550px] mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* ── DESKTOP & TABLET HERO (MATCHES USER SCREENSHOT 1 100%) ── */}
-        <div className="hidden lg:grid grid-cols-12 gap-8 items-center pt-2 pb-4">
+        {/* ── DESKTOP & TABLET HERO (ELEGANT 2-COLUMN LUXURY SHOWCASE) ── */}
+        <div className="hidden lg:grid grid-cols-12 gap-10 items-center pt-2 pb-6">
           
           {/* Left Column: Headlines, Trust Badges, Buttons */}
-          <div className="col-span-6 2xl:col-span-5 flex flex-col items-start pr-2">
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="col-span-6 2xl:col-span-5 flex flex-col items-start pr-2"
+          >
             
-            {/* 1. Crown Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F3EADB] border border-[#E4D5BE] text-[#9A7030] text-[11px] font-bold tracking-[0.18em] uppercase shadow-2xs mb-4">
-              <Crown size={14} className="text-[#C59B4B] fill-[#C59B4B]" />
-              <span>PREMIUM FURNITURE COLLECTION</span>
-            </div>
+            {/* 1. Animated Crown Pill Badge */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FAF3E8] to-[#F5E8D3] border border-amber-300/80 text-[#8C6222] text-[11px] font-bold tracking-[0.2em] uppercase shadow-[0_2px_12px_rgba(184,142,75,0.12)] mb-5 backdrop-blur-xs"
+            >
+              <Crown size={14} className="text-[#B88E4B] fill-[#B88E4B] animate-bounce" style={{ animationDuration: '3s' }} />
+              <span>HANDCRAFTED BESPOKE COLLECTION</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+            </motion.div>
 
-            {/* 2. Main Title */}
-            <h1 className="font-serif text-[48px] xl:text-[58px] 2xl:text-[66px] font-black text-[#1F1A17] leading-[1.06] tracking-tight mb-4">
+            {/* 2. Main Title with Dynamic Gold Shimmer */}
+            <h1 className="font-serif text-[48px] xl:text-[58px] 2xl:text-[66px] font-black text-[#1F1A17] leading-[1.04] tracking-tight mb-4">
               Luxury Furniture <br />
-              <span className="bg-gradient-to-r from-[#B88E4B] via-[#D4AF37] to-[#A67C37] bg-clip-text text-transparent italic font-normal">
-                for Modern Living
+              <span className="relative inline-block mt-1">
+                <span className="bg-gradient-to-r from-[#B88E4B] via-[#E5C989] to-[#996515] bg-clip-text text-transparent italic font-normal">
+                  for Modern Living
+                </span>
+                {/* Glowing under-line */}
+                <span className="absolute -bottom-1 left-0 w-full h-[2.5px] bg-gradient-to-r from-[#B88E4B] via-[#E2C37A] to-transparent rounded-full shadow-[0_0_8px_rgba(184,142,75,0.6)]" />
               </span>
             </h1>
 
             {/* 3. Subtitle */}
-            <p className="text-[15px] xl:text-[16px] text-[#6B5E55] leading-relaxed max-w-xl font-normal mb-6">
-              Transform your home with premium furniture crafted for comfort, style and timeless elegance.
+            <p className="text-[15.5px] xl:text-[16.5px] text-[#5C4D44] leading-relaxed max-w-xl font-normal mb-6.5">
+              Transform your sanctuary with 100% seasoned solid Sheesham timber, hand-tufted Italian fabrics, and heirloom architectural joinery handcrafted in Lahore.
             </p>
 
-            {/* 4. Trust Badges Row */}
-            <div className="grid grid-cols-4 gap-2 w-full max-w-xl mb-7">
+            {/* 4. Luxury Trust Badges Row (Glassmorphic Micro-Cards) */}
+            <div className="grid grid-cols-4 gap-2.5 w-full max-w-xl mb-8">
               {[
-                { icon: ShieldCheck, label: 'Premium Quality' },
-                { icon: Truck, label: 'Safe & Fast Delivery' },
-                { icon: CreditCard, label: 'Secure Payments' },
-                { icon: Headphones, label: '24/7 Support' }
+                { icon: ShieldCheck, label: '10-Yr Warranty', desc: 'Solid Sheesham' },
+                { icon: Truck, label: 'White-Glove', desc: 'Pan-Pakistan' },
+                { icon: CreditCard, label: 'Safe Pay', desc: 'COD & RAAST' },
+                { icon: Headphones, label: 'Concierge', desc: '24/7 Support' }
               ].map((badge) => {
                 const Icon = badge.icon;
                 return (
                   <div 
                     key={badge.label}
-                    className="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-white/95 border border-[#EAE1D5] shadow-[0_2px_10px_rgba(44,30,24,0.03)] text-center transition-transform hover:-translate-y-0.5"
+                    className="group relative flex flex-col items-center justify-center p-3 rounded-2xl bg-white/90 hover:bg-white border border-[#E8DFC8]/90 hover:border-[#B88E4B] shadow-[0_3px_14px_rgba(44,30,24,0.04)] hover:shadow-[0_8px_25px_rgba(184,142,75,0.16)] text-center transition-all duration-300 hover:-translate-y-1 cursor-default backdrop-blur-xs"
                   >
-                    <div className="w-8 h-8 rounded-full bg-[#FAF5ED] flex items-center justify-center text-[#B88E4B] mb-1.5">
-                      <Icon size={16} strokeWidth={1.8} />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FAF5EE] to-[#F3E7D3] border border-amber-300/60 flex items-center justify-center text-[#B88E4B] group-hover:scale-110 group-hover:bg-[#B88E4B] group-hover:text-white transition-all duration-300 mb-1.5 shadow-2xs">
+                      <Icon size={15} strokeWidth={2} />
                     </div>
-                    <span className="text-[10.5px] font-bold text-[#2C1E18] leading-tight">
+                    <span className="text-[11px] font-bold text-[#221814] leading-tight block">
                       {badge.label}
+                    </span>
+                    <span className="text-[9.5px] text-[#8C7A6D] font-medium leading-none mt-0.5 block">
+                      {badge.desc}
                     </span>
                   </div>
                 );
               })}
             </div>
 
-            {/* 5. CTAs: Shop Collection + Watch Video */}
+            {/* 5. Modern CTAs: Shop Collection + Watch Video with Pulse Ripple */}
             <div className="flex items-center gap-5">
+              {/* Primary Glowing Button with Shimmer Sweep */}
               <Link
                 href="/#signature-categories"
                 onClick={(e) => handleSmoothScroll(e, '/#signature-categories')}
-                className="bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-110 text-white font-serif font-bold text-sm xl:text-base px-8 py-3.5 rounded-full shadow-[0_8px_25px_rgba(184,142,75,0.3)] flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                className="relative overflow-hidden group bg-gradient-to-r from-[#C59B4B] via-[#B88E4B] to-[#9E7333] hover:brightness-110 active:scale-95 text-white font-serif font-bold text-sm xl:text-base px-8 py-4 rounded-full shadow-[0_8px_28px_rgba(184,142,75,0.35)] flex items-center gap-3 transition-all duration-300 hover:shadow-[0_12px_36px_rgba(184,142,75,0.45)] hover:scale-105 cursor-pointer"
               >
+                {/* Light sweep ray animation */}
+                <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-in-out pointer-events-none" />
                 <span>Shop Collection</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform" />
               </Link>
 
+              {/* Secondary Video Button with Sonar Radar Wave */}
               <button
                 type="button"
                 onClick={() => setVideoModalOpen(true)}
                 className="flex items-center gap-3 group cursor-pointer"
                 aria-label="Watch Showroom Video"
               >
-                <div className="w-12 h-12 rounded-full bg-white border border-[#E8DFC8] shadow-md flex items-center justify-center text-[#B88E4B] group-hover:scale-110 group-hover:bg-[#FAF5ED] transition-all">
-                  <Play size={16} className="fill-[#B88E4B] ml-0.5" />
+                <div className="relative">
+                  {/* Pulsing Sonar Ring */}
+                  <span className="absolute inset-0 rounded-full bg-[#B88E4B]/30 animate-ping opacity-75 pointer-events-none" />
+                  <div className="relative w-12 h-12 rounded-full bg-white border border-[#E8DFC8] shadow-[0_4px_16px_rgba(0,0,0,0.06)] flex items-center justify-center text-[#B88E4B] group-hover:scale-110 group-hover:bg-[#FAF5ED] group-hover:border-[#B88E4B] transition-all duration-300">
+                    <Play size={16} className="fill-[#B88E4B] ml-0.5 group-hover:scale-110 transition-transform" />
+                  </div>
                 </div>
                 <div className="text-left">
-                  <p className="font-serif font-bold text-xs xl:text-sm text-[#1F1A17] group-hover:text-[#B88E4B] transition-colors">
+                  <p className="font-serif font-bold text-xs xl:text-sm text-[#1F1A17] group-hover:text-[#B88E4B] transition-colors leading-tight">
                     Watch 20s Video
                   </p>
-                  <p className="text-[11px] text-[#8C7A6D] font-medium">
-                    Experience Luxury
+                  <p className="text-[11px] text-[#8C7A6D] font-medium leading-none mt-0.5">
+                    Experience Atelier Craft
                   </p>
                 </div>
               </button>
             </div>
 
-          </div>
+          </motion.div>
 
-          {/* Right Column: Hero Living Room Visual (Matches User Screenshot 1 100%) */}
-          <div className="col-span-6 2xl:col-span-7 relative flex justify-end items-center">
-            <div className="relative w-full aspect-[4/3] max-w-[760px] 2xl:max-w-[820px] rounded-[32px] overflow-hidden shadow-[0_20px_55px_rgba(44,30,24,0.08)] border border-[#E8DEC9] bg-[#FAF6F0]">
+          {/* Right Column: Hero Living Room Visual with Floating Glass Badges */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="col-span-6 2xl:col-span-7 relative flex justify-end items-center"
+          >
+            {/* Ambient Background Glow behind image frame */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#C59B4B]/20 via-transparent to-[#9E7333]/15 rounded-[40px] blur-2xl transform scale-102 pointer-events-none" />
+
+            <div className="group relative w-full aspect-[4/3] max-w-[760px] 2xl:max-w-[820px] rounded-[32px] 2xl:rounded-[38px] overflow-hidden shadow-[0_25px_65px_rgba(44,30,24,0.12)] border-[2px] border-amber-300/60 bg-[#FAF6F0] transition-all duration-500 hover:shadow-[0_30px_80px_rgba(184,142,75,0.22)]">
+              
               <Image
                 src="/hero-living-room-img1-4k.webp"
                 alt="Fahad Ali Interior Luxury Living Room Showcase"
                 fill
                 priority={false}
                 sizes="(min-width: 1024px) 50vw, 100vw"
-                className="object-cover object-center transform hover:scale-102 transition-transform duration-700"
+                className="object-cover object-center transform group-hover:scale-103 transition-transform duration-1000 ease-out"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/8 via-transparent to-transparent pointer-events-none" />
+              
+              {/* Subtle Luxury Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/5 pointer-events-none" />
+
+              {/* Top-Right Floating Glass Badge: 10-Year Warranty */}
+              <div className="absolute top-4 right-4 z-20 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-amber-300/80 shadow-[0_4px_20px_rgba(0,0,0,0.15)] text-[#221814] text-xs font-bold transition-transform duration-300 group-hover:scale-105">
+                <Award size={15} className="text-[#C59B4B] fill-[#C59B4B]" />
+                <span>10-Year Structural Warranty</span>
+              </div>
+
+              {/* Bottom-Left Floating Glass Card: Atelier Signature */}
+              <div className="absolute bottom-4 left-4 z-20 flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl bg-white/90 backdrop-blur-md border border-amber-300/80 shadow-[0_8px_30px_rgba(0,0,0,0.18)] max-w-xs transition-transform duration-300 group-hover:scale-103">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#221814] to-[#3E2E25] flex items-center justify-center text-[#E5C989] shrink-0 shadow-xs">
+                  <Sparkles size={18} />
+                </div>
+                <div className="pr-1">
+                  <p className="text-[11.5px] font-black text-[#221814] leading-tight">
+                    100% Solid Seasoned Wood
+                  </p>
+                  <p className="text-[10px] text-[#7A6354] font-medium leading-none mt-0.5">
+                    Kiln-Dried • Anti-Termite Treated
+                  </p>
+                </div>
+              </div>
+
             </div>
-          </div>
+          </motion.div>
 
         </div>
 
-        {/* ── MOBILE HERO (MATCHES DESIGN COMPACTLY WITH ZERO PRELOAD OVERHEAD) ── */}
+        {/* ── MOBILE HERO (STREAMLINED & ELEGANT FOR TOUCH SCREENS) ── */}
         <div className="lg:hidden flex flex-col pt-1">
           {/* Mobile Living Room Banner */}
-          <div className="relative -mx-4 sm:-mx-6 aspect-[16/9.2] overflow-hidden bg-[#FAF6F0] rounded-b-3xl">
+          <div className="relative -mx-4 sm:-mx-6 aspect-[16/9.2] overflow-hidden bg-[#FAF6F0] rounded-b-3xl shadow-sm">
             <Image
               src="/hero-living-room-mobile-img1.webp"
               alt="Fahad Ali Interior Luxury Living Room Showcase"
@@ -344,10 +414,10 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
               sizes="(max-width: 1023px) 100vw, 0px"
               className="object-cover object-[78%_center] sm:object-center"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#FAF6F0]/95 via-[#FAF6F0]/70 via-55% to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FAF6F0]/95 via-[#FAF6F0]/75 via-55% to-transparent pointer-events-none" />
 
-            <div className="relative z-10 h-full flex flex-col justify-center py-3 px-4 w-[75%] max-w-[280px]">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F3EADB]/95 border border-[#E4D5BE] text-[#8C6222] text-[9.5px] font-black tracking-[0.14em] uppercase shadow-xs w-fit mb-1.5">
+            <div className="relative z-10 h-full flex flex-col justify-center py-3 px-4 w-[75%] max-w-[290px]">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F3EADB]/95 border border-[#E4D5BE] text-[#8C6222] text-[9.5px] font-black tracking-[0.14em] uppercase shadow-2xs w-fit mb-1.5">
                 <Crown size={11} className="text-[#B88E4B] fill-[#B88E4B]" />
                 <span>PREMIUM COLLECTION</span>
               </div>
@@ -376,7 +446,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                 <button
                   type="button"
                   onClick={() => setVideoModalOpen(true)}
-                  className="flex items-center justify-center gap-1.5 bg-white/95 border border-[#E8DFC8] min-h-[44px] px-4 py-2.5 rounded-full text-xs font-bold text-[#1F1A17] shadow-xs active:scale-95 cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 bg-white/95 border border-[#E8DFC8] min-h-[44px] px-4 py-2.5 rounded-full text-xs font-bold text-[#1F1A17] shadow-2xs active:scale-95 cursor-pointer"
                   aria-label="Watch 20s Video"
                 >
                   <Play size={11} className="fill-[#B88E4B] text-[#B88E4B]" />
@@ -409,48 +479,53 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
           </div>
         </div>
 
-        {/* ── SHOP BY CATEGORY SHELF (MATCHES USER SCREENSHOT 2 100%) ── */}
+        {/* ── SHOP BY CATEGORY SHELF (ANIMATED LUXURY SWATCH CAROUSEL) ── */}
         <div 
-          className="w-[calc(100%+1.5rem)] -mx-3 sm:w-full sm:mx-0 mt-4 xl:mt-5"
+          className="w-[calc(100%+1.5rem)] -mx-3 sm:w-full sm:mx-0 mt-5 xl:mt-6"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Header Row: Title & Navigation Arrows */}
+          {/* Header Row: Title & Modern Navigation Pill Controls */}
           <div className="flex items-center justify-between mb-3 px-2 sm:px-0">
-            <div>
-              <div className="w-8 h-1 bg-[#C59B4B] rounded-full mb-1.5" />
-              <h2 className="font-serif font-black text-xl sm:text-2xl xl:text-3xl text-[#1F1A17] tracking-tight">
-                Shop by Category
-              </h2>
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-6 bg-gradient-to-b from-[#B88E4B] to-[#996515] rounded-full" />
+              <div>
+                <h2 className="font-serif font-black text-xl sm:text-2xl xl:text-3xl text-[#1F1A17] tracking-tight">
+                  Shop by Category
+                </h2>
+                <p className="text-[11px] text-[#7A6354] hidden sm:block">
+                  Explore bespoke handcrafted pieces for every corner of your home
+                </p>
+              </div>
             </div>
             
-            {/* Navigation Arrows (WCAG 44px Compliant on Mobile) */}
+            {/* Modern Navigation Arrows */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handlePrev}
                 aria-label="Previous Category"
-                className="w-11 h-11 sm:w-10 sm:h-10 min-w-[44px] min-h-[44px] rounded-full bg-white border border-[#E2D2BC] text-[#8C7A6D] hover:text-[#B88E4B] hover:border-[#B88E4B] flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                className="w-10 h-10 sm:w-10 sm:h-10 min-w-[40px] min-h-[40px] rounded-full bg-white hover:bg-[#FAF5ED] border border-[#E2D2BC] hover:border-[#B88E4B] text-[#8C7A6D] hover:text-[#B88E4B] flex items-center justify-center transition-all duration-300 shadow-2xs active:scale-95 cursor-pointer"
               >
-                <ChevronLeft size={19} />
+                <ChevronLeft size={18} />
               </button>
               <button
                 type="button"
                 onClick={handleNext}
                 aria-label="Next Category"
-                className="w-11 h-11 sm:w-10 sm:h-10 min-w-[44px] min-h-[44px] rounded-full bg-white border border-[#E2D2BC] text-[#8C7A6D] hover:text-[#B88E4B] hover:border-[#B88E4B] flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                className="w-10 h-10 sm:w-10 sm:h-10 min-w-[40px] min-h-[40px] rounded-full bg-white hover:bg-[#FAF5ED] border border-[#E2D2BC] hover:border-[#B88E4B] text-[#8C7A6D] hover:text-[#B88E4B] flex items-center justify-center transition-all duration-300 shadow-2xs active:scale-95 cursor-pointer"
               >
-                <ChevronRight size={19} />
+                <ChevronRight size={18} />
               </button>
             </div>
           </div>
 
-          {/* Sliding Category Track (Maximized Width, Minimal Side Gutters) */}
-          <div data-scroll-container="horizontal" className="overflow-hidden w-full">
+          {/* Sliding Category Track */}
+          <div data-scroll-container="horizontal" className="overflow-hidden w-full py-1">
             <div 
-              className="flex transition-transform duration-300 ease-out will-change-transform"
+              className="flex transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
               style={{ 
                 transform: `translateX(-${currentIndex * (100 / visibleItems)}%)` 
               }}
@@ -463,16 +538,21 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                   <Link
                     href={cat.href}
                     onClick={(e) => handleCategoryClick(e, cat)}
-                    className="group relative flex flex-col justify-between p-1.5 sm:p-2.5 rounded-[18px] sm:rounded-2xl bg-white border border-[#EAE1D5] shadow-xs hover:border-[#C59B4B] hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden aspect-[1.12/1] sm:aspect-[1.2/1] xl:aspect-[1.24/1]"
+                    className="group relative flex flex-col justify-between p-2 sm:p-2.5 rounded-[20px] sm:rounded-2xl bg-gradient-to-b from-white via-[#FCFAF7] to-[#FAF5EE] border border-[#EAE1D5] hover:border-[#B88E4B] shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_25px_rgba(184,142,75,0.16)] transition-all duration-300 cursor-pointer overflow-hidden aspect-[1.12/1] sm:aspect-[1.2/1] xl:aspect-[1.24/1] hover:-translate-y-1"
                   >
-                    {/* Furniture Cutout Image (Wide Landscape Swatch, Snug Fit Without Dead Space) */}
+                    {/* Top Right Subtle Sparkle on Hover */}
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none text-[#B88E4B]">
+                      <Sparkles size={11} />
+                    </div>
+
+                    {/* Furniture Cutout Image */}
                     <div className="relative w-full flex-1 min-h-0 flex items-center justify-center p-0">
                       <Image
                         src={cat.img}
                         alt={cat.name}
                         width={280}
                         height={160}
-                        className="max-h-full w-full object-contain group-hover:scale-106 transition-transform duration-300"
+                        className="max-h-full w-full object-contain group-hover:scale-108 transition-transform duration-500 ease-out"
                       />
                     </div>
 
@@ -481,9 +561,9 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                       <span className="font-serif font-black text-[10.5px] xs:text-[11px] sm:text-xs xl:text-sm text-[#221814] group-hover:text-[#B88E4B] transition-colors truncate">
                         {cat.name}
                       </span>
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#FAF5ED] text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white transition-all flex items-center justify-center shadow-2xs shrink-0 ml-1">
-                        <ArrowRight size={10} className="sm:hidden" />
-                        <ArrowRight size={12} className="hidden sm:block" />
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#FAF5ED] text-[#B88E4B] group-hover:bg-[#B88E4B] group-hover:text-white group-hover:scale-110 transition-all duration-300 flex items-center justify-center shadow-2xs shrink-0 ml-1">
+                        <ArrowRight size={10} className="sm:hidden group-hover:translate-x-0.5 transition-transform" />
+                        <ArrowRight size={12} className="hidden sm:block group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </div>
                   </Link>
@@ -492,20 +572,20 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
             </div>
           </div>
 
-          {/* Dots Indicator matching Image 1 */}
-          <div suppressHydrationWarning className="flex items-center justify-center gap-1 mt-2 sm:mt-3">
+          {/* Dots Indicator */}
+          <div suppressHydrationWarning className="flex items-center justify-center gap-1.5 mt-2.5 sm:mt-3">
             {Array.from({ length: maxIndex + 1 }).map((_, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setCurrentIndex(i)}
                 aria-label={`Go to category slide ${i + 1}`}
-                className="min-w-[24px] min-h-[24px] flex items-center justify-center cursor-pointer"
+                className="min-w-[20px] min-h-[20px] flex items-center justify-center cursor-pointer"
               >
                 <span
                   aria-hidden="true"
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentIndex ? 'w-6 bg-[#A68254]' : 'w-1.5 bg-[#E2D2BC]'
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    i === currentIndex ? 'w-7 bg-gradient-to-r from-[#B88E4B] to-[#996515] shadow-[0_0_6px_rgba(184,142,75,0.4)]' : 'w-1.5 bg-[#E2D2BC]'
                   }`}
                 />
               </button>
@@ -521,9 +601,9 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
         <div 
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
         >
-          <div className="relative w-full max-w-2xl bg-[#1A110B] rounded-3xl overflow-hidden shadow-2xl border border-amber-300/30 p-6 sm:p-8 text-white text-center">
+          <div className="relative w-full max-w-2xl bg-[#1A110B] rounded-3xl overflow-hidden shadow-2xl border border-amber-300/40 p-6 sm:p-8 text-white text-center">
             <button
               type="button"
               onClick={() => setVideoModalOpen(false)}
@@ -533,11 +613,11 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
               <X size={18} />
             </button>
 
-            <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 mx-auto mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 mx-auto mb-4 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
               <Play size={28} className="fill-amber-300 ml-0.5" />
             </div>
 
-            <h3 className="font-serif font-black text-2xl sm:text-3xl text-[#FAF6F0] mb-2">
+            <h3 className="font-serif font-black text-2xl sm:text-3xl text-[#FAF6F0] mb-2 tracking-tight">
               Atelier Video Walkthrough
             </h3>
             
@@ -551,7 +631,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setVideoModalOpen(false)}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white font-serif font-bold text-xs uppercase tracking-wider rounded-xl hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-lg"
+                className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:brightness-110 active:scale-95 text-white font-serif font-bold text-xs uppercase tracking-wider rounded-full transition-all flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(37,211,102,0.3)] cursor-pointer"
               >
                 <MessageSquare size={16} />
                 <span>Request Live WhatsApp Video Tour</span>
@@ -559,7 +639,7 @@ export default function ModernLuxuryHero({ onShopClick }: ModernLuxuryHeroProps)
               <button
                 type="button"
                 onClick={() => setVideoModalOpen(false)}
-                className="w-full sm:w-auto px-6 py-3 bg-white/10 hover:bg-white/20 text-stone-200 text-xs font-serif uppercase tracking-wider rounded-xl transition-all"
+                className="w-full sm:w-auto px-6 py-3.5 bg-white/10 hover:bg-white/20 active:scale-95 text-stone-200 text-xs font-serif uppercase tracking-wider rounded-full transition-all cursor-pointer"
               >
                 Back to Showroom
               </button>
