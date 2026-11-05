@@ -132,13 +132,15 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
   const tagline = product.description?.split('.')[0]
     || (product.material ? `Handcrafted in ${product.material}. Modern Comfort.` : 'Timeless Elegance. Modern Comfort.');
 
-  // Realistic strikethrough price (original price) and discount %
-  const originalPrice = Math.round(product.price * 1.22);
-  const discountPercent = 18;
+  // Authentic pricing: Only show compareAtPrice and discount if explicitly configured
+  const compareAtPrice = (product as { compareAtPrice?: number | null }).compareAtPrice;
+  const hasDiscount = Boolean(compareAtPrice && compareAtPrice > product.price);
+  const discountPercent = hasDiscount && compareAtPrice ? Math.round(((compareAtPrice - product.price) / compareAtPrice) * 100) : 0;
 
-  // Star rating
-  const avgRating = product.avgRating ? Number(product.avgRating).toFixed(1) : '4.8';
-  const reviewsText = product.reviewCount ? `${(product.reviewCount > 999 ? (product.reviewCount / 1000).toFixed(1) + 'k' : product.reviewCount)} Reviews` : '2.5k Reviews';
+  // Real ratings & reviews only — no dummy fallback counts
+  const hasReviews = Boolean(product.reviewCount && product.reviewCount > 0);
+  const avgRating = hasReviews && product.avgRating ? Number(product.avgRating).toFixed(1) : null;
+  const reviewsCount = product.reviewCount ?? 0;
 
   if (layoutMode === 'list') {
     return (
@@ -191,11 +193,15 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#9A7030] bg-[#FAF5ED] border border-[#E8DFC8] px-2.5 py-0.5 rounded-full">
                 {product.category || 'Luxury'}
               </span>
-              <div className="flex items-center gap-1 text-xs font-bold text-[#111827]">
-                <Star size={13} className="fill-[#FBBF24] text-[#FBBF24]" />
-                <span>{avgRating}</span>
-                <span className="text-gray-400">({reviewsText})</span>
-              </div>
+              {hasReviews && avgRating ? (
+                <div className="flex items-center gap-1 text-xs font-bold text-[#111827]">
+                  <Star size={13} className="fill-[#FBBF24] text-[#FBBF24]" />
+                  <span>{avgRating}</span>
+                  <span className="text-gray-400">({reviewsCount} {reviewsCount === 1 ? 'Review' : 'Reviews'})</span>
+                </div>
+              ) : (
+                <span className="text-[10px] text-stone-500 font-medium">Bespoke Masterpiece</span>
+              )}
             </div>
             <Link
               href={`/product/${product.id}`}
@@ -217,12 +223,16 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
               <span className="text-xl font-black text-[#111827] font-sans">
                 Rs. {formatPrice(product.price)}
               </span>
-              <span className="text-xs text-[#9CA3AF] line-through">
-                Rs. {formatPrice(originalPrice)}
-              </span>
-              <span className="bg-[#FAF5ED] text-[#9A7030] border border-[#E8DFC8] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                {discountPercent}% OFF
-              </span>
+              {hasDiscount && compareAtPrice && (
+                <>
+                  <span className="text-xs text-[#9CA3AF] line-through">
+                    Rs. {formatPrice(compareAtPrice)}
+                  </span>
+                  <span className="bg-[#FAF5ED] text-[#9A7030] border border-[#E8DFC8] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {discountPercent}% OFF
+                  </span>
+                </>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -324,36 +334,43 @@ export default function ProductCard({ product, index: _index = 0, onQuickView, l
             {tagline}
           </p>
 
-          {/* Ratings & Reviews Row */}
-          <div className="flex items-center gap-1 mt-2 mb-2">
-            <div className="flex items-center text-[#FBBF24]">
-              <Star size={14} className="fill-[#FBBF24] text-[#FBBF24]" />
-              <Star size={14} className="fill-[#FBBF24] text-[#FBBF24]" />
-              <Star size={14} className="fill-[#FBBF24] text-[#FBBF24]" />
-              <Star size={14} className="fill-[#FBBF24] text-[#FBBF24]" />
-              <div className="relative">
-                <Star size={14} className="fill-[#E5E7EB] text-[#E5E7EB]" />
-                <div className="absolute inset-0 overflow-hidden w-[75%]">
-                  <Star size={14} className="fill-[#FBBF24] text-[#FBBF24]" />
-                </div>
+          {/* Ratings & Reviews Row — Only if real reviews exist */}
+          {hasReviews && avgRating ? (
+            <div className="flex items-center gap-1 mt-2 mb-2">
+              <div className="flex items-center text-[#FBBF24]">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    size={14}
+                    className={i < Math.round(Number(avgRating)) ? 'fill-[#FBBF24] text-[#FBBF24]' : 'text-[#E5E7EB]'}
+                  />
+                ))}
               </div>
+              <span className="font-bold text-[#111827] text-xs sm:text-sm ml-1">{avgRating}</span>
+              <span className="text-gray-300 mx-1">|</span>
+              <span className="text-[#6B7280] text-xs sm:text-sm">({reviewsCount} {reviewsCount === 1 ? 'Review' : 'Reviews'})</span>
             </div>
-            <span className="font-bold text-[#111827] text-xs sm:text-sm ml-1">{avgRating}</span>
-            <span className="text-gray-300 mx-1">|</span>
-            <span className="text-[#6B7280] text-xs sm:text-sm">({reviewsText})</span>
-          </div>
+          ) : (
+            <div className="flex items-center gap-1.5 mt-2 mb-2">
+              <span className="text-[11px] text-stone-500 font-medium tracking-tight">100% Solid Wood · Handcrafted</span>
+            </div>
+          )}
 
           {/* Pricing & Discount Row */}
           <div className="flex items-center flex-wrap gap-2 mb-3.5">
             <span className="text-xl sm:text-2xl font-black text-[#111827] font-sans tracking-tight">
               Rs. {formatPrice(product.price)}
             </span>
-            <span className="text-xs sm:text-sm text-[#9CA3AF] line-through font-sans">
-              Rs. {formatPrice(originalPrice)}
-            </span>
-            <span className="bg-[#FAF5ED] text-[#9A7030] border border-[#E8DFC8] text-[11px] font-bold px-2.5 py-0.5 rounded-full font-sans">
-              {discountPercent}% OFF
-            </span>
+            {hasDiscount && compareAtPrice && (
+              <>
+                <span className="text-xs sm:text-sm text-[#9CA3AF] line-through font-sans">
+                  Rs. {formatPrice(compareAtPrice)}
+                </span>
+                <span className="bg-[#FAF5ED] text-[#9A7030] border border-[#E8DFC8] text-[11px] font-bold px-2.5 py-0.5 rounded-full font-sans">
+                  {discountPercent}% OFF
+                </span>
+              </>
+            )}
           </div>
         </div>
 

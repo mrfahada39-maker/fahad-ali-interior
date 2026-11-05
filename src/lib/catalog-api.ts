@@ -193,7 +193,7 @@ export async function getProductById(id: string): Promise<StorefrontProduct | nu
       const reviewCount = approvedReviews.length;
       const avgRating = reviewCount > 0
         ? Number((approvedReviews.reduce((sum: number, r: { rating?: number | string | null }) => sum + (Number(r.rating) || 5), 0) / reviewCount).toFixed(1))
-        : 5.0;
+        : 0;
       const cleanName = normalizeCatalogText(p.name, p.name);
       const cleanCategory = normalizeCatalogText(p.category, p.category);
 

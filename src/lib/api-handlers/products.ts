@@ -396,7 +396,7 @@ export async function handleProductRoutes(ctx: ApiDispatchContext): Promise<Next
               ) / reviewCount
             ).toFixed(1)
           )
-        : 5.0;
+        : 0;
     const cleanName = String(product.name || '').replace(/\bL-Shap\b(?!e)/gi, 'L-Shape').trim();
 
     return NextResponse.json(

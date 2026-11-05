@@ -202,7 +202,7 @@ export default function ProductPageClient({
   const reviewCount = reviewsList.length || (product.reviewCount ?? 0);
   const avgRating = reviewsList.length > 0
     ? Number((reviewsList.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / reviewsList.length).toFixed(1))
-    : (product.avgRating ?? 5.0);
+    : (product.avgRating && product.avgRating > 0 ? product.avgRating : 0);
 
   let parsedSpecs: ProductSpecs = {};
   try {
@@ -392,18 +392,26 @@ export default function ProductPageClient({
               </h1>
 
               <div className="flex items-center gap-3 pt-1">
-                <div className="flex items-center gap-1 text-[#B88E4B]">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={14}
-                      className={i < Math.round(avgRating) ? 'fill-[#B88E4B] text-[#B88E4B]' : 'text-stone-300'}
-                    />
-                  ))}
-                </div>
-                <span className="text-xs font-bold text-[#7A6048]">
-                  {avgRating.toFixed(1)} ({reviewCount > 0 ? `${reviewCount} Verified Masterwork ${reviewCount === 1 ? 'Review' : 'Reviews'}` : 'Atelier Certified Masterpiece'})
-                </span>
+                {reviewCount > 0 && avgRating > 0 ? (
+                  <>
+                    <div className="flex items-center gap-1 text-[#B88E4B]">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={14}
+                          className={i < Math.round(avgRating) ? 'fill-[#B88E4B] text-[#B88E4B]' : 'text-stone-300'}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-bold text-[#7A6048]">
+                      {avgRating.toFixed(1)} ({reviewCount} Verified {reviewCount === 1 ? 'Review' : 'Reviews'})
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs font-semibold text-stone-600 bg-[#FAF5EE] border border-[#E8DFC8] px-3 py-1 rounded-full">
+                    Artisanal Handcrafted · 10-Year Warranty
+                  </span>
+                )}
               </div>
             </div>
 
@@ -701,16 +709,16 @@ export default function ProductPageClient({
                 <div className="text-right">
                   <div className="flex items-center gap-1 text-[#B88E4B]">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={13} className={i < Math.round(avgRating) ? 'fill-[#B88E4B] text-[#B88E4B]' : 'text-stone-300'} />
+                      <Star key={i} size={13} className={reviewCount > 0 && i < Math.round(avgRating) ? 'fill-[#B88E4B] text-[#B88E4B]' : 'text-stone-300'} />
                     ))}
                   </div>
                   <p className="text-[10px] font-bold text-stone-500 mt-0.5">
-                    {reviewCount > 0 ? `${reviewCount} ${reviewCount === 1 ? 'Review' : 'Reviews'}` : 'Atelier Verified'}
+                    {reviewCount > 0 ? `${reviewCount} ${reviewCount === 1 ? 'Review' : 'Reviews'}` : '0 Reviews'}
                   </p>
                 </div>
                 <div className="border-l border-[#E7DDD0] pl-3">
                   <span className="text-2xl font-black text-[#221814] font-serif leading-none">
-                    {avgRating.toFixed(1)}
+                    {reviewCount > 0 ? avgRating.toFixed(1) : '—'}
                   </span>
                   <span className="text-[10px] text-stone-400 font-bold block">/ 5.0</span>
                 </div>
