@@ -66,7 +66,7 @@ test.describe('E2E: AI Payment Verification & Admin WhatsApp Approval Flow', () 
 
   test('4. WhatsApp Webhook: Meta handshake challenge verification', async ({ request }) => {
     const challengeStr = 'test_meta_challenge_12345';
-    const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || process.env.ADMIN_TOKEN_SECRET || 'fahad_ali_whatsapp_verify_token_2026';
+    const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || process.env.ADMIN_TOKEN_SECRET || 'test_webhook_verify_token';
 
     const res = await request.get(`/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=${encodeURIComponent(verifyToken)}&hub.challenge=${challengeStr}`);
     expect(res.status()).toBe(200);

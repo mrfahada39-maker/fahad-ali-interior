@@ -167,10 +167,7 @@ export class WhatsAppService {
    */
   public static getCredentials(): { accessToken: string; phoneNumberId: string } {
     const accessToken = (process.env.WHATSAPP_ACCESS_TOKEN || '').trim();
-    let phoneNumberId = (process.env.WHATSAPP_PHONE_NUMBER_ID || '1482842828238710').trim();
-    if (phoneNumberId === '1404434616090105' || !phoneNumberId) {
-      phoneNumberId = '1482842828238710';
-    }
+    const phoneNumberId = (process.env.WHATSAPP_PHONE_NUMBER_ID || '').trim();
     return { accessToken, phoneNumberId };
   }
 
